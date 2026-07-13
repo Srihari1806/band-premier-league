@@ -13,7 +13,11 @@ import {
   GraduationCap, 
   CalendarRange, 
   Briefcase,
-  Sparkles
+  Sparkles,
+  ArrowDown,
+  Percent,
+  MapPin,
+  Ticket
 } from "lucide-react";
 
 export const Route = createFileRoute("/join/")({
@@ -171,6 +175,137 @@ function JoinHubPage() {
               </Link>
             );
           })}
+        </div>
+      </section>
+
+      {/* HOW BPL WORKS FLOWCHART */}
+      <section className="border-t border-border bg-slate-950/40 py-20">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 space-y-12">
+          
+          <div className="text-center max-w-2xl mx-auto space-y-3">
+            <p className="text-xs uppercase tracking-widest text-primary-glow font-bold">The Pipeline</p>
+            <h2 className="text-3xl md:text-4xl font-display font-bold text-white">How BPL Works Flowchart</h2>
+            <p className="text-xs text-muted-foreground leading-relaxed">
+              Before you onboard, trace the full operational pipeline of the league — from initial application to transparent revenue payouts.
+            </p>
+          </div>
+
+          {/* Grid Layout of Pipeline Steps */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 relative">
+            
+            {/* Step 1 */}
+            <div className="bpl-card p-6 flex flex-col justify-between text-left space-y-4 hover:border-primary-glow/30 transition-colors">
+              <div className="space-y-3">
+                <div className="flex justify-between items-start">
+                  <span className="text-[10px] font-bold text-primary-glow bg-primary/10 px-2 py-0.5 rounded border border-primary/20">STEP 01</span>
+                  <Users className="text-muted-foreground" size={16} />
+                </div>
+                <h4 className="text-base font-display font-bold text-white">Onboarding & Curation</h4>
+                <p className="text-[11px] text-muted-foreground leading-relaxed">
+                  Bands, cafes, sponsors, and videographers submit applications. Approved profiles are registered into the league draft pool.
+                </p>
+              </div>
+            </div>
+
+            {/* Step 2 */}
+            <div className="bpl-card p-6 flex flex-col justify-between text-left space-y-4 hover:border-primary-glow/30 transition-colors">
+              <div className="space-y-3">
+                <div className="flex justify-between items-start">
+                  <span className="text-[10px] font-bold text-primary-glow bg-primary/10 px-2 py-0.5 rounded border border-primary/20">STEP 02</span>
+                  <Sparkles className="text-muted-foreground" size={16} />
+                </div>
+                <h4 className="text-base font-display font-bold text-white">Sealed Bidding Draft</h4>
+                <p className="text-[11px] text-muted-foreground leading-relaxed">
+                  Production Houses review the draft pool and submit secret bids. The highest bidder secures co-production and IP rights for that band.
+                </p>
+              </div>
+            </div>
+
+            {/* Step 3 */}
+            <div className="bpl-card p-6 flex flex-col justify-between text-left space-y-4 hover:border-primary-glow/30 transition-colors">
+              <div className="space-y-3">
+                <div className="flex justify-between items-start">
+                  <span className="text-[10px] font-bold text-primary-glow bg-primary/10 px-2 py-0.5 rounded border border-primary/20">STEP 03</span>
+                  <Tv className="text-muted-foreground" size={16} />
+                </div>
+                <h4 className="text-base font-display font-bold text-white">Studio & Video Production</h4>
+                <p className="text-[11px] text-muted-foreground leading-relaxed">
+                  Winning franchises fund studio recordings, professional mixing/mastering, and music video shoots to build the band's catalog.
+                </p>
+              </div>
+            </div>
+
+            {/* Step 4 */}
+            <div className="bpl-card p-6 flex flex-col justify-between text-left space-y-4 hover:border-primary-glow/30 transition-colors">
+              <div className="space-y-3">
+                <div className="flex justify-between items-start">
+                  <span className="text-[10px] font-bold text-primary-glow bg-primary/10 px-2 py-0.5 rounded border border-primary/20">STEP 04</span>
+                  <MapPin className="text-muted-foreground" size={16} />
+                </div>
+                <h4 className="text-base font-display font-bold text-white">Cafe Tour Matchups</h4>
+                <p className="text-[11px] text-muted-foreground leading-relaxed">
+                  Bands perform live matches rotating across 6 partner cafes and local rooftop stages. 24 tour gigs scheduled over 8 weeks.
+                </p>
+              </div>
+            </div>
+
+            {/* Step 5 */}
+            <div className="bpl-card p-6 flex flex-col justify-between text-left space-y-4 hover:border-primary-glow/30 transition-colors">
+              <div className="space-y-3">
+                <div className="flex justify-between items-start">
+                  <span className="text-[10px] font-bold text-primary-glow bg-primary/10 px-2 py-0.5 rounded border border-primary/20">STEP 05</span>
+                  <Ticket className="text-muted-foreground" size={16} />
+                </div>
+                <h4 className="text-base font-display font-bold text-white">₹199 Pass + F&B Coupon</h4>
+                <p className="text-[11px] text-muted-foreground leading-relaxed">
+                  Fans purchase ₹199 gig passes. To support partner cafes and maximize attendance, passes include a complimentary ₹100 F&B food coupon.
+                </p>
+              </div>
+            </div>
+
+            {/* Step 6 */}
+            <div className="bpl-card p-6 flex flex-col justify-between text-left space-y-4 hover:border-primary-glow/30 transition-colors">
+              <div className="space-y-3">
+                <div className="flex justify-between items-start">
+                  <span className="text-[10px] font-bold text-primary-glow bg-primary/10 px-2 py-0.5 rounded border border-primary/20">STEP 06</span>
+                  <Percent className="text-muted-foreground" size={16} />
+                </div>
+                <h4 className="text-base font-display font-bold text-white">Ecosystem Revenue Split</h4>
+                <p className="text-[11px] text-muted-foreground leading-relaxed">
+                  Event payouts split: 50% direct to Bands, 30% to Cafe Venues, 20% to BPL. Digital content royalties split 50/50 between Artist & Franchise.
+                </p>
+              </div>
+            </div>
+
+          </div>
+
+          {/* Connective Flow Visual Map */}
+          <div className="bpl-card p-8 bg-gradient-to-br from-secondary/40 to-transparent space-y-6 text-left max-w-4xl mx-auto border border-border/80">
+            <h3 className="text-lg font-display font-bold text-white flex items-center gap-2">
+              <span>Ecosystem Revenue Splits</span>
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="p-4 rounded-lg bg-surface/30 border border-border">
+                <p className="text-xs uppercase font-bold text-muted-foreground">Bands / Artists</p>
+                <p className="text-3xl font-display font-bold text-primary-glow mt-1">50%</p>
+                <p className="text-[10px] text-muted-foreground mt-1">Direct ticketing split + 50% digital IP royalty</p>
+              </div>
+              <div className="p-4 rounded-lg bg-surface/30 border border-border">
+                <p className="text-xs uppercase font-bold text-muted-foreground">Cafes / Venues</p>
+                <p className="text-3xl font-display font-bold text-primary-glow mt-1">30%</p>
+                <p className="text-[10px] text-muted-foreground mt-1">Ticketing commission + 100% amplified F&B sales</p>
+              </div>
+              <div className="p-4 rounded-lg bg-surface/30 border border-border">
+                <p className="text-xs uppercase font-bold text-muted-foreground">BPL League Network</p>
+                <p className="text-3xl font-display font-bold text-primary-glow mt-1">20%</p>
+                <p className="text-[10px] text-muted-foreground mt-1">Manages scoreboards, qualifiers, tech, licensing</p>
+              </div>
+            </div>
+            <p className="text-[10px] text-muted-foreground leading-relaxed">
+              * Live Event splits follow the verified BPL pilot economics format. Music & video distribution rights splits are shared co-equally (50/50) between artists and investing production houses as original catalogs are published.
+            </p>
+          </div>
+
         </div>
       </section>
     </PageShell>
