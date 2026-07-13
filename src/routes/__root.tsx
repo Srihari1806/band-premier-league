@@ -134,11 +134,10 @@ function RootComponent() {
       const onboarded = localStorage.getItem("bpl_user_onboarded") === "true";
       const pathname = location.pathname;
       
-      const isPublicOnboardingRoute = pathname === "/join" || pathname.startsWith("/join/") || pathname === "/login";
-      const isAdminRoute = pathname === "/admin/applications" || pathname.startsWith("/admin/");
+      const isDashboardRoute = pathname === "/dashboard" || pathname.startsWith("/dashboard/");
       
-      if (!onboarded && !isPublicOnboardingRoute && !isAdminRoute) {
-        navigate({ to: "/join" });
+      if (isDashboardRoute && !onboarded) {
+        navigate({ to: "/login" });
       }
     }
   }, [location.pathname, navigate]);

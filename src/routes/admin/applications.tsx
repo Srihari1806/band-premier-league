@@ -82,7 +82,9 @@ function AdminApplicationsPage() {
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    if (loginId === "bplcreator" && password === "bpladmin") {
+    const adminUser = (import.meta.env.VITE_ADMIN_USER as string) || "bplcreator";
+    const adminPass = (import.meta.env.VITE_ADMIN_PASS as string) || "bpladmin";
+    if (loginId === adminUser && password === adminPass) {
       setIsAuthenticated(true);
       setPassError("");
       if (typeof window !== "undefined") {
@@ -174,7 +176,6 @@ function AdminApplicationsPage() {
                   className="w-full bg-secondary border border-border rounded-md px-3.5 py-2.5 text-sm focus:outline-none focus:border-primary text-white"
                 />
                 {passError && <p className="text-red-500 text-xs mt-1 flex items-center gap-1"><AlertCircle size={12} /> {passError}</p>}
-                <p className="text-[9px] text-muted-foreground/60 mt-1.5">Note: Default credentials are <code className="text-primary-glow font-bold">bplcreator</code> / <code className="text-primary-glow font-bold">bpladmin</code></p>
               </div>
               <button 
                 type="submit" 

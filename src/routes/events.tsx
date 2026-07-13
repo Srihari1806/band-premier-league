@@ -35,7 +35,7 @@ function EventsPage() {
           <h1 className="text-4xl md:text-6xl font-display font-bold">BPL Campus Clash</h1>
           <div className="mt-3 flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
             <span className="flex items-center gap-1">
-              <Calendar size={14} /> 12 JUL 2025 · 5:00 PM
+              <Calendar size={14} /> 12 OCT 2026 · 6:00 PM
             </span>
             <span className="flex items-center gap-1">
               <MapPin size={14} /> AntiSOCIAL, Bangalore
@@ -104,9 +104,9 @@ function EventsPage() {
           <Panel title="Tickets">
             <div className="space-y-3">
               {[
-                ["Early Bird", "₹499"],
-                ["Regular", "₹799"],
-                ["At Gate", "₹999"],
+                ["Standard Pass", "₹199"],
+                ["Premium Supporter Pass", "₹499"],
+                ["Franchise VIP Pass", "₹999"],
               ].map(([n, p]) => (
                 <div
                   key={n}
@@ -114,10 +114,16 @@ function EventsPage() {
                 >
                   <div>
                     <p className="text-sm font-medium">{n}</p>
+                    {n === "Standard Pass" && (
+                      <p className="text-[10px] text-primary-glow mt-0.5">* Includes complimentary ₹100 F&B food coupon</p>
+                    )}
                   </div>
                   <p className="font-display font-bold text-lg">{p}</p>
                 </div>
               ))}
+              <p className="text-[10px] text-muted-foreground leading-normal pt-1">
+                * All standard entry tickets are tied to our cafe-partner F&B voucher program. Support your local venues and bands directly.
+              </p>
               <button className="btn-primary btn-primary-hover w-full rounded-md px-4 py-3 text-sm font-semibold flex items-center justify-center gap-2">
                 <Ticket size={16} /> Book Tickets
               </button>

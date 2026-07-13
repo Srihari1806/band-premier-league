@@ -188,13 +188,13 @@ if (supabase) {
 
 // 2. Default Local Mock Data
 const DEFAULT_STATS: LeagueStats = {
-  total_shows: "512",
-  bands: "1,248",
-  cities: "56",
-  attendance: "2.3M+",
-  revenue: "₹12.7Cr",
-  streaming: "8.9M+",
-  followers: "1.6M+",
+  total_shows: "24",
+  bands: "4",
+  cities: "6",
+  attendance: "100",
+  revenue: "₹11.77L",
+  streaming: "200",
+  followers: "5K+",
 };
 
 // Helper to initialize local storage data if empty

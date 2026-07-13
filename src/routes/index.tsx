@@ -28,10 +28,10 @@ export const Route = createFileRoute("/")({
 });
 
 const EVENTS = [
-  { title: "BPL Campus Clash", date: "12 JUL 2025", city: "Bangalore", img: crowdImg },
-  { title: "Indie Night Live", date: "18 JUL 2025", city: "Mumbai", img: bandImg },
-  { title: "Echoes of Earth", date: "26 JUL 2025", city: "Delhi", img: heroImg },
-  { title: "Amplify Sessions", date: "02 AUG 2025", city: "Hyderabad", img: crowdImg },
+  { title: "BPL Campus Clash", date: "12 OCT 2026", city: "Bangalore", img: crowdImg },
+  { title: "Indie Night Live", date: "18 OCT 2026", city: "Mumbai", img: bandImg },
+  { title: "Echoes of Earth", date: "26 OCT 2026", city: "Delhi", img: heroImg },
+  { title: "Amplify Sessions", date: "02 NOV 2026", city: "Hyderabad", img: crowdImg },
 ];
 
 const STATIC_BANDS = [
@@ -80,20 +80,20 @@ function Home() {
   // Format stats for rendering
   const statsList = stats
     ? [
-        { v: stats.total_shows, l: "Total Shows" },
-        { v: stats.bands, l: "Bands" },
-        { v: stats.cities, l: "Cities" },
-        { v: stats.attendance, l: "Attendance" },
-        { v: stats.revenue, l: "Revenue" },
-        { v: stats.streaming, l: "Streams" },
+        { v: stats.total_shows, l: "Shows (8 Weeks)" },
+        { v: stats.bands, l: "Pilot Bands" },
+        { v: stats.cities, l: "Pilot Venues" },
+        { v: stats.attendance, l: "Attendees / Show" },
+        { v: stats.revenue, l: "Projected Revenue" },
+        { v: stats.streaming, l: "Fan Pass Targets" },
       ]
     : [
-        { v: "512", l: "Total Shows" },
-        { v: "1,248", l: "Bands" },
-        { v: "56", l: "Cities" },
-        { v: "2.3M+", l: "Attendance" },
-        { v: "₹12.7Cr", l: "Revenue" },
-        { v: "8.9M+", l: "Streams" },
+        { v: "24", l: "Shows (8 Weeks)" },
+        { v: "4", l: "Pilot Bands" },
+        { v: "6", l: "Pilot Venues" },
+        { v: "100", l: "Attendees / Show" },
+        { v: "₹11.77L", l: "Projected Revenue" },
+        { v: "200", l: "Fan Pass Targets" },
       ];
 
   return (
@@ -295,8 +295,8 @@ function Home() {
         </div>
       </Section>
 
-      {/* SEASON STATS */}
-      <Section title="Season Stats">
+      {/* HYDERABAD PILOT TARGETS */}
+      <Section title="Hyderabad Pilot Targets">
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
           {statsList.map((s) => (
             <div key={s.l} className="bpl-card p-6 text-center">

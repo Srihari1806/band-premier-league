@@ -34,16 +34,11 @@ export function SiteHeader() {
     }
   }, []);
 
-  const visibleNav = onboarded
-    ? [
-        ...NAV,
-        { to: "/dashboard", label: "Dashboard" }
-      ]
-    : [
-        { to: "/join", label: "Join BPL" },
-        { to: "/login", label: "Login" },
-        ...(isAdmin ? [{ to: "/admin/applications", label: "Operator Panel" }] : [])
-      ];
+  const visibleNav = [
+    ...NAV,
+    ...(onboarded ? [{ to: "/dashboard", label: "Dashboard" }] : [{ to: "/login", label: "Login" }]),
+    ...(isAdmin ? [{ to: "/admin/applications", label: "Operator Panel" }] : [])
+  ];
 
   return (
     <header className="sticky top-0 z-50 backdrop-blur-xl bg-background/70 border-b border-border">

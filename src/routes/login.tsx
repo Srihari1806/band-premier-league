@@ -51,7 +51,9 @@ function LoginPage() {
 
     try {
       if (role === "operator") {
-        if (email.trim() === "bplcreator" && password === "bpladmin") {
+        const adminUser = (import.meta.env.VITE_ADMIN_USER as string) || "bplcreator";
+        const adminPass = (import.meta.env.VITE_ADMIN_PASS as string) || "bpladmin";
+        if (email.trim() === adminUser && password === adminPass) {
           if (typeof window !== "undefined") {
             sessionStorage.setItem("bpl_admin_auth", "true");
             localStorage.setItem("bpl_user_onboarded", "true");

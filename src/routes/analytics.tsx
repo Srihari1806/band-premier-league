@@ -22,13 +22,13 @@ export const Route = createFileRoute("/analytics")({
 });
 
 const KPIS = [
-  { v: "512", l: "Total Shows", delta: "+12%" },
-  { v: "1,248", l: "Bands", delta: "+18%" },
-  { v: "56", l: "Cities", delta: "+8%" },
-  { v: "2.3M+", l: "Attendance", delta: "+15%" },
-  { v: "₹12.7Cr", l: "Revenue", delta: "+22%" },
-  { v: "8.9M+", l: "Streaming", delta: "+30%" },
-  { v: "1.6M+", l: "Followers", delta: "+25%" },
+  { v: "24", l: "Shows (8 Weeks Pilot)", delta: "Target" },
+  { v: "4", l: "Pilot Bands", delta: "Target" },
+  { v: "6", l: "Pilot Venues", delta: "Target" },
+  { v: "100", l: "Attendees / Show", delta: "Target" },
+  { v: "₹11.77L", l: "Ecosystem Revenue", delta: "Projected" },
+  { v: "200", l: "Fan Pass Targets", delta: "Target" },
+  { v: "₹4.55L", l: "Operator Net Income", delta: "Projected" },
 ];
 
 function AnalyticsPage() {
@@ -37,7 +37,7 @@ function AnalyticsPage() {
       <PageHeader
         eyebrow="Analytics"
         title="This is to your advantage."
-        subtitle="No event company in India has this data. It's the league's edge."
+        subtitle="Target projections for the Hyderabad Phase 1 Pilot. Data modeling for India's upcoming music league."
       />
       <div className="mx-auto max-w-7xl px-4 sm:px-6 py-12 space-y-8">
         <div className="grid gap-4 grid-cols-2 md:grid-cols-4 lg:grid-cols-4">
