@@ -93,7 +93,7 @@ const ROLES = [
 
 function JoinHubPage() {
   const [activePHBidTab, setActivePHBidTab] = useState<"A" | "B" | "C" | "D">("A");
-  const [activeExplainTab, setActiveExplainTab] = useState<"comparison" | "matrix" | "venues" | "pipeline">("comparison");
+  const [activeExplainTab, setActiveExplainTab] = useState<"comparison" | "matrix" | "venues" | "cashflows" | "pipeline">("comparison");
 
   // Generalized mock data from BPL 2.webp bidding section
   const BIDDING_QUOTES = {
@@ -179,6 +179,7 @@ function JoinHubPage() {
                 { id: "comparison", label: "IPL vs BPL Model", icon: Layers },
                 { id: "matrix", label: "Who Can Hire Whom", icon: Handshake },
                 { id: "venues", label: "Venue Options (A, B, C)", icon: Building2 },
+                { id: "cashflows", label: "Inflows & Outflows", icon: DollarSign },
                 { id: "pipeline", label: "Ecosystem Flow Map", icon: TrendingUp },
               ].map((tab) => {
                 const Icon = tab.icon;
@@ -217,14 +218,14 @@ function JoinHubPage() {
                     </thead>
                     <tbody className="divide-y divide-border/40">
                       {[
-                        ["BCCI", "BPL (League Operator)", "Sets ecosystem rules, creates fixtures, coordinates stakeholders, collects platform commission."],
-                        ["Franchise Owner", "Production House", "Acts as the artist investor. Finances production, branding, shoots, and content IP."],
-                        ["Players", "Bands / Solo Artists", "The central talent. Perform matchups, create music, and retain digital content royalties."],
-                        ["Stadium", "Venues / Cafés / Colleges", "Stadium infrastructure. Cafe partners host gigs and collect amplified Food & Beverage sales."],
-                        ["Broadcaster", "Media / Streaming Partners", "Handles video broadcasting, matches coverage, reels, and digital streaming distro."],
-                        ["Sponsors", "Brand Sponsors", "Provide title/co-sponsorship funding to fuel qualifiers, stages, and operations."],
-                        ["Fan Clubs", "Campus & Local Communities", "Audience mobilization engines promoting tickets, campus gigs, and café activations."],
-                        ["Event Operations", "Event Managers", "Contracted on-ground managers executing stage setup, logistics, security, and match production."],
+                        ["BCCI", "BPL (League Operator)", "Sets rules, runs fixtures. Gets sponsorship & ticket commission, spending on league prize pools, operations, and hiring event managers."],
+                        ["Franchise Owner", "Production House", "Acts as the artist investor. Decides whether to perform services in-house or outsource. Invests directly in catalog production and band marketing."],
+                        ["Players", "Bands / Solo Artists", "The central talent. Retain a 40% live ticket revenue share and a 50% digital IP royalty share."],
+                        ["Stadium", "Venues / Cafés / Colleges", "IPL cricket stadiums require massive upfront rentals. BPL cafés/venues often host for free (for F&B sales) or use hybrid guarantee + share models."],
+                        ["Broadcaster", "YouTube & Audio Platforms", "IPL sells satellite rights centrally. BPL production houses earn major revenues from YT/Spotify. If hit, BPL sells TV 'League War' telecast rights."],
+                        ["Sponsors", "Brand Sponsors", "Provide sponsorship capital. Divided between BPL operators (for prize pool & operations) and event manager logistics funding."],
+                        ["Fan Clubs", "Outsourced Promoters", "Campus & cafe promoter networks hired by BPL or Production Houses to drive ticket sales and local meetups."],
+                        ["Event Operations", "Contracted Event Managers", "Hired & paid directly by BPL Operator (out of BPL's 30% ticket share) to execute matching logistics, stage setup, and security."],
                       ].map(([ipl, bpl, desc], idx) => (
                         <tr key={idx} className="hover:bg-secondary/10">
                           <td className="py-3 px-4 font-bold text-white font-display">{ipl}</td>
@@ -328,6 +329,108 @@ function JoinHubPage() {
                       <p className="text-[10px] font-mono font-bold text-primary-glow">Example: ₹15,000 + 10% Ticket sales</p>
                     </div>
                   </div>
+                </div>
+              </div>
+            )}
+
+            {/* TAB CONTENT: INFLOWS & OUTFLOWS */}
+            {activeExplainTab === "cashflows" && (
+              <div className="bpl-card p-6 md:p-8 space-y-6 text-left animate-fadeIn">
+                <div className="space-y-1">
+                  <h3 className="text-lg font-display font-bold text-white">Ecosystem Capital Flow Grid (Inflows vs Outflows)</h3>
+                  <p className="text-xs text-muted-foreground">Detailed breakdown of where bands, investors, and operators earn money and where they invest it.</p>
+                </div>
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 pt-2">
+                  
+                  {/* Bands Column */}
+                  <div className="p-5 border border-border bg-secondary/15 rounded-lg space-y-5 flex flex-col justify-between">
+                    <div className="space-y-4">
+                      <div className="flex justify-between items-center">
+                        <h4 className="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-primary block"></span> Bands / Solo Artists</h4>
+                      </div>
+                      
+                      <div className="space-y-3">
+                        <div className="space-y-1">
+                          <p className="text-[10px] uppercase font-bold text-primary-glow">💰 Inflows (Earnings)</p>
+                          <ul className="text-[10px] text-muted-foreground space-y-1 list-disc list-inside">
+                            <li>40% Live ticket split per show</li>
+                            <li>50% Audio streaming split (Spotify, Wynk)</li>
+                            <li>50% YouTube ad revenue & sync licensing</li>
+                            <li>Direct merch sales & barters</li>
+                          </ul>
+                        </div>
+                        <div className="space-y-1 pt-2">
+                          <p className="text-[10px] uppercase font-bold text-red-400">💸 Outflows (Investments)</p>
+                          <ul className="text-[10px] text-muted-foreground space-y-1 list-disc list-inside">
+                            <li>Band gear & instrument upgrades</li>
+                            <li>Rehearsal space rentals</li>
+                            <li>Solo artist personal logistics</li>
+                          </ul>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Production Investors Column */}
+                  <div className="p-5 border border-border bg-secondary/15 rounded-lg space-y-5 flex flex-col justify-between">
+                    <div className="space-y-4">
+                      <div className="flex justify-between items-center">
+                        <h4 className="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-teal-400 block"></span> Production Investors</h4>
+                      </div>
+                      
+                      <div className="space-y-3">
+                        <div className="space-y-1">
+                          <p className="text-[10px] uppercase font-bold text-primary-glow">💰 Inflows (Earnings)</p>
+                          <ul className="text-[10px] text-muted-foreground space-y-1 list-disc list-inside">
+                            <li>30% Live ticketing commission split</li>
+                            <li>50% Audio streaming master royalties</li>
+                            <li>50% Video views, brand deals & ads</li>
+                            <li>Bespoke sponsor band integration fees</li>
+                          </ul>
+                        </div>
+                        <div className="space-y-1 pt-2">
+                          <p className="text-[10px] uppercase font-bold text-red-400">💸 Outflows (Investments)</p>
+                          <ul className="text-[10px] text-muted-foreground space-y-1 list-disc list-inside">
+                            <li>Studio recording, mixing & mastering</li>
+                            <li>Video production, camera crew & editing</li>
+                            <li>Band marketing, promo campaigns, and ads</li>
+                            <li>Outsourcing campus/cafe promoters</li>
+                          </ul>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* BPL Operator Column */}
+                  <div className="p-5 border border-primary/20 bg-primary/5 rounded-lg space-y-5 flex flex-col justify-between">
+                    <div className="space-y-4">
+                      <div className="flex justify-between items-center">
+                        <h4 className="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-amber-400 block"></span> BPL League Operator</h4>
+                      </div>
+                      
+                      <div className="space-y-3">
+                        <div className="space-y-1">
+                          <p className="text-[10px] uppercase font-bold text-primary-glow">💰 Inflows (Earnings)</p>
+                          <ul className="text-[10px] text-muted-foreground space-y-1 list-disc list-inside">
+                            <li>30% Live matchup gate ticket split</li>
+                            <li>Brand sponsorships & naming rights</li>
+                            <li>Future TV/OTT telecast rights (League War)</li>
+                            <li>Ticketing platform partner commission</li>
+                          </ul>
+                        </div>
+                        <div className="space-y-1 pt-2">
+                          <p className="text-[10px] uppercase font-bold text-red-400">💸 Outflows (Investments)</p>
+                          <ul className="text-[10px] text-muted-foreground space-y-1 list-disc list-inside">
+                            <li>Contracting Event Managers (on-ground ops)</li>
+                            <li>League prize pool & champion awards</li>
+                            <li>Café hybrid rental base guarantee payouts</li>
+                            <li>League scoring, tech & app maintenance</li>
+                          </ul>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
                 </div>
               </div>
             )}
