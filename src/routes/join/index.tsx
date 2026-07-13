@@ -11,7 +11,6 @@ import {
   Users, 
   Camera, 
   Mic, 
-  GraduationCap, 
   CalendarRange, 
   Sparkles,
   Percent,
@@ -21,7 +20,11 @@ import {
   TrendingUp,
   ArrowRight,
   ArrowDown,
-  Info
+  Info,
+  Layers,
+  Handshake,
+  CheckCircle2,
+  HelpCircle
 } from "lucide-react";
 
 export const Route = createFileRoute("/join/")({
@@ -90,13 +93,14 @@ const ROLES = [
 
 function JoinHubPage() {
   const [activePHBidTab, setActivePHBidTab] = useState<"A" | "B" | "C" | "D">("A");
+  const [activeExplainTab, setActiveExplainTab] = useState<"comparison" | "matrix" | "venues" | "pipeline">("comparison");
 
-  // Sample data from BPL 2.webp bidding section
+  // Generalized mock data from BPL 2.webp bidding section
   const BIDDING_QUOTES = {
-    A: { name: "Tamada Media", quotes: ["₹8,00,000", "₹6,00,000", "₹7,50,000", "₹5,50,000"], wins: "Band 1" },
-    B: { name: "Infinitum Network", quotes: ["₹7,00,000", "₹8,50,000", "₹8,50,000", "₹6,00,000"], wins: "Band 2" },
-    C: { name: "Swipe Up Media", quotes: ["₹6,50,000", "₹6,00,000", "₹9,00,000", "₹7,00,000"], wins: "Band 3" },
-    D: { name: "Independent Studio", quotes: ["₹5,50,000", "₹7,00,000", "₹6,00,000", "₹8,00,000"], wins: "Band 4" },
+    A: { name: "Franchise Investor A", quotes: ["₹8,00,000", "₹6,00,000", "₹7,50,000", "₹5,50,000"], wins: "Band 1" },
+    B: { name: "Franchise Investor B", quotes: ["₹7,0,000", "₹8,50,000", "₹8,50,000", "₹6,00,000"], wins: "Band 2" },
+    C: { name: "Franchise Investor C", quotes: ["₹6,50,000", "₹6,00,000", "₹9,00,000", "₹7,00,000"], wins: "Band 3" },
+    D: { name: "Franchise Investor D", quotes: ["₹5,50,000", "₹7,00,000", "₹6,00,000", "₹8,00,000"], wins: "Band 4" },
   };
 
   return (
@@ -164,472 +168,374 @@ function JoinHubPage() {
             <p className="text-xs uppercase tracking-[0.2em] text-primary-glow font-bold">Ecosystem Model</p>
             <h2 className="text-3xl md:text-5xl font-display font-bold text-white">How BPL Works</h2>
             <p className="text-xs md:text-sm text-muted-foreground leading-relaxed max-w-xl mx-auto">
-              BPL is an IPL-style music league. Below is the structured flow of how bands draft, production houses invest, gigs monetize, and revenues payout.
+              BPL operates as an asset-light orchestration platform. We create demand, set rules, and coordinate stakeholders, while specialized partners provide venue operations, production, and marketing.
             </p>
           </div>
 
-          {/* SECTION 1: LEAGUE STRUCTURE & SECRET BIDDING */}
-          <div className="bpl-card p-6 md:p-8 space-y-8">
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center border-b border-border/65 pb-5 gap-4">
-              <div>
-                <span className="text-[10px] font-bold text-primary-glow bg-primary/10 border border-primary/20 px-2 py-0.5 rounded">PHASE 01</span>
-                <h3 className="text-xl font-display font-bold text-white mt-1.5">1. League Structure & Secret Bidding</h3>
-              </div>
-              <p className="text-[11px] text-muted-foreground max-w-md">
-                Bands apply as franchise teams. Production houses submit secret bids to secure music and video rights for their chosen bands.
-              </p>
+          {/* ASSET-LIGHT EXPLANATION TABS */}
+          <div className="max-w-4xl mx-auto space-y-6">
+            <div className="flex flex-wrap border border-border rounded-lg overflow-hidden bg-secondary/20">
+              {[
+                { id: "comparison", label: "IPL vs BPL Model", icon: Layers },
+                { id: "matrix", label: "Who Can Hire Whom", icon: Handshake },
+                { id: "venues", label: "Venue Options (A, B, C)", icon: Building2 },
+                { id: "pipeline", label: "Ecosystem Flow Map", icon: TrendingUp },
+              ].map((tab) => {
+                const Icon = tab.icon;
+                return (
+                  <button
+                    key={tab.id}
+                    onClick={() => setActiveExplainTab(tab.id as any)}
+                    className={`flex-1 py-3 px-4 text-xs font-bold transition-all flex items-center justify-center gap-2 border-r border-border last:border-0 ${
+                      activeExplainTab === tab.id 
+                        ? "bg-primary text-white" 
+                        : "text-muted-foreground hover:text-white hover:bg-secondary/40"
+                    }`}
+                  >
+                    <Icon size={14} />
+                    <span>{tab.label}</span>
+                  </button>
+                );
+              })}
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
-              {/* 4 Bands Box */}
-              <div className="lg:col-span-3 space-y-3">
-                <p className="text-xs uppercase tracking-wider font-bold text-muted-foreground">4 Bands (Teams)</p>
-                <div className="grid grid-cols-2 gap-2.5">
-                  {[
-                    ["Band 1", "Rock", "text-red-400 bg-red-950/20 border-red-900/40"],
-                    ["Band 2", "Indie", "text-blue-400 bg-blue-950/20 border-blue-900/40"],
-                    ["Band 3", "Pop", "text-purple-400 bg-purple-950/20 border-purple-900/40"],
-                    ["Band 4", "Folk", "text-amber-400 bg-amber-950/20 border-amber-900/40"],
-                  ].map(([b, g, c]) => (
-                    <div key={b} className={`p-3 border rounded-lg text-center ${c}`}>
-                      <Music size={14} className="mx-auto mb-1.5 opacity-80" />
-                      <p className="text-xs font-bold">{b}</p>
-                      <p className="text-[9px] uppercase tracking-wider opacity-60 mt-0.5">{g}</p>
-                    </div>
-                  ))}
+            {/* TAB CONTENT: IPL vs BPL */}
+            {activeExplainTab === "comparison" && (
+              <div className="bpl-card p-6 md:p-8 space-y-6 text-left animate-fadeIn">
+                <div className="space-y-1">
+                  <h3 className="text-lg font-display font-bold text-white">IPL vs BPL Comparison Structure</h3>
+                  <p className="text-xs text-muted-foreground">How the BPL franchise music league maps directly onto a professional sports format.</p>
+                </div>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-xs text-left border-collapse">
+                    <thead>
+                      <tr className="border-b border-border bg-secondary/30">
+                        <th className="py-2.5 px-4 font-bold text-primary-glow uppercase tracking-wider">IPL Counterpart</th>
+                        <th className="py-2.5 px-4 font-bold text-primary-glow uppercase tracking-wider">BPL League Role</th>
+                        <th className="py-2.5 px-4 font-bold text-muted-foreground uppercase tracking-wider">Core Responsibility</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-border/40">
+                      {[
+                        ["BCCI", "BPL (League Operator)", "Sets ecosystem rules, creates fixtures, coordinates stakeholders, collects platform commission."],
+                        ["Franchise Owner", "Production House", "Acts as the artist investor. Finances production, branding, shoots, and content IP."],
+                        ["Players", "Bands / Solo Artists", "The central talent. Perform matchups, create music, and retain digital content royalties."],
+                        ["Stadium", "Venues / Cafés / Colleges", "Stadium infrastructure. Cafe partners host gigs and collect amplified Food & Beverage sales."],
+                        ["Broadcaster", "Media / Streaming Partners", "Handles video broadcasting, matches coverage, reels, and digital streaming distro."],
+                        ["Sponsors", "Brand Sponsors", "Provide title/co-sponsorship funding to fuel qualifiers, stages, and operations."],
+                        ["Fan Clubs", "Campus & Local Communities", "Audience mobilization engines promoting tickets, campus gigs, and café activations."],
+                        ["Event Operations", "Event Managers", "Contracted on-ground managers executing stage setup, logistics, security, and match production."],
+                      ].map(([ipl, bpl, desc], idx) => (
+                        <tr key={idx} className="hover:bg-secondary/10">
+                          <td className="py-3 px-4 font-bold text-white font-display">{ipl}</td>
+                          <td className="py-3 px-4 font-bold text-primary-glow">{bpl}</td>
+                          <td className="py-3 px-4 text-muted-foreground leading-relaxed">{desc}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
                 </div>
               </div>
+            )}
 
-              {/* Bidding Arrow */}
-              <div className="lg:col-span-1 flex lg:flex-col justify-center items-center gap-1 py-2">
-                <div className="h-0.5 lg:h-12 w-8 lg:w-0.5 bg-gradient-to-r lg:bg-gradient-to-b from-primary/80 to-transparent" />
-                <Sparkles size={16} className="text-primary-glow shrink-0" />
-                <div className="h-0.5 lg:h-12 w-8 lg:w-0.5 bg-gradient-to-l lg:bg-gradient-to-t from-primary/80 to-transparent" />
+            {/* TAB CONTENT: HIRING MATRIX */}
+            {activeExplainTab === "matrix" && (
+              <div className="bpl-card p-6 md:p-8 space-y-6 text-left animate-fadeIn">
+                <div className="space-y-1">
+                  <h3 className="text-lg font-display font-bold text-white">Ecosystem Hiring Matrix</h3>
+                  <p className="text-xs text-muted-foreground">Who contracts whom under BPL's decentralized, asset-light model.</p>
+                </div>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-xs text-left border-collapse">
+                    <thead>
+                      <tr className="border-b border-border bg-secondary/30">
+                        <th className="py-2.5 px-4 font-bold text-primary-glow uppercase tracking-wider">Ecosystem Service</th>
+                        <th className="py-2.5 px-4 font-bold text-primary-glow text-center uppercase tracking-wider">Hired by BPL</th>
+                        <th className="py-2.5 px-4 font-bold text-primary-glow text-center uppercase tracking-wider">Hired by Production House</th>
+                        <th className="py-2.5 px-4 font-bold text-muted-foreground uppercase tracking-wider">Operational Context</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-border/40">
+                      {[
+                        ["Event Managers", "✅ Primary (Contracted)", "❌ Rare", "BPL contracts managers to operate the league matches cleanly on-site."],
+                        ["Venues / Cafes", "✅ Primary (Booked)", "❌ Rare", "BPL partners directly with cafes to secure local match stadiums."],
+                        ["Media Partners", "Optional", "✅ Primary (Outsourced)", "Production Houses hire videographers for official music videos & shoots."],
+                        ["Photographers", "Optional", "✅ Primary (Outsourced)", "Production Houses hire photographers for artist branding campaigns."],
+                        ["Influencers", "Optional", "✅ Primary (Outsourced)", "Production Houses pay influencers to promote their drafted bands."],
+                        ["Campus Networks", "✅ Yes (Qualifiers)", "✅ Yes (Ticket Promos)", "Both hire campus ambassadors to mobilize students for live fixtures."],
+                        ["Cafe Communities", "Optional", "✅ Primary (Outsourced)", "Production Houses hire local gathering networks for café fan promotions."],
+                        ["Music Distributors", "❌ No", "✅ Primary (Outsourced)", "Production Houses manage third-party distribution to release tracks."],
+                      ].map(([service, bpl, ph, desc], idx) => (
+                        <tr key={idx} className="hover:bg-secondary/10">
+                          <td className="py-3 px-4 font-bold text-white">{service}</td>
+                          <td className="py-3 px-4 text-center font-bold">{bpl}</td>
+                          <td className="py-3 px-4 text-center font-bold">{ph}</td>
+                          <td className="py-3 px-4 text-muted-foreground leading-relaxed">{desc}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               </div>
+            )}
 
-              {/* Secret Bidding Console */}
-              <div className="lg:col-span-5 bpl-card bg-surface/30 p-5 space-y-4 border-dashed border-border/80">
-                <div className="flex justify-between items-center">
-                  <p className="text-xs font-bold text-white uppercase tracking-wider">Secret Bidding Draft (Simulation)</p>
-                  <span className="text-[9px] bg-primary/20 text-primary-glow border border-primary/30 px-2 py-0.5 rounded font-mono font-bold">PROPOSAL STAGE</span>
+            {/* TAB CONTENT: VENUE OPTIONS */}
+            {activeExplainTab === "venues" && (
+              <div className="bpl-card p-6 md:p-8 space-y-6 text-left animate-fadeIn">
+                <div className="space-y-1">
+                  <h3 className="text-lg font-display font-bold text-white">Cafe / Venue Partnership Models</h3>
+                  <p className="text-xs text-muted-foreground">Cafes provide stages and seating. BPL secures stadium infrastructure under three alignment models.</p>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-2">
+                  <div className="p-5 border border-border bg-secondary/10 rounded-lg space-y-3">
+                    <div className="flex justify-between items-center">
+                      <span className="text-[9px] uppercase tracking-wider font-bold text-muted-foreground">MODEL A</span>
+                      <DollarSign size={14} className="text-primary-glow" />
+                    </div>
+                    <h4 className="text-sm font-bold text-white">Flat Venue Rental</h4>
+                    <p className="text-xs text-muted-foreground leading-relaxed">
+                      BPL pays a flat, fixed fee to rent the space upfront for the gig night. Cafe retains 100% of Food & Beverage revenues.
+                    </p>
+                    <div className="pt-2">
+                      <p className="text-[10px] font-mono font-bold text-primary-glow">Example: Fixed ₹25,000 / Show</p>
+                    </div>
+                  </div>
+
+                  <div className="p-5 border border-border bg-secondary/10 rounded-lg space-y-3">
+                    <div className="flex justify-between items-center">
+                      <span className="text-[9px] uppercase tracking-wider font-bold text-muted-foreground">MODEL B</span>
+                      <Percent size={14} className="text-primary-glow" />
+                    </div>
+                    <h4 className="text-sm font-bold text-white">Ticketing Revenue Share</h4>
+                    <p className="text-xs text-muted-foreground leading-relaxed">
+                      No upfront rental risk. The café receives a direct percentage commission of the live matchup gate ticket sales.
+                    </p>
+                    <div className="pt-2">
+                      <p className="text-[10px] font-mono font-bold text-primary-glow">Example: 15% – 25% Ticket Sales</p>
+                    </div>
+                  </div>
+
+                  <div className="p-5 border border-primary/20 bg-primary/5 rounded-lg space-y-3">
+                    <div className="flex justify-between items-center">
+                      <span className="text-[9px] uppercase tracking-wider font-bold text-primary-glow">MODEL C (Common)</span>
+                      <CheckCircle2 size={14} className="text-primary-glow" />
+                    </div>
+                    <h4 className="text-sm font-bold text-white">Hybrid Guarantee</h4>
+                    <p className="text-xs text-muted-foreground leading-relaxed">
+                      De-risks cafe venue hosts while aligning incentives. BPL pays a lower fixed base guarantee combined with a smaller ticket commission.
+                    </p>
+                    <div className="pt-2">
+                      <p className="text-[10px] font-mono font-bold text-primary-glow">Example: ₹15,000 + 10% Ticket sales</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* TAB CONTENT: ECOSYSTEM PIPELINE GRAPH */}
+            {activeExplainTab === "pipeline" && (
+              <div className="bpl-card p-6 md:p-8 space-y-6 text-left animate-fadeIn">
+                <div className="space-y-1">
+                  <h3 className="text-lg font-display font-bold text-white">Ecosystem Hiring & Operational Flow</h3>
+                  <p className="text-xs text-muted-foreground">Visual mapping of the platform coordination flows and outsourcing relationships.</p>
                 </div>
                 
-                {/* Tabs */}
-                <div className="flex border border-border rounded overflow-hidden">
-                  {(["A", "B", "C", "D"] as const).map((tab) => (
-                    <button
-                      key={tab}
-                      onClick={() => setActivePHBidTab(tab)}
-                      className={`flex-1 py-1.5 text-[10px] font-bold transition-all ${
-                        activePHBidTab === tab 
-                          ? "bg-primary text-white" 
-                          : "bg-secondary text-muted-foreground hover:text-white"
-                      }`}
-                    >
-                      PH {tab}
-                    </button>
-                  ))}
-                </div>
+                {/* Visual Flow diagram */}
+                <div className="border border-border/60 bg-secondary/10 rounded-lg p-6 space-y-8 max-w-2xl mx-auto text-center font-sans">
+                  {/* Row 1 */}
+                  <div>
+                    <div className="inline-block bg-primary/20 border border-primary/40 text-primary-glow text-xs px-4 py-2 rounded-md font-bold uppercase tracking-wider">
+                      Brand Sponsor
+                    </div>
+                    <div className="flex justify-center py-2">
+                      <ArrowDown size={14} className="text-muted-foreground" />
+                    </div>
+                    <div className="inline-block bg-slate-900 border border-border text-white text-xs px-5 py-2.5 rounded-md font-bold uppercase tracking-widest font-mono">
+                      BPL (League Operator)
+                    </div>
+                  </div>
 
-                {/* Tab content */}
+                  {/* Flow Splits */}
+                  <div className="grid grid-cols-3 gap-2 max-w-md mx-auto relative">
+                    <div className="border-l border-t border-border/80 h-6 absolute left-[16.6%] right-[50%] top-0"></div>
+                    <div className="border-r border-t border-border/80 h-6 absolute left-[50%] right-[16.6%] top-0"></div>
+                    <div className="border-l border-border/80 h-6 absolute left-[50%] top-0"></div>
+                  </div>
+
+                  <div className="grid grid-cols-3 gap-3 max-w-lg mx-auto text-[10px] font-semibold text-muted-foreground">
+                    <div className="p-2 border border-border bg-secondary/20 rounded">
+                      <p className="text-white">Event Manager</p>
+                      <span className="text-[8px] text-primary-glow font-mono">(On-ground Ops)</span>
+                    </div>
+                    <div className="p-2 border border-border bg-secondary/20 rounded">
+                      <p className="text-white">Venue Rental</p>
+                      <span className="text-[8px] text-primary-glow font-mono">(Cafe / College)</span>
+                    </div>
+                    <div className="p-2 border border-border bg-secondary/20 rounded">
+                      <p className="text-white">Prize Pool</p>
+                      <span className="text-[8px] text-primary-glow font-mono">(Operations)</span>
+                    </div>
+                  </div>
+
+                  <div className="flex justify-center py-2">
+                    <ArrowDown size={14} className="text-muted-foreground animate-bounce" />
+                  </div>
+
+                  <div className="inline-block bg-primary/10 border border-primary/30 text-white text-xs px-5 py-3 rounded-lg font-bold uppercase tracking-wider">
+                    🏆 LIVE MATCH EVENT 🏆
+                  </div>
+
+                  <div className="flex justify-center py-2">
+                    <ArrowDown size={14} className="text-muted-foreground rotate-180" />
+                  </div>
+
+                  {/* Production House Inputs */}
+                  <div className="border-t border-dashed border-border/60 pt-6">
+                    <div className="inline-block bg-slate-900 border border-border text-white text-xs px-4 py-2 rounded-md font-bold uppercase tracking-wider">
+                      Production House (Investor)
+                    </div>
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-2 mt-4 max-w-md mx-auto text-[9px] text-muted-foreground">
+                      <div className="p-1.5 border border-border/50 rounded bg-secondary/10">🎸 Band Co-Production</div>
+                      <div className="p-1.5 border border-border/50 rounded bg-secondary/10">🎥 Media Partners</div>
+                      <div className="p-1.5 border border-border/50 rounded bg-secondary/10">📢 Local Community</div>
+                      <div className="p-1.5 border border-border/50 rounded bg-secondary/10">🤳 Influencer Promos</div>
+                      <div className="p-1.5 border border-border/50 rounded bg-secondary/10">🎓 Campus Promoters</div>
+                      <div className="p-1.5 border border-border/50 rounded bg-secondary/10">💿 Distro Partners</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* SECTION 1: LEAGUE STRUCTURE & SECRET BIDDING (Detailed flowchart content) */}
+          <div className="bpl-card p-6 md:p-8 space-y-8 text-left">
+            <div className="border-b border-border/65 pb-5">
+              <span className="text-[10px] font-bold text-primary-glow bg-primary/10 border border-primary/20 px-2 py-0.5 rounded">PHASE 02</span>
+              <h3 className="text-xl font-display font-bold text-white mt-1.5">2. Bidding & Production House Investment</h3>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
+              {/* Box A: Sealed Bidding */}
+              <div className="space-y-4">
+                <h4 className="text-sm font-bold text-white uppercase tracking-wider">The Sealed Bidding Process</h4>
+                <p className="text-xs text-muted-foreground leading-relaxed">
+                  BPL releases band profiles, stats, and genre tracks to registered Franchise Investors. Each Production House submits sealed bids detailing their co-production allocations.
+                </p>
                 <div className="space-y-2 text-xs">
-                  <div className="flex justify-between text-[11px] text-muted-foreground border-b border-border/40 pb-1.5">
-                    <span>Quotes by {BIDDING_QUOTES[activePHBidTab].name}:</span>
-                    <span className="text-primary-glow font-bold">Highest Bid Wins the Band</span>
+                  <div className="p-3 border border-border bg-secondary/20 rounded flex justify-between">
+                    <span className="text-muted-foreground">Franchise Investor A winning bid:</span>
+                    <span className="font-mono text-white font-bold">Band 1 (₹8,00,000)</span>
                   </div>
-                  {BIDDING_QUOTES[activePHBidTab].quotes.map((quote, idx) => (
-                    <div key={idx} className="flex justify-between py-1 border-b border-border/20">
-                      <span className="text-muted-foreground">Band {idx + 1} Quote:</span>
-                      <span className="font-mono text-white font-bold">{quote}</span>
-                    </div>
-                  ))}
-                  <div className="pt-2 text-[10px] text-primary-glow font-bold flex items-center gap-1.5">
-                    <Info size={12} />
-                    <span>Projected Auction Win: {BIDDING_QUOTES[activePHBidTab].wins}</span>
+                  <div className="p-3 border border-border bg-secondary/20 rounded flex justify-between">
+                    <span className="text-muted-foreground">Franchise Investor B winning bid:</span>
+                    <span className="font-mono text-white font-bold">Band 2 (₹8,50,000)</span>
+                  </div>
+                  <div className="p-3 border border-border bg-secondary/20 rounded flex justify-between">
+                    <span className="text-muted-foreground">Franchise Investor C winning bid:</span>
+                    <span className="font-mono text-white font-bold">Band 3 (₹9,00,000)</span>
+                  </div>
+                  <div className="p-3 border border-border bg-secondary/20 rounded flex justify-between">
+                    <span className="text-muted-foreground">Franchise Investor D winning bid:</span>
+                    <span className="font-mono text-white font-bold">Band 4 (₹8,00,000)</span>
                   </div>
                 </div>
               </div>
 
-              {/* Bidding Arrow 2 */}
-              <div className="lg:col-span-1 flex lg:flex-col justify-center items-center gap-1 py-2">
-                <div className="h-0.5 lg:h-12 w-8 lg:w-0.5 bg-gradient-to-r lg:bg-gradient-to-b from-primary/80 to-transparent" />
-                <ArrowRight size={14} className="text-primary-glow shrink-0 hidden lg:block" />
-                <ArrowDown size={14} className="text-primary-glow shrink-0 lg:hidden" />
-                <div className="h-0.5 lg:h-12 w-8 lg:w-0.5 bg-gradient-to-l lg:bg-gradient-to-t from-primary/80 to-transparent" />
-              </div>
-
-              {/* Winners Grid */}
-              <div className="lg:col-span-2 space-y-3">
-                <p className="text-xs uppercase tracking-wider font-bold text-muted-foreground">Auction Winners</p>
-                <div className="space-y-2 text-left">
-                  {[
-                    ["Band 1", "PH A", "₹8,00,000"],
-                    ["Band 2", "PH B", "₹8,50,000"],
-                    ["Band 3", "PH C", "₹9,00,000"],
-                    ["Band 4", "PH D", "₹8,00,000"],
-                  ].map(([b, ph, bid]) => (
-                    <div key={b} className="p-2 border border-border bg-secondary/30 rounded flex justify-between items-center">
-                      <div>
-                        <p className="text-xs font-bold text-white">{b}</p>
-                        <p className="text-[9px] text-primary-glow font-semibold mt-0.5">{ph}</p>
-                      </div>
-                      <p className="text-[10px] font-mono font-bold text-muted-foreground">{bid}</p>
-                    </div>
-                  ))}
+              {/* Box B: Production Outsourcing */}
+              <div className="space-y-4">
+                <h4 className="text-sm font-bold text-white uppercase tracking-wider">Production Outsourcing Model</h4>
+                <p className="text-xs text-muted-foreground leading-relaxed">
+                  Winning Production Houses act as the band's financial backer. They are free to execute video production, social media promotions, and campus distributions using their own teams or outsource to BPL-approved ecosystem partners:
+                </p>
+                <div className="grid grid-cols-2 gap-3 text-[10px] text-muted-foreground">
+                  <div className="p-3 border border-border bg-surface/30 rounded-lg">
+                    <span className="font-bold text-white block mb-0.5">Media & Video Partners</span>
+                    Hired to shoot music videos, reels, and BTS aftermovies.
+                  </div>
+                  <div className="p-3 border border-border bg-surface/30 rounded-lg">
+                    <span className="font-bold text-white block mb-0.5">Local Communities</span>
+                    Hired for cafe gig activations and local meetup marketing.
+                  </div>
+                  <div className="p-3 border border-border bg-surface/30 rounded-lg">
+                    <span className="font-bold text-white block mb-0.5">Campus Network</span>
+                    Hired for college promos, ambassadors, and qualifiers.
+                  </div>
+                  <div className="p-3 border border-border bg-surface/30 rounded-lg">
+                    <span className="font-bold text-white block mb-0.5">Third-Party Distro</span>
+                    Hired to release tracks on Spotify, Apple Music, etc.
+                  </div>
                 </div>
               </div>
             </div>
           </div>
 
-          {/* SECTION 2: PRODUCTION HOUSE INVESTMENT & RIGHTS */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            {/* Box A: Investment Allocations */}
-            <div className="bpl-card p-6 md:p-8 space-y-6 text-left">
+          {/* SECTION 4: REVENUE SPLIT GRAPHICS */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 text-left">
+            
+            {/* Live Show Ticket Splits */}
+            <div className="bpl-card p-6 md:p-8 space-y-6">
               <div className="border-b border-border/65 pb-4">
-                <span className="text-[10px] font-bold text-primary-glow bg-primary/10 border border-primary/20 px-2 py-0.5 rounded">PHASE 02</span>
-                <h3 className="text-lg font-display font-bold text-white mt-1">2. Production House Investment</h3>
+                <h3 className="text-lg font-display font-bold text-white">Live Event Ticketing splits</h3>
+                <p className="text-xs text-muted-foreground">Audited event payouts processed immediately after live shows.</p>
               </div>
-              <p className="text-xs text-muted-foreground leading-relaxed">
-                The winning Production House finances the band's catalog production. Budget is divided into two distinct allocations:
-              </p>
 
               <div className="space-y-4">
-                {/* Category 1 */}
-                <div className="flex gap-4 p-4 border border-border/80 bg-secondary/20 rounded-lg">
-                  <div className="h-10 w-10 rounded bg-primary/10 flex items-center justify-center text-primary-glow shrink-0 border border-primary/20">
-                    <Mic size={18} />
-                  </div>
-                  <div className="space-y-1">
-                    <h4 className="text-xs font-bold text-white">Music Production (Studio Sessions)</h4>
-                    <p className="text-[11px] text-muted-foreground leading-relaxed">
-                      Includes recording studio access, instruments & tools, mixing & mastering fees, and digital music distribution setups.
-                    </p>
-                  </div>
+                <div className="flex justify-between items-center text-xs">
+                  <span className="font-bold text-white flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-primary block"></span> Bands / Solo Artists</span>
+                  <span className="font-mono text-primary-glow font-bold">40% Share</span>
+                </div>
+                <div className="w-full bg-secondary h-2.5 rounded-full overflow-hidden">
+                  <div className="bg-primary h-full rounded-full" style={{ width: "40%" }}></div>
                 </div>
 
-                {/* Category 2 */}
-                <div className="flex gap-4 p-4 border border-border/80 bg-secondary/20 rounded-lg">
-                  <div className="h-10 w-10 rounded bg-primary/10 flex items-center justify-center text-primary-glow shrink-0 border border-primary/20">
-                    <Camera size={18} />
-                  </div>
-                  <div className="space-y-1">
-                    <h4 className="text-xs font-bold text-white">Video Production (Music Video shoot)</h4>
-                    <p className="text-[11px] text-muted-foreground leading-relaxed">
-                      Includes storyboard conception, video shooting equipment, professional post-production editing, reels, and BTS content creation.
-                    </p>
-                  </div>
+                <div className="flex justify-between items-center text-xs">
+                  <span className="font-bold text-white flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-teal-400 block"></span> Event Management (Title Sponsor)</span>
+                  <span className="font-mono text-teal-400 font-bold">40% Share</span>
+                </div>
+                <div className="w-full bg-secondary h-2.5 rounded-full overflow-hidden">
+                  <div className="bg-teal-400 h-full rounded-full" style={{ width: "40%" }}></div>
+                </div>
+
+                <div className="flex justify-between items-center text-xs">
+                  <span className="font-bold text-white flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-amber-400 block"></span> BPL League Operator</span>
+                  <span className="font-mono text-amber-400 font-bold">20% Share</span>
+                </div>
+                <div className="w-full bg-secondary h-2.5 rounded-full overflow-hidden">
+                  <div className="bg-amber-400 h-full rounded-full" style={{ width: "20%" }}></div>
                 </div>
               </div>
             </div>
 
-            {/* Box B: Winner Rights Ownership */}
-            <div className="bpl-card p-6 md:p-8 space-y-6 text-left">
+            {/* Digital Content Royalty Splits */}
+            <div className="bpl-card p-6 md:p-8 space-y-6">
               <div className="border-b border-border/65 pb-4">
-                <span className="text-[10px] font-bold text-primary-glow bg-primary/10 border border-primary/20 px-2 py-0.5 rounded">BENEFITS</span>
-                <h3 className="text-lg font-display font-bold text-white mt-1">Rights Ownership & ROI</h3>
+                <h3 className="text-lg font-display font-bold text-white">Digital Content Payouts</h3>
+                <p className="text-xs text-muted-foreground">Long-term IP royalties earned from audio releases, YT views, and sponsorships.</p>
               </div>
-              <p className="text-xs text-muted-foreground leading-relaxed">
-                In exchange for the catalog production investment, the winning production house secures shared rights ownership:
-              </p>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {/* Rights 1 */}
-                <div className="p-4 border border-border bg-surface/30 rounded-lg space-y-2">
-                  <h4 className="text-xs font-bold text-primary-glow">1. Audio Rights (50%)</h4>
-                  <ul className="text-[10px] text-muted-foreground space-y-1 list-disc list-inside">
-                    <li>Music Distribution</li>
-                    <li>Streaming Platforms</li>
-                    <li>Publishing rights</li>
-                  </ul>
+              <div className="space-y-4">
+                <div className="flex justify-between items-center text-xs">
+                  <span className="font-bold text-white flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-primary block"></span> Bands / Solo Artists</span>
+                  <span className="font-mono text-primary-glow font-bold">50% Share</span>
+                </div>
+                <div className="w-full bg-secondary h-2.5 rounded-full overflow-hidden">
+                  <div className="bg-primary h-full rounded-full" style={{ width: "50%" }}></div>
                 </div>
 
-                {/* Rights 2 */}
-                <div className="p-4 border border-border bg-surface/30 rounded-lg space-y-2">
-                  <h4 className="text-xs font-bold text-primary-glow">2. Video Rights (50%)</h4>
-                  <ul className="text-[10px] text-muted-foreground space-y-1 list-disc list-inside">
-                    <li>YouTube monetization</li>
-                    <li>Brand collaborations</li>
-                    <li>Sync licensing</li>
-                  </ul>
+                <div className="flex justify-between items-center text-xs">
+                  <span className="font-bold text-white flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-teal-400 block"></span> Production House (Franchise Investor)</span>
+                  <span className="font-mono text-teal-400 font-bold">50% Share</span>
+                </div>
+                <div className="w-full bg-secondary h-2.5 rounded-full overflow-hidden">
+                  <div className="bg-teal-400 h-full rounded-full" style={{ width: "50%" }}></div>
                 </div>
               </div>
 
-              {/* ROI Summary */}
-              <div className="p-4 border border-primary/20 bg-primary/5 rounded-lg flex items-center gap-3">
-                <TrendingUp size={20} className="text-primary-glow shrink-0" />
-                <div>
-                  <h4 className="text-xs font-bold text-white">Ecosystem Returns Model</h4>
-                  <p className="text-[10px] text-muted-foreground leading-relaxed mt-0.5">
-                    Secures 50% of audio/video digital content revenues + 40% of live gig payouts generated by the band.
-                  </p>
-                </div>
+              <div className="text-[10px] text-muted-foreground pt-1.5">
+                * Content royalties are released co-equally (50/50) between the artists and the production house co-investors.
               </div>
             </div>
-          </div>
-
-          {/* SECTION 3: EVENT MANAGEMENT & TICKETING GIG CIRCUIT */}
-          <div className="bpl-card p-6 md:p-8 space-y-8 text-left">
-            <div className="border-b border-border/65 pb-5">
-              <span className="text-[10px] font-bold text-primary-glow bg-primary/10 border border-primary/20 px-2 py-0.5 rounded">PHASE 03</span>
-              <h3 className="text-xl font-display font-bold text-white mt-1.5">3. Live Tour Matchups & Ticket Partner</h3>
-            </div>
-
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-stretch">
-              {/* Box 1: Title Sponsor */}
-              <div className="p-5 border border-border bg-secondary/10 rounded-lg space-y-4 flex flex-col justify-between">
-                <div className="space-y-3">
-                  <div className="flex items-center gap-2">
-                    <Megaphone size={16} className="text-primary-glow" />
-                    <h4 className="text-xs font-bold text-white uppercase tracking-wider">Event Management (Title Sponsor)</h4>
-                  </div>
-                  <p className="text-[11px] text-muted-foreground leading-relaxed">
-                    Sponsors fund localized logistics, college qualifiers, stage operations, marketing campaigns, and artist travel expenses.
-                  </p>
-                </div>
-                <ul className="text-[10px] text-muted-foreground space-y-1 border-t border-border/40 pt-3">
-                  <li>• Title Sponsor Branding</li>
-                  <li>• On-ground brand visibility</li>
-                  <li>• 40% Live Ticket Revenue share</li>
-                </ul>
-              </div>
-
-              {/* Box 2: Live Gigs (Match Stadium) */}
-              <div className="p-5 border border-primary/20 bg-primary/5 rounded-lg space-y-4 flex flex-col justify-center text-center">
-                <div className="space-y-2">
-                  <MapPin size={24} className="text-primary-glow mx-auto" />
-                  <h4 className="text-sm font-display font-bold text-white uppercase tracking-wider">LIVE SHOWS & EVENTS</h4>
-                  <p className="text-[11px] text-muted-foreground leading-relaxed max-w-xs mx-auto">
-                    The core matchup stadium. Weekend gig fixtures hosted across 6 partner cafes and rooftops.
-                  </p>
-                </div>
-                <div className="border border-border/60 bg-slate-950/40 rounded py-2 px-3 inline-block mx-auto text-[10px] font-mono text-primary-glow">
-                  Hyderabad Pilot: 24 Matches
-                </div>
-              </div>
-
-              {/* Box 3: Ticket Mediator */}
-              <div className="p-5 border border-border bg-secondary/10 rounded-lg space-y-4 flex flex-col justify-between">
-                <div className="space-y-3">
-                  <div className="flex items-center gap-2">
-                    <Ticket size={16} className="text-primary-glow" />
-                    <h4 className="text-xs font-bold text-white uppercase tracking-wider">Ticket Sales Partner (Growzery)</h4>
-                  </div>
-                  <p className="text-[11px] text-muted-foreground leading-relaxed">
-                    Our digital mediator. Handles all booking widgets, attendee barcode generation, and F&B voucher validation checkouts.
-                  </p>
-                </div>
-                <ul className="text-[10px] text-muted-foreground space-y-1 border-t border-border/40 pt-3">
-                  <li>• Core platforms: Growzery, BMS, District</li>
-                  <li>• commission payout per ticket sold</li>
-                  <li>• Validates the ₹199 F&B entry hook</li>
-                </ul>
-              </div>
-            </div>
-          </div>
-
-          {/* SECTION 4 & 5: REVENUE SHARING MODELS */}
-          <div className="bpl-card p-6 md:p-8 space-y-8 text-left">
-            <div className="border-b border-border/65 pb-5">
-              <span className="text-[10px] font-bold text-primary-glow bg-primary/10 border border-primary/20 px-2 py-0.5 rounded">PHASE 04</span>
-              <h3 className="text-xl font-display font-bold text-white mt-1.5">4. Ecosystem Revenue Sharing Model</h3>
-            </div>
-
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              {/* Event Revenue Split */}
-              <div className="p-5 border border-border bg-secondary/20 rounded-lg space-y-4">
-                <p className="text-xs font-bold text-white uppercase tracking-wider">A. Event Revenue (Ticket Sales)</p>
-                
-                {/* Mini Visual Chart */}
-                <div className="flex items-center gap-3 py-2">
-                  <div className="w-12 h-12 rounded-full border-4 border-primary border-t-amber-400 border-r-teal-400 flex items-center justify-center font-bold text-[10px] text-white font-mono">20%</div>
-                  <div className="text-[10px] text-muted-foreground space-y-0.5">
-                    <div className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-primary block"></span> Artists (40%)</div>
-                    <div className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-teal-400 block"></span> Title Sponsor (40%)</div>
-                    <div className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-amber-400 block"></span> BPL Operator (20%)</div>
-                  </div>
-                </div>
-
-                <p className="text-[11px] text-muted-foreground leading-relaxed border-t border-border/30 pt-3">
-                  Ticketing payouts from gig passes are split transparently directly after show verification.
-                </p>
-              </div>
-
-              {/* Audio Revenue Split */}
-              <div className="p-5 border border-border bg-secondary/20 rounded-lg space-y-4">
-                <p className="text-xs font-bold text-white uppercase tracking-wider">B. Audio Revenue (YT, Streaming)</p>
-                
-                {/* Mini Visual Chart */}
-                <div className="flex items-center gap-3 py-2">
-                  <div className="w-12 h-12 rounded-full border-4 border-primary border-r-teal-400 flex items-center justify-center font-bold text-[10px] text-white font-mono">50%</div>
-                  <div className="text-[10px] text-muted-foreground space-y-0.5">
-                    <div className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-primary block"></span> Artists (50%)</div>
-                    <div className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-teal-400 block"></span> Production House (50%)</div>
-                  </div>
-                </div>
-
-                <p className="text-[11px] text-muted-foreground leading-relaxed border-t border-border/30 pt-3">
-                  Revenues from Spotify, Apple Music, Gaana, Wynk, and Kavi Audio digital streaming platforms.
-                </p>
-              </div>
-
-              {/* Video Revenue Split */}
-              <div className="p-5 border border-border bg-secondary/20 rounded-lg space-y-4">
-                <p className="text-xs font-bold text-white uppercase tracking-wider">C. Video & Sync Revenue</p>
-                
-                {/* Mini Visual Chart */}
-                <div className="flex items-center gap-3 py-2">
-                  <div className="w-12 h-12 rounded-full border-4 border-primary border-r-teal-400 flex items-center justify-center font-bold text-[10px] text-white font-mono">50%</div>
-                  <div className="text-[10px] text-muted-foreground space-y-0.5">
-                    <div className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-primary block"></span> Artists (50%)</div>
-                    <div className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-teal-400 block"></span> Production House (50%)</div>
-                  </div>
-                </div>
-
-                <p className="text-[11px] text-muted-foreground leading-relaxed border-t border-border/30 pt-3">
-                  Revenues from YouTube Ads, Instagram deals, brand collabs, sync licensing placements, and OTT platforms.
-                </p>
-              </div>
-            </div>
-
-            {/* Audio Release Partner */}
-            <div className="p-4 border border-border bg-surface/30 rounded-lg flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-              <div className="flex items-center gap-3">
-                <div className="h-9 w-9 rounded-md bg-secondary border border-border flex items-center justify-center text-primary-glow">
-                  <Mic size={16} />
-                </div>
-                <div>
-                  <h4 className="text-xs font-bold text-white">Audio Release Platform Partner: Kavi Audio</h4>
-                  <p className="text-[10px] text-muted-foreground">Exclusivity release window partner for BPL original tracks.</p>
-                </div>
-              </div>
-              <span className="text-[9px] bg-primary/20 text-primary-glow border border-primary/30 px-2 py-0.5 rounded font-mono font-bold uppercase shrink-0">DIGITAL RELEASE</span>
-            </div>
-          </div>
-
-          {/* SECTION 6: KEY ECOSYSTEM PARTNERS (SUPPORT SYSTEM) */}
-          <div className="bpl-card p-6 md:p-8 space-y-6 text-left">
-            <div className="border-b border-border/65 pb-4">
-              <span className="text-[10px] font-bold text-primary-glow bg-primary/10 border border-primary/20 px-2 py-0.5 rounded">SUPPORT</span>
-              <h3 className="text-lg font-display font-bold text-white mt-1">5. Key Ecosystem Partners & Support System</h3>
-            </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-              {[
-                ["Student Tribe", "Campus Promoters", "Connects colleges, student ambassadors, Qualifiers, and crowd mobilization."],
-                ["Communitie.in", "Cafes & Gatherers", "Cafe tie-ups, local community activations, cafe gig partnerships, local promoter marketing."],
-                ["Flashoot", "Video Bloggers", "Behind the Scenes coverage, reels, short-form vlogs, and match promo filming."],
-                ["Social Media", "City Influencers", "Instagram pages, local influencer reviews, trends, and content campaign pushes."],
-                ["Event Managers", "Local Coordinators", "On-ground support, venue bookings, production management, and rental contracts."],
-              ].map(([t, sub, desc], idx) => (
-                <div key={idx} className="p-4 border border-border bg-secondary/20 rounded-lg space-y-2 flex flex-col justify-between">
-                  <div className="space-y-1">
-                    <h4 className="text-xs font-bold text-white">{t}</h4>
-                    <p className="text-[9px] text-primary-glow font-bold uppercase tracking-wider">{sub}</p>
-                    <p className="text-[10px] text-muted-foreground leading-normal pt-1.5">{desc}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* SECTION 7, 8 & 9: CASH FLOW & PILOT ROADMAP */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            
-            {/* Cash Flow Summary */}
-            <div className="bpl-card p-6 md:p-8 space-y-5 text-left flex flex-col justify-between">
-              <div>
-                <div className="border-b border-border/65 pb-3.5">
-                  <span className="text-[10px] font-bold text-primary-glow bg-primary/10 border border-primary/20 px-2 py-0.5 rounded">BUDGETS</span>
-                  <h3 className="text-base font-display font-bold text-white mt-1">6. Cash Flow Projections (Example)</h3>
-                </div>
-                <div className="space-y-3.5 text-[11px] pt-4">
-                  <div>
-                    <div className="flex justify-between font-bold text-white">
-                      <span>Production House Bid (Winner)</span>
-                      <span className="font-mono text-primary-glow">₹5,20,000</span>
-                    </div>
-                    <div className="flex justify-between text-muted-foreground pl-3 text-[10px] mt-0.5">
-                      <span>• Music Production Allocation</span>
-                      <span className="font-mono">₹2,50,000</span>
-                    </div>
-                    <div className="flex justify-between text-muted-foreground pl-3 text-[10px]">
-                      <span>• Video Production Allocation</span>
-                      <span className="font-mono">₹2,70,000</span>
-                    </div>
-                  </div>
-
-                  <div>
-                    <div className="flex justify-between font-bold text-white">
-                      <span>Event Sponsor Budget</span>
-                      <span className="font-mono text-primary-glow">₹3,00,000</span>
-                    </div>
-                    <div className="flex justify-between text-muted-foreground pl-3 text-[10px] mt-0.5">
-                      <span>• Marketing & Publicity</span>
-                      <span className="font-mono">₹2,00,000</span>
-                    </div>
-                    <div className="flex justify-between text-muted-foreground pl-3 text-[10px]">
-                      <span>• Travel & Logistics</span>
-                      <span className="font-mono">₹1,00,000</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div className="border-t border-border pt-4 mt-4 flex justify-between items-center">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Total Pilot Budget</span>
-                <span className="text-sm font-mono font-bold text-white">₹8,20,000</span>
-              </div>
-            </div>
-
-            {/* Return Flow Summary */}
-            <div className="bpl-card p-6 md:p-8 space-y-5 text-left flex flex-col justify-between">
-              <div>
-                <div className="border-b border-border/65 pb-3.5">
-                  <span className="text-[10px] font-bold text-primary-glow bg-primary/10 border border-primary/20 px-2 py-0.5 rounded">RETURNS</span>
-                  <h3 className="text-base font-display font-bold text-white mt-1">7. Return Flow Payout Structure</h3>
-                </div>
-                <div className="space-y-4 pt-4 text-xs">
-                  <div className="space-y-1">
-                    <h4 className="text-[11px] font-bold text-white">A. Event Revenue Payouts</h4>
-                    <p className="text-[10px] text-muted-foreground">
-                      Ticket revenues per show: Artists receive 40%, Title Sponsor 40%, and BPL Operator retains 20%.
-                    </p>
-                  </div>
-                  <div className="space-y-1">
-                    <h4 className="text-[11px] font-bold text-white">B. Digital Content Royalties</h4>
-                    <p className="text-[10px] text-muted-foreground">
-                      Audio streams, YouTube Ads, brand sponsorships, and sync license rights are split 50% Artist / 50% Production House.
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="border-t border-border pt-4 mt-4 text-[9px] uppercase tracking-wider font-bold text-primary-glow">
-                * Fully documented & audited splits
-              </div>
-            </div>
-
-            {/* League Growth Plan */}
-            <div className="bpl-card p-6 md:p-8 space-y-5 text-left flex flex-col justify-between">
-              <div>
-                <div className="border-b border-border/65 pb-3.5">
-                  <span className="text-[10px] font-bold text-primary-glow bg-primary/10 border border-primary/20 px-2 py-0.5 rounded">ROADMAP</span>
-                  <h3 className="text-base font-display font-bold text-white mt-1">8. League Growth Plan</h3>
-                </div>
-                <ul className="space-y-2 text-[10px] text-muted-foreground pt-4 list-decimal list-inside leading-relaxed">
-                  <li><strong className="text-white">Hyderabad Pilot:</strong> Validate 4 bands & 4 production houses.</li>
-                  <li><strong className="text-white">Multi-City Expansion:</strong> Launch events across Bangalore, Mumbai, and Delhi.</li>
-                  <li><strong className="text-white">Campus Integrations:</strong> Run qualifiers in college campuses.</li>
-                  <li><strong className="text-white">Digital Scaling:</strong> License BPL tracks to OTT platforms and video games.</li>
-                  <li><strong className="text-white">Original IP:</strong> Build long-term catalogs, rights, and merch value.</li>
-                </ul>
-              </div>
-
-              <div className="border-t border-border pt-4 mt-4 text-[9px] uppercase tracking-wider font-bold text-muted-foreground">
-                Phase 1 Pilot Validations
-              </div>
-            </div>
-
           </div>
 
           {/* Connective Footer Pipeline */}
@@ -655,19 +561,5 @@ function JoinHubPage() {
         </div>
       </section>
     </PageShell>
-  );
-}
-
-function ArrowRightIcon(props: React.SVGProps<SVGSVGElement>) {
-  return (
-    <svg 
-      fill="none" 
-      viewBox="0 0 24 24" 
-      strokeWidth={2.5} 
-      stroke="currentColor" 
-      {...props}
-    >
-      <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
-    </svg>
   );
 }

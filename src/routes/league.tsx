@@ -20,7 +20,7 @@ export const Route = createFileRoute("/league")({
       {
         name: "description",
         content:
-          "How BPL runs. Seasons, formats, cities and the 50/30/20 revenue splits powering the indie music ecosystem.",
+          "How BPL runs. Seasons, formats, cities and the 40/40/20 revenue splits powering the indie music ecosystem.",
       },
       { property: "og:title", content: "The League & Business Model — BPL" },
       { property: "og:description", content: "How the Bharat Premier League runs across India." },
@@ -71,9 +71,9 @@ function LeaguePage() {
           
           <div className="text-center max-w-2xl mx-auto space-y-3">
             <p className="text-xs uppercase tracking-widest text-primary-glow font-bold">The Business Engine</p>
-            <h2 className="text-3xl md:text-4xl font-display font-bold text-white">How the Ecosystem Model Works</h2>
+            <h2 className="text-3xl md:text-4xl font-display font-bold text-white">How BPL Payouts Work</h2>
             <p className="text-xs text-muted-foreground leading-relaxed">
-              BPL shifts the music industry from sporadic promoter bookings to a franchise-backed sports league model. We enforce a transparent **50/30/20 revenue split** to ensure sustainable growth.
+              BPL acts as an asset-light coordinator. We enforce a transparent **40/40/20 event payout structure** and a **50/50 digital content royalty split** to align investor and artist incentives.
             </p>
           </div>
 
@@ -83,18 +83,18 @@ function LeaguePage() {
             <div className="bpl-card p-8 flex flex-col justify-between text-left space-y-6">
               <div className="space-y-4">
                 <div className="h-12 w-12 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center text-primary-glow">
-                  <Percent size={22} />
+                  <Music size={22} />
                 </div>
                 <div>
-                  <h3 className="text-4xl font-display font-bold text-white">50% Share</h3>
-                  <p className="text-sm font-bold text-primary-glow mt-1">Direct to Bands</p>
+                  <h3 className="text-4xl font-display font-bold text-white">40% Share</h3>
+                  <p className="text-sm font-bold text-primary-glow mt-1">To Artists (Live Events)</p>
                 </div>
                 <p className="text-xs text-muted-foreground leading-relaxed">
-                  Bands receive a direct 50% split of ticket and pass sales. This matches them with recurring performance revenues, supported by franchise sponsors and production-house capital.
+                  Bands receive a direct 40% split of ticket pass sales per show. They also retain a 50% share of all digital music stream and video monetization royalties.
                 </p>
               </div>
               <div className="border-t border-border pt-4">
-                <span className="text-[10px] uppercase font-bold text-muted-foreground">Ecosystem Value: Live IP Retention</span>
+                <span className="text-[10px] uppercase font-bold text-muted-foreground">Ecosystem Value: Artist Livelihood</span>
               </div>
             </div>
 
@@ -102,18 +102,18 @@ function LeaguePage() {
             <div className="bpl-card p-8 flex flex-col justify-between text-left space-y-6">
               <div className="space-y-4">
                 <div className="h-12 w-12 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center text-primary-glow">
-                  <Building2 size={22} />
+                  <Megaphone size={22} />
                 </div>
                 <div>
-                  <h3 className="text-4xl font-display font-bold text-white">30% Share</h3>
-                  <p className="text-sm font-bold text-primary-glow mt-1">To Partner Venues</p>
+                  <h3 className="text-4xl font-display font-bold text-white">40% Share</h3>
+                  <p className="text-sm font-bold text-primary-glow mt-1">To Event Management / Sponsor</p>
                 </div>
                 <p className="text-xs text-muted-foreground leading-relaxed">
-                  Venues/Cafes receive a 30% ticket split to offset setup expenses. More importantly, BPL's ₹199 pass drives massive footfall, dramatically amplifying the venue's core Food & Beverage (F&B) sales.
+                  Event management partners or sponsors receive a 40% ticketing split to handle show production, stage equipment setups, and on-ground logistics.
                 </p>
               </div>
               <div className="border-t border-border pt-4">
-                <span className="text-[10px] uppercase font-bold text-muted-foreground">Ecosystem Value: Stadium Infrastructure</span>
+                <span className="text-[10px] uppercase font-bold text-muted-foreground">Ecosystem Value: Infrastructure Sponsor</span>
               </div>
             </div>
 
@@ -121,14 +121,14 @@ function LeaguePage() {
             <div className="bpl-card p-8 flex flex-col justify-between text-left space-y-6">
               <div className="space-y-4">
                 <div className="h-12 w-12 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center text-primary-glow">
-                  <Tv size={22} />
+                  <Percent size={22} />
                 </div>
                 <div>
                   <h3 className="text-4xl font-display font-bold text-white">20% Share</h3>
-                  <p className="text-sm font-bold text-primary-glow mt-1">To BPL Network</p>
+                  <p className="text-sm font-bold text-primary-glow mt-1">To BPL League Operator</p>
                 </div>
                 <p className="text-xs text-muted-foreground leading-relaxed">
-                  BPL retains 20% of ticketing, streaming rights splits, and franchise licensing fees. This capital manages the scoring software, marketing curation, and city qualifying stages.
+                  BPL retains 20% of ticket pass sales. This commission covers scoring software curation, qualifying auditions management, and platform scaling.
                 </p>
               </div>
               <div className="border-t border-border pt-4">
@@ -235,7 +235,7 @@ function LeaguePage() {
                 <span>Verification Path</span>
               </div>
               <p className="text-[10px] text-muted-foreground leading-normal">
-                This Hyderabad proof-of-concept serves as our seed pitch metrics. It replaces nationwide assumptions with validated, local operational benchmarks to de-risk our later 12-city roll-out.
+                This Hyderabad proof-of-concept serves as our seed pitch metrics. It replaces nationwide assumptions with validated, local operational operational benchmarks.
               </p>
             </div>
           </div>
