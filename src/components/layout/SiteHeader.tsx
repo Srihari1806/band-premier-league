@@ -11,6 +11,8 @@ const NAV = [
   { to: "/bands", label: "Bands" },
   { to: "/events", label: "Events" },
   { to: "/venues", label: "Venues" },
+  { to: "/about", label: "About" },
+  { to: "/community", label: "Community" },
 ] as const;
 
 export function SiteHeader() {

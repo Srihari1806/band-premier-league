@@ -22,7 +22,7 @@ export function SiteFooter() {
             ["Events", "/events"],
             ["Bands", "/bands"],
             ["Venues", "/venues"],
-            ["Resources", "/league"],
+            ["League", "/league"],
           ]}
         />
         
