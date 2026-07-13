@@ -7,8 +7,8 @@ import { db } from "@/lib/db";
 export const Route = createFileRoute("/join/sponsor")({
   head: () => ({
     meta: [
-      { title: "Sponsor League Stages — BPL" },
-      { name: "description", content: "Sponsor franchises, venues, stages, or match broadcasts in the BPL." },
+      { title: "Sponsor Events — Kalakshetra" },
+      { name: "description", content: "Sponsor events, venues, stages, or streams in Kalakshetra." },
     ],
   }),
   component: SponsorOnboardingPage,
@@ -78,7 +78,7 @@ function SponsorOnboardingPage() {
             <div className="space-y-2">
               <h1 className="text-3xl sm:text-4xl font-display font-bold">Proposal Received!</h1>
               <p className="text-muted-foreground max-w-md mx-auto text-sm leading-relaxed">
-                Thank you for your interest in sponsoring BPL. Our franchise sponsorship board will connect with you soon.
+                Thank you for your interest in sponsoring Kalakshetra. Our sponsorship board will connect with you soon.
               </p>
             </div>
             <div className="pt-2">
@@ -90,7 +90,7 @@ function SponsorOnboardingPage() {
         ) : (
           <div className="space-y-8 animate-fade-in">
             <div className="text-center space-y-2">
-              <p className="text-xs uppercase tracking-widest text-primary-glow font-bold">BPL Onboarding Hub</p>
+              <p className="text-xs uppercase tracking-widest text-primary-glow font-bold">Kalakshetra Onboarding Hub</p>
               <h1 className="text-3xl sm:text-4xl font-display font-bold">Sponsorship Application</h1>
               <p className="text-xs text-muted-foreground max-w-lg mx-auto">
                 Promote your brand across league match broadcasts, regional tours, and university campuses.

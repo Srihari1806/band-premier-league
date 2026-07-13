@@ -484,15 +484,14 @@ function BandOnboardingPage() {
             {/* Review Stages Timeline */}
             <div className="max-w-md mx-auto bg-surface/50 border border-border p-6 rounded-lg text-left space-y-4">
               {[
-                { label: "Application Submitted", desc: "Your files have been saved to the BPL registry.", done: true },
-                { label: "Verification", desc: "BPL staff checks links and contact credentials.", done: false },
-                { label: "Curator Review", desc: "Music curators evaluate bio, music links, and demo tracks.", done: false },
-                { label: "Interview (If required)", desc: "A brief virtual chat to align on league match rules.", done: false },
-                { label: "League Approval", desc: "BPL operations team formally signs off on registry entry.", done: false },
-                { label: "Official Registration", desc: "BPL ID created and profile published live on the directory.", done: false },
+                { label: "Application Submitted", desc: "Your files have been saved to the Kalakshetra registry.", done: true },
+                { label: "Verification", desc: "Kalakshetra staff checks links and contact credentials.", done: false },
+                { label: "Evaluation & Selection", desc: "Review of musical style, demo performance video and bio details.", done: false },
+                { label: "League Approval", desc: "Kalakshetra operations team formally signs off on registry entry.", done: false },
+                { label: "Official Registration", desc: "Kalakshetra ID created and profile published live on the directory.", done: false },
               ].map((stage, idx) => (
                 <div key={stage.label} className="flex gap-4 relative">
-                  {idx < 5 && (
+                  {idx < 4 && (
                     <div className="absolute left-[11px] top-6 w-[2px] h-[calc(100%-8px)] bg-border" />
                   )}
                   <div className={`h-6 w-6 rounded-full shrink-0 border flex items-center justify-center text-xs font-semibold ${
@@ -524,7 +523,7 @@ function BandOnboardingPage() {
             
             {/* Header */}
             <div className="text-center space-y-2 relative">
-              <p className="text-xs uppercase tracking-widest text-primary-glow font-bold">BPL Onboarding Hub</p>
+              <p className="text-xs uppercase tracking-widest text-primary-glow font-bold">Kalakshetra Onboarding Hub</p>
               <h1 className="text-3xl sm:text-4xl font-display font-bold">
                 {isSolo ? "Solo Artist" : "Band"} Onboarding
               </h1>
@@ -1391,7 +1390,7 @@ function BandOnboardingPage() {
                   <div className="bpl-card p-6 space-y-4">
                     <div>
                       <h2 className="font-display font-semibold text-lg text-primary-glow">Contact Details (Private)</h2>
-                      <p className="text-xs text-muted-foreground mt-0.5">This information is only visible to BPL staff curators.</p>
+                      <p className="text-xs text-muted-foreground mt-0.5">This information is only visible to Kalakshetra staff curators.</p>
                     </div>
                     <div className="border-b border-border" />
 
@@ -1463,7 +1462,7 @@ function BandOnboardingPage() {
                           className="mt-1 h-4 w-4 border-border rounded bg-secondary text-primary focus:ring-primary cursor-pointer"
                         />
                         <label htmlFor="terms" className="text-xs text-muted-foreground leading-normal select-none cursor-pointer">
-                          I agree to BPL's league evaluation rules. I understand that submitting does not guarantee catalog registration and is subject to curation review.
+                          I agree to Kalakshetra's evaluation rules. I understand that submitting does not guarantee catalog registration and is subject to curation review.
                         </label>
                       </div>
                       {errors.terms && <p className="text-red-500 text-xs flex items-center gap-1"><AlertCircle size={12} /> {errors.terms}</p>}

@@ -30,7 +30,7 @@ import {
 export const Route = createFileRoute("/join/")({
   head: () => ({
     meta: [
-      { title: "Join BPL — Onboarding Hub" },
+      { title: "Join Kalakshetra — Onboarding Hub" },
       { name: "description", content: "Join India's First Franchise Music League. Choose your role: Artist, Venue, Sponsor, Production House, Volunteer, or Manager." },
     ],
   }),
@@ -55,7 +55,7 @@ const ROLES = [
   },
   {
     title: "Venue / Cafe",
-    description: "Partner with BPL to host live matches and tour gigs.",
+    description: "Partner with Kalakshetra to host live matches and tour gigs.",
     to: "/join/venue",
     icon: Building2,
   },
@@ -114,7 +114,7 @@ function JoinHubPage() {
             Join India's First Franchise Music League
           </h1>
           <p className="mt-4 text-base md:text-lg text-muted-foreground max-w-2xl mx-auto leading-relaxed">
-            Choose how you want to become part of the BPL ecosystem. Select a role below to start your application process.
+            Choose how you want to become part of the Kalakshetra ecosystem. Select a role below to start your application process.
           </p>
         </div>
       </section>
@@ -166,9 +166,9 @@ function JoinHubPage() {
           
           <div className="text-center max-w-3xl mx-auto space-y-4">
             <p className="text-xs uppercase tracking-[0.2em] text-primary-glow font-bold">Ecosystem Model</p>
-            <h2 className="text-3xl md:text-5xl font-display font-bold text-white">How BPL Works</h2>
+            <h2 className="text-3xl md:text-5xl font-display font-bold text-white">How Kalakshetra Works</h2>
             <p className="text-xs md:text-sm text-muted-foreground leading-relaxed max-w-xl mx-auto">
-              BPL operates as an asset-light orchestration platform. We create demand, set rules, and coordinate stakeholders, while specialized partners provide venue operations, production, and marketing.
+              Kalakshetra operates as an asset-light orchestration platform. We create demand, set rules, and coordinate stakeholders, while specialized partners provide venue operations, production, and marketing.
             </p>
           </div>
 
@@ -176,7 +176,7 @@ function JoinHubPage() {
           <div className="max-w-4xl mx-auto space-y-6">
             <div className="flex flex-wrap border border-border rounded-lg overflow-hidden bg-secondary/20">
               {[
-                { id: "comparison", label: "IPL vs BPL Model", icon: Layers },
+                { id: "comparison", label: "IPL vs Raaga of Kurukshetra Model", icon: Layers },
                 { id: "matrix", label: "Who Can Hire Whom", icon: Handshake },
                 { id: "venues", label: "Venue Options (A, B, C)", icon: Building2 },
                 { id: "cashflows", label: "Inflows & Outflows", icon: DollarSign },
@@ -204,28 +204,28 @@ function JoinHubPage() {
             {activeExplainTab === "comparison" && (
               <div className="bpl-card p-6 md:p-8 space-y-6 text-left animate-fadeIn">
                 <div className="space-y-1">
-                  <h3 className="text-lg font-display font-bold text-white">IPL vs BPL Comparison Structure</h3>
-                  <p className="text-xs text-muted-foreground">How the BPL franchise music league maps directly onto a professional sports format.</p>
+                  <h3 className="text-lg font-display font-bold text-white">IPL vs Raaga of Kurukshetra Comparison Structure</h3>
+                  <p className="text-xs text-muted-foreground">How the franchise music league maps directly onto a professional sports format.</p>
                 </div>
                 <div className="overflow-x-auto">
                   <table className="w-full text-xs text-left border-collapse">
                     <thead>
                       <tr className="border-b border-border bg-secondary/30">
                         <th className="py-2.5 px-4 font-bold text-primary-glow uppercase tracking-wider">IPL Counterpart</th>
-                        <th className="py-2.5 px-4 font-bold text-primary-glow uppercase tracking-wider">BPL League Role</th>
+                        <th className="py-2.5 px-4 font-bold text-primary-glow uppercase tracking-wider">Raaga of Kurukshetra Role</th>
                         <th className="py-2.5 px-4 font-bold text-muted-foreground uppercase tracking-wider">Core Responsibility</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-border/40">
                       {[
-                        ["BCCI", "BPL (League Operator)", "Sets rules, runs fixtures. Gets sponsorship & ticket commission, spending on league prize pools, operations, and hiring event managers."],
+                        ["BCCI", "Kalakshetra (Operator)", "Sets rules, runs fixtures. Gets sponsorship & ticket commission, spending on league prize pools, operations, and hiring event managers."],
                         ["Franchise Owner", "Production House", "Acts as the artist investor. Decides whether to perform services in-house or outsource. Invests directly in catalog production and band marketing."],
                         ["Players", "Bands / Solo Artists", "The central talent. Retain a 40% live ticket revenue share and a 50% digital IP royalty share."],
-                        ["Stadium", "Venues / Cafés / Colleges", "IPL cricket stadiums require massive upfront rentals. BPL cafés/venues often host for free (for F&B sales) or use hybrid guarantee + share models."],
-                        ["Broadcaster", "YouTube & Audio Platforms", "IPL sells satellite rights centrally. BPL production houses earn major revenues from YT/Spotify. If hit, BPL sells TV 'League War' telecast rights."],
-                        ["Sponsors", "Brand Sponsors", "Provide sponsorship capital. Divided between BPL operators (for prize pool & operations) and event manager logistics funding."],
-                        ["Fan Clubs", "Outsourced Promoters", "Campus & cafe promoter networks hired by BPL or Production Houses to drive ticket sales and local meetups."],
-                        ["Event Operations", "Contracted Event Managers", "Hired & paid directly by BPL Operator (out of BPL's 30% ticket share) to execute matching logistics, stage setup, and security."],
+                        ["Stadium", "Venues / Cafés / Colleges", "IPL cricket stadiums require massive upfront rentals. Kalakshetra cafés/venues often host for free (for F&B sales) or use hybrid guarantee + share models."],
+                        ["Broadcaster", "YouTube & Audio Platforms", "IPL sells satellite rights centrally. Production houses earn major revenues from YT/Spotify. If hit, Kalakshetra sells TV 'Tournament War' telecast rights."],
+                        ["Sponsors", "Brand Sponsors", "Provide sponsorship capital. Divided between operators (for prize pool & operations) and event manager logistics funding."],
+                        ["Fan Clubs", "Outsourced Promoters", "Campus & cafe promoter networks hired by Kalakshetra or Production Houses to drive ticket sales and local meetups."],
+                        ["Event Operations", "Contracted Event Managers", "Hired & paid directly by Kalakshetra Operator (out of the 30% ticket share) to execute matching logistics, stage setup, and security."],
                       ].map(([ipl, bpl, desc], idx) => (
                         <tr key={idx} className="hover:bg-secondary/10">
                           <td className="py-3 px-4 font-bold text-white font-display">{ipl}</td>
@@ -244,22 +244,22 @@ function JoinHubPage() {
               <div className="bpl-card p-6 md:p-8 space-y-6 text-left animate-fadeIn">
                 <div className="space-y-1">
                   <h3 className="text-lg font-display font-bold text-white">Ecosystem Hiring Matrix</h3>
-                  <p className="text-xs text-muted-foreground">Who contracts whom under BPL's decentralized, asset-light model.</p>
+                  <p className="text-xs text-muted-foreground">Who contracts whom under Kalakshetra's decentralized, asset-light model.</p>
                 </div>
                 <div className="overflow-x-auto">
                   <table className="w-full text-xs text-left border-collapse">
                     <thead>
                       <tr className="border-b border-border bg-secondary/30">
                         <th className="py-2.5 px-4 font-bold text-primary-glow uppercase tracking-wider">Ecosystem Service</th>
-                        <th className="py-2.5 px-4 font-bold text-primary-glow text-center uppercase tracking-wider">Hired by BPL</th>
+                        <th className="py-2.5 px-4 font-bold text-primary-glow text-center uppercase tracking-wider">Hired by Kalakshetra</th>
                         <th className="py-2.5 px-4 font-bold text-primary-glow text-center uppercase tracking-wider">Hired by Production House</th>
                         <th className="py-2.5 px-4 font-bold text-muted-foreground uppercase tracking-wider">Operational Context</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-border/40">
                       {[
-                        ["Event Managers", "✅ Primary (Contracted)", "❌ Rare", "BPL contracts managers to operate the league matches cleanly on-site."],
-                        ["Venues / Cafes", "✅ Primary (Booked)", "❌ Rare", "BPL partners directly with cafes to secure local match stadiums."],
+                        ["Event Managers", "✅ Primary (Contracted)", "❌ Rare", "Kalakshetra contracts managers to operate the tour matches cleanly on-site."],
+                        ["Venues / Cafes", "✅ Primary (Booked)", "❌ Rare", "Kalakshetra partners directly with cafes to secure local match stadiums."],
                         ["Media Partners", "Optional", "✅ Primary (Outsourced)", "Production Houses hire videographers for official music videos & shoots."],
                         ["Photographers", "Optional", "✅ Primary (Outsourced)", "Production Houses hire photographers for artist branding campaigns."],
                         ["Influencers", "Optional", "✅ Primary (Outsourced)", "Production Houses pay influencers to promote their drafted bands."],
@@ -285,7 +285,7 @@ function JoinHubPage() {
               <div className="bpl-card p-6 md:p-8 space-y-6 text-left animate-fadeIn">
                 <div className="space-y-1">
                   <h3 className="text-lg font-display font-bold text-white">Cafe / Venue Partnership Models</h3>
-                  <p className="text-xs text-muted-foreground">Cafes provide stages and seating. BPL secures stadium infrastructure under three alignment models.</p>
+                  <p className="text-xs text-muted-foreground">Cafes provide stages and seating. Kalakshetra secures stadium infrastructure under three alignment models.</p>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-2">
                   <div className="p-5 border border-border bg-secondary/10 rounded-lg space-y-3">
@@ -295,7 +295,7 @@ function JoinHubPage() {
                     </div>
                     <h4 className="text-sm font-bold text-white">Flat Venue Rental</h4>
                     <p className="text-xs text-muted-foreground leading-relaxed">
-                      BPL pays a flat, fixed fee to rent the space upfront for the gig night. Cafe retains 100% of Food & Beverage revenues.
+                      Kalakshetra pays a flat, fixed fee to rent the space upfront for the gig night. Cafe retains 100% of Food & Beverage revenues.
                     </p>
                     <div className="pt-2">
                       <p className="text-[10px] font-mono font-bold text-primary-glow">Example: Fixed ₹25,000 / Show</p>
@@ -323,7 +323,7 @@ function JoinHubPage() {
                     </div>
                     <h4 className="text-sm font-bold text-white">Hybrid Guarantee</h4>
                     <p className="text-xs text-muted-foreground leading-relaxed">
-                      De-risks cafe venue hosts while aligning incentives. BPL pays a lower fixed base guarantee combined with a smaller ticket commission.
+                      De-risks cafe venue hosts while aligning incentives. Kalakshetra pays a lower fixed base guarantee combined with a smaller ticket commission.
                     </p>
                     <div className="pt-2">
                       <p className="text-[10px] font-mono font-bold text-primary-glow">Example: ₹15,000 + 10% Ticket sales</p>
@@ -401,11 +401,11 @@ function JoinHubPage() {
                     </div>
                   </div>
 
-                  {/* BPL Operator Column */}
+                  {/* Kalakshetra Operator Column */}
                   <div className="p-5 border border-primary/20 bg-primary/5 rounded-lg space-y-5 flex flex-col justify-between">
                     <div className="space-y-4">
                       <div className="flex justify-between items-center">
-                        <h4 className="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-amber-400 block"></span> BPL League Operator</h4>
+                        <h4 className="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-amber-400 block"></span> Kalakshetra Operator</h4>
                       </div>
                       
                       <div className="space-y-3">
@@ -414,7 +414,7 @@ function JoinHubPage() {
                           <ul className="text-[10px] text-muted-foreground space-y-1 list-disc list-inside">
                             <li>30% Live matchup gate ticket split</li>
                             <li>Brand sponsorships & naming rights</li>
-                            <li>Future TV/OTT telecast rights (League War)</li>
+                            <li>Future TV/OTT telecast rights (Tournament War)</li>
                             <li>Ticketing platform partner commission</li>
                           </ul>
                         </div>
@@ -422,9 +422,9 @@ function JoinHubPage() {
                           <p className="text-[10px] uppercase font-bold text-red-400">💸 Outflows (Investments)</p>
                           <ul className="text-[10px] text-muted-foreground space-y-1 list-disc list-inside">
                             <li>Contracting Event Managers (on-ground ops)</li>
-                            <li>League prize pool & champion awards</li>
+                            <li>Tournament prize pool & champion awards</li>
                             <li>Café hybrid rental base guarantee payouts</li>
-                            <li>League scoring, tech & app maintenance</li>
+                            <li>Tournament scoring, tech & app maintenance</li>
                           </ul>
                         </div>
                       </div>
@@ -454,7 +454,7 @@ function JoinHubPage() {
                       <ArrowDown size={14} className="text-muted-foreground" />
                     </div>
                     <div className="inline-block bg-slate-900 border border-border text-white text-xs px-5 py-2.5 rounded-md font-bold uppercase tracking-widest font-mono">
-                      BPL (League Operator)
+                      Kalakshetra (Operator)
                     </div>
                   </div>
 
@@ -549,7 +549,7 @@ function JoinHubPage() {
               <div className="space-y-4">
                 <h4 className="text-sm font-bold text-white uppercase tracking-wider">Production Outsourcing Model</h4>
                 <p className="text-xs text-muted-foreground leading-relaxed">
-                  Winning Production Houses act as the band's financial backer. They are free to execute video production, social media promotions, and campus distributions using their own teams or outsource to BPL-approved ecosystem partners:
+                  Winning Production Houses act as the band's financial backer. They are free to execute video production, social media promotions, and campus distributions using their own teams or outsource to Kalakshetra-approved ecosystem partners:
                 </p>
                 <div className="grid grid-cols-2 gap-3 text-[10px] text-muted-foreground">
                   <div className="p-3 border border-border bg-surface/30 rounded-lg">
@@ -601,7 +601,7 @@ function JoinHubPage() {
                 </div>
 
                 <div className="flex justify-between items-center text-xs">
-                  <span className="font-bold text-white flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-amber-400 block"></span> BPL League Operator</span>
+                  <span className="font-bold text-white flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-amber-400 block"></span> Kalakshetra Operator</span>
                   <span className="font-mono text-amber-400 font-bold">30% Share</span>
                 </div>
                 <div className="w-full bg-secondary h-2.5 rounded-full overflow-hidden">

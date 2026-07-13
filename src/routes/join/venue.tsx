@@ -20,8 +20,8 @@ import { db } from "@/lib/db";
 export const Route = createFileRoute("/join/venue")({
   head: () => ({
     meta: [
-      { title: "Partner Venue Onboarding — BPL" },
-      { name: "description", content: "Register your venue or cafe as an official BPL live tour partner." },
+      { title: "Partner Venue Onboarding — Kalakshetra" },
+      { name: "description", content: "Register your venue or cafe as an official Kalakshetra live tour partner." },
     ],
   }),
   component: VenueOnboardingPage,
@@ -316,16 +316,16 @@ function VenueOnboardingPage() {
             <div className="space-y-2">
               <h1 className="text-3xl sm:text-4xl font-display font-bold">Venue Application Submitted!</h1>
               <p className="text-muted-foreground max-w-md mx-auto text-sm leading-relaxed">
-                Thank you for applying. BPL Operations team will review your application details.
+                Thank you for applying. Kalakshetra Operations team will review your application details.
               </p>
             </div>
 
             <div className="max-w-md mx-auto bg-surface/50 border border-border p-6 rounded-lg text-left space-y-4">
               {[
-                { label: "Application Received", desc: "Files and photos saved to BPL venue database.", done: true },
+                { label: "Application Received", desc: "Files and photos saved to Kalakshetra venue database.", done: true },
                 { label: "Staff Inspection", desc: "Verifying address, capacity range, and venue specs.", done: false },
                 { label: "Technical Curation", desc: "Verifying sound, lighting system capacity, and riders.", done: false },
-                { label: "League Licensing", desc: "Generating tour partnership agreement and licensing code.", done: false },
+                { label: "Partnership Licensing", desc: "Generating tour partnership agreement and licensing code.", done: false },
               ].map((stage, idx) => (
                 <div key={stage.label} className="flex gap-4 relative">
                   {idx < 3 && (
@@ -360,7 +360,7 @@ function VenueOnboardingPage() {
             
             {/* Header */}
             <div className="text-center space-y-2">
-              <p className="text-xs uppercase tracking-widest text-primary-glow font-bold">BPL Onboarding Hub</p>
+              <p className="text-xs uppercase tracking-widest text-primary-glow font-bold">Kalakshetra Onboarding Hub</p>
               <h1 className="text-3xl sm:text-4xl font-display font-bold">Venue Partner Onboarding</h1>
               <p className="text-xs text-muted-foreground max-w-lg mx-auto">
                 Register your venue to host official live gigs and matches. Autosaves progress.
@@ -767,7 +767,7 @@ function VenueOnboardingPage() {
                   <div className="bpl-card p-6 space-y-4">
                     <div>
                       <h2 className="font-display font-semibold text-lg text-primary-glow">Contact Details (Private)</h2>
-                      <p className="text-xs text-muted-foreground mt-0.5">Visible only to BPL booking curators.</p>
+                      <p className="text-xs text-muted-foreground mt-0.5">Visible only to Kalakshetra booking curators.</p>
                     </div>
                     <div className="border-b border-border" />
 
@@ -819,7 +819,7 @@ function VenueOnboardingPage() {
                           className="mt-1 h-4 w-4 border-border rounded bg-secondary text-primary focus:ring-primary cursor-pointer"
                         />
                         <label htmlFor="venueTerms" className="text-xs text-muted-foreground leading-normal select-none cursor-pointer">
-                          I agree to register this venue in BPL's catalog. I confirm all provided specifications are true and available.
+                          I agree to register this venue in Kalakshetra's catalog. I confirm all provided specifications are true and available.
                         </label>
                       </div>
                       {errors.terms && <p className="text-red-500 text-xs">{errors.terms}</p>}

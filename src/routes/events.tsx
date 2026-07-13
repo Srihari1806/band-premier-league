@@ -8,16 +8,16 @@ import heroImg from "@/assets/hero-concert.jpg";
 export const Route = createFileRoute("/events")({
   head: () => ({
     meta: [
-      { title: "Events — BPL" },
+      { title: "Events — Kalakshetra" },
       {
         name: "description",
         content:
-          "Book indie shows across India. Line-ups, venues, schedules, ticket tiers and live stats for every BPL event.",
+          "Book indie shows across India. Line-ups, venues, schedules, ticket tiers and live stats for every Kalakshetra event.",
       },
-      { property: "og:title", content: "Events — BPL" },
+      { property: "og:title", content: "Events — Kalakshetra" },
       {
         property: "og:description",
-        content: "The BPL live calendar — bookings, sponsors and live stats.",
+        content: "The Kalakshetra live calendar — bookings, sponsors and live stats.",
       },
     ],
   }),
@@ -31,8 +31,8 @@ function EventsPage() {
         <img src={heroImg} alt="Event poster" className="h-72 md:h-[380px] w-full object-cover" />
         <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-transparent" />
         <div className="absolute inset-x-0 bottom-0 mx-auto max-w-7xl px-4 sm:px-6 pb-10">
-          <p className="text-xs uppercase tracking-widest text-primary-glow">Featured Event</p>
-          <h1 className="text-4xl md:text-6xl font-display font-bold">BPL Campus Clash</h1>
+          <p className="text-xs uppercase tracking-[0.2em] text-primary-glow mb-3">Live Show</p>
+          <h1 className="text-4xl md:text-6xl font-display font-bold text-white">Kurukshetra Campus Clash</h1>
           <div className="mt-3 flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
             <span className="flex items-center gap-1">
               <Calendar size={14} /> 12 OCT 2026 · 6:00 PM

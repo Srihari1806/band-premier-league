@@ -22,8 +22,8 @@ import {
 export const Route = createFileRoute("/login")({
   head: () => ({
     meta: [
-      { title: "Login — Band Premier League" },
-      { name: "description", content: "Access your BPL dashboard. Manage your music catalog, update availability, and track curation stages." },
+      { title: "Login — Kalakshetra" },
+      { name: "description", content: "Access your Kalakshetra dashboard. Manage your music catalog, update availability, and track curation stages." },
     ],
   }),
   component: LoginPage,
@@ -137,7 +137,7 @@ function LoginPage() {
               <ArrowLeft size={10} /> Back to Join Hub
             </Link>
             <h1 className="text-3xl font-display font-bold text-white tracking-tight">
-              BPL Member Portal
+              Kalakshetra Member Portal
             </h1>
             <p className="text-xs text-muted-foreground max-w-xs mx-auto">
               Select your league profile role to manage your details.

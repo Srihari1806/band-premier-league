@@ -7,7 +7,7 @@ import { db } from "@/lib/db";
 export const Route = createFileRoute("/join/event-manager")({
   head: () => ({
     meta: [
-      { title: "Register as Event Manager partner — BPL" },
+      { title: "Register as Event Manager partner — Kalakshetra" },
       { name: "description", content: "Apply to manage on-site gig logistics, security, and match setup." },
     ],
   }),
@@ -76,8 +76,8 @@ function EventManagerPage() {
             </div>
             <div className="space-y-2">
               <h1 className="text-3xl sm:text-4xl font-display font-bold">Application Received!</h1>
-              <p className="text-muted-foreground max-w-md mx-auto text-sm leading-relaxed">
-                Thank you for applying. BPL Operations coordinators will review your execution experience.
+              <p className="text-sm text-muted-foreground">
+                Thank you for applying. Kalakshetra Operations coordinators will review your execution experience.
               </p>
             </div>
             <div className="pt-2">
@@ -89,7 +89,7 @@ function EventManagerPage() {
         ) : (
           <div className="space-y-8 animate-fade-in">
             <div className="text-center space-y-2">
-              <p className="text-xs uppercase tracking-widest text-primary-glow font-bold">BPL Onboarding Hub</p>
+              <p className="text-xs uppercase tracking-widest text-primary-glow font-bold">Kalakshetra Onboarding Hub</p>
               <h1 className="text-3xl sm:text-4xl font-display font-bold">Event Manager Partner</h1>
               <p className="text-xs text-muted-foreground max-w-lg mx-auto">
                 Apply to manage on-site logistics, ticketing setups, security operations, and stage production.

@@ -18,8 +18,8 @@ import { db } from "@/lib/db";
 export const Route = createFileRoute("/join/production-house")({
   head: () => ({
     meta: [
-      { title: "Production House Onboarding — BPL" },
-      { name: "description", content: "Apply to become a partner production house in the Bharat Premier League." },
+      { title: "Production House Onboarding — Kalakshetra" },
+      { name: "description", content: "Apply to become a partner production house in Kalakshetra." },
     ],
   }),
   component: ProductionHousePage,
@@ -148,7 +148,7 @@ function ProductionHousePage() {
         ) : (
           <div className="space-y-8 animate-fade-in">
             <div className="text-center space-y-2">
-              <p className="text-xs uppercase tracking-widest text-primary-glow font-bold">BPL Onboarding Hub</p>
+              <p className="text-xs uppercase tracking-widest text-primary-glow font-bold">Kalakshetra Onboarding Hub</p>
               <h1 className="text-3xl sm:text-4xl font-display font-bold">Production House Partnership</h1>
               <p className="text-xs text-muted-foreground max-w-lg mx-auto">
                 Apply to manage artist rights, sponsor matches, and invest in local artist catalogs.

@@ -50,9 +50,9 @@ export function SiteHeader() {
         {/* Logo and Brand */}
         <Link to="/" className="flex items-center gap-2.5 font-display font-bold text-xl group">
           <div className="h-9 w-9 rounded-lg overflow-hidden border border-primary/20 bg-background/50 flex items-center justify-center p-1 shadow-md shadow-primary/5 group-hover:border-primary/50 group-hover:shadow-glow transition-all duration-300">
-            <img src={logoImg} alt="BPL Logo" className="h-full w-full object-contain" />
+            <img src={logoImg} alt="Kalakshetra Logo" className="h-full w-full object-contain" />
           </div>
-          <span className="tracking-tight text-white group-hover:text-primary-glow transition-colors">BPL</span>
+          <span className="tracking-tight text-white group-hover:text-primary-glow transition-colors">Kalakshetra</span>
         </Link>
 
         {/* Center: Standard Navigation Links (Accessible to everyone) */}
@@ -110,7 +110,7 @@ export function SiteHeader() {
                 to="/join"
                 className="btn-primary inline-flex items-center rounded-md px-4 py-1.5 text-xs font-semibold text-white hover:scale-105 active:scale-95 transition-all"
               >
-                Join BPL
+                Join Kalakshetra
               </Link>
             </>
           )}
@@ -194,7 +194,7 @@ export function SiteHeader() {
                     onClick={() => setOpen(false)}
                     className="btn-primary text-center py-2 rounded-md text-xs font-semibold text-white"
                   >
-                    Join BPL
+                    Join Kalakshetra
                   </Link>
                 </div>
               )}

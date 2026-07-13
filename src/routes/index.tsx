@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { PageShell } from "@/components/layout/PageShell";
-import { Play, Ticket, MapPin, ArrowRight, Music, Users, Building2, Sparkles } from "lucide-react";
+import { Play, Ticket, MapPin, ArrowRight, Music, Users, Building2, Sparkles, Music2, Drum, Mic } from "lucide-react";
 import { useState, useEffect } from "react";
 import { db, type BandApplication, type LeagueStats } from "@/lib/db";
 import { isOperatorSessionActive } from "@/lib/security";
@@ -12,16 +12,16 @@ import venueImg from "@/assets/venue-1.jpg";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "BPL — The stage is yours. The league is ours." },
+      { title: "Kalakshetra — The Home of Independent Music" },
       {
         name: "description",
         content:
-          "India's biggest platform for indie bands. Discover shows, venues, production houses and the community fueling live music.",
+          "Kalakshetra is the ultimate home of independent music, connecting artists, venues, and communities. Discover shows, bands, and the tournament fueling live music.",
       },
-      { property: "og:title", content: "BPL — Bharat Premier League for Indie Bands" },
+      { property: "og:title", content: "Kalakshetra — The Home of Independent Music" },
       {
         property: "og:description",
-        content: "Shows, bands, venues, analytics and community — all in one league.",
+        content: "Shows, bands, venues, and community — all under the Raaga of Kurukshetra tournament.",
       },
     ],
   }),
@@ -29,7 +29,7 @@ export const Route = createFileRoute("/")({
 });
 
 const EVENTS = [
-  { title: "BPL Campus Clash", date: "12 OCT 2026", city: "Bangalore", img: crowdImg },
+  { title: "Kurukshetra Campus Clash", date: "12 OCT 2026", city: "Bangalore", img: crowdImg },
   { title: "Indie Night Live", date: "18 OCT 2026", city: "Mumbai", img: bandImg },
   { title: "Echoes of Earth", date: "26 OCT 2026", city: "Delhi", img: heroImg },
   { title: "Amplify Sessions", date: "02 NOV 2026", city: "Hyderabad", img: crowdImg },
@@ -117,13 +117,13 @@ function Home() {
         />
         <div className="absolute inset-0 bg-gradient-to-b from-background/60 via-background/40 to-background" />
         <div className="relative mx-auto max-w-7xl px-4 sm:px-6 py-28 md:py-40 text-left">
-          <h1 className="text-5xl md:text-7xl font-display font-bold tracking-tight max-w-3xl text-white">
-            THE STAGE IS YOURS.
+          <h1 className="text-5xl md:text-7xl font-display font-bold tracking-tight max-w-4xl text-white">
+            RAAGAM. TAALAM.
             <br />
-            THE LEAGUE IS <span className="gradient-text">OURS.</span>
+            <span className="gradient-text">PALLAVI.</span>
           </h1>
           <p className="mt-6 text-lg text-muted-foreground max-w-xl">
-            India&apos;s biggest platform for indie bands.
+            Kalakshetra — The Home of Independent Music.
           </p>
           <div className="mt-8 flex flex-wrap gap-3">
             {isAdmin ? (
@@ -146,7 +146,7 @@ function Home() {
                   to="/join"
                   className="btn-primary btn-primary-hover inline-flex items-center gap-2 rounded-md px-6 py-3 text-sm font-semibold"
                 >
-                  <Sparkles size={16} /> JOIN THE LEAGUE
+                  <Sparkles size={16} /> JOIN THE MOVEMENT
                 </Link>
                 <Link
                   to="/login"
@@ -160,24 +160,23 @@ function Home() {
               to="/league"
               className="inline-flex items-center gap-2 rounded-md border border-border bg-background/50 backdrop-blur px-6 py-3 text-sm font-semibold text-white hover:bg-secondary/40 transition cursor-pointer"
             >
-              <Play size={16} /> EXPLORE BPL MODEL
+              <Play size={16} /> RAAGA OF KURUKSHETRA
             </Link>
           </div>
         </div>
       </section>
 
-      {/* WHAT IS BPL */}
+      {/* WHAT IS KALAKSHETRA */}
       <Section>
         <div className="grid md:grid-cols-2 gap-10 items-center">
           <div className="text-left">
             <p className="text-xs uppercase tracking-[0.2em] text-primary-glow mb-3">
-              What is BPL?
+              What is Kalakshetra?
             </p>
-            <h2 className="text-4xl font-display font-bold text-white">A league built for indie music.</h2>
+            <h2 className="text-4xl font-display font-bold text-white">The home of independent music.</h2>
             <p className="mt-4 text-muted-foreground leading-relaxed text-sm">
-              BPL is India&apos;s first and largest platform connecting indie bands, venues,
-              production houses and fans. We power live music through events, support, and real
-              opportunities.
+              Kalakshetra is India&apos;s premier platform connecting indie bands, venues,
+              production houses, and communities. We fuel the live music ecosystem through our grand tournament segment — <strong>Raaga of Kurukshetra (Raaga of Revenge)</strong> — providing real stages, production backing, and dedicated audiences.
             </p>
             <Link
               to="/about"
@@ -194,6 +193,61 @@ function Home() {
             loading="lazy"
             className="rounded-xl border border-border"
           />
+        </div>
+      </Section>
+
+      {/* PHILOSOPHY SECTION */}
+      <Section>
+        <div className="text-center max-w-2xl mx-auto mb-12 space-y-3">
+          <p className="text-xs uppercase tracking-widest text-primary-glow font-bold">Our Foundation</p>
+          <h2 className="text-3xl md:text-4xl font-display font-bold text-white">Ragam · Talam · Pallavi</h2>
+          <p className="text-xs text-muted-foreground">
+            The core elements of music re-imagined for the modern independent artist and community.
+          </p>
+        </div>
+        
+        <div className="grid gap-8 md:grid-cols-3">
+          {/* Raagam */}
+          <div className="bpl-card p-8 text-left space-y-4 hover:border-[oklch(0.78_0.16_80/0.5)] hover:shadow-[0_10px_30px_-10px_oklch(0.78_0.16_80/0.2)] transition-all duration-300">
+            <div className="h-12 w-12 rounded-lg bg-[oklch(0.78_0.16_80/0.1)] border border-[oklch(0.78_0.16_80/0.2)] flex items-center justify-center text-[oklch(0.78_0.16_80)]">
+              <Music2 size={22} />
+            </div>
+            <div>
+              <h3 className="text-2xl font-display font-bold text-white">Raagam</h3>
+              <p className="text-xs text-[oklch(0.78_0.16_80)] font-semibold mt-0.5">The Sound of Dreams</p>
+            </div>
+            <p className="text-xs text-muted-foreground leading-relaxed">
+              Every artist starts with a dream and a unique voice. Raagam represents the melodies, the creative spark, and the creative expression that define an independent band's sonic identity.
+            </p>
+          </div>
+
+          {/* Taalam */}
+          <div className="bpl-card p-8 text-left space-y-4 hover:border-[oklch(0.60_0.22_25/0.5)] hover:shadow-[0_10px_30px_-10px_oklch(0.60_0.22_25/0.2)] transition-all duration-300">
+            <div className="h-12 w-12 rounded-lg bg-[oklch(0.60_0.22_25/0.1)] border border-[oklch(0.60_0.22_25/0.2)] flex items-center justify-center text-[oklch(0.60_0.22_25)]">
+              <Drum size={22} />
+            </div>
+            <div>
+              <h3 className="text-2xl font-display font-bold text-white">Taalam</h3>
+              <p className="text-xs text-[oklch(0.60_0.22_25)] font-semibold mt-0.5">The Beat of Community</p>
+            </div>
+            <p className="text-xs text-muted-foreground leading-relaxed">
+              Music is nothing without its rhythm and listeners. Taalam represents the heartbeat of the community — the venues, cafes, organizers, and fans that keep the independent movement in sync and alive.
+            </p>
+          </div>
+
+          {/* Pallavi */}
+          <div className="bpl-card p-8 text-left space-y-4 hover:border-[oklch(0.62_0.22_290/0.5)] hover:shadow-[0_10px_30px_-10px_oklch(0.62_0.22_290/0.2)] transition-all duration-300">
+            <div className="h-12 w-12 rounded-lg bg-[oklch(0.62_0.22_290/0.1)] border border-[oklch(0.62_0.22_290/0.2)] flex items-center justify-center text-[oklch(0.62_0.22_290)]">
+              <Mic size={22} />
+            </div>
+            <div>
+              <h3 className="text-2xl font-display font-bold text-white">Pallavi</h3>
+              <p className="text-xs text-[oklch(0.62_0.22_290)] font-semibold mt-0.5">The Start of Every Artist</p>
+            </div>
+            <p className="text-xs text-muted-foreground leading-relaxed">
+              The first verse that launches a thousand songs. Pallavi represents the ultimate platform — structured competitive tournaments, gigs, and professional support that launch bands from garage practice to national stages.
+            </p>
+          </div>
         </div>
       </Section>
 
@@ -378,7 +432,7 @@ function Home() {
         <div className="relative mx-auto max-w-7xl px-4 sm:px-6 py-24 text-center">
           <h2 className="text-4xl md:text-5xl font-display font-bold text-white">Become a Partner</h2>
           <p className="mt-4 text-muted-foreground max-w-xl mx-auto text-sm">
-            Join hands with BPL and be a part of India&apos;s live music revolution.
+            Join hands with Kalakshetra and be a part of India&apos;s live music revolution.
           </p>
           <div className="mt-8 flex justify-center gap-4 flex-wrap">
             <Link

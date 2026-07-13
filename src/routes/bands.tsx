@@ -7,11 +7,11 @@ import { Search, MapPin, Sparkles, Filter, Music } from "lucide-react";
 export const Route = createFileRoute("/bands")({
   head: () => ({
     meta: [
-      { title: "Bands Directory — BPL" },
+      { title: "Bands Directory — Kalakshetra" },
       {
         name: "description",
         content:
-          "Discover indie bands on BPL. Explore members, bios, and gear rosters for every verified artist in the league.",
+          "Discover indie bands on Kalakshetra. Explore members, bios, and gear rosters for every verified artist.",
       },
     ],
   }),
@@ -66,7 +66,7 @@ function BandsPage() {
         <div className="relative mx-auto max-w-7xl px-4 sm:px-6 py-16 text-center space-y-4">
           <p className="text-xs uppercase tracking-[0.2em] text-primary-glow font-bold">Official Roster</p>
           <h1 className="text-4xl md:text-5xl font-display font-bold tracking-tight text-white">
-            BPL Bands & Artists
+            Kalakshetra Bands & Artists
           </h1>
           <p className="mt-2 text-sm text-muted-foreground max-w-xl mx-auto leading-relaxed">
             Discover verified indie bands, solo musicians, and creative members of the league roster.

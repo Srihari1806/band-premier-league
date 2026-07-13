@@ -78,17 +78,17 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "BPL — Bharat Premier League for Indie Bands" },
+      { title: "Kalakshetra — The Home of Independent Music" },
       {
         name: "description",
         content:
-          "India's biggest platform connecting indie bands, venues, production houses and fans. The stage is yours. The league is ours.",
+          "Kalakshetra is the ultimate home of independent music, connecting artists, venues, production houses, and communities.",
       },
-      { property: "og:title", content: "BPL — Bharat Premier League for Indie Bands" },
+      { property: "og:title", content: "Kalakshetra — The Home of Independent Music" },
       {
         property: "og:description",
         content:
-          "India's biggest platform for indie music. Shows, bands, venues, analytics and community, all in one league.",
+          "Kalakshetra is the ultimate home of independent music. Shows, bands, venues, analytics, and community, all under the Raaga of Kurukshetra tournament.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },

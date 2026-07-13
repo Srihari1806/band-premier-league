@@ -37,32 +37,37 @@
 
 :root {
   --radius: 0.75rem;
-  --background: oklch(0.13 0.02 285);
-  --foreground: oklch(0.98 0.005 285);
-  --surface: oklch(0.17 0.025 285);
-  --surface-elevated: oklch(0.21 0.03 285);
-  --card: oklch(0.17 0.025 285);
-  --card-foreground: oklch(0.98 0.005 285);
-  --popover: oklch(0.17 0.025 285);
-  --popover-foreground: oklch(0.98 0.005 285);
-  --primary: oklch(0.62 0.24 300);
-  --primary-foreground: oklch(0.99 0 0);
-  --primary-glow: oklch(0.72 0.22 315);
-  --secondary: oklch(0.24 0.03 285);
-  --secondary-foreground: oklch(0.98 0.005 285);
-  --muted: oklch(0.22 0.025 285);
-  --muted-foreground: oklch(0.7 0.02 285);
-  --accent: oklch(0.62 0.24 300);
-  --accent-foreground: oklch(0.99 0 0);
-  --destructive: oklch(0.62 0.24 27);
+  --background: oklch(0.12 0.015 80); /* Warm deep dark background */
+  --foreground: oklch(0.98 0.005 80);
+  --surface: oklch(0.15 0.02 80);
+  --surface-elevated: oklch(0.18 0.025 80);
+  --card: oklch(0.15 0.02 80);
+  --card-foreground: oklch(0.98 0.005 80);
+  --popover: oklch(0.15 0.02 80);
+  --popover-foreground: oklch(0.98 0.005 80);
+  --primary: oklch(0.76 0.125 80); /* Elegant metallic gold */
+  --primary-foreground: oklch(0.12 0.015 80); /* Deep dark background color for text contrast */
+  --primary-glow: oklch(0.85 0.14 85); /* Bright gold shimmer */
+  --secondary: oklch(0.22 0.02 80);
+  --secondary-foreground: oklch(0.98 0.005 80);
+  --muted: oklch(0.20 0.015 80);
+  --muted-foreground: oklch(0.7 0.015 80);
+  --accent: oklch(0.76 0.125 80); /* Gold */
+  --accent-foreground: oklch(0.12 0.015 80);
+  --destructive: oklch(0.60 0.22 25);
   --destructive-foreground: oklch(0.99 0 0);
-  --border: oklch(0.28 0.03 285);
-  --input: oklch(0.24 0.03 285);
-  --ring: oklch(0.62 0.24 300);
-  --gradient-primary: linear-gradient(135deg, oklch(0.55 0.25 295), oklch(0.7 0.22 315));
-  --gradient-glow: radial-gradient(circle at 50% 0%, oklch(0.55 0.25 295 / 0.35), transparent 60%);
-  --shadow-glow: 0 10px 40px -10px oklch(0.62 0.24 300 / 0.5);
-  --shadow-card: 0 8px 30px -12px oklch(0 0 0 / 0.5);
+  --border: oklch(0.25 0.02 80);
+  --input: oklch(0.22 0.02 80);
+  --ring: oklch(0.76 0.125 80);
+  --gradient-primary: linear-gradient(135deg, oklch(0.72 0.12 78), oklch(0.85 0.14 85)); /* Gold gradient */
+  --gradient-glow: radial-gradient(circle at 50% 0%, oklch(0.76 0.125 80 / 0.25), transparent 60%);
+  --shadow-glow: 0 10px 40px -10px oklch(0.76 0.125 80 / 0.4);
+  --shadow-card: 0 8px 30px -12px oklch(0 0 0 / 0.6);
+  
+  /* Pillar Theme Colors */
+  --raagam: oklch(0.78 0.16 80); /* Amber/Gold */
+  --taalam: oklch(0.60 0.22 25); /* Red/Crimson */
+  --pallavi: oklch(0.62 0.22 290); /* Purple/Indigo */
 }
 
 @layer base {
@@ -96,6 +101,7 @@
   background-color: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius);
+  transition: border-color 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s cubic-bezier(0.16, 1, 0.3, 1), transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 @utility btn-primary {
@@ -109,6 +115,6 @@
 @utility btn-primary-hover {
   &:hover {
     transform: translateY(-1px);
-    box-shadow: 0 14px 50px -10px oklch(0.62 0.24 300 / 0.7);
+    box-shadow: 0 14px 50px -10px oklch(0.76 0.125 80 / 0.6);
   }
 }

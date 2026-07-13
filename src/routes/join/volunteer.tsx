@@ -14,7 +14,7 @@ export const Route = createFileRoute("/join/volunteer")({
 });
 
 const ROLE_LABELS: Record<string, string> = {
-  volunteer: "League Volunteer",
+  volunteer: "Ambassador / Volunteer",
   producer: "Music Producer",
   videographer: "Videographer",
   photographer: "Photographer",
@@ -165,7 +165,7 @@ function VolunteerPage() {
         ) : (
           <div className="space-y-8 animate-fade-in">
             <div className="text-center space-y-2">
-              <p className="text-xs uppercase tracking-widest text-primary-glow font-bold">BPL Onboarding Hub</p>
+              <p className="text-xs uppercase tracking-widest text-primary-glow font-bold">Kalakshetra Onboarding Hub</p>
               <h1 className="text-3xl sm:text-4xl font-display font-bold">Apply as a {roleLabel}</h1>
               <p className="text-xs text-muted-foreground max-w-lg mx-auto">
                 Fill out the application. Your progress is autosaved.
@@ -264,7 +264,7 @@ function VolunteerPage() {
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">Why do you want to join BPL?</label>
+                  <label className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">Why do you want to join Kalakshetra?</label>
                   <textarea 
                     rows={2}
                     placeholder="Tell us what excites you about the franchise music league..."

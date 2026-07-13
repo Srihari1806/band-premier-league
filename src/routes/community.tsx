@@ -14,13 +14,13 @@ import bandImg from "@/assets/band-1.jpg";
 export const Route = createFileRoute("/community")({
   head: () => ({
     meta: [
-      { title: "Community — BPL" },
+      { title: "Community — Kalakshetra" },
       {
         name: "description",
         content:
-          "The people powering the league. Student clubs, cafe communities, city ambassadors, volunteers, Discord, WhatsApp and the leaderboard.",
+          "Join the student clubs, cafe promoter circles and city ambassador networks powering independent music support.",
       },
-      { property: "og:title", content: "Community — BPL" },
+      { property: "og:title", content: "Community — Kalakshetra" },
       { property: "og:description", content: "Join 3,000+ music fans across India." },
     ],
   }),
@@ -42,7 +42,7 @@ function CommunityPage() {
       <PageHeader
         eyebrow="Community"
         title="Powered by people."
-        subtitle="The clubs, cafes, ambassadors and volunteers who make BPL happen."
+        subtitle="The clubs, cafes, ambassadors and volunteers who make Kalakshetra happen."
       />
       <div className="mx-auto max-w-7xl px-4 sm:px-6 py-12 space-y-8">
         <div className="grid gap-4 md:grid-cols-2">

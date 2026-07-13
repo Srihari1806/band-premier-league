@@ -16,14 +16,14 @@ import {
 export const Route = createFileRoute("/league")({
   head: () => ({
     meta: [
-      { title: "The League & Model — BPL" },
+      { title: "The League & Model — Raaga of Kurukshetra" },
       {
         name: "description",
         content:
-          "How BPL runs. Seasons, formats, cities and the 40/40/20 revenue splits powering the indie music ecosystem.",
+          "How Raaga of Kurukshetra runs. Seasons, formats, cities and the 40/30/30 revenue splits powering the indie music ecosystem.",
       },
-      { property: "og:title", content: "The League & Business Model — BPL" },
-      { property: "og:description", content: "How the Bharat Premier League runs across India." },
+      { property: "og:title", content: "Raaga of Kurukshetra — League & Model" },
+      { property: "og:description", content: "How the Raaga of Kurukshetra tournament runs across India." },
     ],
   }),
   component: LeaguePage,
@@ -33,7 +33,7 @@ function LeaguePage() {
   return (
     <PageShell>
       <PageHeader
-        eyebrow="The League Circuit"
+        eyebrow="Raaga of Kurukshetra (Raaga of Revenge)"
         title="One season. Twelve cities. One winner."
         subtitle="A structured competitive circuit for India's indie bands — with real production support, real venues and real audiences."
       />
@@ -54,7 +54,7 @@ function LeaguePage() {
           [
             "03",
             "League Finals",
-            "Top bands battle at the BPL Grand Finale, backed by production houses and sponsors.",
+            "Top bands battle at the Raaga of Kurukshetra Grand Finale, backed by production houses and sponsors.",
           ],
         ].map(([n, t, d]) => (
           <div key={n} className="bpl-card p-6 text-left">
@@ -71,9 +71,9 @@ function LeaguePage() {
           
           <div className="text-center max-w-2xl mx-auto space-y-3">
             <p className="text-xs uppercase tracking-widest text-primary-glow font-bold">The Business Engine</p>
-            <h2 className="text-3xl md:text-4xl font-display font-bold text-white">How BPL Payouts Work</h2>
+            <h2 className="text-3xl md:text-4xl font-display font-bold text-white">How Payouts Work</h2>
             <p className="text-xs text-muted-foreground leading-relaxed">
-              BPL acts as an asset-light coordinator. We enforce a transparent **40/30/30 event payout structure** and a **50/50 digital content royalty split** to align investor and artist incentives.
+              Kalakshetra acts as an asset-light coordinator. We enforce a transparent **40/30/30 event payout structure** and a **50/50 digital content royalty split** to align investor and artist incentives.
             </p>
           </div>
 
@@ -125,14 +125,14 @@ function LeaguePage() {
                 </div>
                 <div>
                   <h3 className="text-4xl font-display font-bold text-white">30% Share</h3>
-                  <p className="text-sm font-bold text-primary-glow mt-1">To BPL League Operator</p>
+                  <p className="text-sm font-bold text-primary-glow mt-1">To Kalakshetra Operator</p>
                 </div>
                 <p className="text-xs text-muted-foreground leading-relaxed">
-                  BPL retains 30% of ticket pass sales. This commission covers league operations, prize pools, software license fees, and outsourcing on-ground event coordinators.
+                  Kalakshetra retains 30% of ticket pass sales. This commission covers tournament operations, prize pools, software license fees, and outsourcing on-ground event coordinators.
                 </p>
               </div>
               <div className="border-t border-border pt-4">
-                <span className="text-[10px] uppercase font-bold text-muted-foreground">Ecosystem Value: League Operations</span>
+                <span className="text-[10px] uppercase font-bold text-muted-foreground">Ecosystem Value: Tournament Operations</span>
               </div>
             </div>
 
@@ -151,7 +151,7 @@ function LeaguePage() {
             </div>
             
             <p className="text-xs text-muted-foreground leading-relaxed">
-              We believe in validating economic assumptions on the ground before national scaling. BPL is launching an initial **8-week proof-of-concept pilot in Hyderabad** to optimize ticketing splits, validate the ₹199 entry price hook, and capture real fan attendance data.
+              We believe in validating economic assumptions on the ground before national scaling. Kalakshetra is launching an initial **8-week proof-of-concept pilot in Hyderabad** to optimize ticketing splits, validate the ₹199 entry price hook, and capture real fan attendance data.
             </p>
 
             <div className="space-y-4">
@@ -235,7 +235,7 @@ function LeaguePage() {
                 <span>Verification Path</span>
               </div>
               <p className="text-[10px] text-muted-foreground leading-normal">
-                This Hyderabad proof-of-concept serves as our seed pitch metrics. It replaces nationwide assumptions with validated, local operational operational benchmarks.
+                This Hyderabad proof-of-concept serves as our seed pitch metrics. It replaces nationwide assumptions with validated, local operational benchmarks.
               </p>
             </div>
           </div>

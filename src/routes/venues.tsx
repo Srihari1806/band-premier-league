@@ -7,13 +7,13 @@ import crowdImg from "@/assets/crowd.jpg";
 export const Route = createFileRoute("/venues")({
   head: () => ({
     meta: [
-      { title: "Venues — BPL" },
+      { title: "Venues — Kalakshetra" },
       {
         name: "description",
         content:
-          "Browse partner venues across India. Capacity, stage, sound, past events and availability — book and apply as a venue partner.",
+          "Explore cafes, pubs, campus stadiums and auditorium partners hosting Kalakshetra tour circuits across India.",
       },
-      { property: "og:title", content: "Venues — BPL" },
+      { property: "og:title", content: "Venues — Kalakshetra" },
       { property: "og:description", content: "The rooms where indie music happens." },
     ],
   }),

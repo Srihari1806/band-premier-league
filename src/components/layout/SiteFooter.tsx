@@ -1,17 +1,21 @@
 import { Link } from "@tanstack/react-router";
 import { Facebook, Twitter, Instagram, Youtube } from "lucide-react";
+import logoImg from "@/assets/logo.png";
 
 export function SiteFooter() {
   return (
     <footer className="mt-24 border-t border-border bg-surface/40">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 py-12 grid gap-10 md:grid-cols-3">
         <div>
-          <Link to="/" className="flex items-center gap-2 font-display font-bold text-xl">
-            <span className="inline-block h-8 w-8 rounded-md bg-gradient-to-br from-primary to-primary-glow" />
-            BPL
+          <Link to="/" className="flex items-center gap-2.5 font-display font-bold text-xl">
+            <div className="h-8 w-8 rounded-md overflow-hidden bg-background/50 flex items-center justify-center p-0.5 border border-primary/20">
+              <img src={logoImg} alt="Kalakshetra Logo" className="h-full w-full object-contain" />
+            </div>
+            Kalakshetra
           </Link>
           <p className="mt-3 text-sm text-muted-foreground max-w-xs leading-relaxed">
-            India&apos;s biggest platform for indie bands. The stage is yours. The league is ours.
+            The Home of Independent Music.<br />
+            Raagam · Taalam · Pallavi
           </p>
         </div>
         
@@ -55,7 +59,7 @@ export function SiteFooter() {
       
       <div className="border-t border-border">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 py-6 flex flex-col md:flex-row items-center justify-between gap-4">
-          <p className="text-xs text-muted-foreground">© 2026 BPL. All rights reserved.</p>
+          <p className="text-xs text-muted-foreground">© 2026 Kalakshetra. All rights reserved.</p>
           <div className="flex items-center gap-3 text-muted-foreground">
             <Facebook size={16} />
             <Twitter size={16} />

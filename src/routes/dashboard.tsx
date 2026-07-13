@@ -23,7 +23,7 @@ import {
 export const Route = createFileRoute("/dashboard")({
   head: () => ({
     meta: [
-      { title: "Dashboard — BPL Member Portal" },
+      { title: "Dashboard — Kalakshetra Member Portal" },
     ],
   }),
   component: DashboardPage,
@@ -64,25 +64,33 @@ function DashboardPage() {
 
     if (isAdminActive) {
       const adminUser = {
-        id: "bplcreator",
-        email: "admin@bpl.in",
-        role: "operator",
-        name: "BPL League Operator",
-        status: "approved"
+        id: "kalakshetracreator",
+        email: "admin@kalakshetra.in",
+        role: "admin",
+        name: "Kalakshetra Operator",
+        logo: null,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        company_name: "Kalakshetra Operator",
+        company_profile: "Kalakshetra administrative staff.",
+        contact_email: "admin@kalakshetra.in",
+        contact_phone: "9999999999",
+        tagline: "Official Kalakshetra Admin & Operator",
+        social_links: { yt: "", spotify: "", insta: "" },
       };
       setCurrentUser(adminUser);
       setProfileData({
-        company_name: "BPL League Operator",
-        name: "BPL League Operator",
-        email: "admin@bpl.in",
-        role: "operator",
+        company_name: "Kalakshetra Operator",
+        name: "Kalakshetra Operator",
+        email: "admin@kalakshetra.in",
+        role: "admin",
         status: "approved",
-        tagline: "Official BPL League Admin & Operator",
+        tagline: "Official Kalakshetra Admin & Operator",
         bio: "Oversees the seasons, coordinates venues, curates bands registry, and approves operator panel applications.",
         city: "Hyderabad / Bangalore"
       });
-      setName("BPL League Operator");
-      setTagline("Official BPL League Admin & Operator");
+      setName("Kalakshetra Operator");
+      setTagline("Official Kalakshetra Admin & Operator");
       setBio("Oversees the seasons, coordinates venues, curates bands registry, and approves operator panel applications.");
       setCity("Hyderabad / Bangalore");
       setLoading(false);
@@ -164,7 +172,7 @@ function DashboardPage() {
         updatedFields.company_profile = bio;
       }
 
-      if (currentUser.role === "operator") {
+      if (currentUser.role === "admin") {
         setSuccess("Operator profile settings updated successfully (in-memory demo)!");
         setSaving(false);
         return;
@@ -184,7 +192,7 @@ function DashboardPage() {
   };
 
   const handleLogout = () => {
-    if (currentUser?.role === "operator") {
+    if (currentUser?.role === "admin") {
       clearOperatorSession();
     }
     db.logoutUser();
@@ -196,10 +204,10 @@ function DashboardPage() {
   if (loading) {
     return (
       <PageShell>
-        <div className="min-h-[70vh] flex items-center justify-center bg-background">
-          <div className="space-y-4 text-center">
+        <div className="flex min-h-screen items-center justify-center bg-background px-4">
+          <div className="text-center space-y-4">
             <div className="h-10 w-10 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto" />
-            <p className="text-xs text-muted-foreground">Loading your BPL Dashboard...</p>
+            <p className="text-xs text-muted-foreground">Loading your Kalakshetra Dashboard...</p>
           </div>
         </div>
       </PageShell>
@@ -223,7 +231,7 @@ function DashboardPage() {
             <div className="space-y-2 text-left">
               <div className="flex flex-wrap items-center gap-2">
                 <span className="text-[9px] uppercase tracking-widest font-bold bg-primary/20 text-primary-glow px-2.5 py-1 rounded-full border border-primary/25">
-                  BPL {roleLabel}
+                  Kalakshetra {roleLabel}
                 </span>
                 {profileStatus === "approved" ? (
                   <span className="text-[9px] uppercase tracking-widest font-bold bg-green-500/10 text-green-400 px-2.5 py-1 rounded-full border border-green-500/25 flex items-center gap-1">
@@ -239,12 +247,14 @@ function DashboardPage() {
                   </span>
                 )}
               </div>
-              <h1 className="text-3xl font-display font-bold text-white tracking-tight">
-                {name || "Your Dashboard"}
-              </h1>
-              <p className="text-xs text-muted-foreground max-w-xl">
-                {tagline || "Manage your settings, configure availability calendar, and coordinate show bookings."}
-              </p>
+              <div className="space-y-1">
+                <h2 className="text-2xl md:text-3xl font-display font-bold tracking-tight text-white">
+                  Kalakshetra {roleLabel}
+                </h2>
+                <p className="text-xs text-muted-foreground">
+                  Manage your credentials, update details and check application status.
+                </p>
+              </div>
             </div>
 
             {/* Quick Actions */}
@@ -323,8 +333,8 @@ function DashboardPage() {
               <div className="bpl-card p-4 space-y-2 text-left">
                 <span className="text-[9px] uppercase tracking-widest font-bold text-muted-foreground">League Status</span>
                 {profileStatus === "approved" ? (
-                  <p className="text-[11px] text-muted-foreground leading-relaxed">
-                    Your profile is <span className="text-green-400 font-bold">Approved</span> and indexed live on BPL databases. Venues can book you for matches.
+                  <p className="text-xs text-muted-foreground leading-relaxed mt-2">
+                    Your profile is <span className="text-green-400 font-bold">Approved</span> and indexed live on Kalakshetra databases. Venues can book you for matches.
                   </p>
                 ) : (
                   <p className="text-[11px] text-muted-foreground leading-relaxed">
@@ -384,7 +394,7 @@ function DashboardPage() {
                               type="text"
                               value={tagline}
                               onChange={(e) => setTagline(e.target.value)}
-                              placeholder="e.g. Bringing high-energy indie rock to BPL matches"
+                              placeholder="e.g. Bringing high-energy indie rock to Kalakshetra stages"
                               className="w-full bg-secondary border border-border rounded-md px-3.5 py-2.5 text-sm focus:outline-none focus:border-primary text-white"
                             />
                           </div>
@@ -507,7 +517,7 @@ function DashboardPage() {
                             </span>
                           ))}
                         </div>
-                        <p className="text-[10px] text-muted-foreground mt-1">Calendar dates show active tour slots open for bookings in BPL franchises.</p>
+                        <p className="text-[10px] text-muted-foreground mt-1">Calendar dates show active tour slots open for bookings in Kalakshetra franchises.</p>
                       </div>
                     </div>
 

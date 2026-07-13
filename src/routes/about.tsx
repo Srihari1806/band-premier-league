@@ -4,16 +4,16 @@ import { PageShell, PageHeader } from "@/components/layout/PageShell";
 export const Route = createFileRoute("/about")({
   head: () => ({
     meta: [
-      { title: "About — BPL" },
+      { title: "About — Kalakshetra" },
       {
         name: "description",
         content:
-          "BPL is India's first and largest platform for indie bands. Our story, our mission and the team behind the league.",
+          "Kalakshetra is the ultimate home of independent music, connecting artists, venues, and communities. Discover our story and mission.",
       },
-      { property: "og:title", content: "About — BPL" },
+      { property: "og:title", content: "About — Kalakshetra" },
       {
         property: "og:description",
-        content: "The story and mission behind the Bharat Premier League for indie bands.",
+        content: "The story and mission behind Kalakshetra — the home of independent music.",
       },
     ],
   }),
@@ -24,20 +24,20 @@ function AboutPage() {
   return (
     <PageShell>
       <PageHeader
-        eyebrow="About BPL"
+        eyebrow="About Kalakshetra"
         title="Built for the sound of a new India."
-        subtitle="BPL is India's first and largest platform connecting indie bands, venues, production houses and fans."
+        subtitle="Kalakshetra is the ultimate home of independent music, connecting indie bands, venues, production houses, and communities."
       />
       <div className="mx-auto max-w-4xl px-4 sm:px-6 py-12 space-y-6 text-muted-foreground">
         <p>
-          We started BPL because India's indie music scene deserved more than one-off gigs and
-          algorithmic scraps. It deserved a league — a stage, a season, a story worth following.
+          We started Kalakshetra because India's indie music scene deserved more than one-off gigs and
+          algorithmic scraps. It deserved a home—a stage, a structured philosophy (Ragam · Talam · Pallavi), and a grand arena worth following.
         </p>
         <p>
-          Today BPL runs shows in 56 cities, works with 1,200+ bands and helps production houses
-          discover, sign and back the next wave of Indian sound.
+          Today Kalakshetra runs shows, coordinates with hundreds of independent bands, and helps production houses
+          discover, sign, and back the next wave of Indian sound through our tournament segment, Raaga of Kurukshetra.
         </p>
-        <p className="text-foreground font-medium">The stage is yours. The league is ours.</p>
+        <p className="text-foreground font-medium">The Home of Independent Music.</p>
       </div>
     </PageShell>
   );

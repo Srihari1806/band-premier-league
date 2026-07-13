@@ -7,8 +7,8 @@ import { db } from "@/lib/db";
 export const Route = createFileRoute("/join/influencer")({
   head: () => ({
     meta: [
-      { title: "Apply as a BPL Influencer / Partner" },
-      { name: "description", content: "Review matches, create content, and amplify Bharat Premier League noise." },
+      { title: "Apply as a Kalakshetra Influencer / Partner" },
+      { name: "description", content: "Review events, create content, and amplify Kalakshetra noise." },
     ],
   }),
   component: InfluencerOnboardingPage,
@@ -94,7 +94,7 @@ function InfluencerOnboardingPage() {
         ) : (
           <div className="space-y-8 animate-fade-in">
             <div className="text-center space-y-2">
-              <p className="text-xs uppercase tracking-widest text-primary-glow font-bold">BPL Onboarding Hub</p>
+              <p className="text-xs uppercase tracking-widest text-primary-glow font-bold">Kalakshetra Onboarding Hub</p>
               <h1 className="text-3xl sm:text-4xl font-display font-bold">Influencer Onboarding</h1>
               <p className="text-xs text-muted-foreground max-w-lg mx-auto">
                 Partner with us to create matchday content, vlog gig tours, and review league matches.
