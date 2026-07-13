@@ -119,20 +119,23 @@ function Home() {
           </p>
           <div className="mt-8 flex flex-wrap gap-3">
             <Link
-              to="/league"
+              to="/join"
               className="btn-primary btn-primary-hover inline-flex items-center gap-2 rounded-md px-6 py-3 text-sm font-semibold"
             >
-              <Sparkles size={16} /> EXPLORE BPL
+              <Sparkles size={16} /> JOIN THE LEAGUE
             </Link>
             <Link
-              to="/join"
+              to="/login"
               className="inline-flex items-center gap-2 rounded-md border border-primary/40 bg-primary/10 text-primary-glow hover:bg-primary/20 px-6 py-3 text-sm font-semibold transition"
             >
-              <Users size={16} /> JOIN THE LEAGUE
+              <Users size={16} /> ACCOUNT LOGIN
             </Link>
-            <button className="inline-flex items-center gap-2 rounded-md border border-border bg-background/50 backdrop-blur px-6 py-3 text-sm font-semibold text-white cursor-pointer">
-              <Play size={16} /> WATCH TRAILER
-            </button>
+            <Link
+              to="/league"
+              className="inline-flex items-center gap-2 rounded-md border border-border bg-background/50 backdrop-blur px-6 py-3 text-sm font-semibold text-white hover:bg-secondary/40 transition cursor-pointer"
+            >
+              <Play size={16} /> EXPLORE BPL MODEL
+            </Link>
           </div>
         </div>
       </section>

@@ -125,20 +125,6 @@ function RootShell({ children }: { children: ReactNode }) {
 }
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
-  const location = useLocation();
-  const navigate = useNavigate();
-
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      const onboarded = localStorage.getItem("bpl_user_onboarded") === "true";
-      const pathname = location.pathname;
-      const isPublicOnboardingRoute = pathname === "/join" || pathname.startsWith("/join/") || pathname === "/login";
-      
-      if (!onboarded && !isPublicOnboardingRoute) {
-        navigate({ to: "/join" });
-      }
-    }
-  }, [location.pathname, navigate]);
 
   return (
     <QueryClientProvider client={queryClient}>

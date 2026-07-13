@@ -4,16 +4,17 @@ import { Facebook, Twitter, Instagram, Youtube } from "lucide-react";
 export function SiteFooter() {
   return (
     <footer className="mt-24 border-t border-border bg-surface/40">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 py-12 grid gap-10 md:grid-cols-4">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 py-12 grid gap-10 md:grid-cols-3">
         <div>
           <Link to="/" className="flex items-center gap-2 font-display font-bold text-xl">
             <span className="inline-block h-8 w-8 rounded-md bg-gradient-to-br from-primary to-primary-glow" />
             BPL
           </Link>
-          <p className="mt-3 text-sm text-muted-foreground max-w-xs">
+          <p className="mt-3 text-sm text-muted-foreground max-w-xs leading-relaxed">
             India&apos;s biggest platform for indie bands. The stage is yours. The league is ours.
           </p>
         </div>
+        
         <FooterCol
           title="Explore"
           links={[
@@ -21,29 +22,40 @@ export function SiteFooter() {
             ["Events", "/events"],
             ["Bands", "/bands"],
             ["Venues", "/venues"],
+            ["Resources", "/league"],
           ]}
         />
-        <FooterCol
-          title="Resources"
-          links={[
-            ["For Bands", "/partners"],
-            ["For Venues", "/partners"],
-            ["For Partners", "/partners"],
-            ["Media Kit", "/media"],
-          ]}
-        />
-        <FooterCol
-          title="Legal"
-          links={[
-            ["Terms", "/about"],
-            ["Privacy", "/about"],
-            ["Cookies", "/about"],
-          ]}
-        />
+        
+        <div>
+          <h4 className="text-sm font-semibold uppercase tracking-wider text-foreground">Join & Media</h4>
+          <ul className="mt-4 space-y-2">
+            <li>
+              <Link to="/join/band" className="text-sm text-muted-foreground hover:text-foreground">
+                For Bands
+              </Link>
+            </li>
+            <li>
+              <Link to="/join/venue" className="text-sm text-muted-foreground hover:text-foreground">
+                For Venues
+              </Link>
+            </li>
+            <li>
+              <Link to="/join/sponsor" className="text-sm text-muted-foreground hover:text-foreground">
+                For Partners
+              </Link>
+            </li>
+            <li>
+              <Link to="/media" className="text-sm text-muted-foreground hover:text-foreground">
+                Media Kit
+              </Link>
+            </li>
+          </ul>
+        </div>
       </div>
+      
       <div className="border-t border-border">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 py-6 flex flex-col md:flex-row items-center justify-between gap-4">
-          <p className="text-xs text-muted-foreground">© 2025 BPL. All rights reserved.</p>
+          <p className="text-xs text-muted-foreground">© 2026 BPL. All rights reserved.</p>
           <div className="flex items-center gap-3 text-muted-foreground">
             <Facebook size={16} />
             <Twitter size={16} />
