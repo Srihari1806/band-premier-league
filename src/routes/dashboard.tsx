@@ -2,6 +2,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { PageShell } from "@/components/layout/PageShell";
 import { useState, useEffect } from "react";
 import { db } from "@/lib/db";
+import { isOperatorSessionActive, clearOperatorSession } from "@/lib/security";
 import { 
   User, 
   MapPin, 
@@ -53,13 +54,42 @@ function DashboardPage() {
 
   useEffect(() => {
     const user = db.getCurrentUser();
-    if (!user) {
+    const isAdminActive = isOperatorSessionActive();
+    
+    if (!user && !isAdminActive) {
       // Not logged in, redirect to login
       navigate({ to: "/login" });
       return;
     }
-    setCurrentUser(user);
-    loadProfile(user);
+
+    if (isAdminActive) {
+      const adminUser = {
+        id: "bplcreator",
+        email: "admin@bpl.in",
+        role: "operator",
+        name: "BPL League Operator",
+        status: "approved"
+      };
+      setCurrentUser(adminUser);
+      setProfileData({
+        company_name: "BPL League Operator",
+        name: "BPL League Operator",
+        email: "admin@bpl.in",
+        role: "operator",
+        status: "approved",
+        tagline: "Official BPL League Admin & Operator",
+        bio: "Oversees the seasons, coordinates venues, curates bands registry, and approves operator panel applications.",
+        city: "Hyderabad / Bangalore"
+      });
+      setName("BPL League Operator");
+      setTagline("Official BPL League Admin & Operator");
+      setBio("Oversees the seasons, coordinates venues, curates bands registry, and approves operator panel applications.");
+      setCity("Hyderabad / Bangalore");
+      setLoading(false);
+    } else {
+      setCurrentUser(user);
+      loadProfile(user!);
+    }
   }, [navigate]);
 
   const loadProfile = async (user: any) => {
@@ -134,6 +164,12 @@ function DashboardPage() {
         updatedFields.company_profile = bio;
       }
 
+      if (currentUser.role === "operator") {
+        setSuccess("Operator profile settings updated successfully (in-memory demo)!");
+        setSaving(false);
+        return;
+      }
+
       await db.updateProfile(currentUser.role, currentUser.id, updatedFields);
       setSuccess("Profile settings updated successfully!");
       // Reload session name
@@ -148,8 +184,13 @@ function DashboardPage() {
   };
 
   const handleLogout = () => {
+    if (currentUser?.role === "operator") {
+      clearOperatorSession();
+    }
     db.logoutUser();
+    localStorage.removeItem("bpl_user_onboarded");
     navigate({ to: "/login" });
+    window.location.reload();
   };
 
   if (loading) {
