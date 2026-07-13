@@ -121,26 +121,8 @@ function RootShell({ children }: { children: ReactNode }) {
     </html>
   );
 }
-
-import { useLocation, useNavigate } from "@tanstack/react-router";
-
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
-  const location = useLocation();
-  const navigate = useNavigate();
-
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      const onboarded = localStorage.getItem("bpl_user_onboarded") === "true";
-      const pathname = location.pathname;
-      
-      const isDashboardRoute = pathname === "/dashboard" || pathname.startsWith("/dashboard/");
-      
-      if (isDashboardRoute && !onboarded) {
-        navigate({ to: "/login" });
-      }
-    }
-  }, [location.pathname, navigate]);
 
   return (
     <QueryClientProvider client={queryClient}>

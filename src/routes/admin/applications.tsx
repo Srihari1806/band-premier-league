@@ -37,6 +37,7 @@ import {
   ChevronRight,
   FileText
 } from "lucide-react";
+import { getConfiguredOperatorCredentials, isOperatorSessionActive, setOperatorSessionActive, validateOperatorLogin } from "@/lib/security";
 
 export const Route = createFileRoute("/admin/applications")({
   head: () => ({
@@ -75,21 +76,17 @@ function AdminApplicationsPage() {
 
   // Load password bypass state if already entered in session
   useEffect(() => {
-    if (typeof window !== "undefined" && sessionStorage.getItem("bpl_admin_auth") === "true") {
+    if (isOperatorSessionActive()) {
       setIsAuthenticated(true);
     }
   }, []);
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    const adminUser = (import.meta.env.VITE_ADMIN_USER as string) || "bplcreator";
-    const adminPass = (import.meta.env.VITE_ADMIN_PASS as string) || "bpladmin";
-    if (loginId === adminUser && password === adminPass) {
+    if (validateOperatorLogin(loginId, password)) {
       setIsAuthenticated(true);
       setPassError("");
-      if (typeof window !== "undefined") {
-        sessionStorage.setItem("bpl_admin_auth", "true");
-      }
+      setOperatorSessionActive();
     } else {
       setPassError("Invalid Operator Login ID or Password");
     }
@@ -162,7 +159,7 @@ function AdminApplicationsPage() {
                 <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Login ID *</label>
                 <input 
                   type="text"
-                  placeholder="Enter login ID (e.g. bplcreator)"
+                  placeholder="Enter operator login ID"
                   value={loginId}
                   onChange={(e) => setLoginId(e.target.value)}
                   className="w-full bg-secondary border border-border rounded-md px-3.5 py-2.5 text-sm focus:outline-none focus:border-primary text-white mb-2"
