@@ -37,6 +37,7 @@ import {
   ChevronRight,
   FileText
 } from "lucide-react";
+import { getConfiguredOperatorCredentials, isOperatorSessionActive, setOperatorSessionActive, validateOperatorLogin } from "@/lib/security";
 
 export const Route = createFileRoute("/admin/applications")({
   head: () => ({
@@ -75,19 +76,22 @@ function AdminApplicationsPage() {
 
   // Load password bypass state if already entered in session
   useEffect(() => {
-    if (typeof window !== "undefined" && sessionStorage.getItem("bpl_admin_auth") === "true") {
+    if (isOperatorSessionActive()) {
       setIsAuthenticated(true);
     }
   }, []);
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    if (loginId === "bplcreator" && password === "bpladmin") {
+    if (!getConfiguredOperatorCredentials()) {
+      setPassError("Operator login is not configured. Set VITE_BPL_OPERATOR_ID and VITE_BPL_OPERATOR_PASSWORD in your deployment environment.");
+      return;
+    }
+
+    if (validateOperatorLogin(loginId, password)) {
       setIsAuthenticated(true);
       setPassError("");
-      if (typeof window !== "undefined") {
-        sessionStorage.setItem("bpl_admin_auth", "true");
-      }
+      setOperatorSessionActive();
     } else {
       setPassError("Invalid Operator Login ID or Password");
     }
@@ -160,7 +164,7 @@ function AdminApplicationsPage() {
                 <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Login ID *</label>
                 <input 
                   type="text"
-                  placeholder="Enter login ID (e.g. bplcreator)"
+                  placeholder="Enter operator login ID"
                   value={loginId}
                   onChange={(e) => setLoginId(e.target.value)}
                   className="w-full bg-secondary border border-border rounded-md px-3.5 py-2.5 text-sm focus:outline-none focus:border-primary text-white mb-2"
@@ -174,7 +178,7 @@ function AdminApplicationsPage() {
                   className="w-full bg-secondary border border-border rounded-md px-3.5 py-2.5 text-sm focus:outline-none focus:border-primary text-white"
                 />
                 {passError && <p className="text-red-500 text-xs mt-1 flex items-center gap-1"><AlertCircle size={12} /> {passError}</p>}
-                <p className="text-[9px] text-muted-foreground/60 mt-1.5">Note: Default credentials are <code className="text-primary-glow font-bold">bplcreator</code> / <code className="text-primary-glow font-bold">bpladmin</code></p>
+                <p className="text-[9px] text-muted-foreground/60 mt-1.5">Operator access is enabled only when deployment credentials are configured.</p>
               </div>
               <button 
                 type="submit" 
