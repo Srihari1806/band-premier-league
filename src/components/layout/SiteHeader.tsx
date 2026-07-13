@@ -34,7 +34,7 @@ export function SiteHeader() {
     if (isAdmin) {
       clearOperatorSession();
     }
-    db.logout();
+    db.logoutUser();
     localStorage.removeItem("bpl_user_onboarded");
     setOnboarded(false);
     setIsAdmin(false);
