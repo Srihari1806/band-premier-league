@@ -73,7 +73,7 @@ function LeaguePage() {
             <p className="text-xs uppercase tracking-widest text-primary-glow font-bold">The Business Engine</p>
             <h2 className="text-3xl md:text-4xl font-display font-bold text-white">How BPL Payouts Work</h2>
             <p className="text-xs text-muted-foreground leading-relaxed">
-              BPL acts as an asset-light coordinator. We enforce a transparent **40/40/20 event payout structure** and a **50/50 digital content royalty split** to align investor and artist incentives.
+              BPL acts as an asset-light coordinator. We enforce a transparent **40/30/30 event payout structure** and a **50/50 digital content royalty split** to align investor and artist incentives.
             </p>
           </div>
 
@@ -102,18 +102,18 @@ function LeaguePage() {
             <div className="bpl-card p-8 flex flex-col justify-between text-left space-y-6">
               <div className="space-y-4">
                 <div className="h-12 w-12 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center text-primary-glow">
-                  <Megaphone size={22} />
+                  <Tv size={22} />
                 </div>
                 <div>
-                  <h3 className="text-4xl font-display font-bold text-white">40% Share</h3>
-                  <p className="text-sm font-bold text-primary-glow mt-1">To Event Management / Sponsor</p>
+                  <h3 className="text-4xl font-display font-bold text-white">30% Share</h3>
+                  <p className="text-sm font-bold text-primary-glow mt-1">To Production House (Investor)</p>
                 </div>
                 <p className="text-xs text-muted-foreground leading-relaxed">
-                  Event management partners or sponsors receive a 40% ticketing split to handle show production, stage equipment setups, and on-ground logistics.
+                  The band's investing Production House receives a 30% ticketing split per show. This aligns their incentives directly with the live performance success of their drafted roster.
                 </p>
               </div>
               <div className="border-t border-border pt-4">
-                <span className="text-[10px] uppercase font-bold text-muted-foreground">Ecosystem Value: Infrastructure Sponsor</span>
+                <span className="text-[10px] uppercase font-bold text-muted-foreground">Ecosystem Value: Franchise ROI</span>
               </div>
             </div>
 
@@ -124,11 +124,11 @@ function LeaguePage() {
                   <Percent size={22} />
                 </div>
                 <div>
-                  <h3 className="text-4xl font-display font-bold text-white">20% Share</h3>
+                  <h3 className="text-4xl font-display font-bold text-white">30% Share</h3>
                   <p className="text-sm font-bold text-primary-glow mt-1">To BPL League Operator</p>
                 </div>
                 <p className="text-xs text-muted-foreground leading-relaxed">
-                  BPL retains 20% of ticket pass sales. This commission covers scoring software curation, qualifying auditions management, and platform scaling.
+                  BPL retains 30% of ticket pass sales. This commission covers league operations, prize pools, software license fees, and outsourcing on-ground event coordinators.
                 </p>
               </div>
               <div className="border-t border-border pt-4">

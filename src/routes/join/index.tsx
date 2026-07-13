@@ -490,19 +490,19 @@ function JoinHubPage() {
                 </div>
 
                 <div className="flex justify-between items-center text-xs">
-                  <span className="font-bold text-white flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-teal-400 block"></span> Event Management (Title Sponsor)</span>
-                  <span className="font-mono text-teal-400 font-bold">40% Share</span>
+                  <span className="font-bold text-white flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-teal-400 block"></span> Production House (Investor)</span>
+                  <span className="font-mono text-teal-400 font-bold">30% Share</span>
                 </div>
                 <div className="w-full bg-secondary h-2.5 rounded-full overflow-hidden">
-                  <div className="bg-teal-400 h-full rounded-full" style={{ width: "40%" }}></div>
+                  <div className="bg-teal-400 h-full rounded-full" style={{ width: "30%" }}></div>
                 </div>
 
                 <div className="flex justify-between items-center text-xs">
                   <span className="font-bold text-white flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-amber-400 block"></span> BPL League Operator</span>
-                  <span className="font-mono text-amber-400 font-bold">20% Share</span>
+                  <span className="font-mono text-amber-400 font-bold">30% Share</span>
                 </div>
                 <div className="w-full bg-secondary h-2.5 rounded-full overflow-hidden">
-                  <div className="bg-amber-400 h-full rounded-full" style={{ width: "20%" }}></div>
+                  <div className="bg-amber-400 h-full rounded-full" style={{ width: "30%" }}></div>
                 </div>
               </div>
             </div>
