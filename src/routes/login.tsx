@@ -2,6 +2,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { PageShell } from "@/components/layout/PageShell";
 import { useState } from "react";
 import { db } from "@/lib/db";
+import { getConfiguredOperatorCredentials, setOperatorSessionActive, validateOperatorLogin } from "@/lib/security";
 import { 
   Lock, 
   Mail, 

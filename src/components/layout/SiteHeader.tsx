@@ -19,6 +19,7 @@ const NAV = [
 ] as const;
 
 import { db } from "@/lib/db";
+import { isOperatorSessionActive } from "@/lib/security";
 
 export function SiteHeader() {
   const [open, setOpen] = useState(false);
@@ -29,26 +30,21 @@ export function SiteHeader() {
   useEffect(() => {
     if (typeof window !== "undefined") {
       setOnboarded(localStorage.getItem("bpl_user_onboarded") === "true");
-      setIsAdmin(window.location.pathname.startsWith("/admin"));
+      setIsAdmin(isOperatorSessionActive() || window.location.pathname.startsWith("/admin"));
       setUser(db.getCurrentUser());
     }
   }, []);
 
-  const visibleNav = onboarded
-    ? [
-        ...NAV,
-        { to: "/dashboard", label: "Dashboard" }
-      ]
-    : [
-        { to: "/join", label: "Join BPL" },
-        { to: "/login", label: "Login" },
-        ...(isAdmin ? [{ to: "/admin/applications", label: "Operator Panel" }] : [])
-      ];
+  const visibleNav = [
+    ...NAV,
+    ...(user || onboarded ? [{ to: "/dashboard", label: "Dashboard" }] : [{ to: "/login", label: "Login" }]),
+    ...(isAdmin ? [{ to: "/admin/applications", label: "Operator Panel" }] : []),
+  ];
 
   return (
     <header className="sticky top-0 z-50 backdrop-blur-xl bg-background/70 border-b border-border">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 flex items-center justify-between h-16">
-        <Link to={onboarded ? "/" : "/join"} className="flex items-center gap-2.5 font-display font-bold text-xl group">
+        <Link to="/" className="flex items-center gap-2.5 font-display font-bold text-xl group">
           <div className="h-9 w-9 rounded-lg overflow-hidden border border-primary/20 bg-background/50 flex items-center justify-center p-1 shadow-md shadow-primary/5 group-hover:border-primary/50 group-hover:shadow-glow transition-all duration-300">
             <img src={logoImg} alt="BPL Logo" className="h-full w-full object-contain" />
           </div>
