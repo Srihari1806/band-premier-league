@@ -133,10 +133,14 @@ function BandOnboardingPage() {
 
   useEffect(() => {
     const currentAccount = db.getCurrentAccount();
-    if (currentAccount && currentAccount.email && !contactEmail) {
+    if (!currentAccount) {
+      navigate({ to: "/login" });
+      return;
+    }
+    if (currentAccount.email && !contactEmail) {
       setContactEmail(currentAccount.email);
     }
-  }, [contactEmail]);
+  }, [navigate, contactEmail]);
 
   // Pre-fill contact fields from the Supabase profile (users with no role yet)
   useEffect(() => {

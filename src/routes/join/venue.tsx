@@ -81,13 +81,17 @@ function VenueOnboardingPage() {
   const [contactEmail, setContactEmail] = useState("");
   const [termsAccepted, setTermsAccepted] = useState(false);
 
-  // Pre-fill contact fields from current account if logged in
+  // Check login on mount and pre-fill contact fields from current account/profile
   useEffect(() => {
     const currentAccount = db.getCurrentAccount();
-    if (currentAccount && currentAccount.email && !contactEmail) {
+    if (!currentAccount) {
+      navigate({ to: "/login" });
+      return;
+    }
+    if (currentAccount.email && !contactEmail) {
       setContactEmail(currentAccount.email);
     }
-  }, [contactEmail]);
+  }, [navigate, contactEmail]);
 
   useEffect(() => {
     if (!profile) return;
