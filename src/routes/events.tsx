@@ -1,8 +1,6 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { PageShell } from "@/components/layout/PageShell";
-import { Calendar, MapPin, Ticket, Users } from "lucide-react";
-import bandImg from "@/assets/band-1.jpg";
-import crowdImg from "@/assets/crowd.jpg";
+import { Calendar, Bell, Music, Sparkles } from "lucide-react";
 import heroImg from "@/assets/hero-concert.jpg";
 
 export const Route = createFileRoute("/events")({
@@ -12,12 +10,12 @@ export const Route = createFileRoute("/events")({
       {
         name: "description",
         content:
-          "Book indie shows across India. Line-ups, venues, schedules, ticket tiers and live stats for every Kalakshetra event.",
+          "Kalakshetra live events — Season 1 shows being planned across India. Register to get notified when tickets go live.",
       },
       { property: "og:title", content: "Events — Kalakshetra" },
       {
         property: "og:description",
-        content: "The Kalakshetra live calendar — bookings, sponsors and live stats.",
+        content: "Season 1 gigs are being planned. Be the first to know.",
       },
     ],
   }),
@@ -27,141 +25,86 @@ export const Route = createFileRoute("/events")({
 function EventsPage() {
   return (
     <PageShell>
+      {/* Hero */}
       <section className="relative">
-        <img src={heroImg} alt="Event poster" className="h-72 md:h-[380px] w-full object-cover" />
+        <img
+          src={heroImg}
+          alt="Live concert"
+          className="h-64 md:h-[340px] w-full object-cover"
+        />
         <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-transparent" />
         <div className="absolute inset-x-0 bottom-0 mx-auto max-w-7xl px-4 sm:px-6 pb-10">
-          <p className="text-xs uppercase tracking-[0.2em] text-primary-glow mb-3">Live Show</p>
+          <p className="text-xs uppercase tracking-[0.2em] text-primary-glow mb-2">Season 1</p>
           <h1 className="text-4xl md:text-6xl font-display font-bold text-white">
-            Kurukshetra Campus Clash
+            Upcoming Events
           </h1>
-          <div className="mt-3 flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
-            <span className="flex items-center gap-1">
-              <Calendar size={14} /> 12 OCT 2026 · 6:00 PM
-            </span>
-            <span className="flex items-center gap-1">
-              <MapPin size={14} /> AntiSOCIAL, Bangalore
-            </span>
-          </div>
         </div>
       </section>
 
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 py-12 grid gap-8 lg:grid-cols-3">
-        <div className="lg:col-span-2 space-y-6">
-          <Panel title="Bands">
-            <div className="flex flex-wrap gap-4">
-              {["The F16s", "Kryptos", "Blakc", "When Chai Met Toast"].map((n) => (
-                <div key={n} className="flex items-center gap-3 bpl-card px-4 py-2.5">
-                  <div className="h-9 w-9 rounded-full overflow-hidden border border-border">
-                    <img src={bandImg} alt={n} className="h-full w-full object-cover" />
-                  </div>
-                  <span className="text-sm font-medium">{n}</span>
-                </div>
-              ))}
-            </div>
-          </Panel>
-
-          <Panel title="Schedule">
-            <div className="divide-y divide-border">
-              {[
-                ["5:00 PM", "Doors Open"],
-                ["6:00 PM", "The F16s"],
-                ["7:00 PM", "Kryptos"],
-                ["8:00 PM", "Aswekeepsearching"],
-              ].map(([t, e]) => (
-                <div key={t} className="flex items-center gap-6 py-3">
-                  <p className="text-primary-glow font-semibold w-24">{t}</p>
-                  <p>{e}</p>
-                </div>
-              ))}
-            </div>
-          </Panel>
-
-          <Panel title="Sponsors">
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-              {["RedBull", "Jack & Jones", "boAt", "Monster"].map((s) => (
-                <div key={s} className="bpl-card px-4 py-6 text-center font-display font-semibold">
-                  {s}
-                </div>
-              ))}
-            </div>
-          </Panel>
-
-          <Panel title="Gallery">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-              {[crowdImg, bandImg, crowdImg, bandImg].map((i, x) => (
-                <img
-                  key={x}
-                  src={i}
-                  alt="gallery"
-                  loading="lazy"
-                  className="aspect-square object-cover rounded-lg border border-border"
-                />
-              ))}
-            </div>
-          </Panel>
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 py-16 space-y-12">
+        {/* Empty state */}
+        <div className="bpl-card p-16 text-center space-y-5 max-w-2xl mx-auto">
+          <div className="h-16 w-16 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center mx-auto">
+            <Calendar size={28} className="text-primary-glow" />
+          </div>
+          <div className="space-y-2">
+            <h2 className="text-xl font-display font-bold text-white">
+              No events scheduled yet
+            </h2>
+            <p className="text-sm text-muted-foreground max-w-sm mx-auto leading-relaxed">
+              We're yet to host our first show. Season 1 gigs are being lined up across India — the calendar opens when the first band and venue slots are confirmed.
+            </p>
+          </div>
+          <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
+            <Link
+              to="/join"
+              className="btn-primary btn-primary-hover inline-flex items-center gap-2 rounded-md px-5 py-2.5 text-sm font-semibold"
+            >
+              <Sparkles size={14} /> Apply as a Band
+            </Link>
+            <Link
+              to="/join"
+              className="inline-flex items-center gap-2 rounded-md border border-border bg-secondary/30 hover:bg-secondary/50 text-white px-5 py-2.5 text-sm font-semibold transition"
+            >
+              <Bell size={14} /> Get Notified
+            </Link>
+          </div>
         </div>
 
-        <aside className="space-y-6">
-          <Panel title="Tickets">
-            <div className="space-y-3">
-              {[
-                ["Standard Pass", "₹199"],
-                ["Premium Supporter Pass", "₹499"],
-                ["Franchise VIP Pass", "₹999"],
-              ].map(([n, p]) => (
-                <div
-                  key={n}
-                  className="flex items-center justify-between rounded-lg border border-border p-3"
-                >
-                  <div>
-                    <p className="text-sm font-medium">{n}</p>
-                    {n === "Standard Pass" && (
-                      <p className="text-[10px] text-primary-glow mt-0.5">
-                        * Includes complimentary ₹100 F&B food coupon
-                      </p>
-                    )}
-                  </div>
-                  <p className="font-display font-bold text-lg">{p}</p>
+        {/* What to expect */}
+        <div className="space-y-4">
+          <h2 className="text-2xl font-display font-bold text-white text-center">
+            What a Kalakshetra show looks like
+          </h2>
+          <div className="grid gap-4 md:grid-cols-3">
+            {[
+              {
+                icon: Music,
+                title: "Live indie acts",
+                desc: "Original music only. Every set is a league fixture — bands earn points, rankings, and production backing.",
+              },
+              {
+                icon: Calendar,
+                title: "Fixed ticket tiers",
+                desc: "Standard, Premium, and Franchise VIP passes. Standard tickets include a café F&B voucher at partner venues.",
+              },
+              {
+                icon: Bell,
+                title: "Fan pass ecosystem",
+                desc: "Season passes let fans follow their favourite bands across the full league calendar — not just one night.",
+              },
+            ].map(({ icon: Icon, title, desc }) => (
+              <div key={title} className="bpl-card p-6 space-y-3">
+                <div className="h-10 w-10 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center">
+                  <Icon size={18} className="text-primary-glow" />
                 </div>
-              ))}
-              <p className="text-[10px] text-muted-foreground leading-normal pt-1">
-                * All standard entry tickets are tied to our cafe-partner F&B voucher program.
-                Support your local venues and bands directly.
-              </p>
-              <button className="btn-primary btn-primary-hover w-full rounded-md px-4 py-3 text-sm font-semibold flex items-center justify-center gap-2">
-                <Ticket size={16} /> Book Tickets
-              </button>
-            </div>
-          </Panel>
-
-          <Panel title="Live Statistics">
-            <div className="grid grid-cols-2 gap-3">
-              <Stat v="812" l="Attendees" />
-              <Stat v="1.2K" l="Live Views" />
-              <Stat v="₹3.4L" l="Revenue" />
-              <Stat v="98%" l="Capacity" />
-            </div>
-          </Panel>
-        </aside>
+                <p className="font-semibold text-white">{title}</p>
+                <p className="text-xs text-muted-foreground leading-relaxed">{desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
     </PageShell>
-  );
-}
-
-function Panel({ title, children }: { title: string; children: React.ReactNode }) {
-  return (
-    <div className="bpl-card p-6">
-      <h2 className="text-sm uppercase tracking-widest text-muted-foreground mb-4">{title}</h2>
-      {children}
-    </div>
-  );
-}
-function Stat({ v, l }: { v: string; l: string }) {
-  return (
-    <div className="rounded-lg border border-border p-3">
-      <p className="text-xl font-display font-bold gradient-text">{v}</p>
-      <p className="text-xs text-muted-foreground">{l}</p>
-    </div>
   );
 }

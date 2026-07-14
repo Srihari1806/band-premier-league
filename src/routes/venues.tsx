@@ -1,7 +1,6 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { PageShell } from "@/components/layout/PageShell";
-import { Users, Speaker, Ruler, Phone, Mail, MapPin } from "lucide-react";
-import venueImg from "@/assets/venue-1.jpg";
+import { MapPin, TrendingUp, Users, Sparkles } from "lucide-react";
 import crowdImg from "@/assets/crowd.jpg";
 
 export const Route = createFileRoute("/venues")({
@@ -11,10 +10,13 @@ export const Route = createFileRoute("/venues")({
       {
         name: "description",
         content:
-          "Explore cafes, pubs, campus stadiums and auditorium partners hosting Kalakshetra tour circuits across India.",
+          "Partner venues for Kalakshetra Season 1 — cafes, pubs, and live music spaces hosting the indie league across India.",
       },
       { property: "og:title", content: "Venues — Kalakshetra" },
-      { property: "og:description", content: "The rooms where indie music happens." },
+      {
+        property: "og:description",
+        content: "Be the room where indie music happens. Partner with Kalakshetra for Season 1.",
+      },
     ],
   }),
   component: VenuesPage,
@@ -23,144 +25,113 @@ export const Route = createFileRoute("/venues")({
 function VenuesPage() {
   return (
     <PageShell>
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 py-12">
-        {/* Gallery */}
-        <div className="grid gap-3 md:grid-cols-3">
-          <img
-            src={venueImg}
-            alt="Venue"
-            className="md:col-span-2 h-72 md:h-[420px] w-full object-cover rounded-xl border border-border"
-          />
-          <div className="grid gap-3">
-            <img
-              src={crowdImg}
-              alt="Venue"
-              className="h-full w-full object-cover rounded-xl border border-border"
-              loading="lazy"
-            />
-            <img
-              src={venueImg}
-              alt="Venue"
-              className="h-full w-full object-cover rounded-xl border border-border"
-              loading="lazy"
-            />
-          </div>
+      {/* Hero */}
+      <section className="relative">
+        <img
+          src={crowdImg}
+          alt="Live venue crowd"
+          className="h-64 md:h-[340px] w-full object-cover"
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-transparent" />
+        <div className="absolute inset-x-0 bottom-0 mx-auto max-w-7xl px-4 sm:px-6 pb-10">
+          <p className="text-xs uppercase tracking-[0.2em] text-primary-glow mb-2">Season 1</p>
+          <h1 className="text-4xl md:text-6xl font-display font-bold text-white">
+            Venue Partners
+          </h1>
         </div>
+      </section>
 
-        <div className="mt-8 grid gap-8 lg:grid-cols-3">
-          <div className="lg:col-span-2 space-y-6">
-            <div className="flex items-start gap-4">
-              <div className="h-16 w-16 rounded-lg bg-black flex items-center justify-center font-display font-bold">
-                BLUE
-              </div>
-              <div>
-                <h1 className="text-3xl md:text-4xl font-display font-bold">BlueFROG</h1>
-                <p className="text-muted-foreground flex items-center gap-1 mt-1">
-                  <MapPin size={14} /> Delhi
-                </p>
-              </div>
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 py-16 grid gap-10 lg:grid-cols-3">
+        {/* Main content */}
+        <div className="lg:col-span-2 space-y-10">
+          {/* Empty state */}
+          <div className="bpl-card p-14 text-center space-y-5">
+            <div className="h-16 w-16 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center mx-auto">
+              <MapPin size={28} className="text-primary-glow" />
             </div>
-
-            <div className="grid grid-cols-3 gap-3">
-              <Spec icon={Users} label="Capacity" value="700 Pax" />
-              <Spec icon={Ruler} label="Stage" value="40 × 24 ft" />
-              <Spec icon={Speaker} label="Sound" value="L-Acoustics" />
+            <div className="space-y-2">
+              <h2 className="text-xl font-display font-bold text-white">
+                No venues listed yet
+              </h2>
+              <p className="text-sm text-muted-foreground max-w-md mx-auto leading-relaxed">
+                We're scouting cafes and live music spaces for Season 1. Partner venues get revenue splits, co-branding, and a permanent slot in the league fixture calendar.
+              </p>
             </div>
+            <Link
+              to="/join"
+              className="btn-primary btn-primary-hover inline-flex items-center gap-2 rounded-md px-5 py-2.5 text-sm font-semibold"
+            >
+              <Sparkles size={14} /> Register Your Venue
+            </Link>
+          </div>
 
-            <Panel title="Past Events">
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                {[crowdImg, venueImg, crowdImg, venueImg].map((i, x) => (
-                  <img
-                    key={x}
-                    src={i}
-                    alt="past"
-                    loading="lazy"
-                    className="aspect-square object-cover rounded-lg border border-border"
-                  />
-                ))}
-              </div>
-            </Panel>
-
-            <Panel title="Availability — July 2025">
-              <div className="grid grid-cols-7 gap-1 text-center text-xs">
-                {"Sun,Mon,Tue,Wed,Thu,Fri,Sat".split(",").map((d) => (
-                  <div key={d} className="py-2 text-muted-foreground uppercase tracking-wider">
-                    {d}
+          {/* What venue partnership means */}
+          <div className="space-y-4">
+            <h2 className="text-xl font-display font-bold text-white">
+              What venue partnership means
+            </h2>
+            <div className="grid gap-4 sm:grid-cols-3">
+              {[
+                {
+                  icon: TrendingUp,
+                  title: "Revenue splits",
+                  desc: "Earn a share of ticket revenue for every show hosted at your space. No upfront fees.",
+                },
+                {
+                  icon: Users,
+                  title: "Built-in audience",
+                  desc: "Kalakshetra promotes every gig to its fan base — you get footfall, not just a booking.",
+                },
+                {
+                  icon: MapPin,
+                  title: "League fixture slot",
+                  desc: "Partner venues are locked into the Season 1 calendar — recurring shows, not one-offs.",
+                },
+              ].map(({ icon: Icon, title, desc }) => (
+                <div key={title} className="bpl-card p-5 space-y-3">
+                  <div className="h-9 w-9 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center">
+                    <Icon size={16} className="text-primary-glow" />
                   </div>
-                ))}
-                {Array.from({ length: 31 }, (_, i) => i + 1).map((n) => {
-                  const busy = [12, 18, 22, 27].includes(n);
-                  return (
-                    <div
-                      key={n}
-                      className={`aspect-square rounded-md flex items-center justify-center ${busy ? "bg-primary/20 text-primary-glow border border-primary/40" : "border border-border"}`}
-                    >
-                      {n}
-                    </div>
-                  );
-                })}
-              </div>
-            </Panel>
-
-            <Panel title="Contact">
-              <div className="space-y-2 text-sm">
-                <p className="flex items-center gap-2 text-muted-foreground">
-                  <Phone size={14} /> +91 98765 43210
-                </p>
-                <p className="flex items-center gap-2 text-muted-foreground">
-                  <Mail size={14} /> bookings@bluefrog.co.in
-                </p>
-                <p className="flex items-center gap-2 text-muted-foreground">
-                  <MapPin size={14} /> BlueFROG, Hauz Khas Village, New Delhi — 110016
-                </p>
-              </div>
-            </Panel>
-          </div>
-
-          <aside className="space-y-4">
-            <div className="bpl-card p-6 sticky top-24">
-              <p className="text-xs uppercase tracking-widest text-muted-foreground">
-                Partner with us
-              </p>
-              <h3 className="mt-1 text-xl font-display font-bold">List your venue</h3>
-              <p className="mt-2 text-sm text-muted-foreground">
-                Get discovered by 1,200+ indie bands and dozens of production houses.
-              </p>
-              <button className="btn-primary btn-primary-hover mt-5 w-full rounded-md px-5 py-3 text-sm font-semibold">
-                Apply as Venue Partner
-              </button>
+                  <p className="font-semibold text-white text-sm">{title}</p>
+                  <p className="text-xs text-muted-foreground leading-relaxed">{desc}</p>
+                </div>
+              ))}
             </div>
-          </aside>
+          </div>
         </div>
+
+        {/* Sidebar CTA */}
+        <aside>
+          <div className="bpl-card p-6 sticky top-24 space-y-4">
+            <p className="text-xs uppercase tracking-widest text-muted-foreground">
+              Partner with us
+            </p>
+            <h3 className="text-xl font-display font-bold text-white">List your venue</h3>
+            <p className="text-sm text-muted-foreground leading-relaxed">
+              Cafes, pubs, campus stages, and auditoriums are all welcome. Season 1 slots are limited — early partners get priority in the fixture draw.
+            </p>
+            <ul className="space-y-2 text-xs text-muted-foreground">
+              {[
+                "Revenue share on every show",
+                "Co-branding and social promotion",
+                "Priority in Season 1 fixture draw",
+                "Dedicated Kalakshetra venue page",
+              ].map((pt) => (
+                <li key={pt} className="flex items-start gap-2">
+                  <span className="text-primary-glow mt-0.5">✓</span>
+                  {pt}
+                </li>
+              ))}
+            </ul>
+            <Link
+              to="/join"
+              className="btn-primary btn-primary-hover mt-2 w-full rounded-md px-5 py-3 text-sm font-semibold flex items-center justify-center gap-2"
+            >
+              <Sparkles size={14} /> Apply as Venue Partner
+            </Link>
+          </div>
+        </aside>
       </div>
     </PageShell>
-  );
-}
-
-function Panel({ title, children }: { title: string; children: React.ReactNode }) {
-  return (
-    <div className="bpl-card p-6">
-      <h2 className="text-sm uppercase tracking-widest text-muted-foreground mb-4">{title}</h2>
-      {children}
-    </div>
-  );
-}
-function Spec({
-  icon: Icon,
-  label,
-  value,
-}: {
-  icon: React.ComponentType<{ size?: number }>;
-  label: string;
-  value: string;
-}) {
-  return (
-    <div className="bpl-card p-4">
-      <div className="text-primary-glow">
-        <Icon size={20} />
-      </div>
-      <p className="mt-2 text-xs text-muted-foreground">{label}</p>
-      <p className="font-semibold">{value}</p>
-    </div>
   );
 }
