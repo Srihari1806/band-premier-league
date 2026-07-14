@@ -242,3 +242,59 @@ CREATE POLICY "Allow admin all access to league_stats" ON league_stats FOR ALL U
 INSERT INTO league_stats (id, total_shows, bands, cities, attendance, revenue, streaming, followers)
 VALUES ('current_season', '512', '1,248', '56', '2.3M+', '₹12.7Cr', '8.9M+', '1.6M+')
 ON CONFLICT (id) DO NOTHING;
+
+
+-- --------------------------------------------------
+-- 9. SOLO ARTIST APPLICATIONS TABLE
+-- --------------------------------------------------
+CREATE TABLE IF NOT EXISTS artist_applications (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()),
+    status TEXT NOT NULL DEFAULT 'approved', -- auto-approved so profile link works immediately
+    -- Core Identity
+    band_name TEXT,           -- display name (artist stage name)
+    contact_name TEXT,
+    contact_phone TEXT,
+    contact_email TEXT,
+    -- Profile
+    profile_image TEXT,       -- Base64 or URL
+    banner_image TEXT,        -- Base64 or URL
+    bio TEXT,
+    home_city TEXT,
+    city TEXT,
+    homeCity TEXT,
+    -- Artist Details
+    "artistRoles" JSONB DEFAULT '[]'::jsonb,  -- e.g. ["Singer", "Guitarist"]
+    skills TEXT,
+    genre TEXT,
+    -- Availability & Fees
+    fee_range TEXT,
+    "feeRange" TEXT,
+    preferred_cities TEXT,
+    "preferredCities" TEXT,
+    -- Career
+    timeline JSONB DEFAULT '[]'::jsonb,    -- [{year, event}]
+    releases JSONB DEFAULT '[]'::jsonb,    -- [{year, title, link}]
+    -- Social Links
+    instagram_url TEXT,
+    youtube_url TEXT,
+    spotify_url TEXT,
+    saavn_url TEXT,
+    apple_url TEXT,
+    website_url TEXT,
+    demo_video TEXT,
+    -- Gallery
+    gallery JSONB DEFAULT '[]'::jsonb,
+    performance_photos JSONB DEFAULT '[]'::jsonb,
+    -- Internal
+    username TEXT,
+    password TEXT
+);
+
+ALTER TABLE artist_applications ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Allow public read access to artists" ON artist_applications;
+CREATE POLICY "Allow public read access to artists" ON artist_applications FOR SELECT USING (true);
+DROP POLICY IF EXISTS "Allow public insert for artists" ON artist_applications;
+CREATE POLICY "Allow public insert for artists" ON artist_applications FOR INSERT WITH CHECK (true);
+DROP POLICY IF EXISTS "Allow all access to authenticated users artists" ON artist_applications;
+CREATE POLICY "Allow all access to authenticated users artists" ON artist_applications FOR ALL USING (true) WITH CHECK (true);
