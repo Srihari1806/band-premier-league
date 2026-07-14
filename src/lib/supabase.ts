@@ -16,8 +16,12 @@ export const supabase =
     : null;
 
 export async function signInWithGoogle() {
-  if (!supabase) throw new Error("Supabase not configured � add VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY to your .env");
-  const redirectTo = `${window.location.origin}/auth/callback`;
+  if (!supabase) throw new Error("Supabase not configured – add VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY to your .env");
+  const isLocal = window.location.origin.includes("localhost") || window.location.origin.includes("127.0.0.1");
+  const redirectTo = isLocal
+    ? `${window.location.origin}/auth/callback`
+    : "https://band-premier-league.vercel.app/auth/callback";
+  
   const { error } = await supabase.auth.signInWithOAuth({
     provider: "google",
     options: { redirectTo, queryParams: { prompt: "select_account" } },
