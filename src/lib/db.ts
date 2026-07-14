@@ -8,6 +8,28 @@ export interface BandMember {
   experience?: string;
 }
 
+export interface ArtistApplication {
+  id: string;
+  created_at: string;
+  status: "pending" | "approved" | "rejected" | "needs_changes";
+  name: string;
+  username: string;
+  contact_email: string;
+  contact_phone: string;
+  about: string;
+  tagline?: string;
+  home_city: string;
+  roles: string[];
+  skills?: string[];
+  releases?: { title: string; year: string; link?: string }[];
+  performances?: { event: string; year: string; location?: string }[];
+  awards?: { title: string; year: string }[];
+  timeline?: { year: number; event: string }[];
+  gallery?: string[];
+  videos?: string[];
+  social_links?: { instagram?: string; spotify?: string; youtube?: string; saavn?: string; apple?: string; website?: string };
+}
+
 export interface BandApplication {
   id: string;
   created_at: string;
@@ -23,12 +45,8 @@ export interface BandApplication {
   tagline?: string;
   languages?: string;
   original_covers?: string; // Originals, Covers, Both
-  mission?: string;
-  influences?: string;
-  musical_style?: string;
-  achievements?: string;
-  performance_photos?: string[]; // Array of Base64
-  members?: BandMember[];
+  members?: { artistId: string; name: string; username: string; position: string }[];
+  owners: string[]; // List of user account IDs
   instagram_url: string;
   youtube_url?: string;
   spotify_url?: string;
@@ -45,6 +63,17 @@ export interface BandApplication {
   contact_phone: string;
   contact_email: string;
   manager_name?: string;
+}
+
+export interface BandInvitation {
+  id: string;
+  bandId: string;
+  bandName: string;
+  artistId: string;
+  artistName: string;
+  position: string;
+  status: "pending" | "accepted" | "declined";
+  timestamp: string;
 }
 
 export interface VenueApplication {
@@ -246,6 +275,7 @@ function initLocalStorage() {
   // Init application arrays if they don't exist
   const roles = [
     "band",
+    "artist",
     "venue",
     "production_house",
     "sponsor",
@@ -269,6 +299,9 @@ function initLocalStorage() {
   }
   if (!localStorage.getItem("bpl_notifications")) {
     localStorage.setItem("bpl_notifications", JSON.stringify([]));
+  }
+  if (!localStorage.getItem("bpl_band_invitations")) {
+    localStorage.setItem("bpl_band_invitations", JSON.stringify([]));
   }
 }
 
@@ -545,7 +578,8 @@ export const db = {
       if (account.activeWorkspaceId) {
         const workspace = account.workspaces.find((w) => w.id === account.activeWorkspaceId);
         if (workspace) {
-          const key = getStorageKey(workspace.role);
+          const resolvedRole = workspace.role === "band_member" ? "band" : workspace.role;
+          const key = getStorageKey(resolvedRole);
           const records = JSON.parse(localStorage.getItem(key) || "[]");
           const profile = records.find((r: any) => r.id === workspace.id) || {};
           
@@ -1007,5 +1041,199 @@ export const db = {
 
     records[idx].password = newPasswordText;
     localStorage.setItem(key, JSON.stringify(records));
+  },
+
+  searchArtists(query: string): any[] {
+    if (typeof window === "undefined") return [];
+    const artists = JSON.parse(localStorage.getItem("bpl_artist_applications") || "[]");
+    const searchVal = query.trim().toLowerCase();
+    if (!searchVal) return [];
+    return artists.filter((a: any) => 
+      (a.name && a.name.toLowerCase().includes(searchVal)) ||
+      (a.username && a.username.toLowerCase().includes(searchVal)) ||
+      (a.contact_email && a.contact_email.toLowerCase().includes(searchVal)) ||
+      (a.contact_phone && a.contact_phone.includes(searchVal))
+    );
+  },
+
+  sendBandInvitation(bandId: string, artistId: string, position: string) {
+    if (typeof window === "undefined") return;
+    const invites = JSON.parse(localStorage.getItem("bpl_band_invitations") || "[]");
+    
+    const bands = JSON.parse(localStorage.getItem("bpl_band_applications") || "[]");
+    const artists = JSON.parse(localStorage.getItem("bpl_artist_applications") || "[]");
+    const band = bands.find((b: any) => b.id === bandId);
+    const artist = artists.find((a: any) => a.id === artistId);
+    if (!band || !artist) throw new Error("Band or Artist not found.");
+
+    if (invites.some((i: any) => i.bandId === bandId && i.artistId === artistId && i.status === "pending")) {
+      throw new Error("An invitation is already pending for this artist.");
+    }
+
+    const newInvite: BandInvitation = {
+      id: "inv_" + Math.random().toString(36).substring(2, 11),
+      bandId,
+      bandName: band.band_name || band.name,
+      artistId,
+      artistName: artist.name || artist.band_name,
+      position,
+      status: "pending",
+      timestamp: new Date().toISOString()
+    };
+
+    invites.push(newInvite);
+    localStorage.setItem("bpl_band_invitations", JSON.stringify(invites));
+
+    const accounts = JSON.parse(localStorage.getItem("bpl_accounts") || "[]");
+    const artistAccount = accounts.find((a: any) => a.email.toLowerCase() === artist.contact_email.toLowerCase());
+    if (artistAccount) {
+      const allNotifs = JSON.parse(localStorage.getItem("bpl_notifications") || "[]");
+      const newNotif = {
+        id: "notif_" + Math.random().toString(36).substring(2, 11),
+        userId: artistAccount.id,
+        title: "Band Invitation",
+        body: `${band.band_name} invited you to join as ${position}.`,
+        timestamp: new Date().toISOString(),
+        read: false,
+        type: "invite"
+      };
+      allNotifs.unshift(newNotif);
+      localStorage.setItem("bpl_notifications", JSON.stringify(allNotifs));
+    }
+  },
+
+  respondToInvitation(inviteId: string, accept: boolean) {
+    if (typeof window === "undefined") return;
+    const invites = JSON.parse(localStorage.getItem("bpl_band_invitations") || "[]");
+    const idx = invites.findIndex((i: any) => i.id === inviteId);
+    if (idx === -1) return;
+
+    const invite = invites[idx];
+    invite.status = accept ? "accepted" : "declined";
+    invites[idx] = invite;
+    localStorage.setItem("bpl_band_invitations", JSON.stringify(invites));
+
+    if (accept) {
+      const bands = JSON.parse(localStorage.getItem("bpl_band_applications") || "[]");
+      const bIdx = bands.findIndex((b: any) => b.id === invite.bandId);
+      if (bIdx !== -1) {
+        const band = bands[bIdx];
+        if (!band.members) band.members = [];
+        
+        if (!band.members.some((m: any) => m.artistId === invite.artistId)) {
+          const artists = JSON.parse(localStorage.getItem("bpl_artist_applications") || "[]");
+          const artist = artists.find((a: any) => a.id === invite.artistId);
+          
+          band.members.push({
+            artistId: invite.artistId,
+            name: invite.artistName,
+            username: artist?.username || invite.artistId,
+            position: invite.position
+          });
+        }
+        bands[bIdx] = band;
+        localStorage.setItem("bpl_band_applications", JSON.stringify(bands));
+
+        const accounts = JSON.parse(localStorage.getItem("bpl_accounts") || "[]");
+        const artists = JSON.parse(localStorage.getItem("bpl_artist_applications") || "[]");
+        const artist = artists.find((a: any) => a.id === invite.artistId);
+        if (artist) {
+          const userAccIdx = accounts.findIndex((a: any) => a.email.toLowerCase() === artist.contact_email.toLowerCase());
+          if (userAccIdx !== -1) {
+            const account = accounts[userAccIdx];
+            if (!account.workspaces.some((w: any) => w.id === invite.bandId)) {
+              account.workspaces.push({
+                id: invite.bandId,
+                role: "band_member",
+                name: invite.bandName,
+                status: "approved"
+              });
+              accounts[userAccIdx] = account;
+              localStorage.setItem("bpl_accounts", JSON.stringify(accounts));
+              
+              const curr = localStorage.getItem("bpl_current_account");
+              if (curr) {
+                const currAcc = JSON.parse(curr);
+                if (currAcc.id === account.id) {
+                  localStorage.setItem("bpl_current_account", JSON.stringify(account));
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+
+  removeBandMember(bandId: string, artistId: string) {
+    if (typeof window === "undefined") return;
+    const bands = JSON.parse(localStorage.getItem("bpl_band_applications") || "[]");
+    const bIdx = bands.findIndex((b: any) => b.id === bandId);
+    if (bIdx !== -1) {
+      const band = bands[bIdx];
+      if (band.members) {
+        band.members = band.members.filter((m: any) => m.artistId !== artistId);
+      }
+      bands[bIdx] = band;
+      localStorage.setItem("bpl_band_applications", JSON.stringify(bands));
+    }
+
+    const artists = JSON.parse(localStorage.getItem("bpl_artist_applications") || "[]");
+    const artist = artists.find((a: any) => a.id === artistId);
+    if (artist) {
+      const accounts = JSON.parse(localStorage.getItem("bpl_accounts") || "[]");
+      const uIdx = accounts.findIndex((a: any) => a.email.toLowerCase() === artist.contact_email.toLowerCase());
+      if (uIdx !== -1) {
+        const account = accounts[uIdx];
+        account.workspaces = account.workspaces.filter((w: any) => w.id !== bandId);
+        
+        if (account.activeWorkspaceId === bandId) {
+          const artistWorkspace = account.workspaces.find((w: any) => w.role === "artist");
+          account.activeWorkspaceId = artistWorkspace ? artistWorkspace.id : undefined;
+        }
+
+        accounts[uIdx] = account;
+        localStorage.setItem("bpl_accounts", JSON.stringify(accounts));
+
+        const curr = localStorage.getItem("bpl_current_account");
+        if (curr) {
+          const currAcc = JSON.parse(curr);
+          if (currAcc.id === account.id) {
+            localStorage.setItem("bpl_current_account", JSON.stringify(account));
+          }
+        }
+      }
+    }
+  },
+
+  updateMemberPosition(bandId: string, artistId: string, position: string) {
+    if (typeof window === "undefined") return;
+    const bands = JSON.parse(localStorage.getItem("bpl_band_applications") || "[]");
+    const bIdx = bands.findIndex((b: any) => b.id === bandId);
+    if (bIdx !== -1) {
+      const band = bands[bIdx];
+      if (band.members) {
+        const mIdx = band.members.findIndex((m: any) => m.artistId === artistId);
+        if (mIdx !== -1) {
+          band.members[mIdx].position = position;
+        }
+      }
+      bands[bIdx] = band;
+      localStorage.setItem("bpl_band_applications", JSON.stringify(bands));
+    }
+  },
+
+  getArtistBands(artistId: string): any[] {
+    if (typeof window === "undefined") return [];
+    const bands = JSON.parse(localStorage.getItem("bpl_band_applications") || "[]");
+    return bands.filter((b: any) => 
+      b.members && b.members.some((m: any) => m.artistId === artistId)
+    );
+  },
+
+  getPendingInvitations(artistId: string): any[] {
+    if (typeof window === "undefined") return [];
+    const invites = JSON.parse(localStorage.getItem("bpl_band_invitations") || "[]");
+    return invites.filter((i: any) => i.artistId === artistId && i.status === "pending");
   },
 };

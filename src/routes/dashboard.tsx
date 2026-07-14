@@ -39,6 +39,7 @@ import {
   X,
   Volume2,
   Music,
+  Trash,
 } from "lucide-react";
 
 export const Route = createFileRoute("/dashboard")({
@@ -54,7 +55,17 @@ type DashboardTab =
   | "calendar"
   | "messages"
   | "curation"
-  | "security";
+  | "security"
+  | "members"
+  | "invites";
+
+const PROFESSIONAL_ROLES = [
+  "Singer", "Songwriter", "Lyricist", "Composer", "Music Producer", "DJ", "Rapper", "Beatboxer",
+  "Guitarist", "Bass Guitarist", "Keyboardist", "Pianist", "Drummer", "Violinist", "Flautist", "Saxophonist",
+  "Percussionist", "Classical Vocalist", "Instrumentalist", "Sound Engineer", "Live Audio Engineer",
+  "Mixing Engineer", "Mastering Engineer", "Arranger", "Sound Designer", "Music Director",
+  "Music Video Director", "Photographer", "Videographer", "Artist Manager", "Booking Manager", "Tour Manager"
+];
 
 function DashboardPage() {
   const navigate = useNavigate();
@@ -79,6 +90,20 @@ function DashboardPage() {
   const [genre, setGenre] = useState("");
   const [customGenre, setCustomGenre] = useState("");
   const [feeRange, setFeeRange] = useState("");
+
+  // Artist specific states
+  const [artistRoles, setArtistRoles] = useState<string[]>([]);
+  const [skills, setSkills] = useState("");
+  const [timeline, setTimeline] = useState<{ year: number; event: string }[]>([]);
+  const [tempYear, setTempYear] = useState("");
+  const [tempEvent, setTempEvent] = useState("");
+  const [releases, setReleases] = useState<{ title: string; year: string; link?: string }[]>([]);
+  const [tempReleaseTitle, setTempReleaseTitle] = useState("");
+  const [tempReleaseYear, setTempReleaseYear] = useState("");
+
+  // Artist Search States (for members manage)
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState<any[]>([]);
 
   // Feedback states
   const [saving, setSaving] = useState(false);
@@ -369,7 +394,16 @@ function DashboardPage() {
 
     try {
       const updatedFields: any = {};
-      if (currentUser.role === "band" || currentUser.role === "solo") {
+      if (currentUser.role === "artist") {
+        updatedFields.name = name;
+        updatedFields.about = bio;
+        updatedFields.home_city = city;
+        updatedFields.roles = artistRoles;
+        updatedFields.skills = skills.split(",").map(s => s.trim()).filter(Boolean);
+        updatedFields.releases = releases;
+        updatedFields.timeline = timeline;
+        updatedFields.fee_range = feeRange;
+      } else if (currentUser.role === "band" || currentUser.role === "solo") {
         updatedFields.band_name = name;
         updatedFields.bio = bio;
         updatedFields.home_city = city;
@@ -536,46 +570,148 @@ function DashboardPage() {
               {/* NOTION DROPDOWN SWITCHER */}
               {isSwitcherOpen && (
                 <div className="absolute top-full left-4 right-4 mt-1 bg-slate-900 border border-border rounded-lg shadow-xl py-2 z-50 animate-fade-in text-left">
-                  <p className="text-[9px] uppercase font-bold text-muted-foreground px-3 py-1.5 tracking-wider">
-                    Switch Workspace
-                  </p>
-                  <div className="max-h-48 overflow-y-auto space-y-0.5 px-1.5">
-                    {currentAccount?.workspaces.map((w: WorkspaceItem) => {
-                      const wBadge = getRoleBadge(w.role);
-                      const WIcon = wBadge.icon;
-                      return (
-                        <button
-                          key={w.id}
-                          onClick={() => handleWorkspaceSwitch(w.id)}
-                          className={`w-full flex items-center justify-between p-2 rounded hover:bg-secondary transition text-left cursor-pointer ${
-                            w.id === currentUser?.id ? "bg-primary/5 border border-primary/20" : ""
-                          }`}
-                        >
-                          <div className="flex items-center gap-2 truncate">
-                            <div className="p-1 rounded bg-secondary text-muted-foreground">
-                              <WIcon size={12} />
-                            </div>
-                            <span className="text-xs font-semibold text-white truncate">{w.name}</span>
-                          </div>
-                          {w.id === currentUser?.id && (
-                            <Check size={12} className="text-primary-glow shrink-0" />
-                          )}
-                        </button>
-                      );
-                    })}
+                  <div className="max-h-56 overflow-y-auto space-y-2 px-2 text-[11px]">
+                    {/* Artist Profiles */}
+                    {currentAccount?.workspaces.filter((w: any) => w.role === "artist").length > 0 && (
+                      <div>
+                        <p className="text-[9px] uppercase font-bold text-muted-foreground px-2 py-1 tracking-wider">Artist Profile</p>
+                        {currentAccount?.workspaces.filter((w: any) => w.role === "artist").map((w: WorkspaceItem) => {
+                          const wBadge = getRoleBadge(w.role);
+                          const WIcon = wBadge.icon;
+                          return (
+                            <button
+                              key={w.id}
+                              onClick={() => handleWorkspaceSwitch(w.id)}
+                              className={`w-full flex items-center justify-between p-1.5 rounded hover:bg-secondary transition text-left cursor-pointer ${
+                                w.id === currentUser?.id ? "bg-primary/5 border border-primary/20" : ""
+                              }`}
+                            >
+                              <div className="flex items-center gap-2 truncate">
+                                <div className="p-1 rounded bg-secondary text-muted-foreground shrink-0">
+                                  <WIcon size={12} />
+                                </div>
+                                <span className="text-xs font-semibold text-white truncate">{w.name}</span>
+                              </div>
+                              {w.id === currentUser?.id && (
+                                <Check size={12} className="text-primary-glow shrink-0" />
+                              )}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    )}
+
+                    {/* Owned Bands */}
+                    {currentAccount?.workspaces.filter((w: any) => w.role === "band").length > 0 && (
+                      <div className="mt-1">
+                        <p className="text-[9px] uppercase font-bold text-muted-foreground px-2 py-1 tracking-wider">Owned Bands</p>
+                        {currentAccount?.workspaces.filter((w: any) => w.role === "band").map((w: WorkspaceItem) => {
+                          const wBadge = getRoleBadge(w.role);
+                          const WIcon = wBadge.icon;
+                          return (
+                            <button
+                              key={w.id}
+                              onClick={() => handleWorkspaceSwitch(w.id)}
+                              className={`w-full flex items-center justify-between p-1.5 rounded hover:bg-secondary transition text-left cursor-pointer ${
+                                w.id === currentUser?.id ? "bg-primary/5 border border-primary/20" : ""
+                              }`}
+                            >
+                              <div className="flex items-center gap-2 truncate">
+                                <div className="p-1 rounded bg-secondary text-muted-foreground shrink-0">
+                                  <WIcon size={12} />
+                                </div>
+                                <span className="text-xs font-semibold text-white truncate">{w.name}</span>
+                              </div>
+                              {w.id === currentUser?.id && (
+                                <Check size={12} className="text-primary-glow shrink-0" />
+                              )}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    )}
+
+                    {/* Joined Bands */}
+                    {currentAccount?.workspaces.filter((w: any) => w.role === "band_member").length > 0 && (
+                      <div className="mt-1">
+                        <p className="text-[9px] uppercase font-bold text-muted-foreground px-2 py-1 tracking-wider">Joined Bands</p>
+                        {currentAccount?.workspaces.filter((w: any) => w.role === "band_member").map((w: WorkspaceItem) => {
+                          const wBadge = getRoleBadge(w.role);
+                          const WIcon = wBadge.icon;
+                          return (
+                            <button
+                              key={w.id}
+                              onClick={() => handleWorkspaceSwitch(w.id)}
+                              className={`w-full flex items-center justify-between p-1.5 rounded hover:bg-secondary transition text-left cursor-pointer ${
+                                w.id === currentUser?.id ? "bg-primary/5 border border-primary/20" : ""
+                              }`}
+                            >
+                              <div className="flex items-center gap-2 truncate">
+                                <div className="p-1 rounded bg-secondary text-muted-foreground shrink-0">
+                                  <WIcon size={12} />
+                                </div>
+                                <span className="text-xs font-semibold text-white truncate">{w.name}</span>
+                              </div>
+                              {w.id === currentUser?.id && (
+                                <Check size={12} className="text-primary-glow shrink-0" />
+                              )}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    )}
+
+                    {/* Other workspaces */}
+                    {currentAccount?.workspaces.filter((w: any) => w.role !== "artist" && w.role !== "band" && w.role !== "band_member").length > 0 && (
+                      <div className="mt-1">
+                        <p className="text-[9px] uppercase font-bold text-muted-foreground px-2 py-1 tracking-wider">Other Profiles</p>
+                        {currentAccount?.workspaces.filter((w: any) => w.role !== "artist" && w.role !== "band" && w.role !== "band_member").map((w: WorkspaceItem) => {
+                          const wBadge = getRoleBadge(w.role);
+                          const WIcon = wBadge.icon;
+                          return (
+                            <button
+                              key={w.id}
+                              onClick={() => handleWorkspaceSwitch(w.id)}
+                              className={`w-full flex items-center justify-between p-1.5 rounded hover:bg-secondary transition text-left cursor-pointer ${
+                                w.id === currentUser?.id ? "bg-primary/5 border border-primary/20" : ""
+                              }`}
+                            >
+                              <div className="flex items-center gap-2 truncate">
+                                <div className="p-1 rounded bg-secondary text-muted-foreground shrink-0">
+                                  <WIcon size={12} />
+                                </div>
+                                <span className="text-xs font-semibold text-white truncate">{w.name}</span>
+                              </div>
+                              {w.id === currentUser?.id && (
+                                <Check size={12} className="text-primary-glow shrink-0" />
+                              )}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    )}
                   </div>
-                  <div className="border-t border-border mt-2 pt-2 px-1.5">
+                  <div className="border-t border-border mt-2 pt-2 px-1.5 space-y-1">
                     <Link
-                      to="/onboarding"
+                      to="/join/band"
+                      search={{ type: "band" }}
                       className="w-full flex items-center gap-2 p-2 rounded hover:bg-secondary text-xs text-primary-glow font-bold transition text-left"
                       onClick={() => setIsSwitcherOpen(false)}
                     >
                       <Plus size={12} />
-                      Register New Role
+                      Create New Band
+                    </Link>
+                    <Link
+                      to="/onboarding"
+                      className="w-full flex items-center gap-2 p-2 rounded hover:bg-secondary text-[11px] text-muted-foreground transition text-left"
+                      onClick={() => setIsSwitcherOpen(false)}
+                    >
+                      <Plus size={12} />
+                      Register Other Roles
                     </Link>
                     <button
                       onClick={handleLogout}
-                      className="w-full flex items-center gap-2 p-2 rounded hover:bg-red-500/10 text-xs text-red-400 font-semibold transition text-left cursor-pointer mt-1"
+                      className="w-full flex items-center gap-2 p-2 rounded hover:bg-red-500/10 text-xs text-red-400 font-semibold transition text-left cursor-pointer"
                     >
                       <LogOut size={12} />
                       Logout Account
@@ -627,21 +763,58 @@ function DashboardPage() {
                       : "text-muted-foreground hover:text-foreground hover:bg-secondary/40"
                   }`}
                 >
-                  <User size={14} /> Profile Workspace
+                  <User size={14} /> {currentUser?.role === "band_member" ? "View Band Details" : "Edit Profile"}
                 </button>
               )}
 
-              {/* WORKSPACE CALENDAR */}
-              <button
-                onClick={() => setActiveTab("calendar")}
-                className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-xs font-bold transition ${
-                  activeTab === "calendar"
-                    ? "bg-primary text-primary-foreground shadow-glow"
-                    : "text-muted-foreground hover:text-foreground hover:bg-secondary/40"
-                }`}
-              >
-                <Calendar size={14} /> Schedule & Calendar
-              </button>
+              {/* BAND INVITES (Artist only) */}
+              {currentUser?.role === "artist" && (
+                <button
+                  onClick={() => setActiveTab("invites")}
+                  className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-xs font-bold transition ${
+                    activeTab === "invites"
+                      ? "bg-primary text-primary-foreground shadow-glow"
+                      : "text-muted-foreground hover:text-foreground hover:bg-secondary/40"
+                  }`}
+                >
+                  <div className="flex items-center gap-2.5">
+                    <Bell size={14} /> Band Invitations
+                  </div>
+                  {currentUser && db.getPendingInvitations(currentUser.id).length > 0 && (
+                    <span className="h-4 px-1 rounded-full bg-red-500 text-[9px] font-bold text-white flex items-center justify-center min-w-4">
+                      {db.getPendingInvitations(currentUser.id).length}
+                    </span>
+                  )}
+                </button>
+              )}
+
+              {/* MANAGE MEMBERS (Band Owner only) */}
+              {currentUser?.role === "band" && (
+                <button
+                  onClick={() => setActiveTab("members")}
+                  className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-xs font-bold transition ${
+                    activeTab === "members"
+                      ? "bg-primary text-primary-foreground shadow-glow"
+                      : "text-muted-foreground hover:text-foreground hover:bg-secondary/40"
+                  }`}
+                >
+                  <Users size={14} /> Manage Members
+                </button>
+              )}
+
+              {/* WORKSPACE CALENDAR (Bands and Venue only) */}
+              {(currentUser?.role === "band" || currentUser?.role === "band_member" || currentUser?.role === "venue") && (
+                <button
+                  onClick={() => setActiveTab("calendar")}
+                  className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-xs font-bold transition ${
+                    activeTab === "calendar"
+                      ? "bg-primary text-primary-foreground shadow-glow"
+                      : "text-muted-foreground hover:text-foreground hover:bg-secondary/40"
+                  }`}
+                >
+                  <Calendar size={14} /> Schedule & Calendar
+                </button>
+              )}
 
               {/* WORKSPACE CHAT MESSAGES */}
               <button
@@ -890,6 +1063,70 @@ function DashboardPage() {
                       </button>
                     </div>
                   </div>
+
+                  {/* My Current Bands (Artist only) */}
+                  {currentUser?.role === "artist" && (
+                    <div className="bpl-card p-6 text-left space-y-4">
+                      <h3 className="text-sm font-semibold text-white font-display">My Current Bands</h3>
+                      {db.getArtistBands(currentUser.id).length === 0 ? (
+                        <p className="text-xs text-muted-foreground">You are not a member of any bands yet. Band owners can invite you using your name, username, email, or phone number.</p>
+                      ) : (
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                          {db.getArtistBands(currentUser.id).map((band: any) => (
+                            <a
+                              key={band.id}
+                              href={`/bands/${band.id}`}
+                              className="flex items-center justify-between p-3 rounded-lg border border-border bg-secondary/20 hover:bg-secondary/40 transition group"
+                            >
+                              <div className="flex items-center gap-2.5 overflow-hidden">
+                                <div className="h-8 w-8 rounded bg-primary/10 flex items-center justify-center text-primary-glow font-bold shrink-0">
+                                  {band.profile_image ? (
+                                    <img src={band.profile_image} alt={band.band_name} className="h-full w-full object-cover rounded" />
+                                  ) : (
+                                    <Music size={14} />
+                                  )}
+                                </div>
+                                <div className="truncate text-left">
+                                  <p className="text-xs font-bold text-white group-hover:text-primary-glow transition truncate">{band.band_name}</p>
+                                  <p className="text-[10px] text-muted-foreground truncate">{band.home_city} • {band.genre}</p>
+                                </div>
+                              </div>
+                              <ChevronRight size={14} className="text-muted-foreground shrink-0" />
+                            </a>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Band Members list (Band Owner / Member only) */}
+                  {(currentUser?.role === "band" || currentUser?.role === "band_member") && (
+                    <div className="bpl-card p-6 text-left space-y-4">
+                      <h3 className="text-sm font-semibold text-white font-display">Band Members & Lineup</h3>
+                      {!currentUser.profileData.members || currentUser.profileData.members.length === 0 ? (
+                        <p className="text-xs text-muted-foreground">No members added yet. {currentUser.role === "band" && "Go to 'Manage Members' to invite artists!"}</p>
+                      ) : (
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                          {currentUser.profileData.members.map((m: any) => (
+                            <div
+                              key={m.artistId}
+                              className="flex items-center justify-between p-3 rounded-lg border border-border bg-secondary/20"
+                            >
+                              <div className="flex items-center gap-2.5 overflow-hidden">
+                                <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center text-primary-glow font-bold shrink-0">
+                                  <User size={14} />
+                                </div>
+                                <div className="truncate text-left">
+                                  <p className="text-xs font-bold text-white truncate">{m.name}</p>
+                                  <p className="text-[10px] text-muted-foreground truncate">{m.position}</p>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
               )}
 
@@ -902,6 +1139,12 @@ function DashboardPage() {
                       Update the public description and catalog statistics for this registry item.
                     </p>
                   </div>
+
+                  {currentUser?.role === "band_member" && (
+                    <div className="bg-amber-500/10 border border-amber-500/30 text-amber-400 rounded-md p-3.5 text-xs">
+                      This profile workspace is in read-only mode because you are a Band Member, not a Band Owner.
+                    </div>
+                  )}
 
                   {success && (
                     <div className="bg-green-500/10 border border-green-500/30 text-green-400 rounded-md p-3 text-xs flex gap-2">
@@ -927,7 +1170,8 @@ function DashboardPage() {
                           type="text"
                           value={name}
                           onChange={(e) => setName(e.target.value)}
-                          className="w-full bg-secondary border border-border rounded-md px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-primary"
+                          disabled={currentUser?.role === "band_member" || saving}
+                          className="w-full bg-secondary border border-border rounded-md px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-primary disabled:opacity-60"
                           required
                         />
                       </div>
@@ -939,7 +1183,8 @@ function DashboardPage() {
                           type="text"
                           value={city}
                           onChange={(e) => setCity(e.target.value)}
-                          className="w-full bg-secondary border border-border rounded-md px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-primary"
+                          disabled={currentUser?.role === "band_member" || saving}
+                          className="w-full bg-secondary border border-border rounded-md px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-primary disabled:opacity-60"
                           required
                         />
                       </div>
@@ -953,7 +1198,8 @@ function DashboardPage() {
                         type="text"
                         value={tagline}
                         onChange={(e) => setTagline(e.target.value)}
-                        className="w-full bg-secondary border border-border rounded-md px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-primary"
+                        disabled={currentUser?.role === "band_member" || saving}
+                        className="w-full bg-secondary border border-border rounded-md px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-primary disabled:opacity-60"
                         placeholder="e.g. India's loudest progressive metal ensemble"
                       />
                     </div>
@@ -965,7 +1211,8 @@ function DashboardPage() {
                       <textarea
                         value={bio}
                         onChange={(e) => setBio(e.target.value)}
-                        className="w-full bg-secondary border border-border rounded-md px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-primary h-28 resize-none"
+                        disabled={currentUser?.role === "band_member" || saving}
+                        className="w-full bg-secondary border border-border rounded-md px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-primary h-28 resize-none disabled:opacity-60"
                         placeholder="Tell the community about your journey, history, and achievements..."
                       />
                     </div>
@@ -980,7 +1227,8 @@ function DashboardPage() {
                             type="text"
                             value={genre}
                             onChange={(e) => setGenre(e.target.value)}
-                            className="w-full bg-secondary border border-border rounded-md px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-primary"
+                            disabled={currentUser?.role === "band_member" || saving}
+                            className="w-full bg-secondary border border-border rounded-md px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-primary disabled:opacity-60"
                             placeholder="e.g. Rock, Folk, Electronic"
                           />
                         </div>
@@ -994,21 +1242,412 @@ function DashboardPage() {
                           type="text"
                           value={feeRange}
                           onChange={(e) => setFeeRange(e.target.value)}
-                          className="w-full bg-secondary border border-border rounded-md px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-primary"
+                          disabled={currentUser?.role === "band_member" || saving}
+                          className="w-full bg-secondary border border-border rounded-md px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-primary disabled:opacity-60"
                           placeholder="e.g. ₹25,000 - ₹40,000 per gig"
                         />
                       </div>
                     </div>
 
-                    <button
-                      type="submit"
-                      disabled={saving}
-                      className="btn-primary btn-primary-hover px-6 py-2.5 rounded-md text-xs font-bold text-white flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
-                    >
-                      <Save size={14} />
-                      {saving ? "Saving Workspace..." : "Save Changes"}
-                    </button>
+                    {currentUser?.role === "artist" && (
+                      <div className="space-y-6 pt-4 border-t border-border/40">
+                        {/* Roles checkboxes */}
+                        <div className="space-y-1.5">
+                          <label className="text-[10px] uppercase tracking-wider text-muted-foreground block font-bold">
+                            Professional Roles
+                          </label>
+                          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-[140px] overflow-y-auto pr-2 border border-border/20 p-2 rounded bg-black/10">
+                            {PROFESSIONAL_ROLES.map((roleName) => {
+                              const checked = artistRoles.includes(roleName);
+                              return (
+                                <label
+                                  key={roleName}
+                                  className={`flex items-center gap-1.5 p-2 rounded border cursor-pointer transition select-none ${
+                                    checked
+                                      ? "bg-primary/10 border-primary text-primary-glow font-bold"
+                                      : "bg-secondary/40 border-border/60 text-muted-foreground hover:text-white"
+                                  }`}
+                                >
+                                  <input
+                                    type="checkbox"
+                                    className="hidden"
+                                    checked={checked}
+                                    onChange={() => {
+                                      if (checked) {
+                                        setArtistRoles((prev) => prev.filter((r) => r !== roleName));
+                                      } else {
+                                        setArtistRoles((prev) => [...prev, roleName]);
+                                      }
+                                    }}
+                                  />
+                                  <span className="text-[10px]">{roleName}</span>
+                                </label>
+                              );
+                            })}
+                          </div>
+                        </div>
+
+                        {/* Skills input */}
+                        <div className="space-y-1.5">
+                          <label className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                            Technical Skills (Comma-separated)
+                          </label>
+                          <input
+                            type="text"
+                            value={skills}
+                            onChange={(e) => setSkills(e.target.value)}
+                            className="w-full bg-secondary border border-border rounded-md px-3.5 py-2.5 text-xs text-white focus:outline-none"
+                            placeholder="e.g. Ableton Live, Logic Pro, Riffing"
+                          />
+                        </div>
+
+                        {/* Releases Manager */}
+                        <div className="space-y-3 pt-2">
+                          <label className="text-[10px] uppercase tracking-wider text-muted-foreground block font-bold">Music Releases Catalog</label>
+                          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 items-end bg-secondary/10 p-3 border border-border rounded-lg">
+                            <div className="space-y-1">
+                              <label className="text-[8px] uppercase tracking-wider text-muted-foreground">Release Title</label>
+                              <input
+                                type="text"
+                                placeholder="e.g. Summer Breeze Single"
+                                value={tempReleaseTitle}
+                                onChange={(e) => setTempReleaseTitle(e.target.value)}
+                                className="w-full bg-secondary border border-border rounded px-2 py-1 text-xs text-white"
+                              />
+                            </div>
+                            <div className="space-y-1">
+                              <label className="text-[8px] uppercase tracking-wider text-muted-foreground">Year</label>
+                              <input
+                                type="text"
+                                placeholder="e.g. 2025"
+                                value={tempReleaseYear}
+                                onChange={(e) => setTempReleaseYear(e.target.value)}
+                                className="w-full bg-secondary border border-border rounded px-2 py-1 text-xs text-white"
+                              />
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                if (tempReleaseTitle.trim() && tempReleaseYear.trim()) {
+                                  setReleases((prev) => [...prev, { title: tempReleaseTitle.trim(), year: tempReleaseYear.trim() }]);
+                                  setTempReleaseTitle("");
+                                  setTempReleaseYear("");
+                                }
+                              }}
+                              className="py-1 bg-primary/20 hover:bg-primary/30 border border-primary/30 text-white rounded text-[10px] font-bold uppercase transition"
+                            >
+                              Add Release
+                            </button>
+                          </div>
+                          {releases.length > 0 && (
+                            <div className="space-y-1 max-h-[100px] overflow-y-auto">
+                              {releases.map((rel, idx) => (
+                                <div key={idx} className="flex justify-between items-center bg-secondary/40 p-2 border border-border rounded text-[11px]">
+                                  <span className="text-white">{rel.title} <span className="text-muted-foreground">({rel.year})</span></span>
+                                  <button type="button" onClick={() => setReleases((prev) => prev.filter((_, i) => i !== idx))} className="text-red-400 text-[10px] hover:underline">Remove</button>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Timeline Manager */}
+                        <div className="space-y-3 pt-2">
+                          <label className="text-[10px] uppercase tracking-wider text-muted-foreground block font-bold">Timeline Milestones</label>
+                          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 items-end bg-secondary/10 p-3 border border-border rounded-lg">
+                            <div className="space-y-1">
+                              <label className="text-[8px] uppercase tracking-wider text-muted-foreground">Year</label>
+                              <input
+                                type="number"
+                                placeholder="e.g. 2026"
+                                value={tempYear}
+                                onChange={(e) => setTempYear(e.target.value)}
+                                className="w-full bg-secondary border border-border rounded px-2 py-1 text-xs text-white"
+                              />
+                            </div>
+                            <div className="space-y-1 col-span-1 sm:col-span-2">
+                              <label className="text-[8px] uppercase tracking-wider text-muted-foreground">Milestone Event</label>
+                              <div className="flex gap-2">
+                                <input
+                                  type="text"
+                                  placeholder="e.g. Joined Band OG"
+                                  value={tempEvent}
+                                  onChange={(e) => setTempEvent(e.target.value)}
+                                  className="flex-1 bg-secondary border border-border rounded px-2 py-1 text-xs text-white"
+                                />
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    if (tempYear.trim() && tempEvent.trim()) {
+                                      setTimeline((prev) => [...prev, { year: Number(tempYear), event: tempEvent.trim() }].sort((a,b)=>a.year - b.year));
+                                      setTempYear("");
+                                      setTempEvent("");
+                                    }
+                                  }}
+                                  className="px-3 bg-primary/20 hover:bg-primary/30 border border-primary/30 text-white rounded text-[10px] font-bold uppercase transition"
+                                >
+                                  Add
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                          {timeline.length > 0 && (
+                            <div className="space-y-1 max-h-[100px] overflow-y-auto">
+                              {timeline.map((item, idx) => (
+                                <div key={idx} className="flex justify-between items-center bg-secondary/40 p-2 border border-border rounded text-[11px]">
+                                  <span className="text-white"><span className="text-primary-glow font-bold">{item.year}</span> {item.event}</span>
+                                  <button type="button" onClick={() => setTimeline((prev) => prev.filter((_, i) => i !== idx))} className="text-red-400 text-[10px] hover:underline">Remove</button>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
+
+                    {currentUser?.role !== "band_member" && (
+                      <button
+                        type="submit"
+                        disabled={saving}
+                        className="btn-primary btn-primary-hover px-6 py-2.5 rounded-md text-xs font-bold text-white flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
+                      >
+                        <Save size={14} />
+                        {saving ? "Saving Workspace..." : "Save Changes"}
+                      </button>
+                    )}
                   </form>
+                </div>
+              )}
+
+              {/* TAB: BAND INVITATIONS (ARTISTS ONLY) */}
+              {activeTab === "invites" && currentUser?.role === "artist" && (
+                <div className="bpl-card p-6 space-y-4 animate-fade-in text-left">
+                  <h2 className="text-xl font-display font-bold text-white">Band Invitations</h2>
+                  <p className="text-xs text-muted-foreground">
+                    Review band joining invitations sent to your profile. Accepting an invitation links you to their active roster.
+                  </p>
+
+                  {db.getPendingInvitations(currentUser.id).length === 0 ? (
+                    <div className="py-8 text-center border border-dashed border-border/45 rounded-lg">
+                      <Bell size={24} className="mx-auto text-muted-foreground mb-2" />
+                      <p className="text-xs text-muted-foreground">No pending invitations at the moment.</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      {db.getPendingInvitations(currentUser.id).map((invite: any) => (
+                        <div key={invite.id} className="flex flex-col sm:flex-row justify-between sm:items-center p-4 bg-secondary/30 border border-border rounded-lg gap-4 text-xs">
+                          <div>
+                            <span className="font-bold text-white text-sm">{invite.bandName}</span>
+                            <p className="text-[10px] text-muted-foreground mt-0.5">
+                              Invited you as <span className="text-primary-glow font-bold">{invite.position}</span>
+                            </p>
+                            <p className="text-[9px] text-muted-foreground mt-1">Received {new Date(invite.timestamp).toLocaleDateString()}</p>
+                          </div>
+
+                          <div className="flex gap-2 shrink-0">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                db.respondToInvitation(invite.id, false);
+                                const refreshedAccount = db.getCurrentAccount();
+                                setCurrentAccount(refreshedAccount);
+                                const refreshedUser = db.getCurrentUser();
+                                setCurrentUser(refreshedUser);
+                              }}
+                              className="px-4 py-2 border border-border bg-secondary hover:bg-slate-800 text-white rounded text-[10px] font-bold uppercase transition"
+                            >
+                              Decline
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                db.respondToInvitation(invite.id, true);
+                                alert(`You have joined ${invite.bandName}!`);
+                                const refreshedAccount = db.getCurrentAccount();
+                                setCurrentAccount(refreshedAccount);
+                                const refreshedUser = db.getCurrentUser();
+                                setCurrentUser(refreshedUser);
+                              }}
+                              className="px-4 py-2 bg-primary hover:bg-primary-glow border border-primary text-primary-foreground rounded text-[10px] font-bold uppercase transition"
+                            >
+                              Accept & Join
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* TAB: MANAGE MEMBERS (BAND OWNERS ONLY) */}
+              {activeTab === "members" && currentUser?.role === "band" && (
+                <div className="space-y-6 animate-fade-in text-left">
+                  <div className="bpl-card p-6 space-y-4">
+                    <h2 className="text-xl font-display font-bold text-white">Manage Band Lineup</h2>
+                    <p className="text-xs text-muted-foreground">
+                      Bands on Kalakshetra are built via invitation. Search individual Artists below and send them an invite to join your lineup.
+                    </p>
+
+                    <div className="space-y-3 pt-2">
+                      <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-bold">
+                        Search Artists
+                      </label>
+                      <div className="relative">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={16} />
+                        <input
+                          type="text"
+                          placeholder="Search by name, username, email, or phone..."
+                          value={searchQuery}
+                          onChange={(e) => {
+                            setSearchQuery(e.target.value);
+                            const results = db.searchArtists(e.target.value);
+                            setSearchResults(results);
+                          }}
+                          className="w-full bg-secondary border border-border rounded-md pl-10 pr-4 py-2.5 text-xs text-white focus:outline-none focus:border-primary"
+                        />
+                      </div>
+
+                      {searchQuery.trim() && (
+                        <div className="border border-border/60 bg-black/20 rounded-lg p-2 max-h-56 overflow-y-auto space-y-2 mt-2">
+                          {searchResults.length === 0 ? (
+                            <p className="text-xs text-muted-foreground p-3 text-center">No artists found matching "{searchQuery}"</p>
+                          ) : (
+                            searchResults.map((artist: any) => {
+                              const isMember = currentUser.profileData.members?.some((m: any) => m.artistId === artist.id);
+                              return (
+                                <div key={artist.id} className="flex flex-col sm:flex-row justify-between sm:items-center gap-3 p-3 bg-secondary/40 border border-border/40 rounded-lg">
+                                  <div className="flex items-center gap-3">
+                                    <div className="h-9 w-9 rounded-full bg-primary/10 flex items-center justify-center text-primary-glow font-bold shrink-0">
+                                      {artist.profile_image ? (
+                                        <img src={artist.profile_image} alt={artist.name} className="h-full w-full object-cover rounded-full" />
+                                      ) : (
+                                        <User size={16} />
+                                      )}
+                                    </div>
+                                    <div>
+                                      <p className="text-xs font-bold text-white">{artist.name}</p>
+                                      <p className="text-[10px] text-muted-foreground">@{artist.username} • {artist.roles?.join(", ")}</p>
+                                    </div>
+                                  </div>
+
+                                  {isMember ? (
+                                    <span className="text-[10px] text-primary-glow font-semibold bg-primary/15 border border-primary/20 px-2.5 py-1 rounded-full uppercase">
+                                      Already Member
+                                    </span>
+                                  ) : (
+                                    <div className="flex items-center gap-2">
+                                      <select
+                                        id={`pos-${artist.id}`}
+                                        className="bg-secondary border border-border rounded px-2 py-1 text-[10px] text-white focus:outline-none"
+                                        defaultValue="Lead Vocal"
+                                      >
+                                        <option value="Founder">Founder</option>
+                                        <option value="Co-Founder">Co-Founder</option>
+                                        <option value="Lead Vocal">Lead Vocal</option>
+                                        <option value="Backing Vocal">Backing Vocal</option>
+                                        <option value="Lead Guitar">Lead Guitar</option>
+                                        <option value="Rhythm Guitar">Rhythm Guitar</option>
+                                        <option value="Bass">Bass</option>
+                                        <option value="Keyboard">Keyboard</option>
+                                        <option value="Drums">Drums</option>
+                                        <option value="Percussion">Percussion</option>
+                                        <option value="Producer">Producer</option>
+                                        <option value="Manager">Manager</option>
+                                        <option value="Guest Artist">Guest Artist</option>
+                                      </select>
+                                      <button
+                                        type="button"
+                                        onClick={() => {
+                                          const posSelect = document.getElementById(`pos-${artist.id}`) as HTMLSelectElement;
+                                          const pos = posSelect ? posSelect.value : "Lead Vocal";
+                                          try {
+                                            db.sendBandInvitation(currentUser.id, artist.id, pos);
+                                            alert(`Invitation sent to ${artist.name} as ${pos}!`);
+                                            setSearchQuery("");
+                                          } catch (e: any) {
+                                            alert(e.message || "Failed to send invitation.");
+                                          }
+                                        }}
+                                        className="bg-primary hover:bg-primary-glow text-primary-foreground rounded text-[10px] px-3 py-1 font-bold uppercase transition"
+                                      >
+                                        Invite
+                                      </button>
+                                    </div>
+                                  )}
+                                </div>
+                              );
+                            })
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="bpl-card p-6 space-y-4">
+                    <h3 className="text-sm font-semibold text-white font-display">Current Band Members</h3>
+                    {!currentUser.profileData.members || currentUser.profileData.members.length === 0 ? (
+                      <p className="text-xs text-muted-foreground py-2">No members in this band lineup yet. Use search above to invite musicians!</p>
+                    ) : (
+                      <div className="space-y-3">
+                        {currentUser.profileData.members.map((m: any) => (
+                          <div key={m.artistId} className="flex justify-between items-center p-3.5 bg-secondary/30 border border-border rounded-lg text-xs">
+                            <div className="flex items-center gap-3">
+                              <div className="h-8 w-8 rounded-full bg-slate-800 flex items-center justify-center text-xs text-primary-glow font-bold shrink-0">
+                                {m.name.substring(0, 1).toUpperCase()}
+                              </div>
+                              <div>
+                                <span className="font-bold text-white">{m.name}</span>
+                                <span className="text-[10px] text-muted-foreground ml-2">(@{m.username})</span>
+                                <p className="text-[10px] text-primary-glow font-medium mt-0.5">{m.position}</p>
+                              </div>
+                            </div>
+
+                            <div className="flex items-center gap-2">
+                              <select
+                                value={m.position}
+                                onChange={(e) => {
+                                  db.updateMemberPosition(currentUser.id, m.artistId, e.target.value);
+                                  const refreshedUser = db.getCurrentUser();
+                                  setCurrentUser(refreshedUser);
+                                }}
+                                className="bg-secondary border border-border rounded px-2 py-1 text-[10px] text-white focus:outline-none"
+                              >
+                                <option value="Founder">Founder</option>
+                                <option value="Co-Founder">Co-Founder</option>
+                                <option value="Lead Vocal">Lead Vocal</option>
+                                <option value="Backing Vocal">Backing Vocal</option>
+                                <option value="Lead Guitar">Lead Guitar</option>
+                                <option value="Rhythm Guitar">Rhythm Guitar</option>
+                                <option value="Bass">Bass</option>
+                                <option value="Keyboard">Keyboard</option>
+                                <option value="Drums">Drums</option>
+                                <option value="Percussion">Percussion</option>
+                                <option value="Producer">Producer</option>
+                                <option value="Manager">Manager</option>
+                                <option value="Guest Artist">Guest Artist</option>
+                              </select>
+
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  if (confirm(`Are you sure you want to remove ${m.name} from the band?`)) {
+                                    db.removeBandMember(currentUser.id, m.artistId);
+                                    const refreshedUser = db.getCurrentUser();
+                                    setCurrentUser(refreshedUser);
+                                  }
+                                }}
+                                className="p-1 text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded transition"
+                                title="Remove Member"
+                              >
+                                <Trash size={14} />
+                              </button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 </div>
               )}
 

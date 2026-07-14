@@ -16,7 +16,7 @@ import {
   User,
   ExternalLink,
 } from "lucide-react";
-import { db, type BandApplication } from "@/lib/db";
+import { db } from "@/lib/db";
 import bandImg from "@/assets/band-1.jpg";
 
 export const Route = createFileRoute("/bands/$bandId")({
@@ -26,7 +26,7 @@ export const Route = createFileRoute("/bands/$bandId")({
     if (!band) {
       throw notFound();
     }
-    return band as BandApplication;
+    return band as any;
   },
   component: BandProfilePage,
 });
@@ -178,7 +178,7 @@ function BandProfilePage() {
           {band.members && band.members.length > 0 && (
             <Panel title="Band Lineup">
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                {band.members.map((m) => (
+                {band.members.map((m: any) => (
                   <div
                     key={m.name}
                     className="text-center p-3 rounded-lg bg-surface/30 border border-border/50"
@@ -219,7 +219,7 @@ function BandProfilePage() {
           {band.performance_photos && band.performance_photos.length > 0 && (
             <Panel title="Gig Gallery">
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                {band.performance_photos.map((p, idx) => (
+                {band.performance_photos.map((p: string, idx: number) => (
                   <img
                     key={idx}
                     src={p}

@@ -41,13 +41,13 @@ const ROLE_CARDS = [
     badge: "Compete & Tour",
   },
   {
-    role: "solo",
-    title: "Solo Artist",
-    description: "Register as an independent singer, instrumentalist, or solo performer.",
+    role: "artist",
+    title: "Artist",
+    description: "Register your individual professional music profile and portfolio.",
     icon: User,
     to: "/join/band",
-    search: { type: "solo" },
-    badge: "Perform Live",
+    search: { type: "artist" },
+    badge: "Portfolio & Network",
   },
   {
     role: "venue",
