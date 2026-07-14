@@ -1,4 +1,4 @@
-import { Link, useNavigate } from "@tanstack/react-router";
+import { Link, useNavigate, useLocation } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { Menu, X, LogOut, User as UserIcon } from "lucide-react";
 import logoImg from "@/assets/logo.png";
@@ -17,6 +17,7 @@ const NAV = [
 
 export function SiteHeader() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [open, setOpen] = useState(false);
   const [onboarded, setOnboarded] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
@@ -28,7 +29,7 @@ export function SiteHeader() {
       setIsAdmin(isOperatorSessionActive() || window.location.pathname.startsWith("/admin"));
       setUser(db.getCurrentUser());
     }
-  }, []);
+  }, [location.pathname]);
 
   const handleLogout = () => {
     if (isAdmin) {
