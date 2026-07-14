@@ -50,17 +50,13 @@ function InfluencerOnboardingPage() {
   const [contactPhone, setContactPhone] = useState("");
   const [contactEmail, setContactEmail] = useState("");
 
-  // Check login on mount and pre-fill contact fields
+  // Pre-fill contact fields from current account if logged in
   useEffect(() => {
     const currentAccount = db.getCurrentAccount();
-    if (!currentAccount) {
-      navigate({ to: "/login" });
-      return;
-    }
-    if (currentAccount.email && !contactEmail) {
+    if (currentAccount && currentAccount.email && !contactEmail) {
       setContactEmail(currentAccount.email);
     }
-  }, [navigate, contactEmail]);
+  }, [contactEmail]);
 
   useEffect(() => {
     if (!profile) return;

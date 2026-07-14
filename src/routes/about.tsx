@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { PageShell } from "@/components/layout/PageShell";
 import { motion } from "framer-motion";
+import { useState } from "react";
 import {
   Users,
   Building2,
@@ -19,7 +20,10 @@ import {
   ArrowDown,
   Target,
   FileMusic,
-  HelpCircle
+  HelpCircle,
+  Handshake,
+  Percent,
+  CheckCircle2
 } from "lucide-react";
 
 export const Route = createFileRoute("/about")({
@@ -110,6 +114,9 @@ const PARTICIPANTS = [
 ];
 
 function AboutPage() {
+  const [activeExplainTab, setActiveExplainTab] = useState<
+    "comparison" | "matrix" | "venues" | "cashflows" | "pipeline"
+  >("comparison");
   return (
     <PageShell>
       <div className="bg-background text-white min-h-screen relative overflow-hidden">
@@ -325,6 +332,370 @@ function AboutPage() {
                 </div>
               </Link>
             ))}
+          </div>
+        </section>
+
+        {/* INTERACTIVE ECOSYSTEM COMPARISON SECTION */}
+        <section className="py-20 px-4 max-w-7xl mx-auto relative z-10 border-t border-border/45">
+          <div className="text-center max-w-3xl mx-auto mb-12 space-y-3">
+            <h2 className="text-xs uppercase tracking-widest text-primary-glow font-bold">Ecosystem Deep Dive</h2>
+            <h3 className="text-3xl font-display font-bold text-white">How BPL Franchise Model Works</h3>
+            <p className="text-xs md:text-sm text-muted-foreground leading-relaxed max-w-xl mx-auto">
+              Kalakshetra operates as an asset-light orchestration platform (like BCCI). We create demand, set rules, and coordinate stakeholders, while specialized partners provide venue operations, production, and marketing.
+            </p>
+          </div>
+
+          {/* EXPLANATION TABS */}
+          <div className="max-w-4xl mx-auto space-y-6">
+            <div className="flex flex-wrap border border-border rounded-lg overflow-hidden bg-secondary/20 backdrop-blur-sm">
+              {[
+                { id: "comparison", label: "IPL vs BPL Model", icon: Layers },
+                { id: "matrix", label: "Who Can Hire Whom", icon: Handshake },
+                { id: "venues", label: "Venue Options (A, B, C)", icon: Building2 },
+                { id: "pipeline", label: "Ecosystem Flow Map", icon: TrendingUp },
+              ].map((tab) => {
+                const Icon = tab.icon;
+                return (
+                  <button
+                    key={tab.id}
+                    onClick={() => setActiveExplainTab(tab.id as any)}
+                    className={`flex-1 py-3 px-4 text-xs font-bold transition-all flex items-center justify-center gap-2 border-r border-border last:border-0 ${
+                      activeExplainTab === tab.id
+                        ? "bg-primary text-white"
+                        : "text-muted-foreground hover:text-white hover:bg-secondary/40"
+                    }`}
+                  >
+                    <Icon size={14} />
+                    <span>{tab.label}</span>
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* TAB CONTENT: IPL vs BPL */}
+            {activeExplainTab === "comparison" && (
+              <div className="bpl-card p-6 md:p-8 space-y-6 text-left animate-fadeIn border border-border bg-slate-950/40 backdrop-blur">
+                <div className="space-y-1">
+                  <h3 className="text-lg font-display font-bold text-white">
+                    IPL vs BPL (Raaga of Kurukshetra) Comparison Structure
+                  </h3>
+                  <p className="text-xs text-muted-foreground">
+                    How the franchise music league maps directly onto a professional sports format.
+                  </p>
+                </div>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-xs text-left border-collapse">
+                    <thead>
+                      <tr className="border-b border-border bg-secondary/30">
+                        <th className="py-2.5 px-4 font-bold text-primary-glow uppercase tracking-wider">
+                          IPL Counterpart
+                        </th>
+                        <th className="py-2.5 px-4 font-bold text-primary-glow uppercase tracking-wider">
+                          Raaga of Kurukshetra Role
+                        </th>
+                        <th className="py-2.5 px-4 font-bold text-muted-foreground uppercase tracking-wider">
+                          Core Responsibility
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-border/40">
+                      {[
+                        [
+                          "BCCI",
+                          "Kalakshetra (Operator)",
+                          "Sets rules, runs fixtures. Gets sponsorship & ticket commission, spending on league prize pools, operations, and hiring event managers.",
+                        ],
+                        [
+                          "Franchise Owner",
+                          "Production House (Investor)",
+                          "Acts as the artist investor. Decides whether to perform services in-house or outsource. Invests directly in catalog production and band marketing.",
+                        ],
+                        [
+                          "Players",
+                          "Bands / Solo Artists",
+                          "The central talent. Retain a 40% live ticket revenue share and a 50% digital IP royalty share.",
+                        ],
+                        [
+                          "Stadium",
+                          "Venues / Cafés / Colleges",
+                          "IPL cricket stadiums require massive upfront rentals. Kalakshetra cafés/venues host for free (for F&B sales) or use hybrid guarantee + share models.",
+                        ],
+                        [
+                          "Broadcaster",
+                          "YouTube & Audio Platforms",
+                          "IPL sells satellite rights centrally. Production houses earn major revenues from YT/Spotify. Kalakshetra sells TV/OTT 'Tournament War' telecast rights.",
+                        ],
+                        [
+                          "Sponsors",
+                          "Brand Sponsors",
+                          "Provide sponsorship capital. Divided between operators (for prize pool & operations) and event manager logistics funding.",
+                        ],
+                        [
+                          "Fan Clubs",
+                          "Outsourced Promoters",
+                          "Campus & cafe promoter networks hired by Kalakshetra or Production Houses to drive ticket sales and local meetups.",
+                        ],
+                        [
+                          "Event Operations",
+                          "Contracted Event Managers",
+                          "Hired & paid directly by Kalakshetra Operator (out of the 30% ticket share) to execute matching logistics, stage setup, and security.",
+                        ],
+                      ].map(([ipl, bpl, desc], idx) => (
+                        <tr key={idx} className="hover:bg-secondary/10">
+                          <td className="py-3 px-4 font-bold text-white font-display">{ipl}</td>
+                          <td className="py-3 px-4 font-bold text-primary-glow">{bpl}</td>
+                          <td className="py-3 px-4 text-muted-foreground leading-relaxed">
+                            {desc}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+
+            {/* TAB CONTENT: HIRING MATRIX */}
+            {activeExplainTab === "matrix" && (
+              <div className="bpl-card p-6 md:p-8 space-y-6 text-left animate-fadeIn border border-border bg-slate-950/40 backdrop-blur">
+                <div className="space-y-1">
+                  <h3 className="text-lg font-display font-bold text-white">
+                    Ecosystem Hiring Matrix
+                  </h3>
+                  <p className="text-xs text-muted-foreground">
+                    Who contracts whom under Kalakshetra's decentralized, asset-light model.
+                  </p>
+                </div>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-xs text-left border-collapse">
+                    <thead>
+                      <tr className="border-b border-border bg-secondary/30">
+                        <th className="py-2.5 px-4 font-bold text-primary-glow uppercase tracking-wider">
+                          Ecosystem Service
+                        </th>
+                        <th className="py-2.5 px-4 font-bold text-primary-glow text-center uppercase tracking-wider">
+                          Hired by Kalakshetra
+                        </th>
+                        <th className="py-2.5 px-4 font-bold text-primary-glow text-center uppercase tracking-wider">
+                          Hired by Production House
+                        </th>
+                        <th className="py-2.5 px-4 font-bold text-muted-foreground uppercase tracking-wider">
+                          Operational Context
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-border/40">
+                      {[
+                        [
+                          "Event Managers",
+                          "✅ Primary (Contracted)",
+                          "❌ Rare",
+                          "Kalakshetra contracts managers to operate the tour matches cleanly on-site.",
+                        ],
+                        [
+                          "Venues / Cafes",
+                          "✅ Primary (Booked)",
+                          "❌ Rare",
+                          "Kalakshetra partners directly with cafes to secure local match stadiums.",
+                        ],
+                        [
+                          "Media Partners",
+                          "Optional",
+                          "✅ Primary (Outsourced)",
+                          "Production Houses hire videographers for official music videos & shoots.",
+                        ],
+                        [
+                          "Photographers",
+                          "Optional",
+                          "✅ Primary (Outsourced)",
+                          "Production Houses hire photographers for artist branding campaigns.",
+                        ],
+                        [
+                          "Influencers",
+                          "Optional",
+                          "✅ Primary (Outsourced)",
+                          "Production Houses pay influencers to promote their drafted bands.",
+                        ],
+                        [
+                          "Campus Networks",
+                          "✅ Yes (Qualifiers)",
+                          "✅ Yes (Ticket Promos)",
+                          "Both hire campus ambassadors to mobilize students for live fixtures.",
+                        ],
+                        [
+                          "Cafe Communities",
+                          "Optional",
+                          "✅ Primary (Outsourced)",
+                          "Production Houses hire local gathering networks for café fan promotions.",
+                        ],
+                        [
+                          "Music Distributors",
+                          "❌ No",
+                          "✅ Primary (Outsourced)",
+                          "Production Houses manage third-party distribution to release tracks.",
+                        ],
+                      ].map(([service, bpl, ph, desc], idx) => (
+                        <tr key={idx} className="hover:bg-secondary/10">
+                          <td className="py-3 px-4 font-bold text-white">{service}</td>
+                          <td className="py-3 px-4 text-center font-bold text-emerald-400">{bpl}</td>
+                          <td className="py-3 px-4 text-center font-bold text-amber-400">{ph}</td>
+                          <td className="py-3 px-4 text-muted-foreground leading-relaxed">
+                            {desc}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+
+            {/* TAB CONTENT: VENUE OPTIONS */}
+            {activeExplainTab === "venues" && (
+              <div className="bpl-card p-6 md:p-8 space-y-6 text-left animate-fadeIn border border-border bg-slate-950/40 backdrop-blur">
+                <div className="space-y-1">
+                  <h3 className="text-lg font-display font-bold text-white">
+                    Cafe / Venue Partnership Models
+                  </h3>
+                  <p className="text-xs text-muted-foreground">
+                    Cafes provide stages and seating. Kalakshetra secures stadium infrastructure under three alignment models.
+                  </p>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-2">
+                  <div className="p-5 border border-border bg-secondary/10 rounded-lg space-y-3">
+                    <div className="flex justify-between items-center">
+                      <span className="text-[9px] uppercase tracking-wider font-bold text-muted-foreground">
+                        MODEL A
+                      </span>
+                      <DollarSign size={14} className="text-primary-glow" />
+                    </div>
+                    <h4 className="text-sm font-bold text-white">Flat Venue Rental</h4>
+                    <p className="text-xs text-muted-foreground leading-relaxed">
+                      Kalakshetra pays a flat, fixed fee to rent the space upfront for the gig night. Cafe retains 100% of Food & Beverage revenues.
+                    </p>
+                    <div className="pt-2">
+                      <p className="text-[10px] font-mono font-bold text-primary-glow">
+                        Example: Fixed ₹25,000 / Show
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="p-5 border border-border bg-secondary/10 rounded-lg space-y-3">
+                    <div className="flex justify-between items-center">
+                      <span className="text-[9px] uppercase tracking-wider font-bold text-muted-foreground">
+                        MODEL B
+                      </span>
+                      <Percent size={14} className="text-primary-glow" />
+                    </div>
+                    <h4 className="text-sm font-bold text-white">Ticketing Revenue Share</h4>
+                    <p className="text-xs text-muted-foreground leading-relaxed">
+                      No upfront rental risk. The café receives a direct percentage commission of the live matchup gate ticket sales.
+                    </p>
+                    <div className="pt-2">
+                      <p className="text-[10px] font-mono font-bold text-primary-glow">
+                        Example: 15% – 25% Ticket Sales
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="p-5 border border-primary/20 bg-primary/5 rounded-lg space-y-3">
+                    <div className="flex justify-between items-center">
+                      <span className="text-[9px] uppercase tracking-wider font-bold text-primary-glow">
+                        MODEL C (Common)
+                      </span>
+                      <CheckCircle2 size={14} className="text-primary-glow" />
+                    </div>
+                    <h4 className="text-sm font-bold text-white">Hybrid Guarantee</h4>
+                    <p className="text-xs text-muted-foreground leading-relaxed">
+                      De-risks cafe venue hosts while aligning incentives. Kalakshetra pays a lower fixed base guarantee combined with a smaller ticket commission.
+                    </p>
+                    <div className="pt-2">
+                      <p className="text-[10px] font-mono font-bold text-primary-glow">
+                        Example: ₹15,000 + 10% Ticket sales
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* TAB CONTENT: ECOSYSTEM PIPELINE GRAPH */}
+            {activeExplainTab === "pipeline" && (
+              <div className="bpl-card p-6 md:p-8 space-y-6 text-left animate-fadeIn border border-border bg-slate-950/40 backdrop-blur">
+                <div className="space-y-1">
+                  <h3 className="text-lg font-display font-bold text-white">
+                    Ecosystem Hiring & Operational Flow
+                  </h3>
+                  <p className="text-xs text-muted-foreground">
+                    Visual mapping of the platform coordination flows and outsourcing relationships.
+                  </p>
+                </div>
+
+                <div className="border border-border/60 bg-secondary/10 rounded-lg p-6 space-y-8 max-w-2xl mx-auto text-center font-sans">
+                  {/* Row 1 */}
+                  <div>
+                    <div className="inline-block bg-primary/20 border border-primary/40 text-primary-glow text-xs px-4 py-2 rounded-md font-bold uppercase tracking-wider">
+                      Brand Sponsor
+                    </div>
+                    <div className="flex justify-center py-2">
+                      <ArrowDown size={14} className="text-muted-foreground" />
+                    </div>
+                    <div className="inline-block bg-slate-900 border border-border text-white text-xs px-5 py-2.5 rounded-md font-bold uppercase tracking-widest font-mono">
+                      Kalakshetra (Operator)
+                    </div>
+                  </div>
+
+                  {/* Flow Splits */}
+                  <div className="grid grid-cols-3 gap-2 max-w-md mx-auto relative">
+                    <div className="border-l border-t border-border/80 h-6 absolute left-[16.6%] right-[50%] top-0"></div>
+                    <div className="border-r border-t border-border/80 h-6 absolute left-[50%] right-[16.6%] top-0"></div>
+                    <div className="border-l border-border/80 h-6 absolute left-[50%] top-0"></div>
+                  </div>
+
+                  <div className="grid grid-cols-3 gap-3 max-w-lg mx-auto text-[10px] font-semibold text-muted-foreground">
+                    <div className="p-2 border border-border bg-secondary/20 rounded">
+                      <p className="text-white">Event Manager</p>
+                      <span className="text-[8px] text-primary-glow font-mono">(On-ground Ops)</span>
+                    </div>
+                    <div className="p-2 border border-border bg-secondary/20 rounded">
+                      <p className="text-white">Venue Rental</p>
+                      <span className="text-[8px] text-primary-glow font-mono">(Cafe / College)</span>
+                    </div>
+                    <div className="p-2 border border-border bg-secondary/20 rounded">
+                      <p className="text-white">Prize Pool</p>
+                      <span className="text-[8px] text-primary-glow font-mono">(Operations)</span>
+                    </div>
+                  </div>
+
+                  <div className="flex justify-center py-2">
+                    <ArrowDown size={14} className="text-muted-foreground animate-bounce" />
+                  </div>
+
+                  <div className="inline-block bg-primary/10 border border-primary/30 text-white text-xs px-5 py-3 rounded-lg font-bold uppercase tracking-wider">
+                    🏆 LIVE MATCH EVENT 🏆
+                  </div>
+
+                  <div className="flex justify-center py-2">
+                    <ArrowDown size={14} className="text-muted-foreground rotate-180" />
+                  </div>
+
+                  {/* Production House Inputs */}
+                  <div className="border-t border-dashed border-border/60 pt-6">
+                    <div className="inline-block bg-slate-900 border border-border text-white text-xs px-4 py-2 rounded-md font-bold uppercase tracking-wider">
+                      Production House (Investor)
+                    </div>
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-2 mt-4 max-w-md mx-auto text-[9px] text-muted-foreground">
+                      <div className="p-1.5 border border-border/50 rounded bg-secondary/10">🎸 Band Co-Production</div>
+                      <div className="p-1.5 border border-border/50 rounded bg-secondary/10">🎥 Media Partners</div>
+                      <div className="p-1.5 border border-border/50 rounded bg-secondary/10">📢 Local Community</div>
+                      <div className="p-1.5 border border-border/50 rounded bg-secondary/10">🤳 Influencer Promos</div>
+                      <div className="p-1.5 border border-border/50 rounded bg-secondary/10">🎓 Campus Promoters</div>
+                      <div className="p-1.5 border border-border/50 rounded bg-secondary/10">💿 Distro Partners</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         </section>
 
