@@ -3,6 +3,8 @@ import { PageShell } from "@/components/layout/PageShell";
 import { useEffect, useState } from "react";
 import { db } from "@/lib/db";
 import { useAuth } from "@/hooks/useAuth";
+import { useProfile } from "@/hooks/useProfile";
+import { upsertProfile } from "@/lib/supabase";
 import {
   Music,
   User,
@@ -15,7 +17,8 @@ import {
   Sparkles,
   ArrowRight,
   ShieldCheck,
-  LayoutDashboard
+  LayoutDashboard,
+  SkipForward
 } from "lucide-react";
 
 export const Route = createFileRoute("/onboarding")({
@@ -56,6 +59,7 @@ const ROLE_CARDS = [
     description: "Host official gigs, tour shows, and partner for revenue splits.",
     icon: Building2,
     to: "/join/venue",
+    search: {},
     badge: "Host Tour Matches",
   },
   {
@@ -64,6 +68,7 @@ const ROLE_CARDS = [
     description: "Support artist production, buy bidding stakes, and manage catalogs.",
     icon: Tv,
     to: "/join/production-house",
+    search: {},
     badge: "Invest in IP",
   },
   {
@@ -72,6 +77,7 @@ const ROLE_CARDS = [
     description: "Fund franchises, sponsor match stages, or advertise in streams.",
     icon: Megaphone,
     to: "/join/sponsor",
+    search: {},
     badge: "Corporate Partner",
   },
   {
@@ -80,6 +86,7 @@ const ROLE_CARDS = [
     description: "Review gigs, create vlogs, and amplify platform promotions.",
     icon: Award,
     to: "/join/influencer",
+    search: {},
     badge: "Content Creator",
   },
   {
@@ -97,6 +104,7 @@ const ROLE_CARDS = [
     description: "Manage local on-site gig logistics, security, and match setup.",
     icon: CalendarRange,
     to: "/join/event-manager",
+    search: {},
     badge: "Ecosystem Operations",
   },
 ];
@@ -104,7 +112,9 @@ const ROLE_CARDS = [
 function OnboardingSelectionPage() {
   const navigate = useNavigate();
   const { session, loading: authLoading, isSupabaseConfigured } = useAuth();
+  const { profile, loading: profileLoading } = useProfile();
   const [account, setAccount] = useState<any>(null);
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     // Wait for Supabase auth to resolve
@@ -123,7 +133,52 @@ function OnboardingSelectionPage() {
     setAccount(currentAccount);
   }, [navigate, authLoading, session, isSupabaseConfigured]);
 
-  if (!account) {
+  const handleSelectRole = async (card: typeof ROLE_CARDS[0]) => {
+    if (saving) return;
+    setSaving(true);
+    try {
+      if (isSupabaseConfigured && session) {
+        // Save role in Supabase profiles
+        await upsertProfile(session.user.id, {
+          full_name: profile?.full_name || session.user.email?.split("@")[0] || "",
+          phone: profile?.phone || "",
+          city: profile?.city || "",
+          role: card.role,
+        });
+      }
+      
+      // Update local storage role
+      const currentAccount = db.getCurrentAccount();
+      if (currentAccount) {
+        currentAccount.onboarded = true;
+        localStorage.setItem("bpl_current_account", JSON.stringify(currentAccount));
+        localStorage.setItem("bpl_user_onboarded", "true");
+      }
+
+      // Navigate to the role's application form
+      navigate({
+        to: card.to as any,
+        search: card.search as any,
+      });
+    } catch (err) {
+      console.error("Failed to select role", err);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleSkip = () => {
+    // Mark as onboarded locally to let them access dashboard
+    const currentAccount = db.getCurrentAccount();
+    if (currentAccount) {
+      currentAccount.onboarded = true;
+      localStorage.setItem("bpl_current_account", JSON.stringify(currentAccount));
+      localStorage.setItem("bpl_user_onboarded", "true");
+    }
+    navigate({ to: "/dashboard" });
+  };
+
+  if (!account || (isSupabaseConfigured && profileLoading)) {
     return (
       <PageShell>
         <div className="flex min-h-screen items-center justify-center bg-background">
@@ -146,7 +201,7 @@ function OnboardingSelectionPage() {
           {/* Header */}
           <div className="space-y-4">
             <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border border-primary/20 bg-primary/5 text-primary-glow text-[10px] uppercase font-bold tracking-widest mx-auto">
-              <Sparkles size={10} /> Account Active
+              <Sparkles size={10} /> Account Setup
             </div>
             <h1 className="text-4xl md:text-5xl font-display font-bold text-white tracking-tight leading-tight">
               Welcome to <span className="gradient-text">Kalakshetra</span>
@@ -164,13 +219,13 @@ function OnboardingSelectionPage() {
             {ROLE_CARDS.map((card) => {
               const Icon = card.icon;
               return (
-                <Link
+                <button
                   key={card.role}
-                  to={card.to}
-                  search={card.search}
-                  className="bpl-card p-5 hover:border-primary/40 hover:bg-secondary/40 transition-all duration-300 group flex flex-col justify-between cursor-pointer"
+                  disabled={saving}
+                  onClick={() => handleSelectRole(card)}
+                  className="bpl-card p-5 hover:border-primary/40 hover:bg-secondary/40 transition-all duration-300 group flex flex-col justify-between cursor-pointer w-full text-left disabled:opacity-50"
                 >
-                  <div className="space-y-4">
+                  <div className="space-y-4 w-full">
                     <div className="flex justify-between items-start">
                       <div className="p-2.5 rounded-lg bg-primary/10 border border-primary/20 text-primary-glow group-hover:scale-105 transition-transform duration-300">
                         <Icon size={20} />
@@ -190,17 +245,25 @@ function OnboardingSelectionPage() {
                       </p>
                     </div>
                   </div>
-                  <div className="mt-4 pt-3 border-t border-border/30 flex items-center justify-between text-[10px] font-bold uppercase tracking-wider text-muted-foreground group-hover:text-primary-glow transition-colors duration-200">
+                  <div className="mt-4 pt-3 border-t border-border/30 flex items-center justify-between text-[10px] font-bold uppercase tracking-wider text-muted-foreground group-hover:text-primary-glow transition-colors duration-200 w-full">
                     Register Role <ArrowRight size={10} className="group-hover:translate-x-1 transition-transform" />
                   </div>
-                </Link>
+                </button>
               );
             })}
           </div>
 
-          {/* Footer controls */}
+          {/* Footer controls & Skip for now */}
           <div className="flex flex-col items-center gap-3 pt-6 border-t border-border/30 max-w-md mx-auto text-xs text-muted-foreground leading-relaxed">
-            <p className="flex items-center gap-1.5">
+            <button
+              onClick={handleSkip}
+              disabled={saving}
+              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-md border border-border bg-secondary/40 hover:bg-secondary text-white font-bold transition text-xs cursor-pointer"
+            >
+              <SkipForward size={12} />
+              Skip for now
+            </button>
+            <p className="flex items-center gap-1.5 mt-2">
               <ShieldCheck size={14} className="text-primary-glow" /> Users can manage multiple roles and workspaces from their dashboard.
             </p>
             {hasWorkspaces && (

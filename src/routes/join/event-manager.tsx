@@ -11,6 +11,9 @@ import {
   CalendarRange,
 } from "lucide-react";
 import { db } from "@/lib/db";
+import { useProfile } from "@/hooks/useProfile";
+import { useNavigate } from "@tanstack/react-router";
+import { useEffect } from "react";
 
 export const Route = createFileRoute("/join/event-manager")({
   head: () => ({
@@ -26,6 +29,8 @@ export const Route = createFileRoute("/join/event-manager")({
 });
 
 function EventManagerPage() {
+  const navigate = useNavigate();
+  const { profile } = useProfile();
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [credentials, setCredentials] = useState<{ username: string; password?: string } | null>(
@@ -41,6 +46,24 @@ function EventManagerPage() {
   const [contactName, setContactName] = useState("");
   const [contactPhone, setContactPhone] = useState("");
   const [contactEmail, setContactEmail] = useState("");
+
+  // Check login on mount and pre-fill contact fields
+  useEffect(() => {
+    const currentAccount = db.getCurrentAccount();
+    if (!currentAccount) {
+      navigate({ to: "/login" });
+      return;
+    }
+    if (currentAccount.email && !contactEmail) {
+      setContactEmail(currentAccount.email);
+    }
+  }, [navigate, contactEmail]);
+
+  useEffect(() => {
+    if (!profile) return;
+    if (profile.full_name && !contactName) setContactName(profile.full_name);
+    if (profile.phone && !contactPhone) setContactPhone(profile.phone);
+  }, [profile, contactName, contactPhone]);
 
   const [errors, setErrors] = useState<Record<string, string>>({});
 

@@ -13,6 +13,8 @@ import {
   Upload,
 } from "lucide-react";
 import { db } from "@/lib/db";
+import { useProfile } from "@/hooks/useProfile";
+import { useNavigate } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/join/volunteer")({
   validateSearch: (search: Record<string, unknown>) => {
@@ -33,6 +35,8 @@ const ROLE_LABELS: Record<string, string> = {
 };
 
 function VolunteerPage() {
+  const navigate = useNavigate();
+  const { profile } = useProfile();
   const { role } = Route.useSearch();
   const roleLabel = ROLE_LABELS[role] || "Volunteer / Creative Partner";
 
@@ -56,6 +60,24 @@ function VolunteerPage() {
 
   const [errors, setErrors] = useState<Record<string, string>>({});
   const photoRef = useRef<HTMLInputElement>(null);
+
+  // Check login on mount and pre-fill contact fields
+  useEffect(() => {
+    const currentAccount = db.getCurrentAccount();
+    if (!currentAccount) {
+      navigate({ to: "/login" });
+      return;
+    }
+    if (currentAccount.email && !contactEmail) {
+      setContactEmail(currentAccount.email);
+    }
+  }, [navigate, contactEmail]);
+
+  useEffect(() => {
+    if (!profile) return;
+    if (profile.full_name && !name) setName(profile.full_name);
+    if (profile.phone && !contactPhone) setContactPhone(profile.phone);
+  }, [profile, name, contactPhone]);
 
   // Load draft from localStorage on mount (Autosave)
   useEffect(() => {

@@ -17,6 +17,7 @@ import {
   Trash,
 } from "lucide-react";
 import { db } from "@/lib/db";
+import { useProfile } from "@/hooks/useProfile";
 
 export const Route = createFileRoute("/join/venue")({
   head: () => ({
@@ -33,13 +34,7 @@ export const Route = createFileRoute("/join/venue")({
 
 function VenueOnboardingPage() {
   const navigate = useNavigate();
-
-  useEffect(() => {
-    const currentAccount = db.getCurrentAccount();
-    if (!currentAccount) {
-      navigate({ to: "/login" });
-    }
-  }, [navigate]);
+  const { profile } = useProfile();
 
   const [step, setStep] = useState(1);
   const [isSubmitted, setIsSubmitted] = useState(false);
@@ -85,6 +80,24 @@ function VenueOnboardingPage() {
   const [contactPhone, setContactPhone] = useState("");
   const [contactEmail, setContactEmail] = useState("");
   const [termsAccepted, setTermsAccepted] = useState(false);
+
+  // Check login on mount and pre-fill contact fields from current account/profile
+  useEffect(() => {
+    const currentAccount = db.getCurrentAccount();
+    if (!currentAccount) {
+      navigate({ to: "/login" });
+      return;
+    }
+    if (currentAccount.email && !contactEmail) {
+      setContactEmail(currentAccount.email);
+    }
+  }, [navigate, contactEmail]);
+
+  useEffect(() => {
+    if (!profile) return;
+    if (profile.full_name && !contactName) setContactName(profile.full_name);
+    if (profile.phone && !contactPhone) setContactPhone(profile.phone);
+  }, [profile, contactName, contactPhone]);
 
   // Errors
   const [errors, setErrors] = useState<Record<string, string>>({});
