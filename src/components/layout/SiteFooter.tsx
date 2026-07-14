@@ -14,11 +14,12 @@ export function SiteFooter() {
             Kalakshetra
           </Link>
           <p className="mt-3 text-sm text-muted-foreground max-w-xs leading-relaxed">
-            The Home of Independent Music.<br />
+            The Home of Independent Music.
+            <br />
             Raagam · Taalam · Pallavi
           </p>
         </div>
-        
+
         <FooterCol
           title="Explore"
           links={[
@@ -29,9 +30,11 @@ export function SiteFooter() {
             ["League", "/league"],
           ]}
         />
-        
+
         <div>
-          <h4 className="text-sm font-semibold uppercase tracking-wider text-foreground">Join & Media</h4>
+          <h4 className="text-sm font-semibold uppercase tracking-wider text-foreground">
+            Join & Media
+          </h4>
           <ul className="mt-4 space-y-2">
             <li>
               <Link to="/join/band" className="text-sm text-muted-foreground hover:text-foreground">
@@ -39,12 +42,18 @@ export function SiteFooter() {
               </Link>
             </li>
             <li>
-              <Link to="/join/venue" className="text-sm text-muted-foreground hover:text-foreground">
+              <Link
+                to="/join/venue"
+                className="text-sm text-muted-foreground hover:text-foreground"
+              >
                 For Venues
               </Link>
             </li>
             <li>
-              <Link to="/join/sponsor" className="text-sm text-muted-foreground hover:text-foreground">
+              <Link
+                to="/join/sponsor"
+                className="text-sm text-muted-foreground hover:text-foreground"
+              >
                 For Partners
               </Link>
             </li>
@@ -56,7 +65,7 @@ export function SiteFooter() {
           </ul>
         </div>
       </div>
-      
+
       <div className="border-t border-border">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 py-6 flex flex-col md:flex-row items-center justify-between gap-4">
           <p className="text-xs text-muted-foreground">© 2026 Kalakshetra. All rights reserved.</p>

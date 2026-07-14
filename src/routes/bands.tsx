@@ -27,7 +27,7 @@ const GENRE_FILTERS = [
   "Pop",
   "Alternative",
   "Hip-Hop",
-  "Other"
+  "Other",
 ];
 
 function BandsPage() {
@@ -49,12 +49,13 @@ function BandsPage() {
 
   // Filter bands based on search query and genre select
   const filteredBands = approvedBands.filter((band) => {
-    const matchesSearch = band.band_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    const matchesSearch =
+      band.band_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       band.home_city.toLowerCase().includes(searchQuery.toLowerCase()) ||
       band.genre.toLowerCase().includes(searchQuery.toLowerCase());
-      
+
     const matchesGenre = selectedGenre === "All" || band.genre === selectedGenre;
-    
+
     return matchesSearch && matchesGenre;
   });
 
@@ -62,14 +63,20 @@ function BandsPage() {
     <PageShell>
       {/* Premium Header */}
       <section className="relative overflow-hidden border-b border-border bg-gradient-to-b from-background/90 via-background/40 to-background">
-        <div className="absolute inset-0 pointer-events-none" style={{ background: "var(--gradient-glow)" }} />
+        <div
+          className="absolute inset-0 pointer-events-none"
+          style={{ background: "var(--gradient-glow)" }}
+        />
         <div className="relative mx-auto max-w-7xl px-4 sm:px-6 py-16 text-center space-y-4">
-          <p className="text-xs uppercase tracking-[0.2em] text-primary-glow font-bold">Official Roster</p>
+          <p className="text-xs uppercase tracking-[0.2em] text-primary-glow font-bold">
+            Official Roster
+          </p>
           <h1 className="text-4xl md:text-5xl font-display font-bold tracking-tight text-white">
             Kalakshetra Bands & Artists
           </h1>
           <p className="mt-2 text-sm text-muted-foreground max-w-xl mx-auto leading-relaxed">
-            Discover verified indie bands, solo musicians, and creative members of the league roster.
+            Discover verified indie bands, solo musicians, and creative members of the league
+            roster.
           </p>
         </div>
       </section>
@@ -79,7 +86,10 @@ function BandsPage() {
         <div className="flex flex-col md:flex-row gap-4 items-center justify-between bg-surface/30 border border-border p-4 rounded-lg">
           {/* Search Bar */}
           <div className="relative w-full md:w-80">
-            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground" size={16} />
+            <Search
+              className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground"
+              size={16}
+            />
             <input
               type="text"
               placeholder="Search by name, city, genre..."
@@ -123,7 +133,7 @@ function BandsPage() {
                 <div className="absolute top-2.5 right-2.5 text-[8px] uppercase tracking-widest bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-1.5 py-0.5 rounded font-bold">
                   Verified
                 </div>
-                
+
                 <div className="mx-auto h-24 w-24 rounded-full overflow-hidden border border-border group-hover:border-primary transition bg-slate-900 shadow-md">
                   <img
                     src={band.profile_image}
@@ -148,11 +158,11 @@ function BandsPage() {
             <div className="mx-auto h-16 w-16 rounded-full bg-secondary flex items-center justify-center text-muted-foreground border border-border">
               <Music size={26} />
             </div>
-            
+
             <div className="space-y-2">
               <h3 className="text-lg font-bold text-white">No Verified Bands Found</h3>
               <p className="text-xs text-muted-foreground leading-relaxed">
-                {approvedBands.length === 0 
+                {approvedBands.length === 0
                   ? "There are no approved bands in the league registry yet. Be the first to onboard!"
                   : "Try clearing your search filters to find bands matching your preferences."}
               </p>
@@ -167,7 +177,10 @@ function BandsPage() {
               </Link>
               {approvedBands.length > 0 && (
                 <button
-                  onClick={() => { setSearchQuery(""); setSelectedGenre("All"); }}
+                  onClick={() => {
+                    setSearchQuery("");
+                    setSelectedGenre("All");
+                  }}
                   className="px-5 py-2.5 rounded-md border border-border bg-surface text-xs text-white"
                 >
                   Clear Filters

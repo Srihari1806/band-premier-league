@@ -3,29 +3,27 @@ import { PageShell } from "@/components/layout/PageShell";
 import { useState, useEffect } from "react";
 import { db } from "@/lib/db";
 import { isOperatorSessionActive, clearOperatorSession } from "@/lib/security";
-import { 
-  User, 
-  MapPin, 
-  Tag, 
-  Calendar, 
-  CheckCircle, 
-  Clock, 
-  AlertCircle, 
-  LogOut, 
-  Save, 
+import {
+  User,
+  MapPin,
+  Tag,
+  Calendar,
+  CheckCircle,
+  Clock,
+  AlertCircle,
+  LogOut,
+  Save,
   ExternalLink,
   ChevronRight,
   ShieldAlert,
   Sliders,
   DollarSign,
-  Lock
+  Lock,
 } from "lucide-react";
 
 export const Route = createFileRoute("/dashboard")({
   head: () => ({
-    meta: [
-      { title: "Dashboard — Kalakshetra Member Portal" },
-    ],
+    meta: [{ title: "Dashboard — Kalakshetra Member Portal" }],
   }),
   component: DashboardPage,
 });
@@ -47,7 +45,7 @@ function DashboardPage() {
   const [genre, setGenre] = useState("");
   const [customGenre, setCustomGenre] = useState("");
   const [feeRange, setFeeRange] = useState("");
-  
+
   // Feedback states
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
@@ -64,7 +62,7 @@ function DashboardPage() {
   useEffect(() => {
     const user = db.getCurrentUser();
     const isAdminActive = isOperatorSessionActive();
-    
+
     if (!user && !isAdminActive) {
       // Not logged in, redirect to login
       navigate({ to: "/login" });
@@ -96,11 +94,13 @@ function DashboardPage() {
         status: "approved",
         tagline: "Official Kalakshetra Admin & Operator",
         bio: "Oversees the seasons, coordinates venues, curates bands registry, and approves operator panel applications.",
-        city: "Hyderabad / Bangalore"
+        city: "Hyderabad / Bangalore",
       });
       setName("Kalakshetra Operator");
       setTagline("Official Kalakshetra Admin & Operator");
-      setBio("Oversees the seasons, coordinates venues, curates bands registry, and approves operator panel applications.");
+      setBio(
+        "Oversees the seasons, coordinates venues, curates bands registry, and approves operator panel applications.",
+      );
       setCity("Hyderabad / Bangalore");
       setLoading(false);
     } else {
@@ -112,7 +112,7 @@ function DashboardPage() {
   const loadProfile = async (user: any) => {
     try {
       setLoading(true);
-      
+
       // Query profile details
       let details: any = null;
       if (user.role === "band") {
@@ -139,10 +139,14 @@ function DashboardPage() {
 
       if (details) {
         setProfileData(details);
-        setName(details.band_name || details.venue_name || details.company_name || details.name || "");
+        setName(
+          details.band_name || details.venue_name || details.company_name || details.name || "",
+        );
         setTagline(details.tagline || "");
         setBio(details.bio || details.company_profile || "");
-        setCity(details.home_city || details.address || details.cities_of_operation || details.city || "");
+        setCity(
+          details.home_city || details.address || details.cities_of_operation || details.city || "",
+        );
         setGenre(details.genre || "");
         setCustomGenre(details.custom_genre || "");
         setFeeRange(details.fee_range || details.pricing || details.budget_range || "");
@@ -205,17 +209,17 @@ function DashboardPage() {
     if (!currentUser) return;
     setSecurityError("");
     setSecuritySuccess("");
-    
+
     if (newPassword.length < 6) {
       setSecurityError("New password must be at least 6 characters long.");
       return;
     }
-    
+
     if (newPassword !== confirmPassword) {
       setSecurityError("Passwords do not match.");
       return;
     }
-    
+
     setUpdatingPassword(true);
     try {
       if (currentUser.role === "admin") {
@@ -223,7 +227,7 @@ function DashboardPage() {
         setUpdatingPassword(false);
         return;
       }
-      
+
       await db.updatePassword(currentUser.role, currentUser.id, currentPassword, newPassword);
       setSecuritySuccess("Password updated successfully!");
       setCurrentPassword("");
@@ -260,18 +264,17 @@ function DashboardPage() {
     );
   }
 
-  const roleLabel = currentUser?.role === "production_house" ? "Label Partner" : currentUser?.role || "Member";
+  const roleLabel =
+    currentUser?.role === "production_house" ? "Label Partner" : currentUser?.role || "Member";
   const profileStatus = profileData?.status || currentUser?.status || "pending";
 
   return (
     <PageShell>
       <div className="mx-auto max-w-6xl px-4 sm:px-6 py-12 relative overflow-hidden">
-        
         {/* Decorative grids */}
         <div className="absolute top-0 right-0 h-96 w-96 rounded-full bg-primary/5 blur-[120px] pointer-events-none" />
 
         <div className="space-y-8 animate-fade-in relative z-10">
-          
           {/* Header Banner */}
           <div className="bpl-card p-6 md:p-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
             <div className="space-y-2 text-left">
@@ -307,7 +310,8 @@ function DashboardPage() {
             <div className="flex gap-2.5 w-full md:w-auto">
               {currentUser?.role === "band" && profileStatus === "approved" && (
                 <Link
-                  to={`/bands/${currentUser.id}`}
+                  to="/bands/$bandId"
+                  params={{ bandId: currentUser.id }}
                   className="flex-1 md:flex-none border border-border bg-secondary hover:bg-slate-800 text-white rounded-md px-4 py-2.5 text-xs font-semibold flex items-center justify-center gap-1.5 transition"
                 >
                   View Profile <ExternalLink size={12} />
@@ -323,19 +327,20 @@ function DashboardPage() {
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-            
             {/* Sidebar Navigation */}
             <div className="lg:col-span-1 space-y-3">
               <div className="bpl-card overflow-hidden">
                 <div className="p-4 border-b border-border bg-surface/30 text-left">
-                  <span className="text-[9px] uppercase tracking-widest font-bold text-muted-foreground">Dashboard Settings</span>
+                  <span className="text-[9px] uppercase tracking-widest font-bold text-muted-foreground">
+                    Dashboard Settings
+                  </span>
                 </div>
                 <div className="p-2 flex flex-col gap-1.5">
                   <button
                     onClick={() => setActiveTab("profile")}
                     className={`w-full py-2.5 px-3.5 rounded-md text-left text-xs font-bold transition flex items-center justify-between cursor-pointer ${
-                      activeTab === "profile" 
-                        ? "bg-primary text-primary-foreground shadow-glow" 
+                      activeTab === "profile"
+                        ? "bg-primary text-primary-foreground shadow-glow"
                         : "text-muted-foreground hover:text-foreground hover:bg-secondary/40"
                     }`}
                   >
@@ -344,12 +349,12 @@ function DashboardPage() {
                     </span>
                     <ChevronRight size={12} />
                   </button>
-                  
+
                   <button
                     onClick={() => setActiveTab("availability")}
                     className={`w-full py-2.5 px-3.5 rounded-md text-left text-xs font-bold transition flex items-center justify-between cursor-pointer ${
-                      activeTab === "availability" 
-                        ? "bg-primary text-primary-foreground shadow-glow" 
+                      activeTab === "availability"
+                        ? "bg-primary text-primary-foreground shadow-glow"
                         : "text-muted-foreground hover:text-foreground hover:bg-secondary/40"
                     }`}
                   >
@@ -358,12 +363,12 @@ function DashboardPage() {
                     </span>
                     <ChevronRight size={12} />
                   </button>
-                  
+
                   <button
                     onClick={() => setActiveTab("curation")}
                     className={`w-full py-2.5 px-3.5 rounded-md text-left text-xs font-bold transition flex items-center justify-between cursor-pointer ${
-                      activeTab === "curation" 
-                        ? "bg-primary text-primary-foreground shadow-glow" 
+                      activeTab === "curation"
+                        ? "bg-primary text-primary-foreground shadow-glow"
                         : "text-muted-foreground hover:text-foreground hover:bg-secondary/40"
                     }`}
                   >
@@ -376,8 +381,8 @@ function DashboardPage() {
                   <button
                     onClick={() => setActiveTab("security")}
                     className={`w-full py-2.5 px-3.5 rounded-md text-left text-xs font-bold transition flex items-center justify-between cursor-pointer ${
-                      activeTab === "security" 
-                        ? "bg-primary text-primary-foreground shadow-glow" 
+                      activeTab === "security"
+                        ? "bg-primary text-primary-foreground shadow-glow"
                         : "text-muted-foreground hover:text-foreground hover:bg-secondary/40"
                     }`}
                   >
@@ -391,14 +396,19 @@ function DashboardPage() {
 
               {/* Status Notice */}
               <div className="bpl-card p-4 space-y-2 text-left">
-                <span className="text-[9px] uppercase tracking-widest font-bold text-muted-foreground">League Status</span>
+                <span className="text-[9px] uppercase tracking-widest font-bold text-muted-foreground">
+                  League Status
+                </span>
                 {profileStatus === "approved" ? (
                   <p className="text-xs text-muted-foreground leading-relaxed mt-2">
-                    Your profile is <span className="text-green-400 font-bold">Approved</span> and indexed live on Kalakshetra databases. Venues can book you for matches.
+                    Your profile is <span className="text-green-400 font-bold">Approved</span> and
+                    indexed live on Kalakshetra databases. Venues can book you for matches.
                   </p>
                 ) : (
                   <p className="text-[11px] text-muted-foreground leading-relaxed">
-                    Your application is currently <span className="text-primary-glow font-bold">Pending Review</span> by the curator board. Updates will appear in the Curation tab.
+                    Your application is currently{" "}
+                    <span className="text-primary-glow font-bold">Pending Review</span> by the
+                    curator board. Updates will appear in the Curation tab.
                   </p>
                 )}
               </div>
@@ -406,13 +416,14 @@ function DashboardPage() {
 
             {/* Dashboard Content Area */}
             <div className="lg:col-span-3">
-              
               {/* TAB 1: PROFILE SETTINGS */}
               {activeTab === "profile" && (
                 <div className="bpl-card p-8 space-y-6">
                   <div className="border-b border-border pb-4 text-left">
                     <h2 className="text-lg font-display font-bold text-white">Profile Details</h2>
-                    <p className="text-xs text-muted-foreground">Configure public details displayed to recruiters and league curators.</p>
+                    <p className="text-xs text-muted-foreground">
+                      Configure public details displayed to recruiters and league curators.
+                    </p>
                   </div>
 
                   {/* Feedback */}
@@ -432,10 +443,13 @@ function DashboardPage() {
 
                   <form onSubmit={handleProfileSave} className="space-y-4 text-left">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      
                       <div className="space-y-1.5 col-span-1 md:col-span-2">
                         <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">
-                          {currentUser?.role === "band" ? "Band / Artist Name" : currentUser?.role === "venue" ? "Venue Name" : "Company Name"}
+                          {currentUser?.role === "band"
+                            ? "Band / Artist Name"
+                            : currentUser?.role === "venue"
+                              ? "Venue Name"
+                              : "Company Name"}
                         </label>
                         <input
                           type="text"
@@ -449,7 +463,9 @@ function DashboardPage() {
                       {currentUser?.role === "band" && (
                         <>
                           <div className="space-y-1.5 col-span-1 md:col-span-2">
-                            <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Tagline / Motto</label>
+                            <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">
+                              Tagline / Motto
+                            </label>
                             <input
                               type="text"
                               value={tagline}
@@ -460,21 +476,36 @@ function DashboardPage() {
                           </div>
 
                           <div className="space-y-1.5">
-                            <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Primary Genre</label>
+                            <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">
+                              Primary Genre
+                            </label>
                             <select
                               value={genre}
                               onChange={(e) => setGenre(e.target.value)}
                               className="w-full bg-secondary border border-border rounded-md px-3.5 py-2.5 text-sm focus:outline-none focus:border-primary text-white"
                             >
-                              {["Rock", "Indie", "Folk", "Metal", "Pop", "Alternative", "Hip-Hop", "Other"].map(g => (
-                                <option key={g} value={g}>{g}</option>
+                              {[
+                                "Rock",
+                                "Indie",
+                                "Folk",
+                                "Metal",
+                                "Pop",
+                                "Alternative",
+                                "Hip-Hop",
+                                "Other",
+                              ].map((g) => (
+                                <option key={g} value={g}>
+                                  {g}
+                                </option>
                               ))}
                             </select>
                           </div>
 
                           {genre === "Other" && (
                             <div className="space-y-1.5">
-                              <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Custom Genre</label>
+                              <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">
+                                Custom Genre
+                              </label>
                               <input
                                 type="text"
                                 value={customGenre}
@@ -488,10 +519,15 @@ function DashboardPage() {
 
                       <div className="space-y-1.5">
                         <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">
-                          {currentUser?.role === "venue" ? "Physical Address" : "Home City / Operation Area"}
+                          {currentUser?.role === "venue"
+                            ? "Physical Address"
+                            : "Home City / Operation Area"}
                         </label>
                         <div className="relative">
-                          <MapPin className="absolute left-3 top-3 text-muted-foreground" size={14} />
+                          <MapPin
+                            className="absolute left-3 top-3 text-muted-foreground"
+                            size={14}
+                          />
                           <input
                             type="text"
                             value={city}
@@ -503,7 +539,9 @@ function DashboardPage() {
                       </div>
 
                       <div className="space-y-1.5 col-span-1 md:col-span-2">
-                        <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Description / Biography</label>
+                        <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">
+                          Description / Biography
+                        </label>
                         <textarea
                           rows={4}
                           value={bio}
@@ -532,23 +570,29 @@ function DashboardPage() {
               {activeTab === "availability" && (
                 <div className="bpl-card p-8 space-y-6">
                   <div className="border-b border-border pb-4 text-left">
-                    <h2 className="text-lg font-display font-bold text-white">Availability & Gig Parameters</h2>
-                    <p className="text-xs text-muted-foreground">Manage your booking parameters, tour ranges, and calendar slots.</p>
+                    <h2 className="text-lg font-display font-bold text-white">
+                      Availability & Gig Parameters
+                    </h2>
+                    <p className="text-xs text-muted-foreground">
+                      Manage your booking parameters, tour ranges, and calendar slots.
+                    </p>
                   </div>
 
                   <form onSubmit={handleProfileSave} className="space-y-6 text-left">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      
                       <div className="space-y-1.5">
                         <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">
-                          {currentUser?.role === "band" 
-                            ? "Performance Fee Range (per show)" 
-                            : currentUser?.role === "venue" 
-                              ? "Average Rental / Ticketing Share" 
+                          {currentUser?.role === "band"
+                            ? "Performance Fee Range (per show)"
+                            : currentUser?.role === "venue"
+                              ? "Average Rental / Ticketing Share"
                               : "Sponsorship / Investment Budget"}
                         </label>
                         <div className="relative">
-                          <DollarSign className="absolute left-3 top-3 text-muted-foreground" size={14} />
+                          <DollarSign
+                            className="absolute left-3 top-3 text-muted-foreground"
+                            size={14}
+                          />
                           <input
                             type="text"
                             value={feeRange}
@@ -560,7 +604,9 @@ function DashboardPage() {
                       </div>
 
                       <div className="space-y-1.5">
-                        <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Tour Status</label>
+                        <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">
+                          Tour Status
+                        </label>
                         <select className="w-full bg-secondary border border-border rounded-md px-3.5 py-2.5 text-sm focus:outline-none focus:border-primary text-white">
                           <option>Open for Match Bookings</option>
                           <option>Currently in League Offseason</option>
@@ -569,15 +615,33 @@ function DashboardPage() {
                       </div>
 
                       <div className="space-y-1.5 col-span-1 md:col-span-2">
-                        <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Availability Calendar</label>
+                        <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">
+                          Availability Calendar
+                        </label>
                         <div className="bg-secondary/40 border border-border p-4 rounded-lg flex flex-wrap gap-2 text-xs">
-                          {["Jul 15", "Jul 16", "Jul 18", "Jul 20", "Jul 22", "Jul 25", "Jul 27", "Jul 29", "Aug 01"].map(date => (
-                            <span key={date} className="bg-primary/10 border border-primary/20 text-primary-glow font-bold rounded-md px-3 py-1.5 flex items-center gap-1.5">
+                          {[
+                            "Jul 15",
+                            "Jul 16",
+                            "Jul 18",
+                            "Jul 20",
+                            "Jul 22",
+                            "Jul 25",
+                            "Jul 27",
+                            "Jul 29",
+                            "Aug 01",
+                          ].map((date) => (
+                            <span
+                              key={date}
+                              className="bg-primary/10 border border-primary/20 text-primary-glow font-bold rounded-md px-3 py-1.5 flex items-center gap-1.5"
+                            >
                               <Calendar size={12} /> {date}
                             </span>
                           ))}
                         </div>
-                        <p className="text-[10px] text-muted-foreground mt-1">Calendar dates show active tour slots open for bookings in Kalakshetra franchises.</p>
+                        <p className="text-[10px] text-muted-foreground mt-1">
+                          Calendar dates show active tour slots open for bookings in Kalakshetra
+                          franchises.
+                        </p>
                       </div>
                     </div>
 
@@ -599,30 +663,56 @@ function DashboardPage() {
               {activeTab === "curation" && (
                 <div className="bpl-card p-8 space-y-6">
                   <div className="border-b border-border pb-4 text-left">
-                    <h2 className="text-lg font-display font-bold text-white">Application Verification Stages</h2>
-                    <p className="text-xs text-muted-foreground">Track your evaluation stages by the curator board.</p>
+                    <h2 className="text-lg font-display font-bold text-white">
+                      Application Verification Stages
+                    </h2>
+                    <p className="text-xs text-muted-foreground">
+                      Track your evaluation stages by the curator board.
+                    </p>
                   </div>
 
                   <div className="space-y-6 text-left max-w-md">
                     {[
-                      { label: "Onboarding Submission", desc: "Profile files and bio cataloged successfully.", done: true },
-                      { label: "Curation & Credential Verification", desc: "Verifying links, stage riders, and performance gallery.", done: profileStatus === "approved" || profileStatus === "needs_changes" },
-                      { label: "Licensing Board Approval", desc: "Evaluating roster placement and league match scheduling.", done: profileStatus === "approved" },
-                      { label: "League Live Indexing", desc: "Approved and visible in public catalogs.", done: profileStatus === "approved" },
+                      {
+                        label: "Onboarding Submission",
+                        desc: "Profile files and bio cataloged successfully.",
+                        done: true,
+                      },
+                      {
+                        label: "Curation & Credential Verification",
+                        desc: "Verifying links, stage riders, and performance gallery.",
+                        done: profileStatus === "approved" || profileStatus === "needs_changes",
+                      },
+                      {
+                        label: "Licensing Board Approval",
+                        desc: "Evaluating roster placement and league match scheduling.",
+                        done: profileStatus === "approved",
+                      },
+                      {
+                        label: "League Live Indexing",
+                        desc: "Approved and visible in public catalogs.",
+                        done: profileStatus === "approved",
+                      },
                     ].map((stage, idx) => (
                       <div key={stage.label} className="flex gap-4 relative">
                         {idx < 3 && (
                           <div className="absolute left-[11px] top-6 w-[2px] h-[calc(100%-8px)] bg-border" />
                         )}
-                        <div className={`h-6 w-6 rounded-full shrink-0 border flex items-center justify-center text-xs font-semibold ${
-                          stage.done 
-                            ? "bg-primary border-primary text-primary-foreground" 
-                            : "bg-surface border-border text-muted-foreground"
-                        }`}>
+                        <div
+                          className={`h-6 w-6 rounded-full shrink-0 border flex items-center justify-center text-xs font-semibold ${
+                            stage.done
+                              ? "bg-primary border-primary text-primary-foreground"
+                              : "bg-surface border-border text-muted-foreground"
+                          }`}
+                        >
                           {idx + 1}
                         </div>
                         <div>
-                          <h4 className={`text-xs font-bold ${stage.done ? "text-primary-glow" : "text-white/80"}`}>{stage.label}</h4>
+                          <h4
+                            className={`text-xs font-bold ${stage.done ? "text-primary-glow" : "text-white/80"}`}
+                          >
+                            {stage.label}
+                          </h4>
                           <p className="text-[10px] text-muted-foreground mt-0.5">{stage.desc}</p>
                         </div>
                       </div>
@@ -635,7 +725,8 @@ function DashboardPage() {
                       <div>
                         <h4 className="font-bold text-white mb-0.5">Under Review</h4>
                         <p>
-                          Our review board evaluates profiles every 24-48 hours. If there are any updates or missing credentials required, you will see instructions here.
+                          Our review board evaluates profiles every 24-48 hours. If there are any
+                          updates or missing credentials required, you will see instructions here.
                         </p>
                       </div>
                     </div>
@@ -648,7 +739,9 @@ function DashboardPage() {
                 <div className="bpl-card p-8 space-y-6">
                   <div className="border-b border-border pb-4 text-left">
                     <h2 className="text-lg font-display font-bold text-white">Security Settings</h2>
-                    <p className="text-xs text-muted-foreground">Manage your account authentication credentials and change password.</p>
+                    <p className="text-xs text-muted-foreground">
+                      Manage your account authentication credentials and change password.
+                    </p>
                   </div>
 
                   {/* Feedback */}
@@ -668,7 +761,9 @@ function DashboardPage() {
 
                   <form onSubmit={handlePasswordChange} className="space-y-4 text-left max-w-md">
                     <div className="space-y-1.5">
-                      <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Current Password</label>
+                      <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">
+                        Current Password
+                      </label>
                       <input
                         type="password"
                         placeholder="••••••••"
@@ -680,7 +775,9 @@ function DashboardPage() {
                     </div>
 
                     <div className="space-y-1.5">
-                      <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">New Password</label>
+                      <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">
+                        New Password
+                      </label>
                       <input
                         type="password"
                         placeholder="Minimum 6 characters"
@@ -692,7 +789,9 @@ function DashboardPage() {
                     </div>
 
                     <div className="space-y-1.5">
-                      <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Confirm New Password</label>
+                      <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">
+                        Confirm New Password
+                      </label>
                       <input
                         type="password"
                         placeholder="••••••••"
@@ -716,10 +815,8 @@ function DashboardPage() {
                   </form>
                 </div>
               )}
-
             </div>
           </div>
-
         </div>
       </div>
     </PageShell>

@@ -50,23 +50,27 @@
   --primary-glow: oklch(0.85 0.14 85); /* Bright gold shimmer */
   --secondary: oklch(0.22 0.02 80);
   --secondary-foreground: oklch(0.98 0.005 80);
-  --muted: oklch(0.20 0.015 80);
+  --muted: oklch(0.2 0.015 80);
   --muted-foreground: oklch(0.7 0.015 80);
   --accent: oklch(0.76 0.125 80); /* Gold */
   --accent-foreground: oklch(0.12 0.015 80);
-  --destructive: oklch(0.60 0.22 25);
+  --destructive: oklch(0.6 0.22 25);
   --destructive-foreground: oklch(0.99 0 0);
   --border: oklch(0.25 0.02 80);
   --input: oklch(0.22 0.02 80);
   --ring: oklch(0.76 0.125 80);
-  --gradient-primary: linear-gradient(135deg, oklch(0.72 0.12 78), oklch(0.85 0.14 85)); /* Gold gradient */
+  --gradient-primary: linear-gradient(
+    135deg,
+    oklch(0.72 0.12 78),
+    oklch(0.85 0.14 85)
+  ); /* Gold gradient */
   --gradient-glow: radial-gradient(circle at 50% 0%, oklch(0.76 0.125 80 / 0.25), transparent 60%);
   --shadow-glow: 0 10px 40px -10px oklch(0.76 0.125 80 / 0.4);
   --shadow-card: 0 8px 30px -12px oklch(0 0 0 / 0.6);
-  
+
   /* Pillar Theme Colors */
   --raagam: oklch(0.78 0.16 80); /* Amber/Gold */
-  --taalam: oklch(0.60 0.22 25); /* Red/Crimson */
+  --taalam: oklch(0.6 0.22 25); /* Red/Crimson */
   --pallavi: oklch(0.62 0.22 290); /* Purple/Indigo */
 }
 
@@ -101,7 +105,10 @@
   background-color: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  transition: border-color 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s cubic-bezier(0.16, 1, 0.3, 1), transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  transition:
+    border-color 0.3s cubic-bezier(0.16, 1, 0.3, 1),
+    box-shadow 0.3s cubic-bezier(0.16, 1, 0.3, 1),
+    transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 @utility btn-primary {

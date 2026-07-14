@@ -1,11 +1,11 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState, useRef, useEffect } from "react";
 import { PageShell } from "@/components/layout/PageShell";
-import { 
-  Building2, 
-  MapPin, 
-  ChevronLeft, 
-  ChevronRight, 
+import {
+  Building2,
+  MapPin,
+  ChevronLeft,
+  ChevronRight,
   CheckCircle,
   Camera,
   Upload,
@@ -13,7 +13,8 @@ import {
   Phone,
   Mail,
   AlertCircle,
-  HelpCircle
+  HelpCircle,
+  Trash,
 } from "lucide-react";
 import { db } from "@/lib/db";
 
@@ -21,7 +22,10 @@ export const Route = createFileRoute("/join/venue")({
   head: () => ({
     meta: [
       { title: "Partner Venue Onboarding — Kalakshetra" },
-      { name: "description", content: "Register your venue or cafe as an official Kalakshetra live tour partner." },
+      {
+        name: "description",
+        content: "Register your venue or cafe as an official Kalakshetra live tour partner.",
+      },
     ],
   }),
   component: VenueOnboardingPage,
@@ -31,7 +35,9 @@ function VenueOnboardingPage() {
   const [step, setStep] = useState(1);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [credentials, setCredentials] = useState<{ username: string; password?: string } | null>(null);
+  const [credentials, setCredentials] = useState<{ username: string; password?: string } | null>(
+    null,
+  );
 
   // Form Fields State
   // Step 1: Identity
@@ -122,17 +128,64 @@ function VenueOnboardingPage() {
     if (isSubmitted) return;
     const saveDraft = () => {
       const stateObj = {
-        venueName, address, mapsLink, ownerName, logoImage, bannerImage, type, capacity, stageSize,
-        parking, greenRoom, lighting, sound, power, food, bar, facilityDetails, images,
-        availableDays, preferredGenres, pricing, contactName, contactPhone, contactEmail, termsAccepted, step
+        venueName,
+        address,
+        mapsLink,
+        ownerName,
+        logoImage,
+        bannerImage,
+        type,
+        capacity,
+        stageSize,
+        parking,
+        greenRoom,
+        lighting,
+        sound,
+        power,
+        food,
+        bar,
+        facilityDetails,
+        images,
+        availableDays,
+        preferredGenres,
+        pricing,
+        contactName,
+        contactPhone,
+        contactEmail,
+        termsAccepted,
+        step,
       };
       localStorage.setItem("bpl_draft_venue", JSON.stringify(stateObj));
     };
     saveDraft();
   }, [
-    venueName, address, mapsLink, ownerName, logoImage, bannerImage, type, capacity, stageSize,
-    parking, greenRoom, lighting, sound, power, food, bar, facilityDetails, images,
-    availableDays, preferredGenres, pricing, contactName, contactPhone, contactEmail, termsAccepted, step, isSubmitted
+    venueName,
+    address,
+    mapsLink,
+    ownerName,
+    logoImage,
+    bannerImage,
+    type,
+    capacity,
+    stageSize,
+    parking,
+    greenRoom,
+    lighting,
+    sound,
+    power,
+    food,
+    bar,
+    facilityDetails,
+    images,
+    availableDays,
+    preferredGenres,
+    pricing,
+    contactName,
+    contactPhone,
+    contactEmail,
+    termsAccepted,
+    step,
+    isSubmitted,
   ]);
 
   useEffect(() => {
@@ -186,7 +239,7 @@ function VenueOnboardingPage() {
     if (files) {
       const remainingSlots = 8 - images.length;
       const filesToUpload = Array.from(files).slice(0, remainingSlots);
-      
+
       const newPhotos: string[] = [];
       for (const file of filesToUpload) {
         try {
@@ -206,8 +259,8 @@ function VenueOnboardingPage() {
   };
 
   const toggleDay = (day: string) => {
-    setAvailableDays(prev => 
-      prev.includes(day) ? prev.filter(d => d !== day) : [...prev, day]
+    setAvailableDays((prev) =>
+      prev.includes(day) ? prev.filter((d) => d !== day) : [...prev, day],
     );
   };
 
@@ -229,7 +282,7 @@ function VenueOnboardingPage() {
     if (currentStep === 6) {
       if (!contactName.trim()) stepErrors.contactName = "Primary contact name is required.";
       if (!contactPhone.trim()) stepErrors.contactPhone = "Phone number is required.";
-      
+
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       if (!contactEmail.trim()) {
         stepErrors.contactEmail = "Contact email is required.";
@@ -280,12 +333,12 @@ function VenueOnboardingPage() {
           power,
           food,
           bar,
-          details: facilityDetails || undefined
+          details: facilityDetails || undefined,
         },
         images: images,
         availability: {
           days: availableDays,
-          preferred_genres: preferredGenres || undefined
+          preferred_genres: preferredGenres || undefined,
         },
         pricing: pricing || undefined,
         contact_name: contactName,
@@ -317,34 +370,59 @@ function VenueOnboardingPage() {
             <div className="mx-auto h-20 w-20 rounded-full bg-primary/10 flex items-center justify-center text-primary-glow border border-primary/30">
               <CheckCircle size={40} />
             </div>
-            
+
             <div className="space-y-2">
-              <h1 className="text-3xl sm:text-4xl font-display font-bold">Venue Application Submitted!</h1>
+              <h1 className="text-3xl sm:text-4xl font-display font-bold">
+                Venue Application Submitted!
+              </h1>
               <p className="text-muted-foreground max-w-md mx-auto text-sm leading-relaxed">
-                Thank you for applying. Kalakshetra Operations team will review your application details.
+                Thank you for applying. Kalakshetra Operations team will review your application
+                details.
               </p>
             </div>
 
             <div className="max-w-md mx-auto bg-surface/50 border border-border p-6 rounded-lg text-left space-y-4">
               {[
-                { label: "Application Received", desc: "Files and photos saved to Kalakshetra venue database.", done: true },
-                { label: "Staff Inspection", desc: "Verifying address, capacity range, and venue specs.", done: false },
-                { label: "Technical Curation", desc: "Verifying sound, lighting system capacity, and riders.", done: false },
-                { label: "Partnership Licensing", desc: "Generating tour partnership agreement and licensing code.", done: false },
+                {
+                  label: "Application Received",
+                  desc: "Files and photos saved to Kalakshetra venue database.",
+                  done: true,
+                },
+                {
+                  label: "Staff Inspection",
+                  desc: "Verifying address, capacity range, and venue specs.",
+                  done: false,
+                },
+                {
+                  label: "Technical Curation",
+                  desc: "Verifying sound, lighting system capacity, and riders.",
+                  done: false,
+                },
+                {
+                  label: "Partnership Licensing",
+                  desc: "Generating tour partnership agreement and licensing code.",
+                  done: false,
+                },
               ].map((stage, idx) => (
                 <div key={stage.label} className="flex gap-4 relative">
                   {idx < 3 && (
                     <div className="absolute left-[11px] top-6 w-[2px] h-[calc(100%-8px)] bg-border" />
                   )}
-                  <div className={`h-6 w-6 rounded-full shrink-0 border flex items-center justify-center text-xs font-semibold ${
-                    stage.done 
-                      ? "bg-primary border-primary text-primary-foreground" 
-                      : "bg-surface border-border text-muted-foreground"
-                  }`}>
+                  <div
+                    className={`h-6 w-6 rounded-full shrink-0 border flex items-center justify-center text-xs font-semibold ${
+                      stage.done
+                        ? "bg-primary border-primary text-primary-foreground"
+                        : "bg-surface border-border text-muted-foreground"
+                    }`}
+                  >
                     {idx + 1}
                   </div>
                   <div>
-                    <h4 className={`text-xs font-bold ${stage.done ? "text-primary-glow" : "text-white/80"}`}>{stage.label}</h4>
+                    <h4
+                      className={`text-xs font-bold ${stage.done ? "text-primary-glow" : "text-white/80"}`}
+                    >
+                      {stage.label}
+                    </h4>
                     <p className="text-[10px] text-muted-foreground mt-0.5">{stage.desc}</p>
                   </div>
                 </div>
@@ -354,23 +432,38 @@ function VenueOnboardingPage() {
             {credentials && (
               <div className="max-w-md mx-auto bpl-card p-6 bg-primary/5 border border-primary/20 rounded-lg text-left space-y-4 my-6">
                 <div>
-                  <h3 className="text-sm font-semibold text-primary-glow font-display">Account Created Successfully</h3>
-                  <p className="text-[10px] text-muted-foreground mt-0.5">Please save these login details. You will need them to access your dashboard and update your profile.</p>
+                  <h3 className="text-sm font-semibold text-primary-glow font-display">
+                    Account Created Successfully
+                  </h3>
+                  <p className="text-[10px] text-muted-foreground mt-0.5">
+                    Please save these login details. You will need them to access your dashboard and
+                    update your profile.
+                  </p>
                 </div>
                 <div className="space-y-2 bg-black/40 p-4 rounded border border-border">
                   <div className="flex justify-between items-center text-xs">
-                    <span className="text-muted-foreground font-semibold uppercase tracking-wider text-[9px]">Username/ID:</span>
-                    <span className="font-mono text-white select-all font-bold">{credentials.username}</span>
+                    <span className="text-muted-foreground font-semibold uppercase tracking-wider text-[9px]">
+                      Username/ID:
+                    </span>
+                    <span className="font-mono text-white select-all font-bold">
+                      {credentials.username}
+                    </span>
                   </div>
                   <div className="flex justify-between items-center text-xs">
-                    <span className="text-muted-foreground font-semibold uppercase tracking-wider text-[9px]">Password:</span>
-                    <span className="font-mono text-white select-all font-bold">{credentials.password}</span>
+                    <span className="text-muted-foreground font-semibold uppercase tracking-wider text-[9px]">
+                      Password:
+                    </span>
+                    <span className="font-mono text-white select-all font-bold">
+                      {credentials.password}
+                    </span>
                   </div>
                 </div>
                 <button
                   type="button"
                   onClick={() => {
-                    navigator.clipboard.writeText(`Username: ${credentials.username}\nPassword: ${credentials.password}`);
+                    navigator.clipboard.writeText(
+                      `Username: ${credentials.username}\nPassword: ${credentials.password}`,
+                    );
                     alert("Credentials copied to clipboard!");
                   }}
                   className="w-full py-2 bg-primary/20 hover:bg-primary/30 border border-primary/30 rounded text-[11px] font-bold text-white uppercase tracking-wider transition"
@@ -381,21 +474,30 @@ function VenueOnboardingPage() {
             )}
 
             <div className="pt-4 flex justify-center gap-3">
-              <Link to="/venues" className="btn-primary btn-primary-hover px-6 py-3 rounded-md text-sm font-semibold">
+              <Link
+                to="/venues"
+                className="btn-primary btn-primary-hover px-6 py-3 rounded-md text-sm font-semibold"
+              >
                 Explore Venues
               </Link>
-              <Link to="/" className="px-6 py-3 rounded-md border border-border bg-surface hover:text-primary-glow transition text-sm">
+              <Link
+                to="/"
+                className="px-6 py-3 rounded-md border border-border bg-surface hover:text-primary-glow transition text-sm"
+              >
                 Back to Home
               </Link>
             </div>
           </div>
         ) : (
           <div className="space-y-8">
-            
             {/* Header */}
             <div className="text-center space-y-2">
-              <p className="text-xs uppercase tracking-widest text-primary-glow font-bold">Kalakshetra Onboarding Hub</p>
-              <h1 className="text-3xl sm:text-4xl font-display font-bold">Venue Partner Onboarding</h1>
+              <p className="text-xs uppercase tracking-widest text-primary-glow font-bold">
+                Kalakshetra Onboarding Hub
+              </p>
+              <h1 className="text-3xl sm:text-4xl font-display font-bold">
+                Venue Partner Onboarding
+              </h1>
               <p className="text-xs text-muted-foreground max-w-lg mx-auto">
                 Register your venue to host official live gigs and matches. Autosaves progress.
               </p>
@@ -413,29 +515,34 @@ function VenueOnboardingPage() {
               ].map((s, idx) => (
                 <div key={s.number} className="flex-1 flex items-center">
                   <div className="flex flex-col items-center gap-1 relative z-10 mx-auto">
-                    <button 
+                    <button
                       type="button"
                       onClick={() => {
                         if (s.number < step) setStep(s.number);
                         else if (s.number > step) {
                           let valid = true;
                           for (let i = step; i < s.number; i++) {
-                            if (!validateStep(i)) { valid = false; break; }
+                            if (!validateStep(i)) {
+                              valid = false;
+                              break;
+                            }
                           }
                           if (valid) setStep(s.number);
                         }
                       }}
                       className={`h-8 w-8 rounded-full flex items-center justify-center font-semibold text-xs border transition-all cursor-pointer ${
-                        step === s.number 
-                          ? "bg-primary border-primary text-primary-foreground shadow-glow" 
-                          : step > s.number 
-                            ? "bg-primary/20 border-primary/40 text-primary-glow hover:bg-primary/30" 
+                        step === s.number
+                          ? "bg-primary border-primary text-primary-foreground shadow-glow"
+                          : step > s.number
+                            ? "bg-primary/20 border-primary/40 text-primary-glow hover:bg-primary/30"
                             : "bg-surface border-border text-muted-foreground hover:text-foreground"
                       }`}
                     >
                       {s.number}
                     </button>
-                    <span className={`text-[9px] uppercase tracking-wider font-semibold ${step >= s.number ? "text-primary-glow" : "text-muted-foreground"}`}>
+                    <span
+                      className={`text-[9px] uppercase tracking-wider font-semibold ${step >= s.number ? "text-primary-glow" : "text-muted-foreground"}`}
+                    >
                       {s.label}
                     </span>
                   </div>
@@ -448,56 +555,85 @@ function VenueOnboardingPage() {
 
             {/* Form */}
             <form onSubmit={handleSubmit} className="space-y-6">
-              
               {/* STEP 1: IDENTITY */}
               {step === 1 && (
                 <div className="space-y-6 animate-fade-in">
-                  
                   {/* Banner & Logo Preview */}
                   <div className="bpl-card overflow-hidden">
                     <div className="p-4 border-b border-border bg-surface/30">
-                      <h2 className="text-xs uppercase tracking-widest text-muted-foreground">Venue Profile Preview</h2>
+                      <h2 className="text-xs uppercase tracking-widest text-muted-foreground">
+                        Venue Profile Preview
+                      </h2>
                     </div>
 
                     <div className="relative h-44 bg-slate-900 overflow-hidden flex items-center justify-center border-b border-border">
                       {bannerImage ? (
-                        <img src={bannerImage} alt="Banner" className="h-full w-full object-cover" />
+                        <img
+                          src={bannerImage}
+                          alt="Banner"
+                          className="h-full w-full object-cover"
+                        />
                       ) : (
-                        <p className="text-xs text-muted-foreground font-bold">No cover image uploaded</p>
+                        <p className="text-xs text-muted-foreground font-bold">
+                          No cover image uploaded
+                        </p>
                       )}
-                      <button 
+                      <button
                         type="button"
                         onClick={() => bannerRef.current?.click()}
                         className="absolute top-3 right-3 z-30 bg-black/75 hover:bg-black/90 text-white rounded px-3 py-1.5 text-xs border border-white/10"
                       >
                         Upload Cover
                       </button>
-                      <input type="file" ref={bannerRef} accept="image/*" onChange={onBannerChange} className="hidden" />
+                      <input
+                        type="file"
+                        ref={bannerRef}
+                        accept="image/*"
+                        onChange={onBannerChange}
+                        className="hidden"
+                      />
                     </div>
 
                     <div className="px-6 pb-6 relative">
                       <div className="flex items-end gap-4 -mt-10 relative z-20">
                         <div className="h-16 w-16 rounded bg-slate-800 border-2 border-background flex items-center justify-center overflow-hidden shrink-0 shadow-md">
                           {logoImage ? (
-                            <img src={logoImage} alt="Logo" className="h-full w-full object-cover" />
+                            <img
+                              src={logoImage}
+                              alt="Logo"
+                              className="h-full w-full object-cover"
+                            />
                           ) : (
                             <Building2 size={24} className="text-muted-foreground" />
                           )}
-                          <button 
+                          <button
                             type="button"
                             onClick={() => logoRef.current?.click()}
                             className="absolute inset-0 bg-black/60 opacity-0 hover:opacity-100 flex items-center justify-center text-white text-[10px]"
                           >
                             Logo
                           </button>
-                          <input type="file" ref={logoRef} accept="image/*" onChange={onLogoChange} className="hidden" />
+                          <input
+                            type="file"
+                            ref={logoRef}
+                            accept="image/*"
+                            onChange={onLogoChange}
+                            className="hidden"
+                          />
                         </div>
                         <div className="mb-1">
-                          <h3 className="font-semibold text-base text-white">{venueName || "Venue Name"}</h3>
-                          <p className="text-xs text-muted-foreground"><MapPin size={11} className="inline mr-1" /> {address || "Venue Address"}</p>
+                          <h3 className="font-semibold text-base text-white">
+                            {venueName || "Venue Name"}
+                          </h3>
+                          <p className="text-xs text-muted-foreground">
+                            <MapPin size={11} className="inline mr-1" />{" "}
+                            {address || "Venue Address"}
+                          </p>
                         </div>
                       </div>
-                      {errors.banner && <p className="text-red-500 text-xs mt-2">{errors.banner}</p>}
+                      {errors.banner && (
+                        <p className="text-red-500 text-xs mt-2">{errors.banner}</p>
+                      )}
                     </div>
                   </div>
 
@@ -505,33 +641,43 @@ function VenueOnboardingPage() {
                   <div className="bpl-card p-6 space-y-4">
                     <div className="grid sm:grid-cols-2 gap-4">
                       <div className="space-y-1.5">
-                        <label className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">Venue Name *</label>
-                        <input 
-                          type="text" 
+                        <label className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">
+                          Venue Name *
+                        </label>
+                        <input
+                          type="text"
                           placeholder="e.g. Hard Rock Cafe"
                           value={venueName}
                           onChange={(e) => setVenueName(e.target.value)}
                           className="w-full bg-secondary border border-border rounded-md px-3.5 py-2.5 text-sm focus:outline-none focus:border-primary text-white"
                         />
-                        {errors.venueName && <p className="text-red-500 text-xs">{errors.venueName}</p>}
+                        {errors.venueName && (
+                          <p className="text-red-500 text-xs">{errors.venueName}</p>
+                        )}
                       </div>
                       <div className="space-y-1.5">
-                        <label className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">Owner / Operator Name *</label>
-                        <input 
-                          type="text" 
+                        <label className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">
+                          Owner / Operator Name *
+                        </label>
+                        <input
+                          type="text"
                           placeholder="Legal entity or person name"
                           value={ownerName}
                           onChange={(e) => setOwnerName(e.target.value)}
                           className="w-full bg-secondary border border-border rounded-md px-3.5 py-2.5 text-sm focus:outline-none focus:border-primary text-white"
                         />
-                        {errors.ownerName && <p className="text-red-500 text-xs">{errors.ownerName}</p>}
+                        {errors.ownerName && (
+                          <p className="text-red-500 text-xs">{errors.ownerName}</p>
+                        )}
                       </div>
                     </div>
 
                     <div className="space-y-1.5">
-                      <label className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">Street Address *</label>
-                      <input 
-                        type="text" 
+                      <label className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">
+                        Street Address *
+                      </label>
+                      <input
+                        type="text"
                         placeholder="Complete location address"
                         value={address}
                         onChange={(e) => setAddress(e.target.value)}
@@ -541,9 +687,11 @@ function VenueOnboardingPage() {
                     </div>
 
                     <div className="space-y-1.5">
-                      <label className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">Google Maps Pin URL</label>
-                      <input 
-                        type="url" 
+                      <label className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">
+                        Google Maps Pin URL
+                      </label>
+                      <input
+                        type="url"
                         placeholder="https://maps.app.goo.gl/..."
                         value={mapsLink}
                         onChange={(e) => setMapsLink(e.target.value)}
@@ -553,7 +701,11 @@ function VenueOnboardingPage() {
                   </div>
 
                   <div className="flex justify-end pt-2">
-                    <button type="button" onClick={handleNext} className="btn-primary btn-primary-hover px-6 py-3 rounded-md text-sm font-semibold flex items-center gap-1 cursor-pointer">
+                    <button
+                      type="button"
+                      onClick={handleNext}
+                      className="btn-primary btn-primary-hover px-6 py-3 rounded-md text-sm font-semibold flex items-center gap-1 cursor-pointer"
+                    >
                       Next: Size & Type <ChevronRight size={16} />
                     </button>
                   </div>
@@ -564,41 +716,63 @@ function VenueOnboardingPage() {
               {step === 2 && (
                 <div className="space-y-6 animate-fade-in">
                   <div className="bpl-card p-6 space-y-4">
-                    <h2 className="font-display font-semibold text-lg border-b border-border pb-2 text-primary-glow">Type & Size</h2>
-                    
+                    <h2 className="font-display font-semibold text-lg border-b border-border pb-2 text-primary-glow">
+                      Type & Size
+                    </h2>
+
                     <div className="grid sm:grid-cols-3 gap-4">
                       <div className="space-y-1.5">
-                        <label className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">Venue Type *</label>
+                        <label className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">
+                          Venue Type *
+                        </label>
                         <select
                           value={type}
                           onChange={(e) => setType(e.target.value)}
                           className="w-full bg-secondary border border-border rounded-md px-3.5 py-2.5 text-sm focus:outline-none focus:border-primary text-white"
                         >
-                          <option value="cafe" className="bg-background">Cafe / Lounge</option>
-                          <option value="pub" className="bg-background">Pub / Bar / Club</option>
-                          <option value="restaurant" className="bg-background">Restaurant</option>
-                          <option value="college" className="bg-background">College Auditorium/Ground</option>
-                          <option value="open-air" className="bg-background">Open-Air Amphitheater</option>
-                          <option value="indoor" className="bg-background">Indoor Warehouse / Concert Hall</option>
+                          <option value="cafe" className="bg-background">
+                            Cafe / Lounge
+                          </option>
+                          <option value="pub" className="bg-background">
+                            Pub / Bar / Club
+                          </option>
+                          <option value="restaurant" className="bg-background">
+                            Restaurant
+                          </option>
+                          <option value="college" className="bg-background">
+                            College Auditorium/Ground
+                          </option>
+                          <option value="open-air" className="bg-background">
+                            Open-Air Amphitheater
+                          </option>
+                          <option value="indoor" className="bg-background">
+                            Indoor Warehouse / Concert Hall
+                          </option>
                         </select>
                       </div>
 
                       <div className="space-y-1.5">
-                        <label className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">Capacity (Pax) *</label>
-                        <input 
-                          type="text" 
+                        <label className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">
+                          Capacity (Pax) *
+                        </label>
+                        <input
+                          type="text"
                           placeholder="e.g. 500-600 Pax"
                           value={capacity}
                           onChange={(e) => setCapacity(e.target.value)}
                           className="w-full bg-secondary border border-border rounded-md px-3.5 py-2.5 text-sm focus:outline-none focus:border-primary text-white"
                         />
-                        {errors.capacity && <p className="text-red-500 text-xs">{errors.capacity}</p>}
+                        {errors.capacity && (
+                          <p className="text-red-500 text-xs">{errors.capacity}</p>
+                        )}
                       </div>
 
                       <div className="space-y-1.5">
-                        <label className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">Stage Size (ft)</label>
-                        <input 
-                          type="text" 
+                        <label className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">
+                          Stage Size (ft)
+                        </label>
+                        <input
+                          type="text"
                           placeholder="e.g. 30 x 18 ft"
                           value={stageSize}
                           onChange={(e) => setStageSize(e.target.value)}
@@ -609,10 +783,18 @@ function VenueOnboardingPage() {
                   </div>
 
                   <div className="flex justify-between pt-2">
-                    <button type="button" onClick={handlePrev} className="px-5 py-2.5 rounded border border-border bg-surface text-sm flex items-center gap-1 cursor-pointer">
+                    <button
+                      type="button"
+                      onClick={handlePrev}
+                      className="px-5 py-2.5 rounded border border-border bg-surface text-sm flex items-center gap-1 cursor-pointer"
+                    >
                       <ChevronLeft size={16} /> Back
                     </button>
-                    <button type="button" onClick={handleNext} className="btn-primary btn-primary-hover px-6 py-3 rounded-md text-sm font-semibold flex items-center gap-1 cursor-pointer">
+                    <button
+                      type="button"
+                      onClick={handleNext}
+                      className="btn-primary btn-primary-hover px-6 py-3 rounded-md text-sm font-semibold flex items-center gap-1 cursor-pointer"
+                    >
                       Next: Facilities <ChevronRight size={16} />
                     </button>
                   </div>
@@ -623,8 +805,10 @@ function VenueOnboardingPage() {
               {step === 3 && (
                 <div className="space-y-6 animate-fade-in">
                   <div className="bpl-card p-6 space-y-4">
-                    <h2 className="font-display font-semibold text-lg border-b border-border pb-2 text-primary-glow">Available Facilities</h2>
-                    
+                    <h2 className="font-display font-semibold text-lg border-b border-border pb-2 text-primary-glow">
+                      Available Facilities
+                    </h2>
+
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-2">
                       {[
                         { label: "Parking Space", val: parking, set: setParking },
@@ -635,22 +819,32 @@ function VenueOnboardingPage() {
                         { label: "Food Catering", val: food, set: setFood },
                         { label: "Alcohol Bar License", val: bar, set: setBar },
                       ].map((f) => (
-                        <div key={f.label} className="flex items-center gap-2.5 bg-secondary/30 border border-border/80 p-3 rounded hover:border-primary/20 transition">
-                          <input 
-                            type="checkbox" 
-                            id={f.label} 
-                            checked={f.val} 
+                        <div
+                          key={f.label}
+                          className="flex items-center gap-2.5 bg-secondary/30 border border-border/80 p-3 rounded hover:border-primary/20 transition"
+                        >
+                          <input
+                            type="checkbox"
+                            id={f.label}
+                            checked={f.val}
                             onChange={(e) => f.set(e.target.checked)}
                             className="h-4 w-4 rounded border-border bg-secondary text-primary focus:ring-primary cursor-pointer"
                           />
-                          <label htmlFor={f.label} className="text-xs text-white/90 select-none cursor-pointer">{f.label}</label>
+                          <label
+                            htmlFor={f.label}
+                            className="text-xs text-white/90 select-none cursor-pointer"
+                          >
+                            {f.label}
+                          </label>
                         </div>
                       ))}
                     </div>
 
                     <div className="space-y-1.5 pt-2">
-                      <label className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">Additional Sound / Light / Tech Specs</label>
-                      <textarea 
+                      <label className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">
+                        Additional Sound / Light / Tech Specs
+                      </label>
+                      <textarea
                         rows={3}
                         placeholder="Provide details about sound brand, monitor mixes, lighting board model..."
                         value={facilityDetails}
@@ -661,10 +855,18 @@ function VenueOnboardingPage() {
                   </div>
 
                   <div className="flex justify-between pt-2">
-                    <button type="button" onClick={handlePrev} className="px-5 py-2.5 rounded border border-border bg-surface text-sm flex items-center gap-1 cursor-pointer">
+                    <button
+                      type="button"
+                      onClick={handlePrev}
+                      className="px-5 py-2.5 rounded border border-border bg-surface text-sm flex items-center gap-1 cursor-pointer"
+                    >
                       <ChevronLeft size={16} /> Back
                     </button>
-                    <button type="button" onClick={handleNext} className="btn-primary btn-primary-hover px-6 py-3 rounded-md text-sm font-semibold flex items-center gap-1 cursor-pointer">
+                    <button
+                      type="button"
+                      onClick={handleNext}
+                      className="btn-primary btn-primary-hover px-6 py-3 rounded-md text-sm font-semibold flex items-center gap-1 cursor-pointer"
+                    >
                       Next: Photo Gallery <ChevronRight size={16} />
                     </button>
                   </div>
@@ -677,10 +879,14 @@ function VenueOnboardingPage() {
                   <div className="bpl-card p-6 space-y-4">
                     <div className="flex items-center justify-between border-b border-border pb-2">
                       <div>
-                        <h2 className="font-display font-semibold text-lg text-primary-glow">Venue Gallery Photos</h2>
-                        <p className="text-xs text-muted-foreground mt-0.5">Upload photos of the stage, bar, facade (max 8).</p>
+                        <h2 className="font-display font-semibold text-lg text-primary-glow">
+                          Venue Gallery Photos
+                        </h2>
+                        <p className="text-xs text-muted-foreground mt-0.5">
+                          Upload photos of the stage, bar, facade (max 8).
+                        </p>
                       </div>
-                      <button 
+                      <button
                         type="button"
                         onClick={() => galleryRef.current?.click()}
                         disabled={images.length >= 8}
@@ -688,23 +894,42 @@ function VenueOnboardingPage() {
                       >
                         Upload Photos
                       </button>
-                      <input type="file" ref={galleryRef} accept="image/*" multiple onChange={onGalleryChange} className="hidden" />
+                      <input
+                        type="file"
+                        ref={galleryRef}
+                        accept="image/*"
+                        multiple
+                        onChange={onGalleryChange}
+                        className="hidden"
+                      />
                     </div>
 
                     {errors.gallery && <p className="text-red-500 text-xs">{errors.gallery}</p>}
 
                     {images.length === 0 ? (
-                      <div onClick={() => galleryRef.current?.click()} className="text-center py-12 text-muted-foreground border-2 border-dashed border-border rounded-lg bg-surface/5 hover:bg-surface/10 cursor-pointer transition flex flex-col items-center justify-center gap-2">
+                      <div
+                        onClick={() => galleryRef.current?.click()}
+                        className="text-center py-12 text-muted-foreground border-2 border-dashed border-border rounded-lg bg-surface/5 hover:bg-surface/10 cursor-pointer transition flex flex-col items-center justify-center gap-2"
+                      >
                         <Camera size={24} />
-                        <p className="text-xs font-semibold text-white">Click to upload stage/interior photos</p>
+                        <p className="text-xs font-semibold text-white">
+                          Click to upload stage/interior photos
+                        </p>
                       </div>
                     ) : (
                       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                         {images.map((photo, idx) => (
-                          <div key={idx} className="bpl-card overflow-hidden aspect-square relative group">
-                            <img src={photo} alt={`Venue ${idx + 1}`} className="h-full w-full object-cover" />
-                            <button 
-                              type="button" 
+                          <div
+                            key={idx}
+                            className="bpl-card overflow-hidden aspect-square relative group"
+                          >
+                            <img
+                              src={photo}
+                              alt={`Venue ${idx + 1}`}
+                              className="h-full w-full object-cover"
+                            />
+                            <button
+                              type="button"
                               onClick={() => removeImage(idx)}
                               className="absolute top-2 right-2 bg-black/70 hover:bg-red-600 text-white rounded-full p-1 cursor-pointer transition"
                             >
@@ -717,10 +942,18 @@ function VenueOnboardingPage() {
                   </div>
 
                   <div className="flex justify-between pt-2">
-                    <button type="button" onClick={handlePrev} className="px-5 py-2.5 rounded border border-border bg-surface text-sm flex items-center gap-1 cursor-pointer">
+                    <button
+                      type="button"
+                      onClick={handlePrev}
+                      className="px-5 py-2.5 rounded border border-border bg-surface text-sm flex items-center gap-1 cursor-pointer"
+                    >
                       <ChevronLeft size={16} /> Back
                     </button>
-                    <button type="button" onClick={handleNext} className="btn-primary btn-primary-hover px-6 py-3 rounded-md text-sm font-semibold flex items-center gap-1 cursor-pointer">
+                    <button
+                      type="button"
+                      onClick={handleNext}
+                      className="btn-primary btn-primary-hover px-6 py-3 rounded-md text-sm font-semibold flex items-center gap-1 cursor-pointer"
+                    >
                       Next: Terms & Dates <ChevronRight size={16} />
                     </button>
                   </div>
@@ -731,14 +964,18 @@ function VenueOnboardingPage() {
               {step === 5 && (
                 <div className="space-y-6 animate-fade-in">
                   <div className="bpl-card p-6 space-y-4">
-                    <h2 className="font-display font-semibold text-lg border-b border-border pb-2 text-primary-glow">Availability & Terms</h2>
-                    
+                    <h2 className="font-display font-semibold text-lg border-b border-border pb-2 text-primary-glow">
+                      Availability & Terms
+                    </h2>
+
                     <div className="grid sm:grid-cols-2 gap-4">
                       {/* Pricing / Revenue terms */}
                       <div className="space-y-1.5">
-                        <label className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">Pricing / Revenue Share Model</label>
-                        <input 
-                          type="text" 
+                        <label className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">
+                          Pricing / Revenue Share Model
+                        </label>
+                        <input
+                          type="text"
                           placeholder="e.g. Fixed rate or 70/30 ticket split"
                           value={pricing}
                           onChange={(e) => setPricing(e.target.value)}
@@ -748,9 +985,11 @@ function VenueOnboardingPage() {
 
                       {/* Preferred genres */}
                       <div className="space-y-1.5">
-                        <label className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">Preferred Music Genres</label>
-                        <input 
-                          type="text" 
+                        <label className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">
+                          Preferred Music Genres
+                        </label>
+                        <input
+                          type="text"
                           placeholder="e.g. Rock, Indie, Acoustic, Metal"
                           value={preferredGenres}
                           onChange={(e) => setPreferredGenres(e.target.value)}
@@ -761,9 +1000,19 @@ function VenueOnboardingPage() {
 
                     {/* Days available */}
                     <div className="space-y-2">
-                      <label className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">Preferred Gig Days</label>
+                      <label className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">
+                        Preferred Gig Days
+                      </label>
                       <div className="flex flex-wrap gap-2 pt-1">
-                        {["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"].map(day => {
+                        {[
+                          "Monday",
+                          "Tuesday",
+                          "Wednesday",
+                          "Thursday",
+                          "Friday",
+                          "Saturday",
+                          "Sunday",
+                        ].map((day) => {
                           const active = availableDays.includes(day);
                           return (
                             <button
@@ -771,8 +1020,8 @@ function VenueOnboardingPage() {
                               type="button"
                               onClick={() => toggleDay(day)}
                               className={`px-3 py-1.5 rounded-full border text-xs font-semibold transition cursor-pointer ${
-                                active 
-                                  ? "bg-primary border-primary text-primary-foreground" 
+                                active
+                                  ? "bg-primary border-primary text-primary-foreground"
                                   : "border-border bg-secondary/40 text-muted-foreground"
                               }`}
                             >
@@ -785,10 +1034,18 @@ function VenueOnboardingPage() {
                   </div>
 
                   <div className="flex justify-between pt-2">
-                    <button type="button" onClick={handlePrev} className="px-5 py-2.5 rounded border border-border bg-surface text-sm flex items-center gap-1 cursor-pointer">
+                    <button
+                      type="button"
+                      onClick={handlePrev}
+                      className="px-5 py-2.5 rounded border border-border bg-surface text-sm flex items-center gap-1 cursor-pointer"
+                    >
                       <ChevronLeft size={16} /> Back
                     </button>
-                    <button type="button" onClick={handleNext} className="btn-primary btn-primary-hover px-6 py-3 rounded-md text-sm font-semibold flex items-center gap-1 cursor-pointer">
+                    <button
+                      type="button"
+                      onClick={handleNext}
+                      className="btn-primary btn-primary-hover px-6 py-3 rounded-md text-sm font-semibold flex items-center gap-1 cursor-pointer"
+                    >
                       Next: Contact details <ChevronRight size={16} />
                     </button>
                   </div>
@@ -800,45 +1057,61 @@ function VenueOnboardingPage() {
                 <div className="space-y-6 animate-fade-in">
                   <div className="bpl-card p-6 space-y-4">
                     <div>
-                      <h2 className="font-display font-semibold text-lg text-primary-glow">Contact Details (Private)</h2>
-                      <p className="text-xs text-muted-foreground mt-0.5">Visible only to Kalakshetra booking curators.</p>
+                      <h2 className="font-display font-semibold text-lg text-primary-glow">
+                        Contact Details (Private)
+                      </h2>
+                      <p className="text-xs text-muted-foreground mt-0.5">
+                        Visible only to Kalakshetra booking curators.
+                      </p>
                     </div>
                     <div className="border-b border-border" />
 
                     <div className="space-y-1.5">
-                      <label className="text-xs uppercase tracking-wider text-muted-foreground font-semibold flex items-center gap-1"><User size={12} /> Contact Person Name *</label>
-                      <input 
-                        type="text" 
+                      <label className="text-xs uppercase tracking-wider text-muted-foreground font-semibold flex items-center gap-1">
+                        <User size={12} /> Contact Person Name *
+                      </label>
+                      <input
+                        type="text"
                         placeholder="Booking Manager name"
                         value={contactName}
                         onChange={(e) => setContactName(e.target.value)}
                         className="w-full bg-secondary border border-border rounded-md px-3.5 py-2.5 text-sm focus:outline-none focus:border-primary text-white"
                       />
-                      {errors.contactName && <p className="text-red-500 text-xs">{errors.contactName}</p>}
+                      {errors.contactName && (
+                        <p className="text-red-500 text-xs">{errors.contactName}</p>
+                      )}
                     </div>
 
                     <div className="grid sm:grid-cols-2 gap-4">
                       <div className="space-y-1.5">
-                        <label className="text-xs uppercase tracking-wider text-muted-foreground font-semibold flex items-center gap-1"><Phone size={12} /> Contact Phone *</label>
-                        <input 
-                          type="tel" 
+                        <label className="text-xs uppercase tracking-wider text-muted-foreground font-semibold flex items-center gap-1">
+                          <Phone size={12} /> Contact Phone *
+                        </label>
+                        <input
+                          type="tel"
                           placeholder="+91 XXXXX XXXXX"
                           value={contactPhone}
                           onChange={(e) => setContactPhone(e.target.value)}
                           className="w-full bg-secondary border border-border rounded-md px-3.5 py-2.5 text-sm focus:outline-none focus:border-primary text-white"
                         />
-                        {errors.contactPhone && <p className="text-red-500 text-xs">{errors.contactPhone}</p>}
+                        {errors.contactPhone && (
+                          <p className="text-red-500 text-xs">{errors.contactPhone}</p>
+                        )}
                       </div>
                       <div className="space-y-1.5">
-                        <label className="text-xs uppercase tracking-wider text-muted-foreground font-semibold flex items-center gap-1"><Mail size={12} /> Email Address *</label>
-                        <input 
-                          type="email" 
+                        <label className="text-xs uppercase tracking-wider text-muted-foreground font-semibold flex items-center gap-1">
+                          <Mail size={12} /> Email Address *
+                        </label>
+                        <input
+                          type="email"
                           placeholder="e.g. venues@yourcafe.com"
                           value={contactEmail}
                           onChange={(e) => setContactEmail(e.target.value)}
                           className="w-full bg-secondary border border-border rounded-md px-3.5 py-2.5 text-sm focus:outline-none focus:border-primary text-white"
                         />
-                        {errors.contactEmail && <p className="text-red-500 text-xs">{errors.contactEmail}</p>}
+                        {errors.contactEmail && (
+                          <p className="text-red-500 text-xs">{errors.contactEmail}</p>
+                        )}
                       </div>
                     </div>
 
@@ -852,8 +1125,12 @@ function VenueOnboardingPage() {
                           onChange={(e) => setTermsAccepted(e.target.checked)}
                           className="mt-1 h-4 w-4 border-border rounded bg-secondary text-primary focus:ring-primary cursor-pointer"
                         />
-                        <label htmlFor="venueTerms" className="text-xs text-muted-foreground leading-normal select-none cursor-pointer">
-                          I agree to register this venue in Kalakshetra's catalog. I confirm all provided specifications are true and available.
+                        <label
+                          htmlFor="venueTerms"
+                          className="text-xs text-muted-foreground leading-normal select-none cursor-pointer"
+                        >
+                          I agree to register this venue in Kalakshetra's catalog. I confirm all
+                          provided specifications are true and available.
                         </label>
                       </div>
                       {errors.terms && <p className="text-red-500 text-xs">{errors.terms}</p>}
@@ -867,16 +1144,23 @@ function VenueOnboardingPage() {
                   )}
 
                   <div className="flex justify-between pt-2">
-                    <button type="button" onClick={handlePrev} className="px-5 py-2.5 rounded border border-border bg-surface text-sm flex items-center gap-1 cursor-pointer">
+                    <button
+                      type="button"
+                      onClick={handlePrev}
+                      className="px-5 py-2.5 rounded border border-border bg-surface text-sm flex items-center gap-1 cursor-pointer"
+                    >
                       <ChevronLeft size={16} /> Back
                     </button>
-                    <button type="submit" disabled={isSubmitting} className="btn-primary btn-primary-hover px-8 py-3 rounded-md text-sm font-semibold flex items-center gap-1 cursor-pointer">
+                    <button
+                      type="submit"
+                      disabled={isSubmitting}
+                      className="btn-primary btn-primary-hover px-8 py-3 rounded-md text-sm font-semibold flex items-center gap-1 cursor-pointer"
+                    >
                       {isSubmitting ? "Submitting..." : "Submit Venue Partner"}
                     </button>
                   </div>
                 </div>
               )}
-
             </form>
           </div>
         )}

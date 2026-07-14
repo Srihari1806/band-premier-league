@@ -178,7 +178,8 @@ const getEnvVar = (key: string): string => {
 const supabaseUrl = getEnvVar("VITE_SUPABASE_URL");
 const supabaseAnonKey = getEnvVar("VITE_SUPABASE_ANON_KEY");
 
-export const supabase = supabaseUrl && supabaseAnonKey ? createClient(supabaseUrl, supabaseAnonKey) : null;
+export const supabase =
+  supabaseUrl && supabaseAnonKey ? createClient(supabaseUrl, supabaseAnonKey) : null;
 
 if (supabase) {
   console.log("Supabase client initialized successfully.");
@@ -205,7 +206,7 @@ function initLocalStorage() {
     localStorage.setItem("bpl_stats", JSON.stringify(DEFAULT_STATS));
     localStorage.setItem("bpl_stats_initialized", "true");
   }
-  
+
   // Init application arrays if they don't exist
   const roles = [
     "band",
@@ -214,10 +215,10 @@ function initLocalStorage() {
     "sponsor",
     "influencer",
     "volunteer",
-    "event_manager"
+    "event_manager",
   ];
-  
-  roles.forEach(role => {
+
+  roles.forEach((role) => {
     const key = `bpl_${role}_applications`;
     if (!localStorage.getItem(key)) {
       localStorage.setItem(key, JSON.stringify([]));
@@ -240,7 +241,7 @@ export const db = {
   async submitApplication(role: string, data: any): Promise<any> {
     const cleanRole = role.replace("-", "_").replace(" ", "_");
     const uniqueUsername = `kala_${cleanRole}_${Math.floor(1000 + Math.random() * 9000)}`;
-    
+
     // Generate temporary 8-character password: kp_xxxxxx
     const chars = "abcdefghijklmnopqrstuvwxyz0123456789";
     let randStr = "";
@@ -306,12 +307,13 @@ export const db = {
   },
 
   // --- Unified Application Status Update (Admin) ---
-  async updateApplicationStatus(role: string, id: string, status: "pending" | "approved" | "rejected" | "needs_changes"): Promise<void> {
+  async updateApplicationStatus(
+    role: string,
+    id: string,
+    status: "pending" | "approved" | "rejected" | "needs_changes",
+  ): Promise<void> {
     if (supabase) {
-      const { error } = await supabase
-        .from(getTableName(role))
-        .update({ status })
-        .eq("id", id);
+      const { error } = await supabase.from(getTableName(role)).update({ status }).eq("id", id);
       if (error) {
         console.warn(`Supabase update failed for ${role}, using localStorage fallback`, error);
         this.updateLocalStatus(role, id, status);
@@ -338,7 +340,10 @@ export const db = {
         .eq("status", "approved")
         .order("created_at", { ascending: false });
       if (error) {
-        console.warn(`Supabase query failed for approved ${role}, using localStorage fallback`, error);
+        console.warn(
+          `Supabase query failed for approved ${role}, using localStorage fallback`,
+          error,
+        );
         return this.getLocalApprovedRecords(role);
       }
       return data || [];
@@ -363,7 +368,10 @@ export const db = {
         .eq("status", "approved")
         .maybeSingle();
       if (error) {
-        console.warn(`Supabase query by ID failed for approved ${role}, using localStorage fallback`, error);
+        console.warn(
+          `Supabase query by ID failed for approved ${role}, using localStorage fallback`,
+          error,
+        );
         return this.getLocalApprovedRecordById(role, id);
       }
       return data || null;
@@ -392,12 +400,16 @@ export const db = {
         .eq("id", "current_season")
         .maybeSingle();
       if (error || !data) {
-        return JSON.parse(localStorage.getItem("bpl_stats") || JSON.stringify(DEFAULT_STATS)) as LeagueStats;
+        return JSON.parse(
+          localStorage.getItem("bpl_stats") || JSON.stringify(DEFAULT_STATS),
+        ) as LeagueStats;
       }
       return data as LeagueStats;
     } else {
       if (typeof window === "undefined") return DEFAULT_STATS;
-      return JSON.parse(localStorage.getItem("bpl_stats") || JSON.stringify(DEFAULT_STATS)) as LeagueStats;
+      return JSON.parse(
+        localStorage.getItem("bpl_stats") || JSON.stringify(DEFAULT_STATS),
+      ) as LeagueStats;
     }
   },
 
@@ -415,10 +427,21 @@ export const db = {
   // --- Clear / Reset Utility (DANGER: Deletes all application records) ---
   async clearAllData(): Promise<void> {
     if (supabase) {
-      const roles = ["band", "venue", "production_house", "sponsor", "influencer", "volunteer", "event_manager"];
+      const roles = [
+        "band",
+        "venue",
+        "production_house",
+        "sponsor",
+        "influencer",
+        "volunteer",
+        "event_manager",
+      ];
       for (const role of roles) {
         try {
-          await supabase.from(getTableName(role)).delete().neq("id", "00000000-0000-0000-0000-000000000000");
+          await supabase
+            .from(getTableName(role))
+            .delete()
+            .neq("id", "00000000-0000-0000-0000-000000000000");
         } catch (e) {
           console.warn(`Failed to clear table ${getTableName(role)} in Supabase`, e);
         }
@@ -434,14 +457,20 @@ export const db = {
         followers: "0",
       };
 
-      await supabase
-        .from("league_stats")
-        .upsert({ id: "current_season", ...zeroStats });
+      await supabase.from("league_stats").upsert({ id: "current_season", ...zeroStats });
     }
 
     if (typeof window !== "undefined") {
-      const roles = ["band", "venue", "production_house", "sponsor", "influencer", "volunteer", "event_manager"];
-      roles.forEach(role => {
+      const roles = [
+        "band",
+        "venue",
+        "production_house",
+        "sponsor",
+        "influencer",
+        "volunteer",
+        "event_manager",
+      ];
+      roles.forEach((role) => {
         localStorage.setItem(getStorageKey(role), JSON.stringify([]));
         localStorage.removeItem(`bpl_draft_${role}`); // Clear drafts too
       });
@@ -470,32 +499,34 @@ export const db = {
   async loginUser(loginId: string, passwordText: string, role: string): Promise<any> {
     if (typeof window === "undefined") return null;
     const searchVal = loginId.trim().toLowerCase();
-    
+
     if (supabase) {
       try {
         const tableName = getTableName(role);
         const { data, error } = await supabase
           .from(tableName)
           .select("*")
-          .or(`contact_email.ilike.${searchVal},username.ilike.${searchVal},contact_phone.ilike.${searchVal}`)
+          .or(
+            `contact_email.ilike.${searchVal},username.ilike.${searchVal},contact_phone.ilike.${searchVal}`,
+          )
           .maybeSingle();
         if (error) throw error;
         if (!data) {
           throw new Error(`No registered profile found with ID/Email/Phone: ${loginId}`);
         }
-        
+
         const recordPassword = data.password || "kala123";
         if (recordPassword !== passwordText) {
           throw new Error("Incorrect password.");
         }
-        
+
         const user = {
           id: data.id,
           role,
           email: data.contact_email,
           name: data.band_name || data.venue_name || data.company_name || data.name || "User",
           status: data.status,
-          username: data.username || loginId
+          username: data.username || loginId,
         };
         localStorage.setItem("bpl_user_onboarded", "true");
         localStorage.setItem("bpl_current_user", JSON.stringify(user));
@@ -512,27 +543,28 @@ export const db = {
   loginLocalUser(searchVal: string, passwordText: string, role: string) {
     const key = getStorageKey(role);
     const records = JSON.parse(localStorage.getItem(key) || "[]");
-    const record = records.find((r: any) => 
-      r.username?.toLowerCase() === searchVal ||
-      r.contact_email?.toLowerCase() === searchVal ||
-      r.contact_phone?.toLowerCase() === searchVal
+    const record = records.find(
+      (r: any) =>
+        r.username?.toLowerCase() === searchVal ||
+        r.contact_email?.toLowerCase() === searchVal ||
+        r.contact_phone?.toLowerCase() === searchVal,
     );
     if (!record) {
       throw new Error(`No registered profile found with ID/Email/Phone: ${searchVal}`);
     }
-    
+
     const recordPassword = record.password || "kala123";
     if (recordPassword !== passwordText) {
       throw new Error("Incorrect password.");
     }
-    
+
     const user = {
       id: record.id,
       role,
       email: record.contact_email,
       name: record.band_name || record.venue_name || record.company_name || record.name || "User",
       status: record.status,
-      username: record.username || searchVal
+      username: record.username || searchVal,
     };
     localStorage.setItem("bpl_user_onboarded", "true");
     localStorage.setItem("bpl_current_user", JSON.stringify(user));
@@ -580,8 +612,9 @@ export const db = {
       id: record.id,
       role,
       email: record.contact_email || "demo@bpl.in",
-      name: record.band_name || record.venue_name || record.company_name || record.name || "Demo User",
-      status: record.status || "approved"
+      name:
+        record.band_name || record.venue_name || record.company_name || record.name || "Demo User",
+      status: record.status || "approved",
     };
     localStorage.setItem("bpl_user_onboarded", "true");
     localStorage.setItem("bpl_current_user", JSON.stringify(user));
@@ -598,10 +631,7 @@ export const db = {
   async updateProfile(role: string, id: string, updatedFields: any): Promise<void> {
     if (supabase) {
       const tableName = getTableName(role);
-      const { error } = await supabase
-        .from(tableName)
-        .update(updatedFields)
-        .eq("id", id);
+      const { error } = await supabase.from(tableName).update(updatedFields).eq("id", id);
       if (error) throw error;
     } else {
       const key = getStorageKey(role);
@@ -612,7 +642,12 @@ export const db = {
         localStorage.setItem(key, JSON.stringify(records));
         const currentUser = this.getCurrentUser();
         if (currentUser && currentUser.id === id) {
-          currentUser.name = updatedFields.band_name || updatedFields.venue_name || updatedFields.company_name || updatedFields.name || currentUser.name;
+          currentUser.name =
+            updatedFields.band_name ||
+            updatedFields.venue_name ||
+            updatedFields.company_name ||
+            updatedFields.name ||
+            currentUser.name;
           localStorage.setItem("bpl_current_user", JSON.stringify(currentUser));
         }
       } else {
@@ -621,7 +656,12 @@ export const db = {
     }
   },
 
-  async updatePassword(role: string, id: string, currentPasswordText: string, newPasswordText: string): Promise<void> {
+  async updatePassword(
+    role: string,
+    id: string,
+    currentPasswordText: string,
+    newPasswordText: string,
+  ): Promise<void> {
     if (supabase) {
       try {
         const tableName = getTableName(role);
@@ -632,12 +672,12 @@ export const db = {
           .maybeSingle();
         if (fetchErr) throw fetchErr;
         if (!data) throw new Error("Profile record not found.");
-        
+
         const activePassword = data.password || "kala123";
         if (activePassword !== currentPasswordText) {
           throw new Error("Current password does not match.");
         }
-        
+
         const { error: updateErr } = await supabase
           .from(tableName)
           .update({ password: newPasswordText })
@@ -652,17 +692,22 @@ export const db = {
     }
   },
 
-  updateLocalPassword(role: string, id: string, currentPasswordText: string, newPasswordText: string) {
+  updateLocalPassword(
+    role: string,
+    id: string,
+    currentPasswordText: string,
+    newPasswordText: string,
+  ) {
     const key = getStorageKey(role);
     const records = JSON.parse(localStorage.getItem(key) || "[]");
     const idx = records.findIndex((r: any) => r.id === id);
     if (idx === -1) throw new Error("Profile record not found.");
-    
+
     const activePassword = records[idx].password || "kala123";
     if (activePassword !== currentPasswordText) {
       throw new Error("Current password does not match.");
     }
-    
+
     records[idx].password = newPasswordText;
     localStorage.setItem(key, JSON.stringify(records));
   },

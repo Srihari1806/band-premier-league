@@ -1,16 +1,16 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState, useRef, useEffect } from "react";
 import { PageShell } from "@/components/layout/PageShell";
-import { 
-  Instagram, 
-  Youtube, 
-  Music, 
-  Plus, 
-  Trash, 
-  Upload, 
-  Camera, 
-  ChevronLeft, 
-  ChevronRight, 
+import {
+  Instagram,
+  Youtube,
+  Music,
+  Plus,
+  Trash,
+  Upload,
+  Camera,
+  ChevronLeft,
+  ChevronRight,
   CheckCircle,
   MapPin,
   Calendar,
@@ -20,12 +20,12 @@ import {
   AlertCircle,
   HelpCircle,
   FileText,
-  DollarSign
+  DollarSign,
 } from "lucide-react";
 import { db, type BandMember } from "@/lib/db";
 
 export const Route = createFileRoute("/join/band")({
-  validateSearch: (search: Record<string, unknown>) => {
+  validateSearch: (search: Record<string, unknown>): { type?: string } => {
     return {
       type: (search.type as string) || "band",
     };
@@ -33,16 +33,7 @@ export const Route = createFileRoute("/join/band")({
   component: BandOnboardingPage,
 });
 
-const GENRES = [
-  "Rock",
-  "Indie",
-  "Folk",
-  "Metal",
-  "Pop",
-  "Alternative",
-  "Hip-Hop",
-  "Other"
-];
+const GENRES = ["Rock", "Indie", "Folk", "Metal", "Pop", "Alternative", "Hip-Hop", "Other"];
 
 function BandOnboardingPage() {
   const { type } = Route.useSearch();
@@ -51,7 +42,9 @@ function BandOnboardingPage() {
   const [step, setStep] = useState(1);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [credentials, setCredentials] = useState<{ username: string; password?: string } | null>(null);
+  const [credentials, setCredentials] = useState<{ username: string; password?: string } | null>(
+    null,
+  );
 
   // Form Fields State
   const [bandName, setBandName] = useState("");
@@ -62,7 +55,7 @@ function BandOnboardingPage() {
   const [formedYear, setFormedYear] = useState("");
   const [languages, setLanguages] = useState("");
   const [originalCovers, setOriginalCovers] = useState("Originals");
-  
+
   // Step 2: Story
   const [bio, setBio] = useState("");
   const [mission, setMission] = useState("");
@@ -77,7 +70,7 @@ function BandOnboardingPage() {
   const [bannerImage, setBannerImage] = useState("");
   const [profileImage, setProfileImage] = useState("");
   const [performancePhotos, setPerformancePhotos] = useState<string[]>([]);
-  
+
   // Step 4: Music
   const [instagramUrl, setInstagramUrl] = useState("");
   const [youtubeUrl, setYoutubeUrl] = useState("");
@@ -86,7 +79,7 @@ function BandOnboardingPage() {
   const [appleUrl, setAppleUrl] = useState("");
   const [websiteUrl, setWebsiteUrl] = useState("");
   const [demoTrack, setDemoTrack] = useState(""); // Base64
-  
+
   // Step 5: Performance
   const [stageRider, setStageRider] = useState(""); // Tech rider specs
   const [technicalRequirements, setTechnicalRequirements] = useState("");
@@ -163,21 +156,83 @@ function BandOnboardingPage() {
     if (isSubmitted) return;
     const saveDraft = () => {
       const stateObj = {
-        bandName, tagline, genre, customGenre, homeCity, formedYear, languages, originalCovers,
-        bio, mission, influences, musicalStyle, achievements, members, bannerImage, profileImage,
-        performancePhotos, instagramUrl, youtubeUrl, spotifyUrl, saavnUrl, appleUrl, websiteUrl,
-        demoTrack, stageRider, technicalRequirements, preferredCities, feeRange, availabilityCalendar,
-        contactName, contactPhone, contactEmail, managerName, termsAccepted, step
+        bandName,
+        tagline,
+        genre,
+        customGenre,
+        homeCity,
+        formedYear,
+        languages,
+        originalCovers,
+        bio,
+        mission,
+        influences,
+        musicalStyle,
+        achievements,
+        members,
+        bannerImage,
+        profileImage,
+        performancePhotos,
+        instagramUrl,
+        youtubeUrl,
+        spotifyUrl,
+        saavnUrl,
+        appleUrl,
+        websiteUrl,
+        demoTrack,
+        stageRider,
+        technicalRequirements,
+        preferredCities,
+        feeRange,
+        availabilityCalendar,
+        contactName,
+        contactPhone,
+        contactEmail,
+        managerName,
+        termsAccepted,
+        step,
       };
       localStorage.setItem(`bpl_draft_${type}`, JSON.stringify(stateObj));
     };
     saveDraft();
   }, [
-    bandName, tagline, genre, customGenre, homeCity, formedYear, languages, originalCovers,
-    bio, mission, influences, musicalStyle, achievements, members, bannerImage, profileImage,
-    performancePhotos, instagramUrl, youtubeUrl, spotifyUrl, saavnUrl, appleUrl, websiteUrl,
-    demoTrack, stageRider, technicalRequirements, preferredCities, feeRange, availabilityCalendar,
-    contactName, contactPhone, contactEmail, managerName, termsAccepted, step, isSubmitted, type
+    bandName,
+    tagline,
+    genre,
+    customGenre,
+    homeCity,
+    formedYear,
+    languages,
+    originalCovers,
+    bio,
+    mission,
+    influences,
+    musicalStyle,
+    achievements,
+    members,
+    bannerImage,
+    profileImage,
+    performancePhotos,
+    instagramUrl,
+    youtubeUrl,
+    spotifyUrl,
+    saavnUrl,
+    appleUrl,
+    websiteUrl,
+    demoTrack,
+    stageRider,
+    technicalRequirements,
+    preferredCities,
+    feeRange,
+    availabilityCalendar,
+    contactName,
+    contactPhone,
+    contactEmail,
+    managerName,
+    termsAccepted,
+    step,
+    isSubmitted,
+    type,
   ]);
 
   // Auto-scroll to top on step change
@@ -188,9 +243,18 @@ function BandOnboardingPage() {
   // Calculate Profile Completion Percentage
   const calculateCompletion = () => {
     let fields = [
-      bannerImage, profileImage, bandName, homeCity, bio, instagramUrl, contactName, contactPhone, contactEmail, termsAccepted
+      bannerImage,
+      profileImage,
+      bandName,
+      homeCity,
+      bio,
+      instagramUrl,
+      contactName,
+      contactPhone,
+      contactEmail,
+      termsAccepted,
     ];
-    let filled = fields.filter(f => !!f).length;
+    let filled = fields.filter((f) => !!f).length;
     let total = fields.length;
 
     // Check optional but key fields for extra %
@@ -253,7 +317,7 @@ function BandOnboardingPage() {
     if (files) {
       const remainingSlots = 8 - performancePhotos.length;
       const filesToUpload = Array.from(files).slice(0, remainingSlots);
-      
+
       const newPhotos: string[] = [];
       for (const file of filesToUpload) {
         try {
@@ -296,7 +360,7 @@ function BandOnboardingPage() {
 
     const newPhotos = [...performancePhotos];
     const targetIndex = direction === "up" ? index - 1 : index + 1;
-    
+
     // Swap
     const temp = newPhotos[index];
     newPhotos[index] = newPhotos[targetIndex];
@@ -307,7 +371,10 @@ function BandOnboardingPage() {
 
   // Team Members
   const addMember = () => {
-    setMembers((prev) => [...prev, { name: "", role: "", photo: "", instagram: "", experience: "" }]);
+    setMembers((prev) => [
+      ...prev,
+      { name: "", role: "", photo: "", instagram: "", experience: "" },
+    ]);
   };
 
   const updateMember = (index: number, key: keyof BandMember, value: string) => {
@@ -337,10 +404,8 @@ function BandOnboardingPage() {
 
   // Calendar toggle
   const toggleCalendarDate = (dateStr: string) => {
-    setAvailabilityCalendar(prev => 
-      prev.includes(dateStr) 
-        ? prev.filter(d => d !== dateStr) 
-        : [...prev, dateStr]
+    setAvailabilityCalendar((prev) =>
+      prev.includes(dateStr) ? prev.filter((d) => d !== dateStr) : [...prev, dateStr],
     );
   };
 
@@ -356,7 +421,12 @@ function BandOnboardingPage() {
       if (genre === "Other" && !customGenre.trim()) {
         stepErrors.customGenre = "Please specify your genre.";
       }
-      if (formedYear && (isNaN(Number(formedYear)) || Number(formedYear) < 1900 || Number(formedYear) > new Date().getFullYear())) {
+      if (
+        formedYear &&
+        (isNaN(Number(formedYear)) ||
+          Number(formedYear) < 1900 ||
+          Number(formedYear) > new Date().getFullYear())
+      ) {
         stepErrors.formedYear = "Please enter a valid year.";
       }
     }
@@ -376,7 +446,11 @@ function BandOnboardingPage() {
         stepErrors.instagram = "Must be a valid Instagram URL (e.g. instagram.com/profile).";
       }
 
-      if (youtubeUrl.trim() && !youtubeUrl.toLowerCase().includes("youtube.com") && !youtubeUrl.toLowerCase().includes("youtu.be")) {
+      if (
+        youtubeUrl.trim() &&
+        !youtubeUrl.toLowerCase().includes("youtube.com") &&
+        !youtubeUrl.toLowerCase().includes("youtu.be")
+      ) {
         stepErrors.youtube = "Must be a valid YouTube URL.";
       }
     }
@@ -384,7 +458,7 @@ function BandOnboardingPage() {
     if (currentStep === 6) {
       if (!contactName.trim()) stepErrors.contactName = "Primary contact name is required.";
       if (!contactPhone.trim()) stepErrors.contactPhone = "Phone number is required.";
-      
+
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       if (!contactEmail.trim()) {
         stepErrors.contactEmail = "Contact email is required.";
@@ -478,9 +552,11 @@ function BandOnboardingPage() {
             <div className="mx-auto h-20 w-20 rounded-full bg-primary/10 flex items-center justify-center text-primary-glow border border-primary/30">
               <CheckCircle size={40} />
             </div>
-            
+
             <div className="space-y-2">
-              <h1 className="text-3xl sm:text-4xl font-display font-bold">Application Submitted!</h1>
+              <h1 className="text-3xl sm:text-4xl font-display font-bold">
+                Application Submitted!
+              </h1>
               <p className="text-muted-foreground max-w-md mx-auto text-sm leading-relaxed">
                 Your application has been logged and is pending league approval. Review stages:
               </p>
@@ -489,25 +565,51 @@ function BandOnboardingPage() {
             {/* Review Stages Timeline */}
             <div className="max-w-md mx-auto bg-surface/50 border border-border p-6 rounded-lg text-left space-y-4">
               {[
-                { label: "Application Submitted", desc: "Your files have been saved to the Kalakshetra registry.", done: true },
-                { label: "Verification", desc: "Kalakshetra staff checks links and contact credentials.", done: false },
-                { label: "Evaluation & Selection", desc: "Review of musical style, demo performance video and bio details.", done: false },
-                { label: "League Approval", desc: "Kalakshetra operations team formally signs off on registry entry.", done: false },
-                { label: "Official Registration", desc: "Kalakshetra ID created and profile published live on the directory.", done: false },
+                {
+                  label: "Application Submitted",
+                  desc: "Your files have been saved to the Kalakshetra registry.",
+                  done: true,
+                },
+                {
+                  label: "Verification",
+                  desc: "Kalakshetra staff checks links and contact credentials.",
+                  done: false,
+                },
+                {
+                  label: "Evaluation & Selection",
+                  desc: "Review of musical style, demo performance video and bio details.",
+                  done: false,
+                },
+                {
+                  label: "League Approval",
+                  desc: "Kalakshetra operations team formally signs off on registry entry.",
+                  done: false,
+                },
+                {
+                  label: "Official Registration",
+                  desc: "Kalakshetra ID created and profile published live on the directory.",
+                  done: false,
+                },
               ].map((stage, idx) => (
                 <div key={stage.label} className="flex gap-4 relative">
                   {idx < 4 && (
                     <div className="absolute left-[11px] top-6 w-[2px] h-[calc(100%-8px)] bg-border" />
                   )}
-                  <div className={`h-6 w-6 rounded-full shrink-0 border flex items-center justify-center text-xs font-semibold ${
-                    stage.done 
-                      ? "bg-primary border-primary text-primary-foreground" 
-                      : "bg-surface border-border text-muted-foreground"
-                  }`}>
+                  <div
+                    className={`h-6 w-6 rounded-full shrink-0 border flex items-center justify-center text-xs font-semibold ${
+                      stage.done
+                        ? "bg-primary border-primary text-primary-foreground"
+                        : "bg-surface border-border text-muted-foreground"
+                    }`}
+                  >
                     {idx + 1}
                   </div>
                   <div>
-                    <h4 className={`text-xs font-bold ${stage.done ? "text-primary-glow" : "text-white/80"}`}>{stage.label}</h4>
+                    <h4
+                      className={`text-xs font-bold ${stage.done ? "text-primary-glow" : "text-white/80"}`}
+                    >
+                      {stage.label}
+                    </h4>
                     <p className="text-[10px] text-muted-foreground mt-0.5">{stage.desc}</p>
                   </div>
                 </div>
@@ -517,23 +619,38 @@ function BandOnboardingPage() {
             {credentials && (
               <div className="max-w-md mx-auto bpl-card p-6 bg-primary/5 border border-primary/20 rounded-lg text-left space-y-4 my-6">
                 <div>
-                  <h3 className="text-sm font-semibold text-primary-glow font-display">Account Created Successfully</h3>
-                  <p className="text-[10px] text-muted-foreground mt-0.5">Please save these login details. You will need them to access your dashboard and update your profile.</p>
+                  <h3 className="text-sm font-semibold text-primary-glow font-display">
+                    Account Created Successfully
+                  </h3>
+                  <p className="text-[10px] text-muted-foreground mt-0.5">
+                    Please save these login details. You will need them to access your dashboard and
+                    update your profile.
+                  </p>
                 </div>
                 <div className="space-y-2 bg-black/40 p-4 rounded border border-border">
                   <div className="flex justify-between items-center text-xs">
-                    <span className="text-muted-foreground font-semibold uppercase tracking-wider text-[9px]">Username/ID:</span>
-                    <span className="font-mono text-white select-all font-bold">{credentials.username}</span>
+                    <span className="text-muted-foreground font-semibold uppercase tracking-wider text-[9px]">
+                      Username/ID:
+                    </span>
+                    <span className="font-mono text-white select-all font-bold">
+                      {credentials.username}
+                    </span>
                   </div>
                   <div className="flex justify-between items-center text-xs">
-                    <span className="text-muted-foreground font-semibold uppercase tracking-wider text-[9px]">Password:</span>
-                    <span className="font-mono text-white select-all font-bold">{credentials.password}</span>
+                    <span className="text-muted-foreground font-semibold uppercase tracking-wider text-[9px]">
+                      Password:
+                    </span>
+                    <span className="font-mono text-white select-all font-bold">
+                      {credentials.password}
+                    </span>
                   </div>
                 </div>
                 <button
                   type="button"
                   onClick={() => {
-                    navigator.clipboard.writeText(`Username: ${credentials.username}\nPassword: ${credentials.password}`);
+                    navigator.clipboard.writeText(
+                      `Username: ${credentials.username}\nPassword: ${credentials.password}`,
+                    );
                     alert("Credentials copied to clipboard!");
                   }}
                   className="w-full py-2 bg-primary/20 hover:bg-primary/30 border border-primary/30 rounded text-[11px] font-bold text-white uppercase tracking-wider transition"
@@ -544,27 +661,34 @@ function BandOnboardingPage() {
             )}
 
             <div className="pt-4 flex justify-center gap-3">
-              <Link to="/bands" className="btn-primary btn-primary-hover px-6 py-3 rounded-md text-sm font-semibold">
+              <Link
+                to="/bands"
+                className="btn-primary btn-primary-hover px-6 py-3 rounded-md text-sm font-semibold"
+              >
                 Explore Directory
               </Link>
-              <Link to="/" className="px-6 py-3 rounded-md border border-border bg-surface hover:text-primary-glow transition text-sm">
+              <Link
+                to="/"
+                className="px-6 py-3 rounded-md border border-border bg-surface hover:text-primary-glow transition text-sm"
+              >
                 Back to Home
               </Link>
             </div>
           </div>
         ) : (
           <div className="space-y-8">
-            
             {/* Header */}
             <div className="text-center space-y-2 relative">
-              <p className="text-xs uppercase tracking-widest text-primary-glow font-bold">Kalakshetra Onboarding Hub</p>
+              <p className="text-xs uppercase tracking-widest text-primary-glow font-bold">
+                Kalakshetra Onboarding Hub
+              </p>
               <h1 className="text-3xl sm:text-4xl font-display font-bold">
                 {isSolo ? "Solo Artist" : "Band"} Onboarding
               </h1>
               <p className="text-xs text-muted-foreground max-w-lg mx-auto">
                 Set up your professional profile. Progress is automatically saved as you type.
               </p>
-              
+
               {/* Profile Completion Bar */}
               <div className="max-w-xs mx-auto pt-3 space-y-1.5">
                 <div className="flex justify-between text-[10px] uppercase font-bold text-muted-foreground tracking-wider">
@@ -572,8 +696,8 @@ function BandOnboardingPage() {
                   <span className="text-primary-glow">{profileCompletion}%</span>
                 </div>
                 <div className="h-2 w-full bg-secondary rounded-full overflow-hidden border border-border">
-                  <div 
-                    className="h-full bg-gradient-to-r from-primary to-primary-glow transition-all duration-500" 
+                  <div
+                    className="h-full bg-gradient-to-r from-primary to-primary-glow transition-all duration-500"
                     style={{ width: `${profileCompletion}%` }}
                   />
                 </div>
@@ -592,7 +716,7 @@ function BandOnboardingPage() {
               ].map((s, idx) => (
                 <div key={s.number} className="flex-1 flex items-center">
                   <div className="flex flex-col items-center gap-1 relative z-10 mx-auto">
-                    <button 
+                    <button
                       type="button"
                       onClick={() => {
                         // Allow skipping backwards freely, but validate going forwards
@@ -611,16 +735,18 @@ function BandOnboardingPage() {
                         }
                       }}
                       className={`h-8 w-8 rounded-full flex items-center justify-center font-semibold text-xs border transition-all cursor-pointer ${
-                        step === s.number 
-                          ? "bg-primary border-primary text-primary-foreground shadow-glow" 
-                          : step > s.number 
-                            ? "bg-primary/20 border-primary/40 text-primary-glow hover:bg-primary/30" 
+                        step === s.number
+                          ? "bg-primary border-primary text-primary-foreground shadow-glow"
+                          : step > s.number
+                            ? "bg-primary/20 border-primary/40 text-primary-glow hover:bg-primary/30"
                             : "bg-surface border-border text-muted-foreground hover:text-foreground"
                       }`}
                     >
                       {s.number}
                     </button>
-                    <span className={`text-[9px] uppercase tracking-wider font-semibold ${step >= s.number ? "text-primary-glow" : "text-muted-foreground"}`}>
+                    <span
+                      className={`text-[9px] uppercase tracking-wider font-semibold ${step >= s.number ? "text-primary-glow" : "text-muted-foreground"}`}
+                    >
                       {s.label}
                     </span>
                   </div>
@@ -633,41 +759,47 @@ function BandOnboardingPage() {
 
             {/* Wizard Form container */}
             <form onSubmit={handleSubmit} className="space-y-6">
-              
               {/* STEP 1: IDENTITY (Twitter-style Layout) */}
               {step === 1 && (
                 <div className="space-y-6 animate-fade-in">
-                  
                   {/* Banner & Profile Setup preview */}
                   <div className="bpl-card overflow-hidden">
                     <div className="p-4 border-b border-border bg-surface/30">
-                      <h2 className="text-xs uppercase tracking-widest text-muted-foreground">Social Layout Preview (Twitter Style)</h2>
+                      <h2 className="text-xs uppercase tracking-widest text-muted-foreground">
+                        Social Layout Preview (Twitter Style)
+                      </h2>
                     </div>
 
                     {/* Cover Banner */}
                     <div className="relative h-44 sm:h-52 bg-slate-900 overflow-hidden flex items-center justify-center border-b border-border">
                       {bannerImage ? (
-                        <img src={bannerImage} alt="Banner Preview" className="h-full w-full object-cover" />
+                        <img
+                          src={bannerImage}
+                          alt="Banner Preview"
+                          className="h-full w-full object-cover"
+                        />
                       ) : (
                         <div className="text-center p-6 text-muted-foreground">
                           <p className="text-xs font-bold">No cover image uploaded</p>
-                          <p className="text-[10px] text-muted-foreground/60 mt-1">Recommended size: 1500 x 500 (3:1)</p>
+                          <p className="text-[10px] text-muted-foreground/60 mt-1">
+                            Recommended size: 1500 x 500 (3:1)
+                          </p>
                         </div>
                       )}
-                      
-                      <button 
+
+                      <button
                         type="button"
                         onClick={() => bannerRef.current?.click()}
                         className="absolute top-3 right-3 z-30 bg-black/75 hover:bg-black/90 text-white rounded-md px-3 py-1.5 text-xs flex items-center gap-1.5 border border-white/10 transition"
                       >
                         <Camera size={12} /> Upload Cover
                       </button>
-                      <input 
-                        type="file" 
+                      <input
+                        type="file"
                         ref={bannerRef}
-                        accept="image/*" 
-                        onChange={onBannerChange} 
-                        className="hidden" 
+                        accept="image/*"
+                        onChange={onBannerChange}
+                        className="hidden"
                       />
                     </div>
 
@@ -676,66 +808,101 @@ function BandOnboardingPage() {
                       <div className="flex items-end gap-4 -mt-10 sm:-mt-14 relative z-20">
                         <div className="h-20 w-20 sm:h-28 sm:w-28 rounded-full overflow-hidden border-4 border-background bg-slate-800 relative group flex items-center justify-center shrink-0 shadow-lg">
                           {profileImage ? (
-                            <img src={profileImage} alt="Profile Preview" className="h-full w-full object-cover" />
+                            <img
+                              src={profileImage}
+                              alt="Profile Preview"
+                              className="h-full w-full object-cover"
+                            />
                           ) : (
                             <div className="text-muted-foreground text-center">
                               <Camera size={20} className="mx-auto" />
                             </div>
                           )}
-                          <button 
+                          <button
                             type="button"
                             onClick={() => profileRef.current?.click()}
                             className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white transition rounded-full"
                           >
                             <Upload size={14} />
                           </button>
-                          <input 
-                            type="file" 
+                          <input
+                            type="file"
                             ref={profileRef}
-                            accept="image/*" 
-                            onChange={onProfileChange} 
-                            className="hidden" 
+                            accept="image/*"
+                            onChange={onProfileChange}
+                            className="hidden"
                           />
                         </div>
                         <div className="mb-2 min-w-0">
-                          <h3 className="font-semibold text-lg text-white truncate">{bandName || "Artist / Band Name"}</h3>
+                          <h3 className="font-semibold text-lg text-white truncate">
+                            {bandName || "Artist / Band Name"}
+                          </h3>
                           <p className="text-xs text-muted-foreground truncate">
-                            {genre === "Other" && customGenre ? customGenre : genre} · {homeCity || "Home City"}
+                            {genre === "Other" && customGenre ? customGenre : genre} ·{" "}
+                            {homeCity || "Home City"}
                           </p>
-                          {tagline && <p className="text-[11px] text-primary-glow italic mt-0.5 truncate">"{tagline}"</p>}
+                          {tagline && (
+                            <p className="text-[11px] text-primary-glow italic mt-0.5 truncate">
+                              "{tagline}"
+                            </p>
+                          )}
                         </div>
                       </div>
-                      
+
                       {/* Errors for images */}
-                      {errors.banner && <p className="text-red-500 text-xs mt-2 flex items-center gap-1"><AlertCircle size={12} /> {errors.banner}</p>}
-                      {errors.profile && <p className="text-red-500 text-xs mt-2 flex items-center gap-1"><AlertCircle size={12} /> {errors.profile}</p>}
+                      {errors.banner && (
+                        <p className="text-red-500 text-xs mt-2 flex items-center gap-1">
+                          <AlertCircle size={12} /> {errors.banner}
+                        </p>
+                      )}
+                      {errors.profile && (
+                        <p className="text-red-500 text-xs mt-2 flex items-center gap-1">
+                          <AlertCircle size={12} /> {errors.profile}
+                        </p>
+                      )}
                     </div>
                   </div>
 
                   {/* Fields */}
                   <div className="bpl-card p-6 space-y-4">
-                    <h2 className="font-display font-semibold text-lg border-b border-border pb-2 text-primary-glow">Basic Details</h2>
-                    
+                    <h2 className="font-display font-semibold text-lg border-b border-border pb-2 text-primary-glow">
+                      Basic Details
+                    </h2>
+
                     <div className="grid sm:grid-cols-2 gap-4">
                       {/* Band/Artist Name */}
                       <div className="space-y-1.5">
-                        <label htmlFor="bandName" className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">{isSolo ? "Artist Name" : "Band Name"} *</label>
-                        <input 
-                          type="text" 
+                        <label
+                          htmlFor="bandName"
+                          className="text-xs uppercase tracking-wider text-muted-foreground font-semibold"
+                        >
+                          {isSolo ? "Artist Name" : "Band Name"} *
+                        </label>
+                        <input
+                          type="text"
                           id="bandName"
                           placeholder={isSolo ? "e.g. Ritviz" : "e.g. Parvaaz"}
                           value={bandName}
                           onChange={(e) => setBandName(e.target.value)}
                           className="w-full bg-secondary border border-border rounded-md px-3.5 py-2.5 text-sm focus:outline-none focus:border-primary transition text-white"
                         />
-                        {errors.bandName && <p className="text-red-500 text-xs flex items-center gap-1"><AlertCircle size={12} /> {errors.bandName}</p>}
+                        {errors.bandName && (
+                          <p className="text-red-500 text-xs flex items-center gap-1">
+                            <AlertCircle size={12} /> {errors.bandName}
+                          </p>
+                        )}
                       </div>
 
                       {/* Tagline */}
                       <div className="space-y-1.5">
-                        <label htmlFor="tagline" className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">One-line Tagline</label>
-                        <input 
-                          type="text" 
+                        <label
+                          htmlFor="tagline"
+                          className="text-xs uppercase tracking-wider text-muted-foreground font-semibold"
+                        >
+                          One-line Tagline
+                        </label>
+                        <input
+                          type="text"
                           id="tagline"
                           placeholder="e.g. Ambient electronic folk from Pune"
                           value={tagline}
@@ -748,7 +915,12 @@ function BandOnboardingPage() {
                     <div className="grid sm:grid-cols-2 gap-4">
                       {/* Genre */}
                       <div className="space-y-1.5">
-                        <label htmlFor="genre" className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">Primary Genre *</label>
+                        <label
+                          htmlFor="genre"
+                          className="text-xs uppercase tracking-wider text-muted-foreground font-semibold"
+                        >
+                          Primary Genre *
+                        </label>
                         <select
                           id="genre"
                           value={genre}
@@ -756,7 +928,9 @@ function BandOnboardingPage() {
                           className="w-full bg-secondary border border-border rounded-md px-3.5 py-2.5 text-sm focus:outline-none focus:border-primary transition text-white"
                         >
                           {GENRES.map((g) => (
-                            <option key={g} value={g} className="bg-background">{g}</option>
+                            <option key={g} value={g} className="bg-background">
+                              {g}
+                            </option>
                           ))}
                         </select>
                       </div>
@@ -764,54 +938,86 @@ function BandOnboardingPage() {
                       {/* Custom Genre */}
                       {genre === "Other" && (
                         <div className="space-y-1.5">
-                          <label htmlFor="customGenre" className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">Specify Genre *</label>
-                          <input 
-                            type="text" 
+                          <label
+                            htmlFor="customGenre"
+                            className="text-xs uppercase tracking-wider text-muted-foreground font-semibold"
+                          >
+                            Specify Genre *
+                          </label>
+                          <input
+                            type="text"
                             id="customGenre"
                             placeholder="e.g. Synth-wave / Shoegaze"
                             value={customGenre}
                             onChange={(e) => setCustomGenre(e.target.value)}
                             className="w-full bg-secondary border border-border rounded-md px-3.5 py-2.5 text-sm focus:outline-none focus:border-primary transition text-white"
                           />
-                          {errors.customGenre && <p className="text-red-500 text-xs flex items-center gap-1"><AlertCircle size={12} /> {errors.customGenre}</p>}
+                          {errors.customGenre && (
+                            <p className="text-red-500 text-xs flex items-center gap-1">
+                              <AlertCircle size={12} /> {errors.customGenre}
+                            </p>
+                          )}
                         </div>
                       )}
 
                       {/* Home City */}
                       <div className="space-y-1.5">
-                        <label htmlFor="homeCity" className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">Home City *</label>
-                        <input 
-                          type="text" 
+                        <label
+                          htmlFor="homeCity"
+                          className="text-xs uppercase tracking-wider text-muted-foreground font-semibold"
+                        >
+                          Home City *
+                        </label>
+                        <input
+                          type="text"
                           id="homeCity"
                           placeholder="e.g. Pune"
                           value={homeCity}
                           onChange={(e) => setHomeCity(e.target.value)}
                           className="w-full bg-secondary border border-border rounded-md px-3.5 py-2.5 text-sm focus:outline-none focus:border-primary transition text-white"
                         />
-                        {errors.homeCity && <p className="text-red-500 text-xs flex items-center gap-1"><AlertCircle size={12} /> {errors.homeCity}</p>}
+                        {errors.homeCity && (
+                          <p className="text-red-500 text-xs flex items-center gap-1">
+                            <AlertCircle size={12} /> {errors.homeCity}
+                          </p>
+                        )}
                       </div>
                     </div>
 
                     <div className="grid sm:grid-cols-3 gap-4">
                       {/* Formation Year */}
                       <div className="space-y-1.5">
-                        <label htmlFor="formedYear" className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">Formation Year</label>
-                        <input 
-                          type="number" 
+                        <label
+                          htmlFor="formedYear"
+                          className="text-xs uppercase tracking-wider text-muted-foreground font-semibold"
+                        >
+                          Formation Year
+                        </label>
+                        <input
+                          type="number"
                           id="formedYear"
                           placeholder="e.g. 2019"
                           value={formedYear}
                           onChange={(e) => setFormedYear(e.target.value)}
                           className="w-full bg-secondary border border-border rounded-md px-3.5 py-2.5 text-sm focus:outline-none focus:border-primary transition text-white"
                         />
-                        {errors.formedYear && <p className="text-red-500 text-xs flex items-center gap-1"><AlertCircle size={12} /> {errors.formedYear}</p>}
+                        {errors.formedYear && (
+                          <p className="text-red-500 text-xs flex items-center gap-1">
+                            <AlertCircle size={12} /> {errors.formedYear}
+                          </p>
+                        )}
                       </div>
 
                       {/* Languages */}
                       <div className="space-y-1.5">
-                        <label htmlFor="languages" className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">Languages of Music</label>
-                        <input 
-                          type="text" 
+                        <label
+                          htmlFor="languages"
+                          className="text-xs uppercase tracking-wider text-muted-foreground font-semibold"
+                        >
+                          Languages of Music
+                        </label>
+                        <input
+                          type="text"
                           id="languages"
                           placeholder="e.g. Hindi, English"
                           value={languages}
@@ -822,24 +1028,35 @@ function BandOnboardingPage() {
 
                       {/* Originals / Covers */}
                       <div className="space-y-1.5">
-                        <label htmlFor="originalCovers" className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">Repertoire Type</label>
+                        <label
+                          htmlFor="originalCovers"
+                          className="text-xs uppercase tracking-wider text-muted-foreground font-semibold"
+                        >
+                          Repertoire Type
+                        </label>
                         <select
                           id="originalCovers"
                           value={originalCovers}
                           onChange={(e) => setOriginalCovers(e.target.value)}
                           className="w-full bg-secondary border border-border rounded-md px-3.5 py-2.5 text-sm focus:outline-none focus:border-primary transition text-white"
                         >
-                          <option value="Originals" className="bg-background">Originals Only</option>
-                          <option value="Covers" className="bg-background">Covers Only</option>
-                          <option value="Both" className="bg-background">Both Originals & Covers</option>
+                          <option value="Originals" className="bg-background">
+                            Originals Only
+                          </option>
+                          <option value="Covers" className="bg-background">
+                            Covers Only
+                          </option>
+                          <option value="Both" className="bg-background">
+                            Both Originals & Covers
+                          </option>
                         </select>
                       </div>
                     </div>
                   </div>
 
                   <div className="flex justify-end pt-2">
-                    <button 
-                      type="button" 
+                    <button
+                      type="button"
                       onClick={handleNext}
                       className="btn-primary btn-primary-hover px-6 py-3 rounded-md text-sm font-semibold flex items-center gap-1 cursor-pointer"
                     >
@@ -853,17 +1070,26 @@ function BandOnboardingPage() {
               {step === 2 && (
                 <div className="space-y-6 animate-fade-in">
                   <div className="bpl-card p-6 space-y-4">
-                    <h2 className="font-display font-semibold text-lg border-b border-border pb-2 text-primary-glow">Our Story</h2>
+                    <h2 className="font-display font-semibold text-lg border-b border-border pb-2 text-primary-glow">
+                      Our Story
+                    </h2>
 
                     {/* Bio */}
                     <div className="space-y-1.5">
                       <div className="flex justify-between">
-                        <label htmlFor="bio" className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">Short Profile Bio *</label>
-                        <span className={`text-[10px] ${bio.length > 300 ? "text-red-500 font-bold" : "text-muted-foreground"}`}>
+                        <label
+                          htmlFor="bio"
+                          className="text-xs uppercase tracking-wider text-muted-foreground font-semibold"
+                        >
+                          Short Profile Bio *
+                        </label>
+                        <span
+                          className={`text-[10px] ${bio.length > 300 ? "text-red-500 font-bold" : "text-muted-foreground"}`}
+                        >
                           {bio.length} / 300
                         </span>
                       </div>
-                      <textarea 
+                      <textarea
                         id="bio"
                         rows={3}
                         maxLength={300}
@@ -872,13 +1098,22 @@ function BandOnboardingPage() {
                         onChange={(e) => setBio(e.target.value)}
                         className="w-full bg-secondary border border-border rounded-md px-3.5 py-2.5 text-sm focus:outline-none focus:border-primary transition text-white resize-none"
                       />
-                      {errors.bio && <p className="text-red-500 text-xs flex items-center gap-1"><AlertCircle size={12} /> {errors.bio}</p>}
+                      {errors.bio && (
+                        <p className="text-red-500 text-xs flex items-center gap-1">
+                          <AlertCircle size={12} /> {errors.bio}
+                        </p>
+                      )}
                     </div>
 
                     {/* Mission / Goal */}
                     <div className="space-y-1.5">
-                      <label htmlFor="mission" className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">Band Mission / Vision</label>
-                      <textarea 
+                      <label
+                        htmlFor="mission"
+                        className="text-xs uppercase tracking-wider text-muted-foreground font-semibold"
+                      >
+                        Band Mission / Vision
+                      </label>
+                      <textarea
                         id="mission"
                         rows={2}
                         placeholder="What drives your band? What are your career aspirations?"
@@ -891,9 +1126,14 @@ function BandOnboardingPage() {
                     {/* Musical Style & Influences */}
                     <div className="grid sm:grid-cols-2 gap-4">
                       <div className="space-y-1.5">
-                        <label htmlFor="influences" className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">Key Influences</label>
-                        <input 
-                          type="text" 
+                        <label
+                          htmlFor="influences"
+                          className="text-xs uppercase tracking-wider text-muted-foreground font-semibold"
+                        >
+                          Key Influences
+                        </label>
+                        <input
+                          type="text"
                           id="influences"
                           placeholder="e.g. Pink Floyd, AR Rahman, Coldplay"
                           value={influences}
@@ -902,9 +1142,14 @@ function BandOnboardingPage() {
                         />
                       </div>
                       <div className="space-y-1.5">
-                        <label htmlFor="style" className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">Describe Musical Style</label>
-                        <input 
-                          type="text" 
+                        <label
+                          htmlFor="style"
+                          className="text-xs uppercase tracking-wider text-muted-foreground font-semibold"
+                        >
+                          Describe Musical Style
+                        </label>
+                        <input
+                          type="text"
                           id="style"
                           placeholder="e.g. Atmospheric, synth-heavy, lyrical"
                           value={musicalStyle}
@@ -916,8 +1161,13 @@ function BandOnboardingPage() {
 
                     {/* Achievements */}
                     <div className="space-y-1.5">
-                      <label htmlFor="achievements" className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">Key Achievements / Milestones</label>
-                      <textarea 
+                      <label
+                        htmlFor="achievements"
+                        className="text-xs uppercase tracking-wider text-muted-foreground font-semibold"
+                      >
+                        Key Achievements / Milestones
+                      </label>
+                      <textarea
                         id="achievements"
                         rows={2}
                         placeholder="e.g. Released debut album, won Hornbill Rock Contest, opened for NH7..."
@@ -929,15 +1179,15 @@ function BandOnboardingPage() {
                   </div>
 
                   <div className="flex justify-between pt-2">
-                    <button 
-                      type="button" 
+                    <button
+                      type="button"
                       onClick={handlePrev}
                       className="px-5 py-2.5 rounded-md border border-border bg-surface hover:text-primary-glow transition text-sm flex items-center gap-1 cursor-pointer"
                     >
                       <ChevronLeft size={16} /> Back
                     </button>
-                    <button 
-                      type="button" 
+                    <button
+                      type="button"
                       onClick={handleNext}
                       className="btn-primary btn-primary-hover px-6 py-3 rounded-md text-sm font-semibold flex items-center gap-1 cursor-pointer"
                     >
@@ -953,10 +1203,14 @@ function BandOnboardingPage() {
                   <div className="bpl-card p-6 space-y-4">
                     <div className="flex items-center justify-between border-b border-border pb-2">
                       <div>
-                        <h2 className="font-display font-semibold text-lg text-primary-glow">Band Lineup / Members</h2>
-                        <p className="text-xs text-muted-foreground">List the official members in your lineup.</p>
+                        <h2 className="font-display font-semibold text-lg text-primary-glow">
+                          Band Lineup / Members
+                        </h2>
+                        <p className="text-xs text-muted-foreground">
+                          List the official members in your lineup.
+                        </p>
                       </div>
-                      <button 
+                      <button
                         type="button"
                         onClick={addMember}
                         className="bg-primary/10 hover:bg-primary/20 border border-primary/30 text-primary-glow text-xs rounded-md px-3 py-1.5 flex items-center gap-1 font-medium transition cursor-pointer"
@@ -968,7 +1222,9 @@ function BandOnboardingPage() {
                     {members.length === 0 ? (
                       <div className="text-center py-8 text-muted-foreground space-y-2 border border-dashed border-border rounded-lg bg-surface/10">
                         <p className="text-sm">No members added yet.</p>
-                        <p className="text-xs text-muted-foreground/60">Include roles (e.g. Lead Vocals, Bass) and Instagram profile links.</p>
+                        <p className="text-xs text-muted-foreground/60">
+                          Include roles (e.g. Lead Vocals, Bass) and Instagram profile links.
+                        </p>
                         <button
                           type="button"
                           onClick={addMember}
@@ -980,7 +1236,10 @@ function BandOnboardingPage() {
                     ) : (
                       <div className="grid gap-4 sm:grid-cols-2">
                         {members.map((m, idx) => (
-                          <div key={idx} className="bpl-card p-4 space-y-3 relative group bg-surface/30 border-border/80 hover:border-primary/40 transition">
+                          <div
+                            key={idx}
+                            className="bpl-card p-4 space-y-3 relative group bg-surface/30 border-border/80 hover:border-primary/40 transition"
+                          >
                             <button
                               type="button"
                               onClick={() => removeMember(idx)}
@@ -994,7 +1253,11 @@ function BandOnboardingPage() {
                               {/* Member Circular Photo */}
                               <div className="h-14 w-14 rounded-full overflow-hidden bg-slate-800 border border-border relative flex items-center justify-center shrink-0">
                                 {m.photo ? (
-                                  <img src={m.photo} alt="Member" className="h-full w-full object-cover" />
+                                  <img
+                                    src={m.photo}
+                                    alt="Member"
+                                    className="h-full w-full object-cover"
+                                  />
                                 ) : (
                                   <Camera size={16} className="text-muted-foreground" />
                                 )}
@@ -1042,7 +1305,9 @@ function BandOnboardingPage() {
                                     type="text"
                                     placeholder="Exp (e.g. 4 years)"
                                     value={m.experience || ""}
-                                    onChange={(e) => updateMember(idx, "experience", e.target.value)}
+                                    onChange={(e) =>
+                                      updateMember(idx, "experience", e.target.value)
+                                    }
                                     className="w-full bg-secondary border border-border rounded-md px-2 py-1 text-[10px] focus:outline-none focus:border-primary transition text-white"
                                   />
                                 </div>
@@ -1055,15 +1320,15 @@ function BandOnboardingPage() {
                   </div>
 
                   <div className="flex justify-between pt-2">
-                    <button 
-                      type="button" 
+                    <button
+                      type="button"
                       onClick={handlePrev}
                       className="px-5 py-2.5 rounded-md border border-border bg-surface hover:text-primary-glow transition text-sm flex items-center gap-1 cursor-pointer"
                     >
                       <ChevronLeft size={16} /> Back
                     </button>
-                    <button 
-                      type="button" 
+                    <button
+                      type="button"
                       onClick={handleNext}
                       className="btn-primary btn-primary-hover px-6 py-3 rounded-md text-sm font-semibold flex items-center gap-1 cursor-pointer"
                     >
@@ -1077,48 +1342,67 @@ function BandOnboardingPage() {
               {step === 4 && (
                 <div className="space-y-6 animate-fade-in">
                   <div className="bpl-card p-6 space-y-4">
-                    <h2 className="font-display font-semibold text-lg border-b border-border pb-2 text-primary-glow">Music & Media Handles</h2>
+                    <h2 className="font-display font-semibold text-lg border-b border-border pb-2 text-primary-glow">
+                      Music & Media Handles
+                    </h2>
 
                     {/* Instagram */}
                     <div className="space-y-1.5">
-                      <label htmlFor="instagramUrl" className="text-xs uppercase tracking-wider text-muted-foreground font-semibold flex items-center gap-1.5">
+                      <label
+                        htmlFor="instagramUrl"
+                        className="text-xs uppercase tracking-wider text-muted-foreground font-semibold flex items-center gap-1.5"
+                      >
                         <Instagram size={13} /> Instagram Profile Link *
                       </label>
-                      <input 
-                        type="url" 
+                      <input
+                        type="url"
                         id="instagramUrl"
                         placeholder="https://www.instagram.com/bandname"
                         value={instagramUrl}
                         onChange={(e) => setInstagramUrl(e.target.value)}
                         className="w-full bg-secondary border border-border rounded-md px-3.5 py-2.5 text-sm focus:outline-none focus:border-primary transition text-white"
                       />
-                      {errors.instagram && <p className="text-red-500 text-xs flex items-center gap-1"><AlertCircle size={12} /> {errors.instagram}</p>}
+                      {errors.instagram && (
+                        <p className="text-red-500 text-xs flex items-center gap-1">
+                          <AlertCircle size={12} /> {errors.instagram}
+                        </p>
+                      )}
                     </div>
 
                     <div className="grid sm:grid-cols-2 gap-4">
                       {/* Youtube */}
                       <div className="space-y-1.5">
-                        <label htmlFor="youtubeUrl" className="text-xs uppercase tracking-wider text-muted-foreground font-semibold flex items-center gap-1.5">
+                        <label
+                          htmlFor="youtubeUrl"
+                          className="text-xs uppercase tracking-wider text-muted-foreground font-semibold flex items-center gap-1.5"
+                        >
                           <Youtube size={13} /> YouTube URL
                         </label>
-                        <input 
-                          type="url" 
+                        <input
+                          type="url"
                           id="youtubeUrl"
                           placeholder="https://www.youtube.com/c/bandname"
                           value={youtubeUrl}
                           onChange={(e) => setYoutubeUrl(e.target.value)}
                           className="w-full bg-secondary border border-border rounded-md px-3.5 py-2.5 text-sm focus:outline-none focus:border-primary transition text-white"
                         />
-                        {errors.youtube && <p className="text-red-500 text-xs flex items-center gap-1"><AlertCircle size={12} /> {errors.youtube}</p>}
+                        {errors.youtube && (
+                          <p className="text-red-500 text-xs flex items-center gap-1">
+                            <AlertCircle size={12} /> {errors.youtube}
+                          </p>
+                        )}
                       </div>
 
                       {/* Spotify */}
                       <div className="space-y-1.5">
-                        <label htmlFor="spotifyUrl" className="text-xs uppercase tracking-wider text-muted-foreground font-semibold flex items-center gap-1.5">
+                        <label
+                          htmlFor="spotifyUrl"
+                          className="text-xs uppercase tracking-wider text-muted-foreground font-semibold flex items-center gap-1.5"
+                        >
                           <Music size={13} /> Spotify Artist URL
                         </label>
-                        <input 
-                          type="url" 
+                        <input
+                          type="url"
                           id="spotifyUrl"
                           placeholder="https://open.spotify.com/artist/..."
                           value={spotifyUrl}
@@ -1131,11 +1415,14 @@ function BandOnboardingPage() {
                     <div className="grid sm:grid-cols-2 gap-4">
                       {/* Apple Music */}
                       <div className="space-y-1.5">
-                        <label htmlFor="appleUrl" className="text-xs uppercase tracking-wider text-muted-foreground font-semibold flex items-center gap-1.5">
+                        <label
+                          htmlFor="appleUrl"
+                          className="text-xs uppercase tracking-wider text-muted-foreground font-semibold flex items-center gap-1.5"
+                        >
                           <Music size={13} /> Apple Music URL
                         </label>
-                        <input 
-                          type="url" 
+                        <input
+                          type="url"
                           id="appleUrl"
                           placeholder="https://music.apple.com/artist/..."
                           value={appleUrl}
@@ -1146,11 +1433,14 @@ function BandOnboardingPage() {
 
                       {/* JioSaavn */}
                       <div className="space-y-1.5">
-                        <label htmlFor="saavnUrl" className="text-xs uppercase tracking-wider text-muted-foreground font-semibold flex items-center gap-1.5">
+                        <label
+                          htmlFor="saavnUrl"
+                          className="text-xs uppercase tracking-wider text-muted-foreground font-semibold flex items-center gap-1.5"
+                        >
                           <Music size={13} /> JioSaavn URL
                         </label>
-                        <input 
-                          type="url" 
+                        <input
+                          type="url"
                           id="saavnUrl"
                           placeholder="https://www.jiosaavn.com/artist/..."
                           value={saavnUrl}
@@ -1163,9 +1453,14 @@ function BandOnboardingPage() {
                     <div className="grid sm:grid-cols-2 gap-4">
                       {/* Website */}
                       <div className="space-y-1.5">
-                        <label htmlFor="websiteUrl" className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">Official Website</label>
-                        <input 
-                          type="url" 
+                        <label
+                          htmlFor="websiteUrl"
+                          className="text-xs uppercase tracking-wider text-muted-foreground font-semibold"
+                        >
+                          Official Website
+                        </label>
+                        <input
+                          type="url"
                           id="websiteUrl"
                           placeholder="https://www.yourband.com"
                           value={websiteUrl}
@@ -1176,7 +1471,10 @@ function BandOnboardingPage() {
 
                       {/* Audio Demo Track (Upload) */}
                       <div className="space-y-1.5">
-                        <label htmlFor="demoFile" className="text-xs uppercase tracking-wider text-muted-foreground font-semibold flex items-center gap-1">
+                        <label
+                          htmlFor="demoFile"
+                          className="text-xs uppercase tracking-wider text-muted-foreground font-semibold flex items-center gap-1"
+                        >
                           Upload Demo Track (MP3/WAV)
                         </label>
                         <div className="flex items-center gap-3">
@@ -1201,21 +1499,25 @@ function BandOnboardingPage() {
                           onChange={onDemoChange}
                           className="hidden"
                         />
-                        {errors.demo && <p className="text-red-500 text-xs flex items-center gap-1"><AlertCircle size={12} /> {errors.demo}</p>}
+                        {errors.demo && (
+                          <p className="text-red-500 text-xs flex items-center gap-1">
+                            <AlertCircle size={12} /> {errors.demo}
+                          </p>
+                        )}
                       </div>
                     </div>
                   </div>
 
                   <div className="flex justify-between pt-2">
-                    <button 
-                      type="button" 
+                    <button
+                      type="button"
                       onClick={handlePrev}
                       className="px-5 py-2.5 rounded-md border border-border bg-surface hover:text-primary-glow transition text-sm flex items-center gap-1 cursor-pointer"
                     >
                       <ChevronLeft size={16} /> Back
                     </button>
-                    <button 
-                      type="button" 
+                    <button
+                      type="button"
                       onClick={handleNext}
                       className="btn-primary btn-primary-hover px-6 py-3 rounded-md text-sm font-semibold flex items-center gap-1 cursor-pointer"
                     >
@@ -1228,15 +1530,18 @@ function BandOnboardingPage() {
               {/* STEP 5: PERFORMANCE & BOOKING DETAILS */}
               {step === 5 && (
                 <div className="space-y-6 animate-fade-in">
-                  
                   {/* Performance Gallery */}
                   <div className="bpl-card p-6 space-y-4">
                     <div className="flex items-center justify-between border-b border-border pb-2">
                       <div>
-                        <h2 className="font-display font-semibold text-lg text-primary-glow">Live Performance Photos</h2>
-                        <p className="text-xs text-muted-foreground mt-0.5">Upload live gig or performance photos (max 8).</p>
+                        <h2 className="font-display font-semibold text-lg text-primary-glow">
+                          Live Performance Photos
+                        </h2>
+                        <p className="text-xs text-muted-foreground mt-0.5">
+                          Upload live gig or performance photos (max 8).
+                        </p>
                       </div>
-                      <button 
+                      <button
                         type="button"
                         onClick={() => galleryRef.current?.click()}
                         disabled={performancePhotos.length >= 8}
@@ -1254,24 +1559,39 @@ function BandOnboardingPage() {
                       />
                     </div>
 
-                    {errors.gallery && <p className="text-red-500 text-xs flex items-center gap-1"><AlertCircle size={12} /> {errors.gallery}</p>}
+                    {errors.gallery && (
+                      <p className="text-red-500 text-xs flex items-center gap-1">
+                        <AlertCircle size={12} /> {errors.gallery}
+                      </p>
+                    )}
 
                     {performancePhotos.length === 0 ? (
-                      <div 
+                      <div
                         onClick={() => galleryRef.current?.click()}
                         className="text-center py-10 text-muted-foreground border-2 border-dashed border-border rounded-lg bg-surface/5 hover:bg-surface/10 transition cursor-pointer flex flex-col items-center justify-center gap-3"
                       >
                         <Camera size={28} className="text-muted-foreground/50" />
                         <div className="space-y-0.5">
-                          <p className="text-xs font-semibold text-white">Click to upload gig photos</p>
-                          <p className="text-[10px] text-muted-foreground/60">Supports PNG, JPG (Max 2MB)</p>
+                          <p className="text-xs font-semibold text-white">
+                            Click to upload gig photos
+                          </p>
+                          <p className="text-[10px] text-muted-foreground/60">
+                            Supports PNG, JPG (Max 2MB)
+                          </p>
                         </div>
                       </div>
                     ) : (
                       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                         {performancePhotos.map((photo, idx) => (
-                          <div key={idx} className="bpl-card overflow-hidden aspect-square relative group border-border">
-                            <img src={photo} alt={`Performance ${idx + 1}`} className="h-full w-full object-cover" />
+                          <div
+                            key={idx}
+                            className="bpl-card overflow-hidden aspect-square relative group border-border"
+                          >
+                            <img
+                              src={photo}
+                              alt={`Performance ${idx + 1}`}
+                              className="h-full w-full object-cover"
+                            />
                             <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition flex flex-col justify-between p-2">
                               <div className="flex justify-end">
                                 <button
@@ -1292,7 +1612,9 @@ function BandOnboardingPage() {
                                 >
                                   L
                                 </button>
-                                <span className="text-[9px] text-white/80 font-bold px-1">{idx + 1}</span>
+                                <span className="text-[9px] text-white/80 font-bold px-1">
+                                  {idx + 1}
+                                </span>
                                 <button
                                   type="button"
                                   disabled={idx === performancePhotos.length - 1}
@@ -1311,13 +1633,20 @@ function BandOnboardingPage() {
 
                   {/* Rider & Pricing */}
                   <div className="bpl-card p-6 space-y-4">
-                    <h2 className="font-display font-semibold text-lg border-b border-border pb-2 text-primary-glow">Stage & Technical Requirements</h2>
-                    
+                    <h2 className="font-display font-semibold text-lg border-b border-border pb-2 text-primary-glow">
+                      Stage & Technical Requirements
+                    </h2>
+
                     <div className="grid sm:grid-cols-2 gap-4">
                       {/* Tech Rider Details */}
                       <div className="space-y-1.5">
-                        <label htmlFor="stageRider" className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">Stage Rider Summary</label>
-                        <textarea 
+                        <label
+                          htmlFor="stageRider"
+                          className="text-xs uppercase tracking-wider text-muted-foreground font-semibold"
+                        >
+                          Stage Rider Summary
+                        </label>
+                        <textarea
                           id="stageRider"
                           rows={3}
                           placeholder="e.g. 4 Vocal mics, 2 Guitar amps, 1 Bass DI, drum kit setup..."
@@ -1329,8 +1658,13 @@ function BandOnboardingPage() {
 
                       {/* Technical requirements details */}
                       <div className="space-y-1.5">
-                        <label htmlFor="tech" className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">Technical requirements / Audio channels</label>
-                        <textarea 
+                        <label
+                          htmlFor="tech"
+                          className="text-xs uppercase tracking-wider text-muted-foreground font-semibold"
+                        >
+                          Technical requirements / Audio channels
+                        </label>
+                        <textarea
                           id="tech"
                           rows={3}
                           placeholder="List any complex equipment, monitors count, sub-mix details..."
@@ -1344,9 +1678,14 @@ function BandOnboardingPage() {
                     <div className="grid sm:grid-cols-2 gap-4">
                       {/* Preferred Cities */}
                       <div className="space-y-1.5">
-                        <label htmlFor="prefCities" className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">Preferred Gig Cities</label>
-                        <input 
-                          type="text" 
+                        <label
+                          htmlFor="prefCities"
+                          className="text-xs uppercase tracking-wider text-muted-foreground font-semibold"
+                        >
+                          Preferred Gig Cities
+                        </label>
+                        <input
+                          type="text"
                           id="prefCities"
                           placeholder="e.g. Pune, Mumbai, Bangalore"
                           value={preferredCities}
@@ -1357,9 +1696,14 @@ function BandOnboardingPage() {
 
                       {/* Fee range */}
                       <div className="space-y-1.5">
-                        <label htmlFor="fee" className="text-xs uppercase tracking-wider text-muted-foreground font-semibold flex items-center gap-1"><DollarSign size={13} /> Preferred Fee Range per Gig</label>
-                        <input 
-                          type="text" 
+                        <label
+                          htmlFor="fee"
+                          className="text-xs uppercase tracking-wider text-muted-foreground font-semibold flex items-center gap-1"
+                        >
+                          <DollarSign size={13} /> Preferred Fee Range per Gig
+                        </label>
+                        <input
+                          type="text"
                           id="fee"
                           placeholder="e.g. Rs. 40,000 - 60,000"
                           value={feeRange}
@@ -1371,13 +1715,17 @@ function BandOnboardingPage() {
 
                     {/* Simple Availability Calendar */}
                     <div className="space-y-2">
-                      <label className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">Availability Calendar (Select dates you are available this month)</label>
+                      <label className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">
+                        Availability Calendar (Select dates you are available this month)
+                      </label>
                       <div className="grid grid-cols-7 gap-1.5 text-center text-[10px] uppercase font-semibold text-muted-foreground tracking-wider pt-2">
-                        {"Sun,Mon,Tue,Wed,Thu,Fri,Sat".split(",").map(d => (
-                          <div key={d} className="py-1">{d}</div>
+                        {"Sun,Mon,Tue,Wed,Thu,Fri,Sat".split(",").map((d) => (
+                          <div key={d} className="py-1">
+                            {d}
+                          </div>
                         ))}
                         {Array.from({ length: 31 }, (_, i) => i + 1).map((n) => {
-                          const dateStr = `2026-07-${n.toString().padStart(2, '0')}`;
+                          const dateStr = `2026-07-${n.toString().padStart(2, "0")}`;
                           const selected = availabilityCalendar.includes(dateStr);
                           return (
                             <button
@@ -1385,8 +1733,8 @@ function BandOnboardingPage() {
                               type="button"
                               onClick={() => toggleCalendarDate(dateStr)}
                               className={`aspect-square rounded-md border flex items-center justify-center font-bold transition cursor-pointer ${
-                                selected 
-                                  ? "bg-primary border-primary text-primary-foreground shadow-glow" 
+                                selected
+                                  ? "bg-primary border-primary text-primary-foreground shadow-glow"
                                   : "border-border hover:border-primary/40 text-white/90 bg-secondary/50"
                               }`}
                             >
@@ -1396,19 +1744,18 @@ function BandOnboardingPage() {
                         })}
                       </div>
                     </div>
-
                   </div>
 
                   <div className="flex justify-between pt-2">
-                    <button 
-                      type="button" 
+                    <button
+                      type="button"
                       onClick={handlePrev}
                       className="px-5 py-2.5 rounded-md border border-border bg-surface hover:text-primary-glow transition text-sm flex items-center gap-1 cursor-pointer"
                     >
                       <ChevronLeft size={16} /> Back
                     </button>
-                    <button 
-                      type="button" 
+                    <button
+                      type="button"
                       onClick={handleNext}
                       className="btn-primary btn-primary-hover px-6 py-3 rounded-md text-sm font-semibold flex items-center gap-1 cursor-pointer"
                     >
@@ -1423,60 +1770,96 @@ function BandOnboardingPage() {
                 <div className="space-y-6 animate-fade-in">
                   <div className="bpl-card p-6 space-y-4">
                     <div>
-                      <h2 className="font-display font-semibold text-lg text-primary-glow">Contact Details (Private)</h2>
-                      <p className="text-xs text-muted-foreground mt-0.5">This information is only visible to Kalakshetra staff curators.</p>
+                      <h2 className="font-display font-semibold text-lg text-primary-glow">
+                        Contact Details (Private)
+                      </h2>
+                      <p className="text-xs text-muted-foreground mt-0.5">
+                        This information is only visible to Kalakshetra staff curators.
+                      </p>
                     </div>
                     <div className="border-b border-border" />
 
                     {/* Primary contact */}
                     <div className="space-y-1.5">
-                      <label htmlFor="contactName" className="text-xs uppercase tracking-wider text-muted-foreground font-semibold flex items-center gap-1"><User size={13} /> Primary Contact Name *</label>
-                      <input 
-                        type="text" 
+                      <label
+                        htmlFor="contactName"
+                        className="text-xs uppercase tracking-wider text-muted-foreground font-semibold flex items-center gap-1"
+                      >
+                        <User size={13} /> Primary Contact Name *
+                      </label>
+                      <input
+                        type="text"
                         id="contactName"
                         placeholder="Manager or Band Spokesperson name"
                         value={contactName}
                         onChange={(e) => setContactName(e.target.value)}
                         className="w-full bg-secondary border border-border rounded-md px-3.5 py-2.5 text-sm focus:outline-none focus:border-primary transition text-white"
                       />
-                      {errors.contactName && <p className="text-red-500 text-xs flex items-center gap-1"><AlertCircle size={12} /> {errors.contactName}</p>}
+                      {errors.contactName && (
+                        <p className="text-red-500 text-xs flex items-center gap-1">
+                          <AlertCircle size={12} /> {errors.contactName}
+                        </p>
+                      )}
                     </div>
 
                     <div className="grid sm:grid-cols-2 gap-4">
                       {/* Phone */}
                       <div className="space-y-1.5">
-                        <label htmlFor="contactPhone" className="text-xs uppercase tracking-wider text-muted-foreground font-semibold flex items-center gap-1"><Phone size={13} /> Phone Number *</label>
-                        <input 
-                          type="tel" 
+                        <label
+                          htmlFor="contactPhone"
+                          className="text-xs uppercase tracking-wider text-muted-foreground font-semibold flex items-center gap-1"
+                        >
+                          <Phone size={13} /> Phone Number *
+                        </label>
+                        <input
+                          type="tel"
                           id="contactPhone"
                           placeholder="+91 XXXXX XXXXX"
                           value={contactPhone}
                           onChange={(e) => setContactPhone(e.target.value)}
                           className="w-full bg-secondary border border-border rounded-md px-3.5 py-2.5 text-sm focus:outline-none focus:border-primary transition text-white"
                         />
-                        {errors.contactPhone && <p className="text-red-500 text-xs flex items-center gap-1"><AlertCircle size={12} /> {errors.contactPhone}</p>}
+                        {errors.contactPhone && (
+                          <p className="text-red-500 text-xs flex items-center gap-1">
+                            <AlertCircle size={12} /> {errors.contactPhone}
+                          </p>
+                        )}
                       </div>
 
                       {/* Email */}
                       <div className="space-y-1.5">
-                        <label htmlFor="contactEmail" className="text-xs uppercase tracking-wider text-muted-foreground font-semibold flex items-center gap-1"><Mail size={13} /> Email Address *</label>
-                        <input 
-                          type="email" 
+                        <label
+                          htmlFor="contactEmail"
+                          className="text-xs uppercase tracking-wider text-muted-foreground font-semibold flex items-center gap-1"
+                        >
+                          <Mail size={13} /> Email Address *
+                        </label>
+                        <input
+                          type="email"
                           id="contactEmail"
                           placeholder="e.g. booking@yourband.com"
                           value={contactEmail}
                           onChange={(e) => setContactEmail(e.target.value)}
                           className="w-full bg-secondary border border-border rounded-md px-3.5 py-2.5 text-sm focus:outline-none focus:border-primary transition text-white"
                         />
-                        {errors.contactEmail && <p className="text-red-500 text-xs flex items-center gap-1"><AlertCircle size={12} /> {errors.contactEmail}</p>}
+                        {errors.contactEmail && (
+                          <p className="text-red-500 text-xs flex items-center gap-1">
+                            <AlertCircle size={12} /> {errors.contactEmail}
+                          </p>
+                        )}
                       </div>
                     </div>
 
                     {/* Manager Name */}
                     <div className="space-y-1.5">
-                      <label htmlFor="managerName" className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">Manager Name (Optional)</label>
-                      <input 
-                        type="text" 
+                      <label
+                        htmlFor="managerName"
+                        className="text-xs uppercase tracking-wider text-muted-foreground font-semibold"
+                      >
+                        Manager Name (Optional)
+                      </label>
+                      <input
+                        type="text"
                         id="managerName"
                         placeholder="e.g. Aaditya Roy"
                         value={managerName}
@@ -1495,13 +1878,20 @@ function BandOnboardingPage() {
                           onChange={(e) => setTermsAccepted(e.target.checked)}
                           className="mt-1 h-4 w-4 border-border rounded bg-secondary text-primary focus:ring-primary cursor-pointer"
                         />
-                        <label htmlFor="terms" className="text-xs text-muted-foreground leading-normal select-none cursor-pointer">
-                          I agree to Kalakshetra's evaluation rules. I understand that submitting does not guarantee catalog registration and is subject to curation review.
+                        <label
+                          htmlFor="terms"
+                          className="text-xs text-muted-foreground leading-normal select-none cursor-pointer"
+                        >
+                          I agree to Kalakshetra's evaluation rules. I understand that submitting
+                          does not guarantee catalog registration and is subject to curation review.
                         </label>
                       </div>
-                      {errors.terms && <p className="text-red-500 text-xs flex items-center gap-1"><AlertCircle size={12} /> {errors.terms}</p>}
+                      {errors.terms && (
+                        <p className="text-red-500 text-xs flex items-center gap-1">
+                          <AlertCircle size={12} /> {errors.terms}
+                        </p>
+                      )}
                     </div>
-
                   </div>
 
                   {errors.submit && (
@@ -1511,14 +1901,14 @@ function BandOnboardingPage() {
                   )}
 
                   <div className="flex justify-between pt-2">
-                    <button 
-                      type="button" 
+                    <button
+                      type="button"
                       onClick={handlePrev}
                       className="px-5 py-2.5 rounded-md border border-border bg-surface hover:text-primary-glow transition text-sm flex items-center gap-1 cursor-pointer"
                     >
                       <ChevronLeft size={16} /> Back
                     </button>
-                    <button 
+                    <button
                       type="submit"
                       disabled={isSubmitting}
                       className="btn-primary btn-primary-hover px-8 py-3 rounded-md text-sm font-semibold flex items-center gap-1 cursor-pointer"
@@ -1528,7 +1918,6 @@ function BandOnboardingPage() {
                   </div>
                 </div>
               )}
-
             </form>
           </div>
         )}

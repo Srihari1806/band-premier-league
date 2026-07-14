@@ -30,12 +30,14 @@ function AboutPage() {
       />
       <div className="mx-auto max-w-4xl px-4 sm:px-6 py-12 space-y-6 text-muted-foreground">
         <p>
-          We started Kalakshetra because India's indie music scene deserved more than one-off gigs and
-          algorithmic scraps. It deserved a home—a stage, a structured philosophy (Ragam · Talam · Pallavi), and a grand arena worth following.
+          We started Kalakshetra because India's indie music scene deserved more than one-off gigs
+          and algorithmic scraps. It deserved a home—a stage, a structured philosophy (Ragam · Talam
+          · Pallavi), and a grand arena worth following.
         </p>
         <p>
-          Today Kalakshetra runs shows, coordinates with hundreds of independent bands, and helps production houses
-          discover, sign, and back the next wave of Indian sound through our tournament segment, Raaga of Kurukshetra.
+          Today Kalakshetra runs shows, coordinates with hundreds of independent bands, and helps
+          production houses discover, sign, and back the next wave of Indian sound through our
+          tournament segment, Raaga of Kurukshetra.
         </p>
         <p className="text-foreground font-medium">The Home of Independent Music.</p>
       </div>

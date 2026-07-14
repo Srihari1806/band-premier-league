@@ -1,14 +1,25 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { PageShell } from "@/components/layout/PageShell";
-import { ChevronLeft, CheckCircle, User, Phone, Mail, AlertCircle, CalendarRange } from "lucide-react";
+import {
+  ChevronLeft,
+  CheckCircle,
+  User,
+  Phone,
+  Mail,
+  AlertCircle,
+  CalendarRange,
+} from "lucide-react";
 import { db } from "@/lib/db";
 
 export const Route = createFileRoute("/join/event-manager")({
   head: () => ({
     meta: [
       { title: "Register as Event Manager partner — Kalakshetra" },
-      { name: "description", content: "Apply to manage on-site gig logistics, security, and match setup." },
+      {
+        name: "description",
+        content: "Apply to manage on-site gig logistics, security, and match setup.",
+      },
     ],
   }),
   component: EventManagerPage,
@@ -17,18 +28,20 @@ export const Route = createFileRoute("/join/event-manager")({
 function EventManagerPage() {
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [credentials, setCredentials] = useState<{ username: string; password?: string } | null>(null);
+  const [credentials, setCredentials] = useState<{ username: string; password?: string } | null>(
+    null,
+  );
 
   // State
   const [companyName, setCompanyName] = useState("");
   const [cities, setCities] = useState("");
   const [pastEvents, setPastEvents] = useState("");
   const [teamSize, setTeamSize] = useState("");
-  
+
   const [contactName, setContactName] = useState("");
   const [contactPhone, setContactPhone] = useState("");
   const [contactEmail, setContactEmail] = useState("");
-  
+
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -49,7 +62,10 @@ function EventManagerPage() {
     try {
       const result = await db.submitApplication("event_manager", {
         company_name: companyName,
-        cities: cities.split(",").map(c => c.trim()).filter(Boolean),
+        cities: cities
+          .split(",")
+          .map((c) => c.trim())
+          .filter(Boolean),
         past_events: pastEvents || undefined,
         team_size: teamSize || undefined,
         contact_name: contactName,
@@ -82,29 +98,45 @@ function EventManagerPage() {
             <div className="space-y-2">
               <h1 className="text-3xl sm:text-4xl font-display font-bold">Application Received!</h1>
               <p className="text-sm text-muted-foreground">
-                Thank you for applying. Kalakshetra Operations coordinators will review your execution experience.
+                Thank you for applying. Kalakshetra Operations coordinators will review your
+                execution experience.
               </p>
             </div>
             {credentials && (
               <div className="max-w-md mx-auto bpl-card p-6 bg-primary/5 border border-primary/20 rounded-lg text-left space-y-4 my-6">
                 <div>
-                  <h3 className="text-sm font-semibold text-primary-glow font-display">Account Created Successfully</h3>
-                  <p className="text-[10px] text-muted-foreground mt-0.5">Please save these login details. You will need them to access your dashboard and update your profile.</p>
+                  <h3 className="text-sm font-semibold text-primary-glow font-display">
+                    Account Created Successfully
+                  </h3>
+                  <p className="text-[10px] text-muted-foreground mt-0.5">
+                    Please save these login details. You will need them to access your dashboard and
+                    update your profile.
+                  </p>
                 </div>
                 <div className="space-y-2 bg-black/40 p-4 rounded border border-border">
                   <div className="flex justify-between items-center text-xs">
-                    <span className="text-muted-foreground font-semibold uppercase tracking-wider text-[9px]">Username/ID:</span>
-                    <span className="font-mono text-white select-all font-bold">{credentials.username}</span>
+                    <span className="text-muted-foreground font-semibold uppercase tracking-wider text-[9px]">
+                      Username/ID:
+                    </span>
+                    <span className="font-mono text-white select-all font-bold">
+                      {credentials.username}
+                    </span>
                   </div>
                   <div className="flex justify-between items-center text-xs">
-                    <span className="text-muted-foreground font-semibold uppercase tracking-wider text-[9px]">Password:</span>
-                    <span className="font-mono text-white select-all font-bold">{credentials.password}</span>
+                    <span className="text-muted-foreground font-semibold uppercase tracking-wider text-[9px]">
+                      Password:
+                    </span>
+                    <span className="font-mono text-white select-all font-bold">
+                      {credentials.password}
+                    </span>
                   </div>
                 </div>
                 <button
                   type="button"
                   onClick={() => {
-                    navigator.clipboard.writeText(`Username: ${credentials.username}\nPassword: ${credentials.password}`);
+                    navigator.clipboard.writeText(
+                      `Username: ${credentials.username}\nPassword: ${credentials.password}`,
+                    );
                     alert("Credentials copied to clipboard!");
                   }}
                   className="w-full py-2 bg-primary/20 hover:bg-primary/30 border border-primary/30 rounded text-[11px] font-bold text-white uppercase tracking-wider transition"
@@ -115,7 +147,10 @@ function EventManagerPage() {
             )}
 
             <div className="pt-2">
-              <Link to="/join" className="btn-primary btn-primary-hover px-6 py-3 rounded-md text-sm font-semibold">
+              <Link
+                to="/join"
+                className="btn-primary btn-primary-hover px-6 py-3 rounded-md text-sm font-semibold"
+              >
                 Back to Hub
               </Link>
             </div>
@@ -123,15 +158,17 @@ function EventManagerPage() {
         ) : (
           <div className="space-y-8 animate-fade-in">
             <div className="text-center space-y-2">
-              <p className="text-xs uppercase tracking-widest text-primary-glow font-bold">Kalakshetra Onboarding Hub</p>
+              <p className="text-xs uppercase tracking-widest text-primary-glow font-bold">
+                Kalakshetra Onboarding Hub
+              </p>
               <h1 className="text-3xl sm:text-4xl font-display font-bold">Event Manager Partner</h1>
               <p className="text-xs text-muted-foreground max-w-lg mx-auto">
-                Apply to manage on-site logistics, ticketing setups, security operations, and stage production.
+                Apply to manage on-site logistics, ticketing setups, security operations, and stage
+                production.
               </p>
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-6">
-              
               {/* Profile Card */}
               <div className="bpl-card p-6 space-y-4">
                 <h2 className="font-display font-semibold text-lg border-b border-border pb-2 text-primary-glow flex items-center gap-1.5 font-bold">
@@ -140,21 +177,27 @@ function EventManagerPage() {
 
                 <div className="grid sm:grid-cols-2 gap-4">
                   <div className="space-y-1.5">
-                    <label className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">Company / Individual Name *</label>
-                    <input 
-                      type="text" 
+                    <label className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">
+                      Company / Individual Name *
+                    </label>
+                    <input
+                      type="text"
                       placeholder="e.g. Apex Event Solutions"
                       value={companyName}
                       onChange={(e) => setCompanyName(e.target.value)}
                       className="w-full bg-secondary border border-border rounded-md px-3.5 py-2.5 text-sm focus:outline-none focus:border-primary text-white"
                     />
-                    {errors.companyName && <p className="text-red-500 text-xs">{errors.companyName}</p>}
+                    {errors.companyName && (
+                      <p className="text-red-500 text-xs">{errors.companyName}</p>
+                    )}
                   </div>
 
                   <div className="space-y-1.5">
-                    <label className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">Operational Cities (comma-separated)</label>
-                    <input 
-                      type="text" 
+                    <label className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">
+                      Operational Cities (comma-separated)
+                    </label>
+                    <input
+                      type="text"
                       placeholder="e.g. Pune, Mumbai"
                       value={cities}
                       onChange={(e) => setCities(e.target.value)}
@@ -165,9 +208,11 @@ function EventManagerPage() {
 
                 <div className="grid sm:grid-cols-2 gap-4">
                   <div className="space-y-1.5">
-                    <label className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">Core Team Size</label>
-                    <input 
-                      type="text" 
+                    <label className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">
+                      Core Team Size
+                    </label>
+                    <input
+                      type="text"
                       placeholder="e.g. 15 core members, 50 volunteers"
                       value={teamSize}
                       onChange={(e) => setTeamSize(e.target.value)}
@@ -177,8 +222,10 @@ function EventManagerPage() {
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">Past Events Handled</label>
-                  <textarea 
+                  <label className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">
+                    Past Events Handled
+                  </label>
+                  <textarea
                     rows={3}
                     placeholder="Provide names or scale of gigs/festivals managed (e.g. NH7 Pune gate management, college fests)..."
                     value={pastEvents}
@@ -190,42 +237,56 @@ function EventManagerPage() {
 
               {/* Contacts */}
               <div className="bpl-card p-6 space-y-4">
-                <h2 className="font-display font-semibold text-lg border-b border-border pb-2 text-primary-glow">Contact Details (Private)</h2>
-                
+                <h2 className="font-display font-semibold text-lg border-b border-border pb-2 text-primary-glow">
+                  Contact Details (Private)
+                </h2>
+
                 <div className="space-y-1.5">
-                  <label className="text-xs uppercase tracking-wider text-muted-foreground font-semibold flex items-center gap-1"><User size={12} /> Contact Person Name *</label>
-                  <input 
-                    type="text" 
+                  <label className="text-xs uppercase tracking-wider text-muted-foreground font-semibold flex items-center gap-1">
+                    <User size={12} /> Contact Person Name *
+                  </label>
+                  <input
+                    type="text"
                     placeholder="Full name"
                     value={contactName}
                     onChange={(e) => setContactName(e.target.value)}
                     className="w-full bg-secondary border border-border rounded-md px-3.5 py-2.5 text-sm focus:outline-none focus:border-primary text-white"
                   />
-                  {errors.contactName && <p className="text-red-500 text-xs">{errors.contactName}</p>}
+                  {errors.contactName && (
+                    <p className="text-red-500 text-xs">{errors.contactName}</p>
+                  )}
                 </div>
 
                 <div className="grid sm:grid-cols-2 gap-4">
                   <div className="space-y-1.5">
-                    <label className="text-xs uppercase tracking-wider text-muted-foreground font-semibold flex items-center gap-1"><Phone size={12} /> Contact Phone *</label>
-                    <input 
-                      type="tel" 
+                    <label className="text-xs uppercase tracking-wider text-muted-foreground font-semibold flex items-center gap-1">
+                      <Phone size={12} /> Contact Phone *
+                    </label>
+                    <input
+                      type="tel"
                       placeholder="+91 XXXXX XXXXX"
                       value={contactPhone}
                       onChange={(e) => setContactPhone(e.target.value)}
                       className="w-full bg-secondary border border-border rounded-md px-3.5 py-2.5 text-sm focus:outline-none focus:border-primary text-white"
                     />
-                    {errors.contactPhone && <p className="text-red-500 text-xs">{errors.contactPhone}</p>}
+                    {errors.contactPhone && (
+                      <p className="text-red-500 text-xs">{errors.contactPhone}</p>
+                    )}
                   </div>
                   <div className="space-y-1.5">
-                    <label className="text-xs uppercase tracking-wider text-muted-foreground font-semibold flex items-center gap-1"><Mail size={12} /> Email Address *</label>
-                    <input 
-                      type="email" 
+                    <label className="text-xs uppercase tracking-wider text-muted-foreground font-semibold flex items-center gap-1">
+                      <Mail size={12} /> Email Address *
+                    </label>
+                    <input
+                      type="email"
                       placeholder="e.g. operations@apex.com"
                       value={contactEmail}
                       onChange={(e) => setContactEmail(e.target.value)}
                       className="w-full bg-secondary border border-border rounded-md px-3.5 py-2.5 text-sm focus:outline-none focus:border-primary text-white"
                     />
-                    {errors.contactEmail && <p className="text-red-500 text-xs">{errors.contactEmail}</p>}
+                    {errors.contactEmail && (
+                      <p className="text-red-500 text-xs">{errors.contactEmail}</p>
+                    )}
                   </div>
                 </div>
               </div>
@@ -237,14 +298,20 @@ function EventManagerPage() {
               )}
 
               <div className="flex justify-between pt-2">
-                <Link to="/join" className="px-5 py-2.5 rounded border border-border bg-surface text-sm flex items-center gap-1 text-white">
+                <Link
+                  to="/join"
+                  className="px-5 py-2.5 rounded border border-border bg-surface text-sm flex items-center gap-1 text-white"
+                >
                   <ChevronLeft size={16} /> Hub
                 </Link>
-                <button type="submit" disabled={isSubmitting} className="btn-primary btn-primary-hover px-8 py-3 rounded-md text-sm font-semibold flex items-center gap-1 cursor-pointer">
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="btn-primary btn-primary-hover px-8 py-3 rounded-md text-sm font-semibold flex items-center gap-1 cursor-pointer"
+                >
                   {isSubmitting ? "Submitting..." : "Submit Application"}
                 </button>
               </div>
-
             </form>
           </div>
         )}

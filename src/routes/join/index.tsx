@@ -1,17 +1,17 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { PageShell } from "@/components/layout/PageShell";
 import { useState } from "react";
-import { 
-  Music, 
-  User, 
-  Building2, 
-  Tv, 
-  Megaphone, 
-  Award, 
-  Users, 
-  Camera, 
-  Mic, 
-  CalendarRange, 
+import {
+  Music,
+  User,
+  Building2,
+  Tv,
+  Megaphone,
+  Award,
+  Users,
+  Camera,
+  Mic,
+  CalendarRange,
   Sparkles,
   Percent,
   MapPin,
@@ -24,14 +24,18 @@ import {
   Layers,
   Handshake,
   CheckCircle2,
-  HelpCircle
+  HelpCircle,
 } from "lucide-react";
 
 export const Route = createFileRoute("/join/")({
   head: () => ({
     meta: [
       { title: "Join Kalakshetra — Onboarding Hub" },
-      { name: "description", content: "Join India's First Franchise Music League. Choose your role: Artist, Venue, Sponsor, Production House, Volunteer, or Manager." },
+      {
+        name: "description",
+        content:
+          "Join India's First Franchise Music League. Choose your role: Artist, Venue, Sponsor, Production House, Volunteer, or Manager.",
+      },
     ],
   }),
   component: JoinHubPage,
@@ -93,28 +97,52 @@ const ROLES = [
 
 function JoinHubPage() {
   const [activePHBidTab, setActivePHBidTab] = useState<"A" | "B" | "C" | "D">("A");
-  const [activeExplainTab, setActiveExplainTab] = useState<"comparison" | "matrix" | "venues" | "cashflows" | "pipeline">("comparison");
+  const [activeExplainTab, setActiveExplainTab] = useState<
+    "comparison" | "matrix" | "venues" | "cashflows" | "pipeline"
+  >("comparison");
 
   // Generalized mock data from BPL 2.webp bidding section
   const BIDDING_QUOTES = {
-    A: { name: "Franchise Investor A", quotes: ["₹8,00,000", "₹6,00,000", "₹7,50,000", "₹5,50,000"], wins: "Band 1" },
-    B: { name: "Franchise Investor B", quotes: ["₹7,0,000", "₹8,50,000", "₹8,50,000", "₹6,00,000"], wins: "Band 2" },
-    C: { name: "Franchise Investor C", quotes: ["₹6,50,000", "₹6,00,000", "₹9,00,000", "₹7,00,000"], wins: "Band 3" },
-    D: { name: "Franchise Investor D", quotes: ["₹5,50,000", "₹7,00,000", "₹6,00,000", "₹8,00,000"], wins: "Band 4" },
+    A: {
+      name: "Franchise Investor A",
+      quotes: ["₹8,00,000", "₹6,00,000", "₹7,50,000", "₹5,50,000"],
+      wins: "Band 1",
+    },
+    B: {
+      name: "Franchise Investor B",
+      quotes: ["₹7,0,000", "₹8,50,000", "₹8,50,000", "₹6,00,000"],
+      wins: "Band 2",
+    },
+    C: {
+      name: "Franchise Investor C",
+      quotes: ["₹6,50,000", "₹6,00,000", "₹9,00,000", "₹7,00,000"],
+      wins: "Band 3",
+    },
+    D: {
+      name: "Franchise Investor D",
+      quotes: ["₹5,50,000", "₹7,00,000", "₹6,00,000", "₹8,00,000"],
+      wins: "Band 4",
+    },
   };
 
   return (
     <PageShell>
       {/* Hero Section */}
       <section className="relative overflow-hidden border-b border-border bg-gradient-to-b from-background/90 via-background/40 to-background">
-        <div className="absolute inset-0 pointer-events-none" style={{ background: "var(--gradient-glow)" }} />
+        <div
+          className="absolute inset-0 pointer-events-none"
+          style={{ background: "var(--gradient-glow)" }}
+        />
         <div className="relative mx-auto max-w-7xl px-4 sm:px-6 py-20 text-center space-y-4">
-          <p className="text-xs uppercase tracking-[0.2em] text-primary-glow font-bold">Join the Music Revolution</p>
+          <p className="text-xs uppercase tracking-[0.2em] text-primary-glow font-bold">
+            Join the Music Revolution
+          </p>
           <h1 className="text-4xl md:text-6xl font-display font-bold tracking-tight text-white">
             Join India's First Franchise Music League
           </h1>
           <p className="mt-4 text-base md:text-lg text-muted-foreground max-w-2xl mx-auto leading-relaxed">
-            Choose how you want to become part of the Kalakshetra ecosystem. Select a role below to start your application process.
+            Choose how you want to become part of the Kalakshetra ecosystem. Select a role below to
+            start your application process.
           </p>
         </div>
       </section>
@@ -125,8 +153,8 @@ function JoinHubPage() {
           {ROLES.map((role) => {
             const Icon = role.icon;
             return (
-              <Link 
-                key={role.title} 
+              <Link
+                key={role.title}
                 to={role.to}
                 search={role.search as any}
                 className="bpl-card p-6 flex flex-col justify-between hover:border-primary hover:scale-[1.02] active:scale-[0.98] transition duration-300 relative group cursor-pointer"
@@ -136,7 +164,7 @@ function JoinHubPage() {
                     {role.badge}
                   </span>
                 )}
-                
+
                 <div className="space-y-4">
                   <div className="h-12 w-12 rounded-lg bg-primary/10 text-primary-glow flex items-center justify-center border border-primary/20 group-hover:bg-primary/20 transition-colors">
                     <Icon size={22} />
@@ -152,7 +180,11 @@ function JoinHubPage() {
                 </div>
 
                 <div className="mt-6 flex items-center gap-1 text-[11px] uppercase tracking-wider font-semibold text-primary-glow group-hover:text-primary transition-colors">
-                  Apply Now <ArrowRight size={14} className="ml-1 transition-transform group-hover:translate-x-1" />
+                  Apply Now{" "}
+                  <ArrowRight
+                    size={14}
+                    className="ml-1 transition-transform group-hover:translate-x-1"
+                  />
                 </div>
               </Link>
             );
@@ -163,12 +195,17 @@ function JoinHubPage() {
       {/* HOW BPL WORKS FLOWCHART SECTION */}
       <section className="border-t border-border bg-slate-950/60 py-24">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 space-y-16">
-          
           <div className="text-center max-w-3xl mx-auto space-y-4">
-            <p className="text-xs uppercase tracking-[0.2em] text-primary-glow font-bold">Ecosystem Model</p>
-            <h2 className="text-3xl md:text-5xl font-display font-bold text-white">How Kalakshetra Works</h2>
+            <p className="text-xs uppercase tracking-[0.2em] text-primary-glow font-bold">
+              Ecosystem Model
+            </p>
+            <h2 className="text-3xl md:text-5xl font-display font-bold text-white">
+              How Kalakshetra Works
+            </h2>
             <p className="text-xs md:text-sm text-muted-foreground leading-relaxed max-w-xl mx-auto">
-              Kalakshetra operates as an asset-light orchestration platform. We create demand, set rules, and coordinate stakeholders, while specialized partners provide venue operations, production, and marketing.
+              Kalakshetra operates as an asset-light orchestration platform. We create demand, set
+              rules, and coordinate stakeholders, while specialized partners provide venue
+              operations, production, and marketing.
             </p>
           </div>
 
@@ -188,8 +225,8 @@ function JoinHubPage() {
                     key={tab.id}
                     onClick={() => setActiveExplainTab(tab.id as any)}
                     className={`flex-1 py-3 px-4 text-xs font-bold transition-all flex items-center justify-center gap-2 border-r border-border last:border-0 ${
-                      activeExplainTab === tab.id 
-                        ? "bg-primary text-white" 
+                      activeExplainTab === tab.id
+                        ? "bg-primary text-white"
                         : "text-muted-foreground hover:text-white hover:bg-secondary/40"
                     }`}
                   >
@@ -204,33 +241,77 @@ function JoinHubPage() {
             {activeExplainTab === "comparison" && (
               <div className="bpl-card p-6 md:p-8 space-y-6 text-left animate-fadeIn">
                 <div className="space-y-1">
-                  <h3 className="text-lg font-display font-bold text-white">IPL vs Raaga of Kurukshetra Comparison Structure</h3>
-                  <p className="text-xs text-muted-foreground">How the franchise music league maps directly onto a professional sports format.</p>
+                  <h3 className="text-lg font-display font-bold text-white">
+                    IPL vs Raaga of Kurukshetra Comparison Structure
+                  </h3>
+                  <p className="text-xs text-muted-foreground">
+                    How the franchise music league maps directly onto a professional sports format.
+                  </p>
                 </div>
                 <div className="overflow-x-auto">
                   <table className="w-full text-xs text-left border-collapse">
                     <thead>
                       <tr className="border-b border-border bg-secondary/30">
-                        <th className="py-2.5 px-4 font-bold text-primary-glow uppercase tracking-wider">IPL Counterpart</th>
-                        <th className="py-2.5 px-4 font-bold text-primary-glow uppercase tracking-wider">Raaga of Kurukshetra Role</th>
-                        <th className="py-2.5 px-4 font-bold text-muted-foreground uppercase tracking-wider">Core Responsibility</th>
+                        <th className="py-2.5 px-4 font-bold text-primary-glow uppercase tracking-wider">
+                          IPL Counterpart
+                        </th>
+                        <th className="py-2.5 px-4 font-bold text-primary-glow uppercase tracking-wider">
+                          Raaga of Kurukshetra Role
+                        </th>
+                        <th className="py-2.5 px-4 font-bold text-muted-foreground uppercase tracking-wider">
+                          Core Responsibility
+                        </th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-border/40">
                       {[
-                        ["BCCI", "Kalakshetra (Operator)", "Sets rules, runs fixtures. Gets sponsorship & ticket commission, spending on league prize pools, operations, and hiring event managers."],
-                        ["Franchise Owner", "Production House", "Acts as the artist investor. Decides whether to perform services in-house or outsource. Invests directly in catalog production and band marketing."],
-                        ["Players", "Bands / Solo Artists", "The central talent. Retain a 40% live ticket revenue share and a 50% digital IP royalty share."],
-                        ["Stadium", "Venues / Cafés / Colleges", "IPL cricket stadiums require massive upfront rentals. Kalakshetra cafés/venues often host for free (for F&B sales) or use hybrid guarantee + share models."],
-                        ["Broadcaster", "YouTube & Audio Platforms", "IPL sells satellite rights centrally. Production houses earn major revenues from YT/Spotify. If hit, Kalakshetra sells TV 'Tournament War' telecast rights."],
-                        ["Sponsors", "Brand Sponsors", "Provide sponsorship capital. Divided between operators (for prize pool & operations) and event manager logistics funding."],
-                        ["Fan Clubs", "Outsourced Promoters", "Campus & cafe promoter networks hired by Kalakshetra or Production Houses to drive ticket sales and local meetups."],
-                        ["Event Operations", "Contracted Event Managers", "Hired & paid directly by Kalakshetra Operator (out of the 30% ticket share) to execute matching logistics, stage setup, and security."],
+                        [
+                          "BCCI",
+                          "Kalakshetra (Operator)",
+                          "Sets rules, runs fixtures. Gets sponsorship & ticket commission, spending on league prize pools, operations, and hiring event managers.",
+                        ],
+                        [
+                          "Franchise Owner",
+                          "Production House",
+                          "Acts as the artist investor. Decides whether to perform services in-house or outsource. Invests directly in catalog production and band marketing.",
+                        ],
+                        [
+                          "Players",
+                          "Bands / Solo Artists",
+                          "The central talent. Retain a 40% live ticket revenue share and a 50% digital IP royalty share.",
+                        ],
+                        [
+                          "Stadium",
+                          "Venues / Cafés / Colleges",
+                          "IPL cricket stadiums require massive upfront rentals. Kalakshetra cafés/venues often host for free (for F&B sales) or use hybrid guarantee + share models.",
+                        ],
+                        [
+                          "Broadcaster",
+                          "YouTube & Audio Platforms",
+                          "IPL sells satellite rights centrally. Production houses earn major revenues from YT/Spotify. If hit, Kalakshetra sells TV 'Tournament War' telecast rights.",
+                        ],
+                        [
+                          "Sponsors",
+                          "Brand Sponsors",
+                          "Provide sponsorship capital. Divided between operators (for prize pool & operations) and event manager logistics funding.",
+                        ],
+                        [
+                          "Fan Clubs",
+                          "Outsourced Promoters",
+                          "Campus & cafe promoter networks hired by Kalakshetra or Production Houses to drive ticket sales and local meetups.",
+                        ],
+                        [
+                          "Event Operations",
+                          "Contracted Event Managers",
+                          "Hired & paid directly by Kalakshetra Operator (out of the 30% ticket share) to execute matching logistics, stage setup, and security.",
+                        ],
                       ].map(([ipl, bpl, desc], idx) => (
                         <tr key={idx} className="hover:bg-secondary/10">
                           <td className="py-3 px-4 font-bold text-white font-display">{ipl}</td>
                           <td className="py-3 px-4 font-bold text-primary-glow">{bpl}</td>
-                          <td className="py-3 px-4 text-muted-foreground leading-relaxed">{desc}</td>
+                          <td className="py-3 px-4 text-muted-foreground leading-relaxed">
+                            {desc}
+                          </td>
                         </tr>
                       ))}
                     </tbody>
@@ -243,35 +324,89 @@ function JoinHubPage() {
             {activeExplainTab === "matrix" && (
               <div className="bpl-card p-6 md:p-8 space-y-6 text-left animate-fadeIn">
                 <div className="space-y-1">
-                  <h3 className="text-lg font-display font-bold text-white">Ecosystem Hiring Matrix</h3>
-                  <p className="text-xs text-muted-foreground">Who contracts whom under Kalakshetra's decentralized, asset-light model.</p>
+                  <h3 className="text-lg font-display font-bold text-white">
+                    Ecosystem Hiring Matrix
+                  </h3>
+                  <p className="text-xs text-muted-foreground">
+                    Who contracts whom under Kalakshetra's decentralized, asset-light model.
+                  </p>
                 </div>
                 <div className="overflow-x-auto">
                   <table className="w-full text-xs text-left border-collapse">
                     <thead>
                       <tr className="border-b border-border bg-secondary/30">
-                        <th className="py-2.5 px-4 font-bold text-primary-glow uppercase tracking-wider">Ecosystem Service</th>
-                        <th className="py-2.5 px-4 font-bold text-primary-glow text-center uppercase tracking-wider">Hired by Kalakshetra</th>
-                        <th className="py-2.5 px-4 font-bold text-primary-glow text-center uppercase tracking-wider">Hired by Production House</th>
-                        <th className="py-2.5 px-4 font-bold text-muted-foreground uppercase tracking-wider">Operational Context</th>
+                        <th className="py-2.5 px-4 font-bold text-primary-glow uppercase tracking-wider">
+                          Ecosystem Service
+                        </th>
+                        <th className="py-2.5 px-4 font-bold text-primary-glow text-center uppercase tracking-wider">
+                          Hired by Kalakshetra
+                        </th>
+                        <th className="py-2.5 px-4 font-bold text-primary-glow text-center uppercase tracking-wider">
+                          Hired by Production House
+                        </th>
+                        <th className="py-2.5 px-4 font-bold text-muted-foreground uppercase tracking-wider">
+                          Operational Context
+                        </th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-border/40">
                       {[
-                        ["Event Managers", "✅ Primary (Contracted)", "❌ Rare", "Kalakshetra contracts managers to operate the tour matches cleanly on-site."],
-                        ["Venues / Cafes", "✅ Primary (Booked)", "❌ Rare", "Kalakshetra partners directly with cafes to secure local match stadiums."],
-                        ["Media Partners", "Optional", "✅ Primary (Outsourced)", "Production Houses hire videographers for official music videos & shoots."],
-                        ["Photographers", "Optional", "✅ Primary (Outsourced)", "Production Houses hire photographers for artist branding campaigns."],
-                        ["Influencers", "Optional", "✅ Primary (Outsourced)", "Production Houses pay influencers to promote their drafted bands."],
-                        ["Campus Networks", "✅ Yes (Qualifiers)", "✅ Yes (Ticket Promos)", "Both hire campus ambassadors to mobilize students for live fixtures."],
-                        ["Cafe Communities", "Optional", "✅ Primary (Outsourced)", "Production Houses hire local gathering networks for café fan promotions."],
-                        ["Music Distributors", "❌ No", "✅ Primary (Outsourced)", "Production Houses manage third-party distribution to release tracks."],
+                        [
+                          "Event Managers",
+                          "✅ Primary (Contracted)",
+                          "❌ Rare",
+                          "Kalakshetra contracts managers to operate the tour matches cleanly on-site.",
+                        ],
+                        [
+                          "Venues / Cafes",
+                          "✅ Primary (Booked)",
+                          "❌ Rare",
+                          "Kalakshetra partners directly with cafes to secure local match stadiums.",
+                        ],
+                        [
+                          "Media Partners",
+                          "Optional",
+                          "✅ Primary (Outsourced)",
+                          "Production Houses hire videographers for official music videos & shoots.",
+                        ],
+                        [
+                          "Photographers",
+                          "Optional",
+                          "✅ Primary (Outsourced)",
+                          "Production Houses hire photographers for artist branding campaigns.",
+                        ],
+                        [
+                          "Influencers",
+                          "Optional",
+                          "✅ Primary (Outsourced)",
+                          "Production Houses pay influencers to promote their drafted bands.",
+                        ],
+                        [
+                          "Campus Networks",
+                          "✅ Yes (Qualifiers)",
+                          "✅ Yes (Ticket Promos)",
+                          "Both hire campus ambassadors to mobilize students for live fixtures.",
+                        ],
+                        [
+                          "Cafe Communities",
+                          "Optional",
+                          "✅ Primary (Outsourced)",
+                          "Production Houses hire local gathering networks for café fan promotions.",
+                        ],
+                        [
+                          "Music Distributors",
+                          "❌ No",
+                          "✅ Primary (Outsourced)",
+                          "Production Houses manage third-party distribution to release tracks.",
+                        ],
                       ].map(([service, bpl, ph, desc], idx) => (
                         <tr key={idx} className="hover:bg-secondary/10">
                           <td className="py-3 px-4 font-bold text-white">{service}</td>
                           <td className="py-3 px-4 text-center font-bold">{bpl}</td>
                           <td className="py-3 px-4 text-center font-bold">{ph}</td>
-                          <td className="py-3 px-4 text-muted-foreground leading-relaxed">{desc}</td>
+                          <td className="py-3 px-4 text-muted-foreground leading-relaxed">
+                            {desc}
+                          </td>
                         </tr>
                       ))}
                     </tbody>
@@ -284,49 +419,69 @@ function JoinHubPage() {
             {activeExplainTab === "venues" && (
               <div className="bpl-card p-6 md:p-8 space-y-6 text-left animate-fadeIn">
                 <div className="space-y-1">
-                  <h3 className="text-lg font-display font-bold text-white">Cafe / Venue Partnership Models</h3>
-                  <p className="text-xs text-muted-foreground">Cafes provide stages and seating. Kalakshetra secures stadium infrastructure under three alignment models.</p>
+                  <h3 className="text-lg font-display font-bold text-white">
+                    Cafe / Venue Partnership Models
+                  </h3>
+                  <p className="text-xs text-muted-foreground">
+                    Cafes provide stages and seating. Kalakshetra secures stadium infrastructure
+                    under three alignment models.
+                  </p>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-2">
                   <div className="p-5 border border-border bg-secondary/10 rounded-lg space-y-3">
                     <div className="flex justify-between items-center">
-                      <span className="text-[9px] uppercase tracking-wider font-bold text-muted-foreground">MODEL A</span>
+                      <span className="text-[9px] uppercase tracking-wider font-bold text-muted-foreground">
+                        MODEL A
+                      </span>
                       <DollarSign size={14} className="text-primary-glow" />
                     </div>
                     <h4 className="text-sm font-bold text-white">Flat Venue Rental</h4>
                     <p className="text-xs text-muted-foreground leading-relaxed">
-                      Kalakshetra pays a flat, fixed fee to rent the space upfront for the gig night. Cafe retains 100% of Food & Beverage revenues.
+                      Kalakshetra pays a flat, fixed fee to rent the space upfront for the gig
+                      night. Cafe retains 100% of Food & Beverage revenues.
                     </p>
                     <div className="pt-2">
-                      <p className="text-[10px] font-mono font-bold text-primary-glow">Example: Fixed ₹25,000 / Show</p>
+                      <p className="text-[10px] font-mono font-bold text-primary-glow">
+                        Example: Fixed ₹25,000 / Show
+                      </p>
                     </div>
                   </div>
 
                   <div className="p-5 border border-border bg-secondary/10 rounded-lg space-y-3">
                     <div className="flex justify-between items-center">
-                      <span className="text-[9px] uppercase tracking-wider font-bold text-muted-foreground">MODEL B</span>
+                      <span className="text-[9px] uppercase tracking-wider font-bold text-muted-foreground">
+                        MODEL B
+                      </span>
                       <Percent size={14} className="text-primary-glow" />
                     </div>
                     <h4 className="text-sm font-bold text-white">Ticketing Revenue Share</h4>
                     <p className="text-xs text-muted-foreground leading-relaxed">
-                      No upfront rental risk. The café receives a direct percentage commission of the live matchup gate ticket sales.
+                      No upfront rental risk. The café receives a direct percentage commission of
+                      the live matchup gate ticket sales.
                     </p>
                     <div className="pt-2">
-                      <p className="text-[10px] font-mono font-bold text-primary-glow">Example: 15% – 25% Ticket Sales</p>
+                      <p className="text-[10px] font-mono font-bold text-primary-glow">
+                        Example: 15% – 25% Ticket Sales
+                      </p>
                     </div>
                   </div>
 
                   <div className="p-5 border border-primary/20 bg-primary/5 rounded-lg space-y-3">
                     <div className="flex justify-between items-center">
-                      <span className="text-[9px] uppercase tracking-wider font-bold text-primary-glow">MODEL C (Common)</span>
+                      <span className="text-[9px] uppercase tracking-wider font-bold text-primary-glow">
+                        MODEL C (Common)
+                      </span>
                       <CheckCircle2 size={14} className="text-primary-glow" />
                     </div>
                     <h4 className="text-sm font-bold text-white">Hybrid Guarantee</h4>
                     <p className="text-xs text-muted-foreground leading-relaxed">
-                      De-risks cafe venue hosts while aligning incentives. Kalakshetra pays a lower fixed base guarantee combined with a smaller ticket commission.
+                      De-risks cafe venue hosts while aligning incentives. Kalakshetra pays a lower
+                      fixed base guarantee combined with a smaller ticket commission.
                     </p>
                     <div className="pt-2">
-                      <p className="text-[10px] font-mono font-bold text-primary-glow">Example: ₹15,000 + 10% Ticket sales</p>
+                      <p className="text-[10px] font-mono font-bold text-primary-glow">
+                        Example: ₹15,000 + 10% Ticket sales
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -337,21 +492,30 @@ function JoinHubPage() {
             {activeExplainTab === "cashflows" && (
               <div className="bpl-card p-6 md:p-8 space-y-6 text-left animate-fadeIn">
                 <div className="space-y-1">
-                  <h3 className="text-lg font-display font-bold text-white">Ecosystem Capital Flow Grid (Inflows vs Outflows)</h3>
-                  <p className="text-xs text-muted-foreground">Detailed breakdown of where bands, investors, and operators earn money and where they invest it.</p>
+                  <h3 className="text-lg font-display font-bold text-white">
+                    Ecosystem Capital Flow Grid (Inflows vs Outflows)
+                  </h3>
+                  <p className="text-xs text-muted-foreground">
+                    Detailed breakdown of where bands, investors, and operators earn money and where
+                    they invest it.
+                  </p>
                 </div>
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 pt-2">
-                  
                   {/* Bands Column */}
                   <div className="p-5 border border-border bg-secondary/15 rounded-lg space-y-5 flex flex-col justify-between">
                     <div className="space-y-4">
                       <div className="flex justify-between items-center">
-                        <h4 className="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-primary block"></span> Bands / Solo Artists</h4>
+                        <h4 className="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-1.5">
+                          <span className="w-2.5 h-2.5 rounded-full bg-primary block"></span> Bands
+                          / Solo Artists
+                        </h4>
                       </div>
-                      
+
                       <div className="space-y-3">
                         <div className="space-y-1">
-                          <p className="text-[10px] uppercase font-bold text-primary-glow">💰 Inflows (Earnings)</p>
+                          <p className="text-[10px] uppercase font-bold text-primary-glow">
+                            💰 Inflows (Earnings)
+                          </p>
                           <ul className="text-[10px] text-muted-foreground space-y-1 list-disc list-inside">
                             <li>40% Live ticket split per show</li>
                             <li>50% Audio streaming split (Spotify, Wynk)</li>
@@ -360,7 +524,9 @@ function JoinHubPage() {
                           </ul>
                         </div>
                         <div className="space-y-1 pt-2">
-                          <p className="text-[10px] uppercase font-bold text-red-400">💸 Outflows (Investments)</p>
+                          <p className="text-[10px] uppercase font-bold text-red-400">
+                            💸 Outflows (Investments)
+                          </p>
                           <ul className="text-[10px] text-muted-foreground space-y-1 list-disc list-inside">
                             <li>Band gear & instrument upgrades</li>
                             <li>Rehearsal space rentals</li>
@@ -375,12 +541,17 @@ function JoinHubPage() {
                   <div className="p-5 border border-border bg-secondary/15 rounded-lg space-y-5 flex flex-col justify-between">
                     <div className="space-y-4">
                       <div className="flex justify-between items-center">
-                        <h4 className="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-teal-400 block"></span> Production Investors</h4>
+                        <h4 className="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-1.5">
+                          <span className="w-2.5 h-2.5 rounded-full bg-teal-400 block"></span>{" "}
+                          Production Investors
+                        </h4>
                       </div>
-                      
+
                       <div className="space-y-3">
                         <div className="space-y-1">
-                          <p className="text-[10px] uppercase font-bold text-primary-glow">💰 Inflows (Earnings)</p>
+                          <p className="text-[10px] uppercase font-bold text-primary-glow">
+                            💰 Inflows (Earnings)
+                          </p>
                           <ul className="text-[10px] text-muted-foreground space-y-1 list-disc list-inside">
                             <li>30% Live ticketing commission split</li>
                             <li>50% Audio streaming master royalties</li>
@@ -389,7 +560,9 @@ function JoinHubPage() {
                           </ul>
                         </div>
                         <div className="space-y-1 pt-2">
-                          <p className="text-[10px] uppercase font-bold text-red-400">💸 Outflows (Investments)</p>
+                          <p className="text-[10px] uppercase font-bold text-red-400">
+                            💸 Outflows (Investments)
+                          </p>
                           <ul className="text-[10px] text-muted-foreground space-y-1 list-disc list-inside">
                             <li>Studio recording, mixing & mastering</li>
                             <li>Video production, camera crew & editing</li>
@@ -405,12 +578,17 @@ function JoinHubPage() {
                   <div className="p-5 border border-primary/20 bg-primary/5 rounded-lg space-y-5 flex flex-col justify-between">
                     <div className="space-y-4">
                       <div className="flex justify-between items-center">
-                        <h4 className="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-amber-400 block"></span> Kalakshetra Operator</h4>
+                        <h4 className="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-1.5">
+                          <span className="w-2.5 h-2.5 rounded-full bg-amber-400 block"></span>{" "}
+                          Kalakshetra Operator
+                        </h4>
                       </div>
-                      
+
                       <div className="space-y-3">
                         <div className="space-y-1">
-                          <p className="text-[10px] uppercase font-bold text-primary-glow">💰 Inflows (Earnings)</p>
+                          <p className="text-[10px] uppercase font-bold text-primary-glow">
+                            💰 Inflows (Earnings)
+                          </p>
                           <ul className="text-[10px] text-muted-foreground space-y-1 list-disc list-inside">
                             <li>30% Live matchup gate ticket split</li>
                             <li>Brand sponsorships & naming rights</li>
@@ -419,7 +597,9 @@ function JoinHubPage() {
                           </ul>
                         </div>
                         <div className="space-y-1 pt-2">
-                          <p className="text-[10px] uppercase font-bold text-red-400">💸 Outflows (Investments)</p>
+                          <p className="text-[10px] uppercase font-bold text-red-400">
+                            💸 Outflows (Investments)
+                          </p>
                           <ul className="text-[10px] text-muted-foreground space-y-1 list-disc list-inside">
                             <li>Contracting Event Managers (on-ground ops)</li>
                             <li>Tournament prize pool & champion awards</li>
@@ -430,7 +610,6 @@ function JoinHubPage() {
                       </div>
                     </div>
                   </div>
-
                 </div>
               </div>
             )}
@@ -439,10 +618,14 @@ function JoinHubPage() {
             {activeExplainTab === "pipeline" && (
               <div className="bpl-card p-6 md:p-8 space-y-6 text-left animate-fadeIn">
                 <div className="space-y-1">
-                  <h3 className="text-lg font-display font-bold text-white">Ecosystem Hiring & Operational Flow</h3>
-                  <p className="text-xs text-muted-foreground">Visual mapping of the platform coordination flows and outsourcing relationships.</p>
+                  <h3 className="text-lg font-display font-bold text-white">
+                    Ecosystem Hiring & Operational Flow
+                  </h3>
+                  <p className="text-xs text-muted-foreground">
+                    Visual mapping of the platform coordination flows and outsourcing relationships.
+                  </p>
                 </div>
-                
+
                 {/* Visual Flow diagram */}
                 <div className="border border-border/60 bg-secondary/10 rounded-lg p-6 space-y-8 max-w-2xl mx-auto text-center font-sans">
                   {/* Row 1 */}
@@ -468,11 +651,15 @@ function JoinHubPage() {
                   <div className="grid grid-cols-3 gap-3 max-w-lg mx-auto text-[10px] font-semibold text-muted-foreground">
                     <div className="p-2 border border-border bg-secondary/20 rounded">
                       <p className="text-white">Event Manager</p>
-                      <span className="text-[8px] text-primary-glow font-mono">(On-ground Ops)</span>
+                      <span className="text-[8px] text-primary-glow font-mono">
+                        (On-ground Ops)
+                      </span>
                     </div>
                     <div className="p-2 border border-border bg-secondary/20 rounded">
                       <p className="text-white">Venue Rental</p>
-                      <span className="text-[8px] text-primary-glow font-mono">(Cafe / College)</span>
+                      <span className="text-[8px] text-primary-glow font-mono">
+                        (Cafe / College)
+                      </span>
                     </div>
                     <div className="p-2 border border-border bg-secondary/20 rounded">
                       <p className="text-white">Prize Pool</p>
@@ -498,12 +685,24 @@ function JoinHubPage() {
                       Production House (Investor)
                     </div>
                     <div className="grid grid-cols-2 md:grid-cols-3 gap-2 mt-4 max-w-md mx-auto text-[9px] text-muted-foreground">
-                      <div className="p-1.5 border border-border/50 rounded bg-secondary/10">🎸 Band Co-Production</div>
-                      <div className="p-1.5 border border-border/50 rounded bg-secondary/10">🎥 Media Partners</div>
-                      <div className="p-1.5 border border-border/50 rounded bg-secondary/10">📢 Local Community</div>
-                      <div className="p-1.5 border border-border/50 rounded bg-secondary/10">🤳 Influencer Promos</div>
-                      <div className="p-1.5 border border-border/50 rounded bg-secondary/10">🎓 Campus Promoters</div>
-                      <div className="p-1.5 border border-border/50 rounded bg-secondary/10">💿 Distro Partners</div>
+                      <div className="p-1.5 border border-border/50 rounded bg-secondary/10">
+                        🎸 Band Co-Production
+                      </div>
+                      <div className="p-1.5 border border-border/50 rounded bg-secondary/10">
+                        🎥 Media Partners
+                      </div>
+                      <div className="p-1.5 border border-border/50 rounded bg-secondary/10">
+                        📢 Local Community
+                      </div>
+                      <div className="p-1.5 border border-border/50 rounded bg-secondary/10">
+                        🤳 Influencer Promos
+                      </div>
+                      <div className="p-1.5 border border-border/50 rounded bg-secondary/10">
+                        🎓 Campus Promoters
+                      </div>
+                      <div className="p-1.5 border border-border/50 rounded bg-secondary/10">
+                        💿 Distro Partners
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -514,16 +713,24 @@ function JoinHubPage() {
           {/* SECTION 1: LEAGUE STRUCTURE & SECRET BIDDING (Detailed flowchart content) */}
           <div className="bpl-card p-6 md:p-8 space-y-8 text-left">
             <div className="border-b border-border/65 pb-5">
-              <span className="text-[10px] font-bold text-primary-glow bg-primary/10 border border-primary/20 px-2 py-0.5 rounded">PHASE 02</span>
-              <h3 className="text-xl font-display font-bold text-white mt-1.5">2. Bidding & Production House Investment</h3>
+              <span className="text-[10px] font-bold text-primary-glow bg-primary/10 border border-primary/20 px-2 py-0.5 rounded">
+                PHASE 02
+              </span>
+              <h3 className="text-xl font-display font-bold text-white mt-1.5">
+                2. Bidding & Production House Investment
+              </h3>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
               {/* Box A: Sealed Bidding */}
               <div className="space-y-4">
-                <h4 className="text-sm font-bold text-white uppercase tracking-wider">The Sealed Bidding Process</h4>
+                <h4 className="text-sm font-bold text-white uppercase tracking-wider">
+                  The Sealed Bidding Process
+                </h4>
                 <p className="text-xs text-muted-foreground leading-relaxed">
-                  BPL releases band profiles, stats, and genre tracks to registered Franchise Investors. Each Production House submits sealed bids detailing their co-production allocations.
+                  BPL releases band profiles, stats, and genre tracks to registered Franchise
+                  Investors. Each Production House submits sealed bids detailing their co-production
+                  allocations.
                 </p>
                 <div className="space-y-2 text-xs">
                   <div className="p-3 border border-border bg-secondary/20 rounded flex justify-between">
@@ -547,13 +754,19 @@ function JoinHubPage() {
 
               {/* Box B: Production Outsourcing */}
               <div className="space-y-4">
-                <h4 className="text-sm font-bold text-white uppercase tracking-wider">Production Outsourcing Model</h4>
+                <h4 className="text-sm font-bold text-white uppercase tracking-wider">
+                  Production Outsourcing Model
+                </h4>
                 <p className="text-xs text-muted-foreground leading-relaxed">
-                  Winning Production Houses act as the band's financial backer. They are free to execute video production, social media promotions, and campus distributions using their own teams or outsource to Kalakshetra-approved ecosystem partners:
+                  Winning Production Houses act as the band's financial backer. They are free to
+                  execute video production, social media promotions, and campus distributions using
+                  their own teams or outsource to Kalakshetra-approved ecosystem partners:
                 </p>
                 <div className="grid grid-cols-2 gap-3 text-[10px] text-muted-foreground">
                   <div className="p-3 border border-border bg-surface/30 rounded-lg">
-                    <span className="font-bold text-white block mb-0.5">Media & Video Partners</span>
+                    <span className="font-bold text-white block mb-0.5">
+                      Media & Video Partners
+                    </span>
                     Hired to shoot music videos, reels, and BTS aftermovies.
                   </div>
                   <div className="p-3 border border-border bg-surface/30 rounded-lg">
@@ -575,17 +788,23 @@ function JoinHubPage() {
 
           {/* SECTION 4: REVENUE SPLIT GRAPHICS */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 text-left">
-            
             {/* Live Show Ticket Splits */}
             <div className="bpl-card p-6 md:p-8 space-y-6">
               <div className="border-b border-border/65 pb-4">
-                <h3 className="text-lg font-display font-bold text-white">Live Event Ticketing splits</h3>
-                <p className="text-xs text-muted-foreground">Audited event payouts processed immediately after live shows.</p>
+                <h3 className="text-lg font-display font-bold text-white">
+                  Live Event Ticketing splits
+                </h3>
+                <p className="text-xs text-muted-foreground">
+                  Audited event payouts processed immediately after live shows.
+                </p>
               </div>
 
               <div className="space-y-4">
                 <div className="flex justify-between items-center text-xs">
-                  <span className="font-bold text-white flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-primary block"></span> Bands / Solo Artists</span>
+                  <span className="font-bold text-white flex items-center gap-1.5">
+                    <span className="w-2.5 h-2.5 rounded-full bg-primary block"></span> Bands / Solo
+                    Artists
+                  </span>
                   <span className="font-mono text-primary-glow font-bold">40% Share</span>
                 </div>
                 <div className="w-full bg-secondary h-2.5 rounded-full overflow-hidden">
@@ -593,7 +812,10 @@ function JoinHubPage() {
                 </div>
 
                 <div className="flex justify-between items-center text-xs">
-                  <span className="font-bold text-white flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-teal-400 block"></span> Production House (Investor)</span>
+                  <span className="font-bold text-white flex items-center gap-1.5">
+                    <span className="w-2.5 h-2.5 rounded-full bg-teal-400 block"></span> Production
+                    House (Investor)
+                  </span>
                   <span className="font-mono text-teal-400 font-bold">30% Share</span>
                 </div>
                 <div className="w-full bg-secondary h-2.5 rounded-full overflow-hidden">
@@ -601,7 +823,10 @@ function JoinHubPage() {
                 </div>
 
                 <div className="flex justify-between items-center text-xs">
-                  <span className="font-bold text-white flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-amber-400 block"></span> Kalakshetra Operator</span>
+                  <span className="font-bold text-white flex items-center gap-1.5">
+                    <span className="w-2.5 h-2.5 rounded-full bg-amber-400 block"></span>{" "}
+                    Kalakshetra Operator
+                  </span>
                   <span className="font-mono text-amber-400 font-bold">30% Share</span>
                 </div>
                 <div className="w-full bg-secondary h-2.5 rounded-full overflow-hidden">
@@ -613,13 +838,20 @@ function JoinHubPage() {
             {/* Digital Content Royalty Splits */}
             <div className="bpl-card p-6 md:p-8 space-y-6">
               <div className="border-b border-border/65 pb-4">
-                <h3 className="text-lg font-display font-bold text-white">Digital Content Payouts</h3>
-                <p className="text-xs text-muted-foreground">Long-term IP royalties earned from audio releases, YT views, and sponsorships.</p>
+                <h3 className="text-lg font-display font-bold text-white">
+                  Digital Content Payouts
+                </h3>
+                <p className="text-xs text-muted-foreground">
+                  Long-term IP royalties earned from audio releases, YT views, and sponsorships.
+                </p>
               </div>
 
               <div className="space-y-4">
                 <div className="flex justify-between items-center text-xs">
-                  <span className="font-bold text-white flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-primary block"></span> Bands / Solo Artists</span>
+                  <span className="font-bold text-white flex items-center gap-1.5">
+                    <span className="w-2.5 h-2.5 rounded-full bg-primary block"></span> Bands / Solo
+                    Artists
+                  </span>
                   <span className="font-mono text-primary-glow font-bold">50% Share</span>
                 </div>
                 <div className="w-full bg-secondary h-2.5 rounded-full overflow-hidden">
@@ -627,7 +859,10 @@ function JoinHubPage() {
                 </div>
 
                 <div className="flex justify-between items-center text-xs">
-                  <span className="font-bold text-white flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-teal-400 block"></span> Production House (Franchise Investor)</span>
+                  <span className="font-bold text-white flex items-center gap-1.5">
+                    <span className="w-2.5 h-2.5 rounded-full bg-teal-400 block"></span> Production
+                    House (Franchise Investor)
+                  </span>
                   <span className="font-mono text-teal-400 font-bold">50% Share</span>
                 </div>
                 <div className="w-full bg-secondary h-2.5 rounded-full overflow-hidden">
@@ -636,14 +871,17 @@ function JoinHubPage() {
               </div>
 
               <div className="text-[10px] text-muted-foreground pt-1.5">
-                * Content royalties are released co-equally (50/50) between the artists and the production house co-investors.
+                * Content royalties are released co-equally (50/50) between the artists and the
+                production house co-investors.
               </div>
             </div>
           </div>
 
           {/* Connective Footer Pipeline */}
           <div className="bpl-card p-5 bg-gradient-to-r from-primary/10 via-secondary/20 to-primary/10 rounded-lg text-center border border-border/80 max-w-4xl mx-auto space-y-3">
-            <p className="text-[10px] uppercase tracking-widest text-primary-glow font-bold">End-to-End Pipeline Summary</p>
+            <p className="text-[10px] uppercase tracking-widest text-primary-glow font-bold">
+              End-to-End Pipeline Summary
+            </p>
             <div className="flex flex-wrap justify-center items-center gap-2 text-[9px] font-bold text-muted-foreground">
               <span>Bands Curated</span>
               <ArrowRight size={10} className="text-primary-glow shrink-0" />
@@ -660,7 +898,6 @@ function JoinHubPage() {
               <span>Revenue Distributed</span>
             </div>
           </div>
-
         </div>
       </section>
     </PageShell>

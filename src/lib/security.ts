@@ -23,7 +23,9 @@ export function normalizeUrl(value?: string | null): string | undefined {
 }
 
 export function normalizeSocialHandle(value?: string | null): string {
-  return sanitizeText(value, 80).replace(/^@+/, "").replace(/[^a-zA-Z0-9._]/g, "");
+  return sanitizeText(value, 80)
+    .replace(/^@+/, "")
+    .replace(/[^a-zA-Z0-9._]/g, "");
 }
 
 export function safeImageSrc(value?: string | null): string | undefined {

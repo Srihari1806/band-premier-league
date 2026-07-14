@@ -2,28 +2,36 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { PageShell } from "@/components/layout/PageShell";
 import { useState } from "react";
 import { db } from "@/lib/db";
-import { getConfiguredOperatorCredentials, setOperatorSessionActive, validateOperatorLogin } from "@/lib/security";
-import { 
-  Lock, 
-  Mail, 
-  Phone, 
-  Chrome, 
-  Instagram, 
-  Facebook, 
-  ArrowRight, 
-  AlertCircle, 
-  Music, 
-  Building2, 
-  ShieldCheck, 
+import {
+  getConfiguredOperatorCredentials,
+  setOperatorSessionActive,
+  validateOperatorLogin,
+} from "@/lib/security";
+import {
+  Lock,
+  Mail,
+  Phone,
+  Chrome,
+  Instagram,
+  Facebook,
+  ArrowRight,
+  AlertCircle,
+  Music,
+  Building2,
+  ShieldCheck,
   ArrowLeft,
-  Sparkles
+  Sparkles,
 } from "lucide-react";
 
 export const Route = createFileRoute("/login")({
   head: () => ({
     meta: [
       { title: "Login — Kalakshetra" },
-      { name: "description", content: "Access your Kalakshetra dashboard. Manage your music catalog, update availability, and track curation stages." },
+      {
+        name: "description",
+        content:
+          "Access your Kalakshetra dashboard. Manage your music catalog, update availability, and track curation stages.",
+      },
     ],
   }),
   component: LoginPage,
@@ -34,13 +42,13 @@ type LoginRole = "band" | "venue" | "production_house" | "sponsor" | "operator";
 function LoginPage() {
   const navigate = useNavigate();
   const [role, setRole] = useState<LoginRole>("band");
-  
+
   // Input fields
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
   const [authMethod, setAuthMethod] = useState<"email" | "phone" | "social">("email");
-  
+
   // Feedback states
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -73,7 +81,7 @@ function LoginPage() {
 
       // Check registration & verify password
       await db.loginUser(inputVal, password, role);
-      
+
       // Redirect
       navigate({ to: "/dashboard" });
     } catch (err) {
@@ -131,9 +139,11 @@ function LoginPage() {
         <div className="absolute bottom-1/4 right-1/4 h-[300px] w-[300px] rounded-full bg-primary-glow/5 blur-[120px] pointer-events-none" />
 
         <div className="w-full max-w-md space-y-6 animate-fade-in relative z-10">
-          
           <div className="text-center space-y-2">
-            <Link to="/join" className="inline-flex items-center gap-1 text-[10px] uppercase font-bold tracking-widest text-muted-foreground hover:text-primary-glow transition mb-2">
+            <Link
+              to="/join"
+              className="inline-flex items-center gap-1 text-[10px] uppercase font-bold tracking-widest text-muted-foreground hover:text-primary-glow transition mb-2"
+            >
               <ArrowLeft size={10} /> Back to Join Hub
             </Link>
             <h1 className="text-3xl font-display font-bold text-white tracking-tight">
@@ -168,13 +178,13 @@ function LoginPage() {
           </div>
 
           <div className="bpl-card p-8 space-y-6">
-            
             {/* Operator info badge */}
             {role === "operator" ? (
               <div className="bg-primary/5 border border-primary/20 rounded-md p-3 flex gap-2.5 text-left text-[11px] text-muted-foreground leading-normal">
                 <ShieldCheck size={16} className="text-primary-glow shrink-0 mt-0.5" />
                 <p>
-                  Organizer login for reviewing curation lists, approving candidates, and managing match fixtures.
+                  Organizer login for reviewing curation lists, approving candidates, and managing
+                  match fixtures.
                 </p>
               </div>
             ) : (
@@ -184,7 +194,9 @@ function LoginPage() {
                   type="button"
                   onClick={() => setAuthMethod("email")}
                   className={`flex-1 pb-2 font-semibold text-center border-b-2 transition ${
-                    authMethod === "email" ? "border-primary text-primary-glow" : "border-transparent text-muted-foreground hover:text-foreground"
+                    authMethod === "email"
+                      ? "border-primary text-primary-glow"
+                      : "border-transparent text-muted-foreground hover:text-foreground"
                   }`}
                 >
                   Email
@@ -193,7 +205,9 @@ function LoginPage() {
                   type="button"
                   onClick={() => setAuthMethod("phone")}
                   className={`flex-1 pb-2 font-semibold text-center border-b-2 transition ${
-                    authMethod === "phone" ? "border-primary text-primary-glow" : "border-transparent text-muted-foreground hover:text-foreground"
+                    authMethod === "phone"
+                      ? "border-primary text-primary-glow"
+                      : "border-transparent text-muted-foreground hover:text-foreground"
                   }`}
                 >
                   Phone OTP
@@ -202,7 +216,9 @@ function LoginPage() {
                   type="button"
                   onClick={() => setAuthMethod("social")}
                   className={`flex-1 pb-2 font-semibold text-center border-b-2 transition ${
-                    authMethod === "social" ? "border-primary text-primary-glow" : "border-transparent text-muted-foreground hover:text-foreground"
+                    authMethod === "social"
+                      ? "border-primary text-primary-glow"
+                      : "border-transparent text-muted-foreground hover:text-foreground"
                   }`}
                 >
                   Social Sign-in
@@ -223,7 +239,9 @@ function LoginPage() {
               <form onSubmit={handleLoginSubmit} className="space-y-4 text-left">
                 {role === "operator" ? (
                   <div className="space-y-1.5">
-                    <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Login ID *</label>
+                    <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">
+                      Login ID *
+                    </label>
                     <div className="relative">
                       <Mail className="absolute left-3 top-3 text-muted-foreground" size={14} />
                       <input
@@ -238,7 +256,9 @@ function LoginPage() {
                   </div>
                 ) : authMethod === "email" ? (
                   <div className="space-y-1.5">
-                    <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Username or Email *</label>
+                    <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">
+                      Username or Email *
+                    </label>
                     <div className="relative">
                       <Mail className="absolute left-3 top-3 text-muted-foreground" size={14} />
                       <input
@@ -253,7 +273,9 @@ function LoginPage() {
                   </div>
                 ) : (
                   <div className="space-y-1.5">
-                    <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Phone Number *</label>
+                    <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">
+                      Phone Number *
+                    </label>
                     <div className="relative">
                       <Phone className="absolute left-3 top-3 text-muted-foreground" size={14} />
                       <input
@@ -274,12 +296,15 @@ function LoginPage() {
                       {authMethod === "phone" ? "OTP Passcode *" : "Password *"}
                     </label>
                     {authMethod === "phone" && (
-                      <button type="button" className="text-[10px] font-bold text-primary-glow hover:underline">
+                      <button
+                        type="button"
+                        className="text-[10px] font-bold text-primary-glow hover:underline"
+                      >
                         Send OTP
                       </button>
                     )}
                   </div>
-                  
+
                   <div className="relative">
                     <Lock className="absolute left-3 top-3 text-muted-foreground" size={14} />
                     <input
@@ -335,7 +360,9 @@ function LoginPage() {
             {/* DEMO ACC BYPASS */}
             <div className="relative flex items-center justify-center py-2">
               <div className="absolute w-full border-t border-border" />
-              <span className="relative z-10 px-3 bg-slate-950 text-[10px] text-muted-foreground uppercase font-bold">Curation Test</span>
+              <span className="relative z-10 px-3 bg-slate-950 text-[10px] text-muted-foreground uppercase font-bold">
+                Curation Test
+              </span>
             </div>
 
             <button

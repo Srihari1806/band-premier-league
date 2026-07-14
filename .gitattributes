@@ -1,0 +1,5 @@
+# Force LF line endings for all source code files
+* text eol=lf
+*.png -text
+*.webp -text
+*.docx -text

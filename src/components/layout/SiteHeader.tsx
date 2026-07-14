@@ -47,13 +47,14 @@ export function SiteHeader() {
   return (
     <header className="sticky top-0 z-50 backdrop-blur-xl bg-background/70 border-b border-border">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 flex items-center justify-between h-16">
-        
         {/* Logo and Brand */}
         <Link to="/" className="flex items-center gap-2.5 font-display font-bold text-xl group">
           <div className="h-9 w-9 rounded-lg overflow-hidden border border-primary/20 bg-background/50 flex items-center justify-center p-1 shadow-md shadow-primary/5 group-hover:border-primary/50 group-hover:shadow-glow transition-all duration-300">
             <img src={logoImg} alt="Kalakshetra Logo" className="h-full w-full object-contain" />
           </div>
-          <span className="tracking-tight text-white group-hover:text-primary-glow transition-colors">Kalakshetra</span>
+          <span className="tracking-tight text-white group-hover:text-primary-glow transition-colors">
+            Kalakshetra
+          </span>
         </Link>
 
         {/* Center: Standard Navigation Links (Accessible to everyone) */}
@@ -133,14 +134,19 @@ export function SiteHeader() {
           <div className="px-4 py-4 flex flex-col gap-4">
             {/* Nav links */}
             <div className="flex flex-col gap-2.5">
-              <span className="text-[10px] uppercase tracking-wider font-bold text-muted-foreground px-2">Navigation</span>
+              <span className="text-[10px] uppercase tracking-wider font-bold text-muted-foreground px-2">
+                Navigation
+              </span>
               {NAV.map((n) => (
                 <Link
                   key={n.to}
                   to={n.to}
                   onClick={() => setOpen(false)}
                   className="px-2 py-1.5 text-sm text-muted-foreground hover:text-white rounded hover:bg-secondary/20 transition-all"
-                  activeProps={{ className: "px-2 py-1.5 text-sm text-white font-semibold bg-secondary/30 rounded" }}
+                  activeProps={{
+                    className:
+                      "px-2 py-1.5 text-sm text-white font-semibold bg-secondary/30 rounded",
+                  }}
                   activeOptions={{ exact: n.to === "/" }}
                 >
                   {n.label}

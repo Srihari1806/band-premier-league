@@ -32,7 +32,9 @@ function EventsPage() {
         <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-transparent" />
         <div className="absolute inset-x-0 bottom-0 mx-auto max-w-7xl px-4 sm:px-6 pb-10">
           <p className="text-xs uppercase tracking-[0.2em] text-primary-glow mb-3">Live Show</p>
-          <h1 className="text-4xl md:text-6xl font-display font-bold text-white">Kurukshetra Campus Clash</h1>
+          <h1 className="text-4xl md:text-6xl font-display font-bold text-white">
+            Kurukshetra Campus Clash
+          </h1>
           <div className="mt-3 flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
             <span className="flex items-center gap-1">
               <Calendar size={14} /> 12 OCT 2026 · 6:00 PM
@@ -115,14 +117,17 @@ function EventsPage() {
                   <div>
                     <p className="text-sm font-medium">{n}</p>
                     {n === "Standard Pass" && (
-                      <p className="text-[10px] text-primary-glow mt-0.5">* Includes complimentary ₹100 F&B food coupon</p>
+                      <p className="text-[10px] text-primary-glow mt-0.5">
+                        * Includes complimentary ₹100 F&B food coupon
+                      </p>
                     )}
                   </div>
                   <p className="font-display font-bold text-lg">{p}</p>
                 </div>
               ))}
               <p className="text-[10px] text-muted-foreground leading-normal pt-1">
-                * All standard entry tickets are tied to our cafe-partner F&B voucher program. Support your local venues and bands directly.
+                * All standard entry tickets are tied to our cafe-partner F&B voucher program.
+                Support your local venues and bands directly.
               </p>
               <button className="btn-primary btn-primary-hover w-full rounded-md px-4 py-3 text-sm font-semibold flex items-center justify-center gap-2">
                 <Ticket size={16} /> Book Tickets

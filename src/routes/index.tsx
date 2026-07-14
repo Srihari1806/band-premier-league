@@ -1,6 +1,18 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { PageShell } from "@/components/layout/PageShell";
-import { Play, Ticket, MapPin, ArrowRight, Music, Users, Building2, Sparkles, Music2, Drum, Mic } from "lucide-react";
+import {
+  Play,
+  Ticket,
+  MapPin,
+  ArrowRight,
+  Music,
+  Users,
+  Building2,
+  Sparkles,
+  Music2,
+  Drum,
+  Mic,
+} from "lucide-react";
 import { useState, useEffect } from "react";
 import { db, type BandApplication, type LeagueStats } from "@/lib/db";
 import { isOperatorSessionActive } from "@/lib/security";
@@ -21,7 +33,8 @@ export const Route = createFileRoute("/")({
       { property: "og:title", content: "Kalakshetra — The Home of Independent Music" },
       {
         property: "og:description",
-        content: "Shows, bands, venues, and community — all under the Raaga of Kurukshetra tournament.",
+        content:
+          "Shows, bands, venues, and community — all under the Raaga of Kurukshetra tournament.",
       },
     ],
   }),
@@ -80,7 +93,9 @@ function Home() {
     loadHomeData();
 
     if (typeof window !== "undefined") {
-      setIsLogged(db.getCurrentUser() !== null || localStorage.getItem("bpl_user_onboarded") === "true");
+      setIsLogged(
+        db.getCurrentUser() !== null || localStorage.getItem("bpl_user_onboarded") === "true",
+      );
       setIsAdmin(isOperatorSessionActive());
     }
   }, []);
@@ -173,10 +188,14 @@ function Home() {
             <p className="text-xs uppercase tracking-[0.2em] text-primary-glow mb-3">
               What is Kalakshetra?
             </p>
-            <h2 className="text-4xl font-display font-bold text-white">The home of independent music.</h2>
+            <h2 className="text-4xl font-display font-bold text-white">
+              The home of independent music.
+            </h2>
             <p className="mt-4 text-muted-foreground leading-relaxed text-sm">
               Kalakshetra is India&apos;s premier platform connecting indie bands, venues,
-              production houses, and communities. We fuel the live music ecosystem through our grand tournament segment — <strong>Raaga of Kurukshetra (Raaga of Revenge)</strong> — providing real stages, production backing, and dedicated audiences.
+              production houses, and communities. We fuel the live music ecosystem through our grand
+              tournament segment — <strong>Raaga of Kurukshetra (Raaga of Revenge)</strong> —
+              providing real stages, production backing, and dedicated audiences.
             </p>
             <Link
               to="/about"
@@ -199,13 +218,17 @@ function Home() {
       {/* PHILOSOPHY SECTION */}
       <Section>
         <div className="text-center max-w-2xl mx-auto mb-12 space-y-3">
-          <p className="text-xs uppercase tracking-widest text-primary-glow font-bold">Our Foundation</p>
-          <h2 className="text-3xl md:text-4xl font-display font-bold text-white">Ragam · Talam · Pallavi</h2>
+          <p className="text-xs uppercase tracking-widest text-primary-glow font-bold">
+            Our Foundation
+          </p>
+          <h2 className="text-3xl md:text-4xl font-display font-bold text-white">
+            Ragam · Talam · Pallavi
+          </h2>
           <p className="text-xs text-muted-foreground">
             The core elements of music re-imagined for the modern independent artist and community.
           </p>
         </div>
-        
+
         <div className="grid gap-8 md:grid-cols-3">
           {/* Raagam */}
           <div className="bpl-card p-8 text-left space-y-4 hover:border-[oklch(0.78_0.16_80/0.5)] hover:shadow-[0_10px_30px_-10px_oklch(0.78_0.16_80/0.2)] transition-all duration-300">
@@ -214,10 +237,14 @@ function Home() {
             </div>
             <div>
               <h3 className="text-2xl font-display font-bold text-white">Raagam</h3>
-              <p className="text-xs text-[oklch(0.78_0.16_80)] font-semibold mt-0.5">The Sound of Dreams</p>
+              <p className="text-xs text-[oklch(0.78_0.16_80)] font-semibold mt-0.5">
+                The Sound of Dreams
+              </p>
             </div>
             <p className="text-xs text-muted-foreground leading-relaxed">
-              Every artist starts with a dream and a unique voice. Raagam represents the melodies, the creative spark, and the creative expression that define an independent band's sonic identity.
+              Every artist starts with a dream and a unique voice. Raagam represents the melodies,
+              the creative spark, and the creative expression that define an independent band's
+              sonic identity.
             </p>
           </div>
 
@@ -228,10 +255,14 @@ function Home() {
             </div>
             <div>
               <h3 className="text-2xl font-display font-bold text-white">Taalam</h3>
-              <p className="text-xs text-[oklch(0.60_0.22_25)] font-semibold mt-0.5">The Beat of Community</p>
+              <p className="text-xs text-[oklch(0.60_0.22_25)] font-semibold mt-0.5">
+                The Beat of Community
+              </p>
             </div>
             <p className="text-xs text-muted-foreground leading-relaxed">
-              Music is nothing without its rhythm and listeners. Taalam represents the heartbeat of the community — the venues, cafes, organizers, and fans that keep the independent movement in sync and alive.
+              Music is nothing without its rhythm and listeners. Taalam represents the heartbeat of
+              the community — the venues, cafes, organizers, and fans that keep the independent
+              movement in sync and alive.
             </p>
           </div>
 
@@ -242,10 +273,14 @@ function Home() {
             </div>
             <div>
               <h3 className="text-2xl font-display font-bold text-white">Pallavi</h3>
-              <p className="text-xs text-[oklch(0.62_0.22_290)] font-semibold mt-0.5">The Start of Every Artist</p>
+              <p className="text-xs text-[oklch(0.62_0.22_290)] font-semibold mt-0.5">
+                The Start of Every Artist
+              </p>
             </div>
             <p className="text-xs text-muted-foreground leading-relaxed">
-              The first verse that launches a thousand songs. Pallavi represents the ultimate platform — structured competitive tournaments, gigs, and professional support that launch bands from garage practice to national stages.
+              The first verse that launches a thousand songs. Pallavi represents the ultimate
+              platform — structured competitive tournaments, gigs, and professional support that
+              launch bands from garage practice to national stages.
             </p>
           </div>
         </div>
@@ -280,9 +315,9 @@ function Home() {
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-6">
           {/* Dynamic Approved Bands */}
           {dynBands.slice(0, 5).map((b) => (
-            <Link 
-              key={b.id} 
-              to="/bands/$bandId" 
+            <Link
+              key={b.id}
+              to="/bands/$bandId"
               params={{ bandId: b.id }}
               className="text-center group block"
             >
@@ -430,7 +465,9 @@ function Home() {
         />
         <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-background/80" />
         <div className="relative mx-auto max-w-7xl px-4 sm:px-6 py-24 text-center">
-          <h2 className="text-4xl md:text-5xl font-display font-bold text-white">Become a Partner</h2>
+          <h2 className="text-4xl md:text-5xl font-display font-bold text-white">
+            Become a Partner
+          </h2>
           <p className="mt-4 text-muted-foreground max-w-xl mx-auto text-sm">
             Join hands with Kalakshetra and be a part of India&apos;s live music revolution.
           </p>

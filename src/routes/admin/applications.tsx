@@ -1,29 +1,29 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState, useEffect } from "react";
 import { PageShell } from "@/components/layout/PageShell";
-import { 
-  db, 
-  type BandApplication, 
+import {
+  db,
+  type BandApplication,
   type VenueApplication,
   type ProductionHouseApplication,
   type SponsorApplication,
   type InfluencerApplication,
   type VolunteerApplication,
-  type EventManagerApplication
+  type EventManagerApplication,
 } from "@/lib/db";
-import { 
-  Check, 
-  X, 
-  Eye, 
-  Trash2, 
-  ShieldAlert, 
-  Instagram, 
-  Youtube, 
-  Music, 
-  User, 
-  Phone, 
-  Mail, 
-  MapPin, 
+import {
+  Check,
+  X,
+  Eye,
+  Trash2,
+  ShieldAlert,
+  Instagram,
+  Youtube,
+  Music,
+  User,
+  Phone,
+  Mail,
+  MapPin,
   Calendar,
   Building,
   Tv,
@@ -35,20 +35,26 @@ import {
   Plus,
   Lock,
   ChevronRight,
-  FileText
+  FileText,
+  AlertCircle,
 } from "lucide-react";
-import { getConfiguredOperatorCredentials, isOperatorSessionActive, setOperatorSessionActive, validateOperatorLogin } from "@/lib/security";
+import {
+  getConfiguredOperatorCredentials,
+  isOperatorSessionActive,
+  setOperatorSessionActive,
+  validateOperatorLogin,
+} from "@/lib/security";
+import bandImg from "@/assets/band-1.jpg";
 
 export const Route = createFileRoute("/admin/applications")({
   head: () => ({
-    meta: [
-      { title: "Operator Registry Dashboard — BPL" },
-    ],
+    meta: [{ title: "Operator Registry Dashboard — BPL" }],
   }),
   component: AdminApplicationsPage,
 });
 
-type RoleTab = "band" | "venue" | "production_house" | "sponsor" | "influencer" | "volunteer" | "event_manager";
+type RoleTab =
+  "band" | "venue" | "production_house" | "sponsor" | "influencer" | "volunteer" | "event_manager";
 
 const ROLE_LABELS: Record<RoleTab, string> = {
   band: "Bands / Artists",
@@ -110,13 +116,16 @@ function AdminApplicationsPage() {
     loadData();
   }, [activeTab, isAuthenticated]);
 
-  const handleStatusUpdate = async (id: string, status: "pending" | "approved" | "rejected" | "needs_changes") => {
+  const handleStatusUpdate = async (
+    id: string,
+    status: "pending" | "approved" | "rejected" | "needs_changes",
+  ) => {
     try {
       await db.updateApplicationStatus(activeTab, id, status);
       // Update local state
-      setApplications(prev => prev.map(app => app.id === id ? { ...app, status } : app));
+      setApplications((prev) => prev.map((app) => (app.id === id ? { ...app, status } : app)));
       if (selectedApp && selectedApp.id === id) {
-        setSelectedApp(prev => prev ? { ...prev, status } : null);
+        setSelectedApp((prev: any) => (prev ? { ...prev, status } : null));
       }
       alert(`Status updated to: ${status}`);
     } catch (err) {
@@ -126,7 +135,11 @@ function AdminApplicationsPage() {
   };
 
   const handleClearAll = async () => {
-    if (confirm("Are you absolutely sure you want to clear ALL data? This deletes all applications across all tables, all local drafts, and resets season statistics. This action is irreversible!")) {
+    if (
+      confirm(
+        "Are you absolutely sure you want to clear ALL data? This deletes all applications across all tables, all local drafts, and resets season statistics. This action is irreversible!",
+      )
+    ) {
       try {
         await db.clearAllData();
         await loadData();
@@ -139,7 +152,7 @@ function AdminApplicationsPage() {
     }
   };
 
-  const filteredApps = applications.filter(app => app.status === statusFilter);
+  const filteredApps = applications.filter((app) => app.status === statusFilter);
 
   // Render Password Gate if not authenticated
   if (!isAuthenticated) {
@@ -152,30 +165,40 @@ function AdminApplicationsPage() {
             </div>
             <div className="space-y-1">
               <h1 className="text-2xl font-display font-bold text-white">Operator Access Gate</h1>
-              <p className="text-xs text-muted-foreground">Enter password to manage BPL onboarding applications.</p>
+              <p className="text-xs text-muted-foreground">
+                Enter password to manage BPL onboarding applications.
+              </p>
             </div>
             <form onSubmit={handleLogin} className="space-y-4">
               <div className="space-y-1.5 text-left">
-                <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Login ID *</label>
-                <input 
+                <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">
+                  Login ID *
+                </label>
+                <input
                   type="text"
                   placeholder="Enter operator login ID"
                   value={loginId}
                   onChange={(e) => setLoginId(e.target.value)}
                   className="w-full bg-secondary border border-border rounded-md px-3.5 py-2.5 text-sm focus:outline-none focus:border-primary text-white mb-2"
                 />
-                <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Admin Password *</label>
-                <input 
+                <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">
+                  Admin Password *
+                </label>
+                <input
                   type="password"
                   placeholder="Enter operator password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   className="w-full bg-secondary border border-border rounded-md px-3.5 py-2.5 text-sm focus:outline-none focus:border-primary text-white"
                 />
-                {passError && <p className="text-red-500 text-xs mt-1 flex items-center gap-1"><AlertCircle size={12} /> {passError}</p>}
+                {passError && (
+                  <p className="text-red-500 text-xs mt-1 flex items-center gap-1">
+                    <AlertCircle size={12} /> {passError}
+                  </p>
+                )}
               </div>
-              <button 
-                type="submit" 
+              <button
+                type="submit"
                 className="w-full btn-primary btn-primary-hover py-2.5 rounded-md text-xs font-semibold text-white cursor-pointer"
               >
                 Authenticate Operator
@@ -190,7 +213,6 @@ function AdminApplicationsPage() {
   return (
     <PageShell>
       <div className="mx-auto max-w-7xl px-4 sm:px-6 py-12 space-y-8 animate-fade-in">
-        
         {/* Admin Header */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-border pb-6">
           <div>
@@ -202,7 +224,7 @@ function AdminApplicationsPage() {
               Review partner profiles, manage approval states, and wipe out BPL mock databases.
             </p>
           </div>
-          
+
           <button
             onClick={handleClearAll}
             className="flex items-center gap-1.5 px-4 py-2.5 rounded-md bg-red-950/40 hover:bg-red-900 border border-red-800 text-red-400 text-xs font-semibold transition cursor-pointer"
@@ -213,18 +235,19 @@ function AdminApplicationsPage() {
 
         {/* Dashboard Grid Layout */}
         <div className="grid lg:grid-cols-4 gap-8 items-start">
-          
           {/* Sidebar Navigation (Tabs) */}
           <div className="lg:col-span-1 space-y-4">
-            <h3 className="text-xs uppercase tracking-widest text-muted-foreground font-bold pl-1">Role Registry</h3>
+            <h3 className="text-xs uppercase tracking-widest text-muted-foreground font-bold pl-1">
+              Role Registry
+            </h3>
             <div className="flex flex-col bg-secondary/30 p-1.5 rounded-lg border border-border space-y-1">
               {(Object.keys(ROLE_LABELS) as RoleTab[]).map((tab) => (
                 <button
                   key={tab}
                   onClick={() => setActiveTab(tab)}
                   className={`w-full py-2.5 px-4 text-xs font-semibold rounded-md text-left transition ${
-                    activeTab === tab 
-                      ? "bg-primary text-primary-foreground shadow shadow-glow" 
+                    activeTab === tab
+                      ? "bg-primary text-primary-foreground shadow shadow-glow"
                       : "text-muted-foreground hover:text-foreground hover:bg-surface-elevated"
                   }`}
                 >
@@ -236,7 +259,6 @@ function AdminApplicationsPage() {
 
           {/* Center Column: List of Applications for current Role */}
           <div className="lg:col-span-1 space-y-4">
-            
             {/* Status Filter Tab Buttons */}
             <div className="flex bg-secondary p-1 rounded-lg border border-border">
               {["pending", "approved", "rejected", "needs_changes"].map((f) => (
@@ -244,8 +266,8 @@ function AdminApplicationsPage() {
                   key={f}
                   onClick={() => setStatusFilter(f)}
                   className={`flex-1 py-1.5 text-[9px] uppercase tracking-wider font-bold rounded transition ${
-                    statusFilter === f 
-                      ? "bg-primary/20 border border-primary/30 text-primary-glow" 
+                    statusFilter === f
+                      ? "bg-primary/20 border border-primary/30 text-primary-glow"
                       : "text-muted-foreground hover:text-foreground border border-transparent"
                   }`}
                 >
@@ -259,19 +281,25 @@ function AdminApplicationsPage() {
               <p className="text-[10px] uppercase font-bold text-muted-foreground pl-1 tracking-wider">
                 {ROLE_LABELS[activeTab]} ({filteredApps.length})
               </p>
-              
+
               {loading ? (
-                <p className="text-center py-6 text-xs text-muted-foreground">Loading applications...</p>
+                <p className="text-center py-6 text-xs text-muted-foreground">
+                  Loading applications...
+                </p>
               ) : filteredApps.length === 0 ? (
-                <p className="text-center py-12 text-xs text-muted-foreground">No {statusFilter} records.</p>
+                <p className="text-center py-12 text-xs text-muted-foreground">
+                  No {statusFilter} records.
+                </p>
               ) : (
                 <div className="divide-y divide-border/60">
                   {filteredApps.map((app) => (
-                    <div 
-                      key={app.id} 
+                    <div
+                      key={app.id}
                       onClick={() => setSelectedApp(app)}
                       className={`py-3 flex items-center justify-between cursor-pointer group transition px-2 rounded-md ${
-                        selectedApp?.id === app.id ? "bg-primary/15 border border-primary/20" : "hover:bg-surface-elevated border border-transparent"
+                        selectedApp?.id === app.id
+                          ? "bg-primary/15 border border-primary/20"
+                          : "hover:bg-surface-elevated border border-transparent"
                       }`}
                     >
                       <div className="min-w-0">
@@ -294,29 +322,37 @@ function AdminApplicationsPage() {
           <div className="lg:col-span-2">
             {selectedApp ? (
               <div className="bpl-card overflow-hidden animate-fade-in border-border bg-surface/30">
-                
                 {/* Header banner style details */}
                 <div className="bg-secondary/40 p-6 border-b border-border space-y-4">
                   <div className="flex flex-wrap items-start justify-between gap-3">
                     <div>
-                      <span className={`text-[9px] uppercase tracking-widest font-bold px-2 py-0.5 rounded border ${
-                        selectedApp.status === "approved" 
-                          ? "bg-emerald-500/20 text-emerald-400 border-emerald-500/30" 
-                          : selectedApp.status === "rejected"
-                            ? "bg-red-500/20 text-red-400 border-red-500/30"
-                            : selectedApp.status === "needs_changes"
-                              ? "bg-purple-500/20 text-purple-400 border-purple-500/30"
-                              : "bg-amber-500/20 text-amber-400 border-amber-500/30"
-                      }`}>
+                      <span
+                        className={`text-[9px] uppercase tracking-widest font-bold px-2 py-0.5 rounded border ${
+                          selectedApp.status === "approved"
+                            ? "bg-emerald-500/20 text-emerald-400 border-emerald-500/30"
+                            : selectedApp.status === "rejected"
+                              ? "bg-red-500/20 text-red-400 border-red-500/30"
+                              : selectedApp.status === "needs_changes"
+                                ? "bg-purple-500/20 text-purple-400 border-purple-500/30"
+                                : "bg-amber-500/20 text-amber-400 border-amber-500/30"
+                        }`}
+                      >
                         {selectedApp.status.toUpperCase()}
                       </span>
-                      
+
                       <h2 className="text-2xl font-display font-bold text-white mt-2">
-                        {selectedApp.band_name || selectedApp.venue_name || selectedApp.company_name || selectedApp.name}
+                        {selectedApp.band_name ||
+                          selectedApp.venue_name ||
+                          selectedApp.company_name ||
+                          selectedApp.name}
                       </h2>
-                      
+
                       <p className="text-xs text-muted-foreground mt-0.5">
-                        Role: <span className="text-primary-glow font-semibold capitalize">{activeTab.replace("_", " ")}</span> {selectedApp.role_type ? `(${selectedApp.role_type})` : ""}
+                        Role:{" "}
+                        <span className="text-primary-glow font-semibold capitalize">
+                          {activeTab.replace("_", " ")}
+                        </span>{" "}
+                        {selectedApp.role_type ? `(${selectedApp.role_type})` : ""}
                       </p>
                     </div>
 
@@ -329,33 +365,59 @@ function AdminApplicationsPage() {
 
                 {/* Details Contents depending on activeTab */}
                 <div className="p-6 space-y-6 max-h-[500px] overflow-y-auto">
-                  
                   {/* --- BAND DETAIL --- */}
                   {activeTab === "band" && (
                     <div className="space-y-4 text-xs">
                       {/* Image Preview */}
                       <div className="grid grid-cols-2 gap-4">
                         <div>
-                          <p className="text-muted-foreground uppercase tracking-wider mb-1">Avatar Preview</p>
-                          <img src={selectedApp.profile_image} className="h-16 w-16 rounded-full border border-border object-cover bg-slate-900" />
+                          <p className="text-muted-foreground uppercase tracking-wider mb-1">
+                            Avatar Preview
+                          </p>
+                          <img
+                            src={selectedApp.profile_image}
+                            className="h-16 w-16 rounded-full border border-border object-cover bg-slate-900"
+                          />
                         </div>
                         <div>
-                          <p className="text-muted-foreground uppercase tracking-wider mb-1">Banner Preview</p>
-                          <img src={selectedApp.banner_image} className="h-16 w-full rounded border border-border object-cover bg-slate-900" />
+                          <p className="text-muted-foreground uppercase tracking-wider mb-1">
+                            Banner Preview
+                          </p>
+                          <img
+                            src={selectedApp.banner_image}
+                            className="h-16 w-full rounded border border-border object-cover bg-slate-900"
+                          />
                         </div>
                       </div>
 
                       <div className="border-t border-border pt-3 grid grid-cols-2 gap-3 text-white/90">
-                        <div><span className="text-muted-foreground">Genre:</span> {selectedApp.genre} {selectedApp.custom_genre ? `(${selectedApp.custom_genre})` : ""}</div>
-                        <div><span className="text-muted-foreground">City:</span> {selectedApp.home_city}</div>
-                        <div><span className="text-muted-foreground">Formed:</span> {selectedApp.formed_year || "Unknown"}</div>
-                        <div><span className="text-muted-foreground">Originals/Covers:</span> {selectedApp.original_covers}</div>
-                        <div><span className="text-muted-foreground">Languages:</span> {selectedApp.languages || "N/A"}</div>
+                        <div>
+                          <span className="text-muted-foreground">Genre:</span> {selectedApp.genre}{" "}
+                          {selectedApp.custom_genre ? `(${selectedApp.custom_genre})` : ""}
+                        </div>
+                        <div>
+                          <span className="text-muted-foreground">City:</span>{" "}
+                          {selectedApp.home_city}
+                        </div>
+                        <div>
+                          <span className="text-muted-foreground">Formed:</span>{" "}
+                          {selectedApp.formed_year || "Unknown"}
+                        </div>
+                        <div>
+                          <span className="text-muted-foreground">Originals/Covers:</span>{" "}
+                          {selectedApp.original_covers}
+                        </div>
+                        <div>
+                          <span className="text-muted-foreground">Languages:</span>{" "}
+                          {selectedApp.languages || "N/A"}
+                        </div>
                       </div>
 
                       <div className="border-t border-border pt-3">
                         <p className="text-muted-foreground font-bold">Bio:</p>
-                        <p className="mt-1 text-white leading-relaxed italic">"{selectedApp.bio}"</p>
+                        <p className="mt-1 text-white leading-relaxed italic">
+                          "{selectedApp.bio}"
+                        </p>
                       </div>
 
                       {selectedApp.mission && (
@@ -368,14 +430,24 @@ function AdminApplicationsPage() {
                       {/* Lineup */}
                       {selectedApp.members && selectedApp.members.length > 0 && (
                         <div className="border-t border-border pt-3">
-                          <p className="text-muted-foreground font-bold mb-1.5">Lineup / Members:</p>
+                          <p className="text-muted-foreground font-bold mb-1.5">
+                            Lineup / Members:
+                          </p>
                           <div className="grid grid-cols-2 gap-2">
                             {selectedApp.members.map((m: any, i: number) => (
-                              <div key={i} className="flex items-center gap-2 p-1.5 bg-secondary/35 rounded border border-border">
-                                <img src={m.photo || bandImg} className="h-8 w-8 rounded-full object-cover shrink-0 bg-slate-800" />
+                              <div
+                                key={i}
+                                className="flex items-center gap-2 p-1.5 bg-secondary/35 rounded border border-border"
+                              >
+                                <img
+                                  src={m.photo || bandImg}
+                                  className="h-8 w-8 rounded-full object-cover shrink-0 bg-slate-800"
+                                />
                                 <div className="min-w-0">
                                   <p className="font-semibold truncate">{m.name}</p>
-                                  <p className="text-[10px] text-muted-foreground truncate">{m.role} {m.experience ? `(${m.experience})` : ""}</p>
+                                  <p className="text-[10px] text-muted-foreground truncate">
+                                    {m.role} {m.experience ? `(${m.experience})` : ""}
+                                  </p>
                                 </div>
                               </div>
                             ))}
@@ -387,23 +459,42 @@ function AdminApplicationsPage() {
                       {selectedApp.demo_track && (
                         <div className="border-t border-border pt-3">
                           <p className="text-muted-foreground font-bold mb-1.5">Demo Track:</p>
-                          <audio src={selectedApp.demo_track} controls className="w-full max-w-sm h-8" />
+                          <audio
+                            src={selectedApp.demo_track}
+                            controls
+                            className="w-full max-w-sm h-8"
+                          />
                         </div>
                       )}
 
                       {/* Social handles links */}
                       <div className="border-t border-border pt-3 space-y-1">
                         <p className="text-muted-foreground font-bold mb-1">Public Links:</p>
-                        <a href={selectedApp.instagram_url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-primary-glow hover:underline">
+                        <a
+                          href={selectedApp.instagram_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-2 text-primary-glow hover:underline"
+                        >
                           <Instagram size={12} /> Instagram Profile <Globe size={10} />
                         </a>
                         {selectedApp.youtube_url && (
-                          <a href={selectedApp.youtube_url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-primary-glow hover:underline">
+                          <a
+                            href={selectedApp.youtube_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center gap-2 text-primary-glow hover:underline"
+                          >
                             <Youtube size={12} /> YouTube Link <Globe size={10} />
                           </a>
                         )}
                         {selectedApp.spotify_url && (
-                          <a href={selectedApp.spotify_url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-primary-glow hover:underline">
+                          <a
+                            href={selectedApp.spotify_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center gap-2 text-primary-glow hover:underline"
+                          >
                             <Music size={12} /> Spotify Link <Globe size={10} />
                           </a>
                         )}
@@ -415,17 +506,34 @@ function AdminApplicationsPage() {
                   {activeTab === "venue" && (
                     <div className="space-y-4 text-xs text-white/95">
                       <div className="grid grid-cols-2 gap-3 border-b border-border pb-3">
-                        <div><span className="text-muted-foreground">Type:</span> <span className="capitalize">{selectedApp.type}</span></div>
-                        <div><span className="text-muted-foreground">Capacity:</span> {selectedApp.capacity}</div>
-                        <div><span className="text-muted-foreground">Stage Size:</span> {selectedApp.stage_size || "N/A"}</div>
-                        <div><span className="text-muted-foreground">Owner:</span> {selectedApp.owner_name}</div>
+                        <div>
+                          <span className="text-muted-foreground">Type:</span>{" "}
+                          <span className="capitalize">{selectedApp.type}</span>
+                        </div>
+                        <div>
+                          <span className="text-muted-foreground">Capacity:</span>{" "}
+                          {selectedApp.capacity}
+                        </div>
+                        <div>
+                          <span className="text-muted-foreground">Stage Size:</span>{" "}
+                          {selectedApp.stage_size || "N/A"}
+                        </div>
+                        <div>
+                          <span className="text-muted-foreground">Owner:</span>{" "}
+                          {selectedApp.owner_name}
+                        </div>
                       </div>
 
                       <div>
                         <span className="text-muted-foreground font-bold">Street Address:</span>
                         <p className="mt-1">{selectedApp.address}</p>
                         {selectedApp.maps_link && (
-                          <a href={selectedApp.maps_link} target="_blank" rel="noopener noreferrer" className="text-primary-glow hover:underline block mt-1">
+                          <a
+                            href={selectedApp.maps_link}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-primary-glow hover:underline block mt-1"
+                          >
                             View on Google Maps <Globe size={10} className="inline ml-0.5" />
                           </a>
                         )}
@@ -433,31 +541,42 @@ function AdminApplicationsPage() {
 
                       {/* Facilities */}
                       <div className="border-t border-border pt-3">
-                        <span className="text-muted-foreground font-bold mb-1.5 block">Facilities:</span>
+                        <span className="text-muted-foreground font-bold mb-1.5 block">
+                          Facilities:
+                        </span>
                         <div className="flex flex-wrap gap-1.5">
                           {Object.entries(selectedApp.facilities || {}).map(([key, val]) => {
                             if (key === "details" || !val) return null;
                             return (
-                              <span key={key} className="bg-secondary px-2 py-0.5 rounded border border-border text-[9px] uppercase tracking-wider">
+                              <span
+                                key={key}
+                                className="bg-secondary px-2 py-0.5 rounded border border-border text-[9px] uppercase tracking-wider"
+                              >
                                 {key.replace("_", " ")}
                               </span>
                             );
                           })}
                         </div>
                         {selectedApp.facilities?.details && (
-                          <p className="mt-2 text-muted-foreground bg-secondary/30 p-2 rounded border border-border">{selectedApp.facilities.details}</p>
+                          <p className="mt-2 text-muted-foreground bg-secondary/30 p-2 rounded border border-border">
+                            {selectedApp.facilities.details}
+                          </p>
                         )}
                       </div>
 
                       {/* Pricing Availability */}
                       <div className="border-t border-border pt-3 grid grid-cols-2 gap-3">
                         <div>
-                          <span className="text-muted-foreground font-bold">Pricing/Rev Terms:</span>
+                          <span className="text-muted-foreground font-bold">
+                            Pricing/Rev Terms:
+                          </span>
                           <p className="mt-0.5">{selectedApp.pricing || "N/A"}</p>
                         </div>
                         <div>
                           <span className="text-muted-foreground font-bold">Days Available:</span>
-                          <p className="mt-0.5">{selectedApp.availability?.days?.join(", ") || "N/A"}</p>
+                          <p className="mt-0.5">
+                            {selectedApp.availability?.days?.join(", ") || "N/A"}
+                          </p>
                         </div>
                       </div>
                     </div>
@@ -472,23 +591,54 @@ function AdminApplicationsPage() {
                       </div>
 
                       <div className="border-t border-border pt-3 grid grid-cols-2 gap-3">
-                        <div><span className="text-muted-foreground">Investment Cap:</span> {selectedApp.investment_capacity || "N/A"}</div>
-                        <div><span className="text-muted-foreground">Operating Cities:</span> {selectedApp.cities_of_operation || "N/A"}</div>
-                        <div><span className="text-muted-foreground">Genres:</span> {selectedApp.genres_of_interest?.join(", ") || "N/A"}</div>
+                        <div>
+                          <span className="text-muted-foreground">Investment Cap:</span>{" "}
+                          {selectedApp.investment_capacity || "N/A"}
+                        </div>
+                        <div>
+                          <span className="text-muted-foreground">Operating Cities:</span>{" "}
+                          {selectedApp.cities_of_operation || "N/A"}
+                        </div>
+                        <div>
+                          <span className="text-muted-foreground">Genres:</span>{" "}
+                          {selectedApp.genres_of_interest?.join(", ") || "N/A"}
+                        </div>
                       </div>
 
                       {selectedApp.past_artists && selectedApp.past_artists.length > 0 && (
                         <div className="border-t border-border pt-3">
-                          <span className="text-muted-foreground font-bold">Past Artists Worked With:</span>
+                          <span className="text-muted-foreground font-bold">
+                            Past Artists Worked With:
+                          </span>
                           <p className="mt-0.5">{selectedApp.past_artists.join(", ")}</p>
                         </div>
                       )}
-                      
+
                       {(selectedApp.website_url || selectedApp.instagram_url) && (
                         <div className="border-t border-border pt-3 space-y-1">
-                          <span className="text-muted-foreground font-bold block mb-1">Company Links:</span>
-                          {selectedApp.website_url && <a href={selectedApp.website_url} target="_blank" rel="noopener noreferrer" className="text-primary-glow hover:underline block"><Globe size={11} className="inline mr-1" /> Website</a>}
-                          {selectedApp.instagram_url && <a href={selectedApp.instagram_url} target="_blank" rel="noopener noreferrer" className="text-primary-glow hover:underline block"><Instagram size={11} className="inline mr-1" /> Instagram</a>}
+                          <span className="text-muted-foreground font-bold block mb-1">
+                            Company Links:
+                          </span>
+                          {selectedApp.website_url && (
+                            <a
+                              href={selectedApp.website_url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-primary-glow hover:underline block"
+                            >
+                              <Globe size={11} className="inline mr-1" /> Website
+                            </a>
+                          )}
+                          {selectedApp.instagram_url && (
+                            <a
+                              href={selectedApp.instagram_url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-primary-glow hover:underline block"
+                            >
+                              <Instagram size={11} className="inline mr-1" /> Instagram
+                            </a>
+                          )}
                         </div>
                       )}
                     </div>
@@ -498,18 +648,28 @@ function AdminApplicationsPage() {
                   {activeTab === "sponsor" && (
                     <div className="space-y-4 text-xs text-white/95">
                       <div className="grid grid-cols-2 gap-3 border-b border-border pb-3">
-                        <div><span className="text-muted-foreground">Industry:</span> {selectedApp.industry || "N/A"}</div>
-                        <div><span className="text-muted-foreground">Budget:</span> {selectedApp.budget_range || "N/A"}</div>
+                        <div>
+                          <span className="text-muted-foreground">Industry:</span>{" "}
+                          {selectedApp.industry || "N/A"}
+                        </div>
+                        <div>
+                          <span className="text-muted-foreground">Budget:</span>{" "}
+                          {selectedApp.budget_range || "N/A"}
+                        </div>
                       </div>
-                      
+
                       <div>
                         <span className="text-muted-foreground font-bold">Campaign Goals:</span>
-                        <p className="mt-1 leading-relaxed">{selectedApp.campaign_goals || "N/A"}</p>
+                        <p className="mt-1 leading-relaxed">
+                          {selectedApp.campaign_goals || "N/A"}
+                        </p>
                       </div>
 
                       <div>
                         <span className="text-muted-foreground font-bold">Target Audience:</span>
-                        <p className="mt-1 leading-relaxed">{selectedApp.preferred_audience || "N/A"}</p>
+                        <p className="mt-1 leading-relaxed">
+                          {selectedApp.preferred_audience || "N/A"}
+                        </p>
                       </div>
 
                       {selectedApp.preferred_cities && selectedApp.preferred_cities.length > 0 && (
@@ -525,15 +685,35 @@ function AdminApplicationsPage() {
                   {activeTab === "influencer" && (
                     <div className="space-y-4 text-xs text-white/95">
                       <div className="grid grid-cols-2 gap-3 border-b border-border pb-3">
-                        <div><span className="text-muted-foreground">Instagram:</span> <a href={`https://instagram.com/${selectedApp.instagram_handle.replace("@", "")}`} target="_blank" className="text-primary-glow hover:underline">@{selectedApp.instagram_handle.replace("@", "")}</a></div>
-                        <div><span className="text-muted-foreground">Followers:</span> {selectedApp.follower_count}</div>
-                        <div><span className="text-muted-foreground">Engagement Rate:</span> {selectedApp.engagement_rate || "N/A"}</div>
-                        <div><span className="text-muted-foreground">Category:</span> {selectedApp.category || "N/A"}</div>
+                        <div>
+                          <span className="text-muted-foreground">Instagram:</span>{" "}
+                          <a
+                            href={`https://instagram.com/${selectedApp.instagram_handle.replace("@", "")}`}
+                            target="_blank"
+                            className="text-primary-glow hover:underline"
+                          >
+                            @{selectedApp.instagram_handle.replace("@", "")}
+                          </a>
+                        </div>
+                        <div>
+                          <span className="text-muted-foreground">Followers:</span>{" "}
+                          {selectedApp.follower_count}
+                        </div>
+                        <div>
+                          <span className="text-muted-foreground">Engagement Rate:</span>{" "}
+                          {selectedApp.engagement_rate || "N/A"}
+                        </div>
+                        <div>
+                          <span className="text-muted-foreground">Category:</span>{" "}
+                          {selectedApp.category || "N/A"}
+                        </div>
                       </div>
 
                       {selectedApp.audience_demographics && (
                         <div>
-                          <span className="text-muted-foreground font-bold">Audience Demographics:</span>
+                          <span className="text-muted-foreground font-bold">
+                            Audience Demographics:
+                          </span>
                           <p className="mt-0.5">{selectedApp.audience_demographics}</p>
                         </div>
                       )}
@@ -541,7 +721,9 @@ function AdminApplicationsPage() {
                       {selectedApp.past_campaigns && (
                         <div>
                           <span className="text-muted-foreground font-bold">Past Campaigns:</span>
-                          <p className="mt-1 leading-relaxed bg-secondary/30 p-2 rounded border border-border">{selectedApp.past_campaigns}</p>
+                          <p className="mt-1 leading-relaxed bg-secondary/30 p-2 rounded border border-border">
+                            {selectedApp.past_campaigns}
+                          </p>
                         </div>
                       )}
                     </div>
@@ -552,34 +734,58 @@ function AdminApplicationsPage() {
                     <div className="space-y-4 text-xs text-white/95">
                       {selectedApp.photo && (
                         <div>
-                          <p className="text-muted-foreground uppercase tracking-wider mb-1">Creative Headshot</p>
-                          <img src={selectedApp.photo} className="h-16 w-16 rounded border border-border object-cover bg-slate-900" />
+                          <p className="text-muted-foreground uppercase tracking-wider mb-1">
+                            Creative Headshot
+                          </p>
+                          <img
+                            src={selectedApp.photo}
+                            className="h-16 w-16 rounded border border-border object-cover bg-slate-900"
+                          />
                         </div>
                       )}
-                      
+
                       <div className="grid grid-cols-2 gap-3 border-b border-border pb-3">
-                        <div><span className="text-muted-foreground">Role Type:</span> <span className="capitalize text-primary-glow font-semibold">{selectedApp.role_type}</span></div>
-                        <div><span className="text-muted-foreground">Operating City:</span> {selectedApp.city}</div>
-                        <div><span className="text-muted-foreground">Availability:</span> {selectedApp.availability || "N/A"}</div>
+                        <div>
+                          <span className="text-muted-foreground">Role Type:</span>{" "}
+                          <span className="capitalize text-primary-glow font-semibold">
+                            {selectedApp.role_type}
+                          </span>
+                        </div>
+                        <div>
+                          <span className="text-muted-foreground">Operating City:</span>{" "}
+                          {selectedApp.city}
+                        </div>
+                        <div>
+                          <span className="text-muted-foreground">Availability:</span>{" "}
+                          {selectedApp.availability || "N/A"}
+                        </div>
                       </div>
 
                       {selectedApp.skills && (
                         <div>
-                          <span className="text-muted-foreground font-bold">Skills / Tech Stack:</span>
+                          <span className="text-muted-foreground font-bold">
+                            Skills / Tech Stack:
+                          </span>
                           <p className="mt-0.5 text-white">{selectedApp.skills}</p>
                         </div>
                       )}
 
                       {selectedApp.experience && (
                         <div>
-                          <span className="text-muted-foreground font-bold">Experience / Portfolio:</span>
-                          <p className="mt-1 leading-relaxed bg-secondary/30 p-2 rounded border border-border">{selectedApp.experience}</p>
+                          <span className="text-muted-foreground font-bold">
+                            Experience / Portfolio:
+                          </span>
+                          <p className="mt-1 leading-relaxed bg-secondary/30 p-2 rounded border border-border">
+                            {selectedApp.experience}
+                          </p>
                         </div>
                       )}
 
                       {selectedApp.interests && (
                         <div>
-                          <span className="text-muted-foreground font-bold">Why BPL Interests Them:</span>
+                          <span className="text-muted-foreground font-bold">
+                            Why BPL Interests Them:
+                          </span>
                           <p className="mt-1 leading-relaxed italic">"{selectedApp.interests}"</p>
                         </div>
                       )}
@@ -590,14 +796,24 @@ function AdminApplicationsPage() {
                   {activeTab === "event_manager" && (
                     <div className="space-y-4 text-xs text-white/95">
                       <div className="grid grid-cols-2 gap-3 border-b border-border pb-3">
-                        <div><span className="text-muted-foreground">Core Team Size:</span> {selectedApp.team_size || "N/A"}</div>
-                        <div><span className="text-muted-foreground">Execution Cities:</span> {selectedApp.cities?.join(", ") || "N/A"}</div>
+                        <div>
+                          <span className="text-muted-foreground">Core Team Size:</span>{" "}
+                          {selectedApp.team_size || "N/A"}
+                        </div>
+                        <div>
+                          <span className="text-muted-foreground">Execution Cities:</span>{" "}
+                          {selectedApp.cities?.join(", ") || "N/A"}
+                        </div>
                       </div>
 
                       {selectedApp.past_events && (
                         <div>
-                          <span className="text-muted-foreground font-bold">Past Gigs managed:</span>
-                          <p className="mt-1 leading-relaxed bg-secondary/30 p-2 rounded border border-border">{selectedApp.past_events}</p>
+                          <span className="text-muted-foreground font-bold">
+                            Past Gigs managed:
+                          </span>
+                          <p className="mt-1 leading-relaxed bg-secondary/30 p-2 rounded border border-border">
+                            {selectedApp.past_events}
+                          </p>
                         </div>
                       )}
                     </div>
@@ -605,18 +821,31 @@ function AdminApplicationsPage() {
 
                   {/* Unified Contact info details */}
                   <div className="border-t border-border pt-4">
-                    <p className="text-red-400 font-bold uppercase tracking-wider text-[10px] mb-2">Private Contacts (Operator view only)</p>
+                    <p className="text-red-400 font-bold uppercase tracking-wider text-[10px] mb-2">
+                      Private Contacts (Operator view only)
+                    </p>
                     <div className="grid sm:grid-cols-2 gap-2 text-xs text-muted-foreground bg-secondary/20 p-3 rounded border border-border">
-                      <div><span className="text-white/60">Primary Contact:</span> {selectedApp.contact_name || selectedApp.name}</div>
-                      {selectedApp.manager_name && <div><span className="text-white/60">Manager Name:</span> {selectedApp.manager_name}</div>}
-                      <div><span className="text-white/60">Phone:</span> {selectedApp.contact_phone}</div>
-                      <div><span className="text-white/60">Email:</span> {selectedApp.contact_email}</div>
+                      <div>
+                        <span className="text-white/60">Primary Contact:</span>{" "}
+                        {selectedApp.contact_name || selectedApp.name}
+                      </div>
+                      {selectedApp.manager_name && (
+                        <div>
+                          <span className="text-white/60">Manager Name:</span>{" "}
+                          {selectedApp.manager_name}
+                        </div>
+                      )}
+                      <div>
+                        <span className="text-white/60">Phone:</span> {selectedApp.contact_phone}
+                      </div>
+                      <div>
+                        <span className="text-white/60">Email:</span> {selectedApp.contact_email}
+                      </div>
                     </div>
                   </div>
 
                   {/* Action buttons */}
                   <div className="border-t border-border pt-4 flex flex-wrap gap-2 justify-end">
-                    
                     {selectedApp.status !== "approved" && (
                       <button
                         onClick={() => handleStatusUpdate(selectedApp.id, "approved")}
@@ -625,7 +854,7 @@ function AdminApplicationsPage() {
                         <Check size={13} /> Approve Application
                       </button>
                     )}
-                    
+
                     {selectedApp.status !== "needs_changes" && (
                       <button
                         onClick={() => handleStatusUpdate(selectedApp.id, "needs_changes")}
@@ -644,21 +873,19 @@ function AdminApplicationsPage() {
                       </button>
                     )}
                   </div>
-
                 </div>
-
               </div>
             ) : (
               <div className="bpl-card p-12 text-center text-muted-foreground border-dashed border-border/80">
-                < Eye size={36} className="mx-auto text-muted-foreground/30 mb-2" />
+                <Eye size={36} className="mx-auto text-muted-foreground/30 mb-2" />
                 <p className="text-sm font-semibold">No Application Selected</p>
-                <p className="text-xs text-muted-foreground/60 mt-1">Select an application from the role list to evaluate its specifications.</p>
+                <p className="text-xs text-muted-foreground/60 mt-1">
+                  Select an application from the role list to evaluate its specifications.
+                </p>
               </div>
             )}
           </div>
-
         </div>
-
       </div>
     </PageShell>
   );
