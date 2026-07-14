@@ -25,7 +25,8 @@ export function SiteHeader() {
 
   useEffect(() => {
     if (typeof window !== "undefined") {
-      setOnboarded(localStorage.getItem("bpl_user_onboarded") === "true");
+      const hasAccount = db.getCurrentAccount() !== null;
+      setOnboarded(localStorage.getItem("bpl_user_onboarded") === "true" || hasAccount);
       setIsAdmin(isOperatorSessionActive() || window.location.pathname.startsWith("/admin"));
       setUser(db.getCurrentUser());
     }

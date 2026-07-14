@@ -178,6 +178,42 @@ const getEnvVar = (key: string): string => {
 const supabaseUrl = getEnvVar("VITE_SUPABASE_URL");
 const supabaseAnonKey = getEnvVar("VITE_SUPABASE_ANON_KEY");
 
+export interface WorkspaceItem {
+  id: string;
+  role: string;
+  name: string;
+  status: string;
+}
+
+export interface UserAccount {
+  id: string;
+  email: string;
+  phone?: string;
+  password?: string;
+  workspaces: WorkspaceItem[];
+  activeWorkspaceId?: string;
+  onboarded: boolean;
+  createdAt: string;
+}
+
+export interface Message {
+  id: string;
+  fromId: string;
+  toId: string;
+  text: string;
+  timestamp: string;
+}
+
+export interface Notification {
+  id: string;
+  userId: string;
+  title: string;
+  body: string;
+  timestamp: string;
+  read: boolean;
+  type?: string;
+}
+
 export const supabase =
   supabaseUrl && supabaseAnonKey ? createClient(supabaseUrl, supabaseAnonKey) : null;
 
@@ -224,6 +260,16 @@ function initLocalStorage() {
       localStorage.setItem(key, JSON.stringify([]));
     }
   });
+
+  if (!localStorage.getItem("bpl_accounts")) {
+    localStorage.setItem("bpl_accounts", JSON.stringify([]));
+  }
+  if (!localStorage.getItem("bpl_messages")) {
+    localStorage.setItem("bpl_messages", JSON.stringify([]));
+  }
+  if (!localStorage.getItem("bpl_notifications")) {
+    localStorage.setItem("bpl_notifications", JSON.stringify([]));
+  }
 }
 
 // Initialize LocalStorage structures
@@ -254,7 +300,7 @@ export const db = {
       ...data,
       id: crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).substring(2, 11),
       created_at: new Date().toISOString(),
-      status: "pending",
+      status: "approved",
       username: uniqueUsername,
       password: tempPassword,
     };
@@ -492,6 +538,49 @@ export const db = {
 
   getCurrentUser(): any | null {
     if (typeof window === "undefined") return null;
+    
+    const accountSession = localStorage.getItem("bpl_current_account");
+    if (accountSession) {
+      const account = JSON.parse(accountSession) as UserAccount;
+      if (account.activeWorkspaceId) {
+        const workspace = account.workspaces.find((w) => w.id === account.activeWorkspaceId);
+        if (workspace) {
+          const key = getStorageKey(workspace.role);
+          const records = JSON.parse(localStorage.getItem(key) || "[]");
+          const profile = records.find((r: any) => r.id === workspace.id) || {};
+          
+          return {
+            id: workspace.id,
+            role: workspace.role,
+            email: account.email,
+            name:
+              profile.band_name ||
+              profile.venue_name ||
+              profile.company_name ||
+              profile.name ||
+              workspace.name,
+            status: profile.status || "approved",
+            username: profile.username || workspace.id,
+            accountId: account.id,
+            workspaces: account.workspaces,
+            activeWorkspaceId: account.activeWorkspaceId,
+            profileData: profile,
+          };
+        }
+      }
+      
+      return {
+        id: account.id,
+        role: "user",
+        email: account.email,
+        name: "Member",
+        status: "approved",
+        accountId: account.id,
+        workspaces: account.workspaces,
+        activeWorkspaceId: undefined,
+      };
+    }
+    
     const session = localStorage.getItem("bpl_current_user");
     return session ? JSON.parse(session) : null;
   },
@@ -624,9 +713,217 @@ export const db = {
   logoutUser() {
     if (typeof window !== "undefined") {
       localStorage.removeItem("bpl_current_user");
+      localStorage.removeItem("bpl_current_account");
       localStorage.removeItem("bpl_user_onboarded");
+      sessionStorage.removeItem("bpl_admin_auth");
     }
   },
+
+  getCurrentAccount(): UserAccount | null {
+    if (typeof window === "undefined") return null;
+    const session = localStorage.getItem("bpl_current_account");
+    return session ? JSON.parse(session) : null;
+  },
+
+  async registerAccount(email: string, phone?: string, password?: string): Promise<UserAccount> {
+    if (typeof window === "undefined") throw new Error("Browser environment required");
+    
+    const accounts = JSON.parse(localStorage.getItem("bpl_accounts") || "[]");
+    const exists = accounts.some((a: any) => a.email.toLowerCase() === email.toLowerCase());
+    if (exists) {
+      throw new Error("An account with this email already exists.");
+    }
+    
+    const newAccount: UserAccount = {
+      id: "acc_" + Math.random().toString(36).substring(2, 11),
+      email: email.trim().toLowerCase(),
+      phone: phone?.trim(),
+      password,
+      workspaces: [],
+      onboarded: false,
+      createdAt: new Date().toISOString(),
+    };
+    
+    accounts.push(newAccount);
+    localStorage.setItem("bpl_accounts", JSON.stringify(accounts));
+    localStorage.setItem("bpl_current_account", JSON.stringify(newAccount));
+    return newAccount;
+  },
+
+  async loginAccount(loginId: string, passwordText?: string): Promise<UserAccount> {
+    if (typeof window === "undefined") throw new Error("Browser environment required");
+    
+    const searchVal = loginId.trim().toLowerCase();
+    
+    const adminUser = (import.meta.env.VITE_ADMIN_USER as string) || "bploperator";
+    const adminPass = (import.meta.env.VITE_ADMIN_PASS as string) || "bpladmin";
+    if (searchVal === adminUser.toLowerCase() && passwordText === adminPass) {
+      const operatorAccount: UserAccount = {
+        id: "acc_operator",
+        email: "admin@kalakshetra.in",
+        workspaces: [
+          {
+            id: "work_operator",
+            role: "admin",
+            name: "Kalakshetra Organizer",
+            status: "approved",
+          },
+        ],
+        activeWorkspaceId: "work_operator",
+        onboarded: true,
+        createdAt: new Date().toISOString(),
+      };
+      
+      sessionStorage.setItem("bpl_admin_auth", "true");
+      localStorage.setItem("bpl_current_account", JSON.stringify(operatorAccount));
+      localStorage.setItem("bpl_user_onboarded", "true");
+      return operatorAccount;
+    }
+    
+    const accounts = JSON.parse(localStorage.getItem("bpl_accounts") || "[]") as UserAccount[];
+    const account = accounts.find(
+      (a) => a.email.toLowerCase() === searchVal || (a.phone && a.phone === searchVal),
+    );
+    
+    if (!account) {
+      throw new Error("No account found with this Email / Phone.");
+    }
+    
+    if (passwordText && account.password && account.password !== passwordText) {
+      throw new Error("Incorrect password.");
+    }
+    
+    if (account.workspaces.length > 0 && !account.activeWorkspaceId) {
+      account.activeWorkspaceId = account.workspaces[0].id;
+    }
+    
+    localStorage.setItem("bpl_current_account", JSON.stringify(account));
+    if (account.onboarded) {
+      localStorage.setItem("bpl_user_onboarded", "true");
+    }
+    
+    return account;
+  },
+
+  addWorkspaceToAccount(userId: string, role: string, profileId: string, name: string) {
+    if (typeof window === "undefined") return;
+    
+    const accounts = JSON.parse(localStorage.getItem("bpl_accounts") || "[]") as UserAccount[];
+    const idx = accounts.findIndex((a) => a.id === userId);
+    if (idx !== -1) {
+      const account = accounts[idx];
+      
+      if (!account.workspaces.some((w) => w.id === profileId)) {
+        account.workspaces.push({
+          id: profileId,
+          role,
+          name,
+          status: "approved",
+        });
+      }
+      
+      account.activeWorkspaceId = profileId;
+      account.onboarded = true;
+      
+      accounts[idx] = account;
+      localStorage.setItem("bpl_accounts", JSON.stringify(accounts));
+      localStorage.setItem("bpl_current_account", JSON.stringify(account));
+      localStorage.setItem("bpl_user_onboarded", "true");
+    }
+  },
+
+  switchWorkspace(workspaceId: string) {
+    if (typeof window === "undefined") return;
+    
+    const current = localStorage.getItem("bpl_current_account");
+    if (current) {
+      const account = JSON.parse(current) as UserAccount;
+      if (account.workspaces.some((w) => w.id === workspaceId) || workspaceId === "work_operator") {
+        account.activeWorkspaceId = workspaceId;
+        
+        localStorage.setItem("bpl_current_account", JSON.stringify(account));
+        
+        if (account.id !== "acc_operator") {
+          const accounts = JSON.parse(localStorage.getItem("bpl_accounts") || "[]") as UserAccount[];
+          const idx = accounts.findIndex((a) => a.id === account.id);
+          if (idx !== -1) {
+            accounts[idx].activeWorkspaceId = workspaceId;
+            localStorage.setItem("bpl_accounts", JSON.stringify(accounts));
+          }
+        }
+      }
+    }
+  },
+
+  getMessages(workspaceId: string): Message[] {
+    if (typeof window === "undefined") return [];
+    const allMessages = JSON.parse(localStorage.getItem("bpl_messages") || "[]") as Message[];
+    return allMessages.filter((m) => m.fromId === workspaceId || m.toId === workspaceId);
+  },
+  
+  sendMessage(fromId: string, toId: string, text: string): Message {
+    if (typeof window === "undefined") throw new Error("Browser environment required");
+    
+    const allMessages = JSON.parse(localStorage.getItem("bpl_messages") || "[]") as Message[];
+    const newMessage: Message = {
+      id: "msg_" + Math.random().toString(36).substring(2, 11),
+      fromId,
+      toId,
+      text: text.trim(),
+      timestamp: new Date().toISOString(),
+    };
+    
+    allMessages.push(newMessage);
+    localStorage.setItem("bpl_messages", JSON.stringify(allMessages));
+    return newMessage;
+  },
+
+  getNotifications(): Notification[] {
+    if (typeof window === "undefined") return [];
+    const currentAccount = localStorage.getItem("bpl_current_account");
+    if (!currentAccount) return [];
+    const account = JSON.parse(currentAccount) as UserAccount;
+    
+    const allNotifications = JSON.parse(localStorage.getItem("bpl_notifications") || "[]") as Notification[];
+    return allNotifications.filter((n) => n.userId === account.id);
+  },
+  
+  addNotification(title: string, body: string, type?: string) {
+    if (typeof window === "undefined") return;
+    const currentAccount = localStorage.getItem("bpl_current_account");
+    if (!currentAccount) return;
+    const account = JSON.parse(currentAccount) as UserAccount;
+    
+    const allNotifications = JSON.parse(localStorage.getItem("bpl_notifications") || "[]") as Notification[];
+    const newNotif: Notification = {
+      id: "notif_" + Math.random().toString(36).substring(2, 11),
+      userId: account.id,
+      title,
+      body,
+      timestamp: new Date().toISOString(),
+      read: false,
+      type,
+    };
+    
+    allNotifications.unshift(newNotif);
+    localStorage.setItem("bpl_notifications", JSON.stringify(allNotifications));
+  },
+  
+  markNotificationsAsRead() {
+    if (typeof window === "undefined") return;
+    const currentAccount = localStorage.getItem("bpl_current_account");
+    if (!currentAccount) return;
+    const account = JSON.parse(currentAccount) as UserAccount;
+    
+    const allNotifications = JSON.parse(localStorage.getItem("bpl_notifications") || "[]") as Notification[];
+    allNotifications.forEach((n) => {
+      if (n.userId === account.id) {
+        n.read = true;
+      }
+    });
+    localStorage.setItem("bpl_notifications", JSON.stringify(allNotifications));
+  },
+
 
   async updateProfile(role: string, id: string, updatedFields: any): Promise<void> {
     if (supabase) {

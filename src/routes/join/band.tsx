@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState, useRef, useEffect } from "react";
 import { PageShell } from "@/components/layout/PageShell";
 import {
@@ -21,6 +21,7 @@ import {
   HelpCircle,
   FileText,
   DollarSign,
+  ArrowRight,
 } from "lucide-react";
 import { db, type BandMember } from "@/lib/db";
 
@@ -36,8 +37,16 @@ export const Route = createFileRoute("/join/band")({
 const GENRES = ["Rock", "Indie", "Folk", "Metal", "Pop", "Alternative", "Hip-Hop", "Other"];
 
 function BandOnboardingPage() {
+  const navigate = useNavigate();
   const { type } = Route.useSearch();
   const isSolo = type === "solo";
+
+  useEffect(() => {
+    const currentAccount = db.getCurrentAccount();
+    if (!currentAccount) {
+      navigate({ to: "/login" });
+    }
+  }, [navigate]);
 
   const [step, setStep] = useState(1);
   const [isSubmitted, setIsSubmitted] = useState(false);
@@ -527,13 +536,18 @@ function BandOnboardingPage() {
         manager_name: managerName || undefined,
       });
 
-      if (result) {
-        setCredentials({ username: result.username, password: result.password });
+      const currentAccount = db.getCurrentAccount();
+      if (result && currentAccount) {
+        db.addWorkspaceToAccount(
+          currentAccount.id,
+          type === "solo" ? "solo" : "band",
+          result.id,
+          bandName,
+        );
       }
 
       // Clear draft on successful submit
       localStorage.removeItem(`bpl_draft_${type}`);
-      localStorage.setItem("bpl_user_onboarded", "true");
       setIsSubmitted(true);
     } catch (err) {
       const error = err as Error;
@@ -555,123 +569,19 @@ function BandOnboardingPage() {
 
             <div className="space-y-2">
               <h1 className="text-3xl sm:text-4xl font-display font-bold">
-                Application Submitted!
+                Workspace Created!
               </h1>
               <p className="text-muted-foreground max-w-md mx-auto text-sm leading-relaxed">
-                Your application has been logged and is pending league approval. Review stages:
+                Your new {isSolo ? "Solo Artist" : "Band"} workspace has been successfully registered and is now live.
               </p>
             </div>
 
-            {/* Review Stages Timeline */}
-            <div className="max-w-md mx-auto bg-surface/50 border border-border p-6 rounded-lg text-left space-y-4">
-              {[
-                {
-                  label: "Application Submitted",
-                  desc: "Your files have been saved to the Kalakshetra registry.",
-                  done: true,
-                },
-                {
-                  label: "Verification",
-                  desc: "Kalakshetra staff checks links and contact credentials.",
-                  done: false,
-                },
-                {
-                  label: "Evaluation & Selection",
-                  desc: "Review of musical style, demo performance video and bio details.",
-                  done: false,
-                },
-                {
-                  label: "League Approval",
-                  desc: "Kalakshetra operations team formally signs off on registry entry.",
-                  done: false,
-                },
-                {
-                  label: "Official Registration",
-                  desc: "Kalakshetra ID created and profile published live on the directory.",
-                  done: false,
-                },
-              ].map((stage, idx) => (
-                <div key={stage.label} className="flex gap-4 relative">
-                  {idx < 4 && (
-                    <div className="absolute left-[11px] top-6 w-[2px] h-[calc(100%-8px)] bg-border" />
-                  )}
-                  <div
-                    className={`h-6 w-6 rounded-full shrink-0 border flex items-center justify-center text-xs font-semibold ${
-                      stage.done
-                        ? "bg-primary border-primary text-primary-foreground"
-                        : "bg-surface border-border text-muted-foreground"
-                    }`}
-                  >
-                    {idx + 1}
-                  </div>
-                  <div>
-                    <h4
-                      className={`text-xs font-bold ${stage.done ? "text-primary-glow" : "text-white/80"}`}
-                    >
-                      {stage.label}
-                    </h4>
-                    <p className="text-[10px] text-muted-foreground mt-0.5">{stage.desc}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            {credentials && (
-              <div className="max-w-md mx-auto bpl-card p-6 bg-primary/5 border border-primary/20 rounded-lg text-left space-y-4 my-6">
-                <div>
-                  <h3 className="text-sm font-semibold text-primary-glow font-display">
-                    Account Created Successfully
-                  </h3>
-                  <p className="text-[10px] text-muted-foreground mt-0.5">
-                    Please save these login details. You will need them to access your dashboard and
-                    update your profile.
-                  </p>
-                </div>
-                <div className="space-y-2 bg-black/40 p-4 rounded border border-border">
-                  <div className="flex justify-between items-center text-xs">
-                    <span className="text-muted-foreground font-semibold uppercase tracking-wider text-[9px]">
-                      Username/ID:
-                    </span>
-                    <span className="font-mono text-white select-all font-bold">
-                      {credentials.username}
-                    </span>
-                  </div>
-                  <div className="flex justify-between items-center text-xs">
-                    <span className="text-muted-foreground font-semibold uppercase tracking-wider text-[9px]">
-                      Password:
-                    </span>
-                    <span className="font-mono text-white select-all font-bold">
-                      {credentials.password}
-                    </span>
-                  </div>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => {
-                    navigator.clipboard.writeText(
-                      `Username: ${credentials.username}\nPassword: ${credentials.password}`,
-                    );
-                    alert("Credentials copied to clipboard!");
-                  }}
-                  className="w-full py-2 bg-primary/20 hover:bg-primary/30 border border-primary/30 rounded text-[11px] font-bold text-white uppercase tracking-wider transition"
-                >
-                  Copy Credentials
-                </button>
-              </div>
-            )}
-
             <div className="pt-4 flex justify-center gap-3">
               <Link
-                to="/bands"
-                className="btn-primary btn-primary-hover px-6 py-3 rounded-md text-sm font-semibold"
+                to="/dashboard"
+                className="btn-primary btn-primary-hover px-6 py-3 rounded-md text-sm font-semibold flex items-center gap-1.5"
               >
-                Explore Directory
-              </Link>
-              <Link
-                to="/"
-                className="px-6 py-3 rounded-md border border-border bg-surface hover:text-primary-glow transition text-sm"
-              >
-                Back to Home
+                Go to Dashboard <ArrowRight size={16} />
               </Link>
             </div>
           </div>

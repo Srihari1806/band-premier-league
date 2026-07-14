@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as VenuesRouteImport } from './routes/venues'
 import { Route as ProductionHousesRouteImport } from './routes/production-houses'
 import { Route as PartnersRouteImport } from './routes/partners'
+import { Route as OnboardingRouteImport } from './routes/onboarding'
 import { Route as MediaRouteImport } from './routes/media'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as LeagueRouteImport } from './routes/league'
@@ -46,6 +47,11 @@ const ProductionHousesRoute = ProductionHousesRouteImport.update({
 const PartnersRoute = PartnersRouteImport.update({
   id: '/partners',
   path: '/partners',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OnboardingRoute = OnboardingRouteImport.update({
+  id: '/onboarding',
+  path: '/onboarding',
   getParentRoute: () => rootRouteImport,
 } as any)
 const MediaRoute = MediaRouteImport.update({
@@ -160,6 +166,7 @@ export interface FileRoutesByFullPath {
   '/league': typeof LeagueRoute
   '/login': typeof LoginRoute
   '/media': typeof MediaRoute
+  '/onboarding': typeof OnboardingRoute
   '/partners': typeof PartnersRoute
   '/production-houses': typeof ProductionHousesRoute
   '/venues': typeof VenuesRoute
@@ -185,6 +192,7 @@ export interface FileRoutesByTo {
   '/league': typeof LeagueRoute
   '/login': typeof LoginRoute
   '/media': typeof MediaRoute
+  '/onboarding': typeof OnboardingRoute
   '/partners': typeof PartnersRoute
   '/production-houses': typeof ProductionHousesRoute
   '/venues': typeof VenuesRoute
@@ -211,6 +219,7 @@ export interface FileRoutesById {
   '/league': typeof LeagueRoute
   '/login': typeof LoginRoute
   '/media': typeof MediaRoute
+  '/onboarding': typeof OnboardingRoute
   '/partners': typeof PartnersRoute
   '/production-houses': typeof ProductionHousesRoute
   '/venues': typeof VenuesRoute
@@ -238,6 +247,7 @@ export interface FileRouteTypes {
     | '/league'
     | '/login'
     | '/media'
+    | '/onboarding'
     | '/partners'
     | '/production-houses'
     | '/venues'
@@ -263,6 +273,7 @@ export interface FileRouteTypes {
     | '/league'
     | '/login'
     | '/media'
+    | '/onboarding'
     | '/partners'
     | '/production-houses'
     | '/venues'
@@ -288,6 +299,7 @@ export interface FileRouteTypes {
     | '/league'
     | '/login'
     | '/media'
+    | '/onboarding'
     | '/partners'
     | '/production-houses'
     | '/venues'
@@ -314,6 +326,7 @@ export interface RootRouteChildren {
   LeagueRoute: typeof LeagueRoute
   LoginRoute: typeof LoginRoute
   MediaRoute: typeof MediaRoute
+  OnboardingRoute: typeof OnboardingRoute
   PartnersRoute: typeof PartnersRoute
   ProductionHousesRoute: typeof ProductionHousesRoute
   VenuesRoute: typeof VenuesRoute
@@ -349,6 +362,13 @@ declare module '@tanstack/react-router' {
       path: '/partners'
       fullPath: '/partners'
       preLoaderRoute: typeof PartnersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/onboarding': {
+      id: '/onboarding'
+      path: '/onboarding'
+      fullPath: '/onboarding'
+      preLoaderRoute: typeof OnboardingRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/media': {
@@ -515,6 +535,7 @@ const rootRouteChildren: RootRouteChildren = {
   LeagueRoute: LeagueRoute,
   LoginRoute: LoginRoute,
   MediaRoute: MediaRoute,
+  OnboardingRoute: OnboardingRoute,
   PartnersRoute: PartnersRoute,
   ProductionHousesRoute: ProductionHousesRoute,
   VenuesRoute: VenuesRoute,
