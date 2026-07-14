@@ -21,10 +21,10 @@ import bandImg from "@/assets/band-1.jpg";
 
 export const Route = createFileRoute("/bands/$bandId")({
   loader: async ({ params }) => {
-    // API-Level Security Check: Fetch only if approved
-    let record = await db.getApprovedRecordById("band", params.bandId);
+    // API-Level Security Check: Fetch by ID regardless of status (so shared links work instantly)
+    let record = await db.getRecordById("band", params.bandId);
     if (!record) {
-      record = await db.getApprovedRecordById("artist", params.bandId);
+      record = await db.getRecordById("artist", params.bandId);
     }
     if (!record) {
       throw notFound();

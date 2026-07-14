@@ -470,6 +470,29 @@ export const db = {
     return null;
   },
 
+  async getRecordById(role: string, id: string): Promise<any | null> {
+    if (supabase) {
+      const { data, error } = await supabase
+        .from(getTableName(role))
+        .select("*")
+        .eq("id", id)
+        .maybeSingle();
+      if (error) {
+        console.warn(`Supabase query failed for ${role} by id, using localStorage fallback`, error);
+        return this.getLocalRecordById(role, id);
+      }
+      return data || null;
+    } else {
+      return this.getLocalRecordById(role, id);
+    }
+  },
+
+  getLocalRecordById(role: string, id: string): any | null {
+    if (typeof window === "undefined") return null;
+    const apps = JSON.parse(localStorage.getItem(getStorageKey(role)) || "[]");
+    return apps.find((app: any) => app.id === id) || null;
+  },
+
   // --- Stats / Numbers ---
   async getStats(): Promise<LeagueStats> {
     if (supabase) {

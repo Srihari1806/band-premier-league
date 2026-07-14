@@ -54,10 +54,18 @@ export const Route = createFileRoute("/admin/applications")({
 });
 
 type RoleTab =
-  "band" | "venue" | "production_house" | "sponsor" | "influencer" | "volunteer" | "event_manager";
+  | "band"
+  | "artist"
+  | "venue"
+  | "production_house"
+  | "sponsor"
+  | "influencer"
+  | "volunteer"
+  | "event_manager";
 
 const ROLE_LABELS: Record<RoleTab, string> = {
-  band: "Bands / Artists",
+  band: "Bands",
+  artist: "Solo Artists",
   venue: "Venues / Cafes",
   production_house: "Production Houses",
   sponsor: "Sponsors",
@@ -478,6 +486,147 @@ function AdminApplicationsPage() {
                         >
                           <Instagram size={12} /> Instagram Profile <Globe size={10} />
                         </a>
+                        {selectedApp.youtube_url && (
+                          <a
+                            href={selectedApp.youtube_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center gap-2 text-primary-glow hover:underline"
+                          >
+                            <Youtube size={12} /> YouTube Link <Globe size={10} />
+                          </a>
+                        )}
+                        {selectedApp.spotify_url && (
+                          <a
+                            href={selectedApp.spotify_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center gap-2 text-primary-glow hover:underline"
+                          >
+                            <Music size={12} /> Spotify Link <Globe size={10} />
+                          </a>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* --- SOLO ARTIST DETAIL --- */}
+                  {activeTab === "artist" && (
+                    <div className="space-y-4 text-xs">
+                      {/* Image Preview */}
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <p className="text-muted-foreground uppercase tracking-wider mb-1">
+                            Avatar Preview
+                          </p>
+                          <img
+                            src={selectedApp.profile_image || selectedApp.avatarUrl}
+                            className="h-16 w-16 rounded-full border border-border object-cover bg-slate-900"
+                          />
+                        </div>
+                        <div>
+                          <p className="text-muted-foreground uppercase tracking-wider mb-1">
+                            Banner Preview
+                          </p>
+                          <img
+                            src={selectedApp.banner_image || "/images/placeholder-banner.jpg"}
+                            className="h-16 w-full rounded border border-border object-cover bg-slate-900"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="border-t border-border pt-3 grid grid-cols-2 gap-3 text-white/90">
+                        <div>
+                          <span className="text-muted-foreground font-semibold">Artistic Roles/Skills:</span>{" "}
+                          {selectedApp.artistRoles && selectedApp.artistRoles.length > 0
+                            ? selectedApp.artistRoles.join(", ")
+                            : selectedApp.skills || "Solo Musician"}
+                        </div>
+                        <div>
+                          <span className="text-muted-foreground font-semibold">City:</span>{" "}
+                          {selectedApp.homeCity || selectedApp.city || selectedApp.home_city}
+                        </div>
+                        <div>
+                          <span className="text-muted-foreground font-semibold">Preferred Fee Range:</span>{" "}
+                          {selectedApp.fee_range || selectedApp.feeRange || "N/A"}
+                        </div>
+                        <div>
+                          <span className="text-muted-foreground font-semibold">Preferred Cities:</span>{" "}
+                          {selectedApp.preferred_cities || selectedApp.preferredCities || "N/A"}
+                        </div>
+                      </div>
+
+                      <div className="border-t border-border pt-3">
+                        <p className="text-muted-foreground font-bold">Bio:</p>
+                        <p className="mt-1 text-white leading-relaxed italic">
+                          "{selectedApp.bio}"
+                        </p>
+                      </div>
+
+                      {/* Timeline */}
+                      {selectedApp.timeline && selectedApp.timeline.length > 0 && (
+                        <div className="border-t border-border pt-3">
+                          <p className="text-muted-foreground font-bold mb-1.5">Timeline / Milestones:</p>
+                          <div className="space-y-1.5 max-h-36 overflow-y-auto bg-secondary/20 p-2.5 rounded border border-border text-left">
+                            {selectedApp.timeline.map((t: any, idx: number) => (
+                              <div key={idx} className="flex gap-2">
+                                <span className="text-primary-glow font-bold min-w-[40px]">{t.year}:</span>
+                                <span className="text-white/90">{t.event}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Releases */}
+                      {selectedApp.releases && selectedApp.releases.length > 0 && (
+                        <div className="border-t border-border pt-3">
+                          <p className="text-muted-foreground font-bold mb-1.5">Featured Releases:</p>
+                          <div className="grid grid-cols-2 gap-2 max-h-36 overflow-y-auto text-left">
+                            {selectedApp.releases.map((r: any, idx: number) => (
+                              <div key={idx} className="p-2 bg-secondary/35 rounded border border-border">
+                                <span className="text-[9px] font-bold text-muted-foreground block">{r.year}</span>
+                                <span className="font-semibold text-white truncate block">{r.title}</span>
+                                {r.link && (
+                                  <a href={r.link} target="_blank" rel="noopener noreferrer" className="text-[9px] text-primary-glow hover:underline mt-1 block">
+                                    Listen Link
+                                  </a>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Contact Info */}
+                      <div className="border-t border-border pt-3 grid grid-cols-2 gap-2 text-white/95 text-left font-sans">
+                        <div>
+                          <span className="text-muted-foreground block">Contact Name:</span>
+                          <span className="font-semibold">{selectedApp.contact_name || selectedApp.name}</span>
+                        </div>
+                        <div>
+                          <span className="text-muted-foreground block">Contact Phone:</span>
+                          <span className="font-semibold">{selectedApp.contact_phone || selectedApp.phone}</span>
+                        </div>
+                        <div className="col-span-2">
+                          <span className="text-muted-foreground block">Contact Email:</span>
+                          <span className="font-semibold select-all">{selectedApp.contact_email || selectedApp.email}</span>
+                        </div>
+                      </div>
+
+                      {/* Social handles links */}
+                      <div className="border-t border-border pt-3 space-y-1 text-left">
+                        <p className="text-muted-foreground font-bold mb-1">Public Links:</p>
+                        {selectedApp.instagram_url && (
+                          <a
+                            href={selectedApp.instagram_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center gap-2 text-primary-glow hover:underline"
+                          >
+                            <Instagram size={12} /> Instagram Profile <Globe size={10} />
+                          </a>
+                        )}
                         {selectedApp.youtube_url && (
                           <a
                             href={selectedApp.youtube_url}
