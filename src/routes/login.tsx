@@ -1,351 +1,564 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { PageShell } from "@/components/layout/PageShell";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { db } from "@/lib/db";
+import { signInWithGoogle, signInWithOTP, signUpWithEmail, signInWithEmail } from "@/lib/supabase";
+import { useAuth } from "@/hooks/useAuth";
 import {
   Lock,
   Mail,
   Phone,
-  Chrome,
   Apple,
   ArrowRight,
   AlertCircle,
   Sparkles,
-  ArrowLeft,
-  ShieldCheck,
-  UserCheck
+  CheckCircle,
+  Music,
+  User,
+  Eye,
+  EyeOff,
+  Zap,
+  UserCheck,
 } from "lucide-react";
 
 export const Route = createFileRoute("/login")({
   head: () => ({
     meta: [
-      { title: "Login — Kalakshetra" },
-      {
-        name: "description",
-        content:
-          "Access your Kalakshetra account. Manage your music catalog, update availability, and track curation stages.",
-      },
+      { title: "Sign In — Kalakshetra" },
+      { name: "description", content: "Access your Kalakshetra workspace. Sign in or create your account to join India's independent music ecosystem." },
     ],
   }),
   component: LoginPage,
 });
 
+type AuthMode = "signin" | "signup";
+type AuthMethod = "email" | "magic" | "phone";
+
 function LoginPage() {
   const navigate = useNavigate();
+  const { session, loading: authLoading, isSupabaseConfigured } = useAuth();
 
-  // Input fields
+  const [mode, setMode] = useState<AuthMode>("signin");
+  const [method, setMethod] = useState<AuthMethod>("email");
+
+  // Fields
   const [email, setEmail] = useState("");
-  const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
-  const [authMethod, setAuthMethod] = useState<"email" | "phone" | "social">("email");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [fullName, setFullName] = useState("");
+  const [phone, setPhone] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
 
-  // Feedback states
+  // States
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
+  const [googleLoading, setGoogleLoading] = useState(false);
 
-  const handleLoginSubmit = async (e: React.FormEvent) => {
+  // If already authenticated, redirect
+  useEffect(() => {
+    if (authLoading) return;
+    if (isSupabaseConfigured && session) {
+      const account = db.getCurrentAccount();
+      if ((account?.workspaces?.length ?? 0) > 0) {
+        navigate({ to: "/dashboard" });
+      } else {
+        navigate({ to: "/onboarding" });
+      }
+    }
+  }, [session, authLoading, isSupabaseConfigured, navigate]);
+
+  const resetForm = () => {
+    setError("");
+    setSuccess("");
+    setEmail("");
+    setPassword("");
+    setConfirmPassword("");
+    setFullName("");
+  };
+
+  const switchMode = (newMode: AuthMode) => {
+    setMode(newMode);
+    resetForm();
+  };
+
+  // --- Google OAuth ---
+  const handleGoogleAuth = async () => {
+    setError("");
+    setGoogleLoading(true);
+    try {
+      if (isSupabaseConfigured) {
+        await signInWithGoogle();
+        // Redirect happens externally — browser navigates to Google
+      } else {
+        // Fallback: localStorage mock
+        const mockEmail = "google_user@kalakshetra.in";
+        let account;
+        try {
+          account = await db.loginAccount(mockEmail, "social123");
+        } catch {
+          account = await db.registerAccount(mockEmail, undefined, "social123");
+        }
+        if (account.workspaces?.length > 0) navigate({ to: "/dashboard" });
+        else navigate({ to: "/onboarding" });
+      }
+    } catch (err: any) {
+      setError(err.message || "Google sign-in failed.");
+      setGoogleLoading(false);
+    }
+  };
+
+  // --- Email + Password ---
+  const handleEmailSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
     setLoading(true);
 
     try {
-      const inputVal = authMethod === "email" ? email : phone;
-      if (!inputVal.trim()) {
-        throw new Error(`Please enter your login email or phone number`);
-      }
+      if (!email.trim()) throw new Error("Please enter your email address.");
 
-      // 1. Authenticate the unified account
-      let account;
-      try {
-        // Try logging in
-        account = await db.loginAccount(inputVal, password);
-      } catch (loginErr: any) {
-        // If account not found and it's email format, automatically register them!
-        // This simplifies the "first login" flow for any email entered by the user
-        if (loginErr.message.includes("No account found") && authMethod === "email" && password) {
-          account = await db.registerAccount(inputVal, undefined, password);
+      if (isSupabaseConfigured) {
+        if (mode === "signup") {
+          if (!password || password.length < 6) throw new Error("Password must be at least 6 characters.");
+          if (password !== confirmPassword) throw new Error("Passwords do not match.");
+          await signUpWithEmail(email, password, fullName);
+          setSuccess("Account created! Check your inbox for a verification link, then sign in.");
+          setMode("signin");
         } else {
-          throw loginErr;
+          if (!password) throw new Error("Please enter your password.");
+          const { session } = await signInWithEmail(email, password);
+          if (session) {
+            const account = db.linkSupabaseUserToAccount(
+              session.user.email || email,
+              session.user.user_metadata?.full_name || email.split("@")[0],
+              session.user.id
+            );
+            if (account.workspaces?.length > 0) navigate({ to: "/dashboard" });
+            else navigate({ to: "/onboarding" });
+          }
+        }
+      } else {
+        // localStorage fallback
+        if (mode === "signup") {
+          if (!password || password.length < 6) throw new Error("Password must be at least 6 characters.");
+          if (password !== confirmPassword) throw new Error("Passwords do not match.");
+          const account = await db.registerAccount(email, undefined, password);
+          localStorage.setItem("bpl_current_account", JSON.stringify(account));
+          navigate({ to: "/onboarding" });
+        } else {
+          let account;
+          try {
+            account = await db.loginAccount(email, password);
+          } catch (loginErr: any) {
+            if (loginErr.message?.includes("No account found") && password) {
+              account = await db.registerAccount(email, undefined, password);
+            } else throw loginErr;
+          }
+          if (account.workspaces?.length > 0) navigate({ to: "/dashboard" });
+          else navigate({ to: "/onboarding" });
         }
       }
-
-      // 2. Redirect based on onboarding status
-      if (account.id === "acc_operator" || (account.workspaces && account.workspaces.length > 0)) {
-        navigate({ to: "/dashboard" });
-      } else {
-        navigate({ to: "/onboarding" });
-      }
-    } catch (err) {
-      const errorObj = err as Error;
-      setError(errorObj.message || "An error occurred during authentication.");
+    } catch (err: any) {
+      setError(err.message || "Authentication failed.");
     } finally {
       setLoading(false);
     }
   };
 
+  // --- Magic Link ---
+  const handleMagicLink = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError("");
+    setLoading(true);
+    try {
+      if (!email.trim()) throw new Error("Please enter your email address.");
+      if (isSupabaseConfigured) {
+        await signInWithOTP(email);
+        setSuccess(`Magic link sent to ${email}. Check your inbox and click the link to sign in.`);
+      } else {
+        throw new Error("Magic link requires Supabase configuration.");
+      }
+    } catch (err: any) {
+      setError(err.message || "Failed to send magic link.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // --- Demo / Admin bypass ---
   const handleDemoLogin = async (asOrganizer: boolean) => {
     setError("");
     setLoading(true);
     try {
       if (asOrganizer) {
-        // Operator bypass
         const adminUser = (import.meta.env.VITE_ADMIN_USER as string) || "bploperator";
         const adminPass = (import.meta.env.VITE_ADMIN_PASS as string) || "bpladmin";
         await db.loginAccount(adminUser, adminPass);
         navigate({ to: "/dashboard" });
       } else {
-        // Standard user bypass
-        try {
-          await db.registerAccount("demo@kalakshetra.in", "9999999999", "demo123");
-        } catch (e) {
-          // Ignore if already registered
-        }
+        try { await db.registerAccount("demo@kalakshetra.in", "9999999999", "demo123"); } catch { /* already exists */ }
         const account = await db.loginAccount("demo@kalakshetra.in", "demo123");
-        
-        if (account.workspaces && account.workspaces.length > 0) {
-          navigate({ to: "/dashboard" });
-        } else {
-          navigate({ to: "/onboarding" });
-        }
+        if (account.workspaces?.length > 0) navigate({ to: "/dashboard" });
+        else navigate({ to: "/onboarding" });
       }
-    } catch (err) {
-      const errorObj = err as Error;
-      setError(errorObj.message || "Demo login failed.");
+    } catch (err: any) {
+      setError(err.message || "Demo login failed.");
     } finally {
       setLoading(false);
     }
   };
 
-  const handleSocialMockLogin = async (platformName: string) => {
-    setError("");
-    setLoading(true);
-    // Simulate social authentication
-    setTimeout(async () => {
-      try {
-        const mockEmail = `social_${platformName.toLowerCase()}_user@kalakshetra.in`;
-        let account;
-        try {
-          account = await db.loginAccount(mockEmail, "social123");
-        } catch (e) {
-          account = await db.registerAccount(mockEmail, undefined, "social123");
-        }
-        
-        if (account.workspaces && account.workspaces.length > 0) {
-          navigate({ to: "/dashboard" });
-        } else {
-          navigate({ to: "/onboarding" });
-        }
-      } catch (err) {
-        const errorObj = err as Error;
-        setError(errorObj.message || `${platformName} connection failed.`);
-        setLoading(false);
-      }
-    }, 800);
-  };
+  if (authLoading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background">
+        <div className="h-8 w-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
 
   return (
-    <PageShell>
-      <div className="flex min-h-screen items-center justify-center bg-background px-4 py-24 relative overflow-hidden">
-        {/* Glow backdrop */}
-        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 h-[350px] w-[350px] rounded-full bg-primary/5 blur-[120px] pointer-events-none" />
+    <div className="flex min-h-screen bg-background relative overflow-hidden">
+      {/* Glow layers */}
+      <div className="absolute top-0 left-1/4 h-[500px] w-[500px] rounded-full bg-primary/4 blur-[160px] pointer-events-none" />
+      <div className="absolute bottom-0 right-1/4 h-[400px] w-[400px] rounded-full bg-amber-500/4 blur-[140px] pointer-events-none" />
+      <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.015)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.015)_1px,transparent_1px)] bg-[size:48px_48px] pointer-events-none" />
 
-        <div className="w-full max-w-[420px] space-y-8 animate-fade-in relative z-10">
-          <div className="text-center space-y-2">
-            <Link
-              to="/join"
-              className="inline-flex items-center gap-1 text-[10px] uppercase font-bold tracking-widest text-muted-foreground hover:text-primary-glow transition mb-2"
-            >
-              <ArrowLeft size={10} /> Back to Join Hub
-            </Link>
-            <h1 className="text-3xl font-display font-bold text-white tracking-tight">
-              Kalakshetra Member Portal
+      <div className="flex flex-col w-full items-center justify-center px-4 py-16 relative z-10">
+        {/* Logo */}
+        <a href="/" className="flex items-center gap-2 mb-10 group">
+          <div className="h-9 w-9 rounded-xl bg-primary/10 border border-primary/25 flex items-center justify-center group-hover:scale-105 transition-transform">
+            <Music size={18} className="text-primary-glow" />
+          </div>
+          <span className="text-lg font-display font-bold text-white tracking-tight">Kalakshetra</span>
+        </a>
+
+        <div className="w-full max-w-[420px] space-y-5 animate-fade-in">
+          {/* Heading */}
+          <div className="text-center space-y-1">
+            <h1 className="text-2xl font-display font-bold text-white tracking-tight">
+              {mode === "signin" ? "Welcome back" : "Join the ecosystem"}
             </h1>
-            <p className="text-xs text-muted-foreground max-w-xs mx-auto">
-              Enter your credentials to manage your platform workspaces.
+            <p className="text-xs text-muted-foreground">
+              {mode === "signin"
+                ? "Sign in to your Kalakshetra workspace."
+                : "Create your account to start your music journey."}
             </p>
           </div>
 
-          <div className="bpl-card p-8 space-y-6">
-            {/* Auth Method Toggle */}
-            <div className="flex border-b border-border text-xs">
+          {/* Sign In / Sign Up toggle */}
+          <div className="flex bg-secondary/60 border border-border rounded-lg p-1 gap-1">
+            <button
+              type="button"
+              onClick={() => switchMode("signin")}
+              className={`flex-1 py-2 rounded-md text-xs font-bold transition-all duration-200 ${
+                mode === "signin"
+                  ? "bg-primary text-primary-foreground shadow-sm"
+                  : "text-muted-foreground hover:text-white"
+              }`}
+            >
+              Sign In
+            </button>
+            <button
+              type="button"
+              onClick={() => switchMode("signup")}
+              className={`flex-1 py-2 rounded-md text-xs font-bold transition-all duration-200 ${
+                mode === "signup"
+                  ? "bg-primary text-primary-foreground shadow-sm"
+                  : "text-muted-foreground hover:text-white"
+              }`}
+            >
+              Sign Up
+            </button>
+          </div>
+
+          {/* Main card */}
+          <div className="bpl-card p-6 space-y-5">
+            {/* Social auth */}
+            <div className="space-y-2.5">
               <button
                 type="button"
-                onClick={() => setAuthMethod("email")}
-                className={`flex-1 pb-2 font-semibold text-center border-b-2 transition ${
-                  authMethod === "email"
-                    ? "border-primary text-primary-glow"
-                    : "border-transparent text-muted-foreground hover:text-foreground"
-                }`}
+                onClick={handleGoogleAuth}
+                disabled={googleLoading || loading}
+                className="w-full flex items-center justify-center gap-2.5 py-2.5 px-4 rounded-lg border border-border bg-white/5 hover:bg-white/10 text-white text-xs font-semibold transition-all duration-200 disabled:opacity-50"
               >
-                Email
+                {googleLoading ? (
+                  <div className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                ) : (
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                    <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+                    <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+                    <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/>
+                    <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+                  </svg>
+                )}
+                Continue with Google
               </button>
+
               <button
                 type="button"
-                onClick={() => setAuthMethod("phone")}
-                className={`flex-1 pb-2 font-semibold text-center border-b-2 transition ${
-                  authMethod === "phone"
-                    ? "border-primary text-primary-glow"
-                    : "border-transparent text-muted-foreground hover:text-foreground"
-                }`}
+                disabled
+                className="w-full flex items-center justify-center gap-2.5 py-2.5 px-4 rounded-lg border border-border/50 bg-white/3 text-muted-foreground text-xs font-semibold cursor-not-allowed opacity-50"
               >
-                Phone OTP
-              </button>
-              <button
-                type="button"
-                onClick={() => setAuthMethod("social")}
-                className={`flex-1 pb-2 font-semibold text-center border-b-2 transition ${
-                  authMethod === "social"
-                    ? "border-primary text-primary-glow"
-                    : "border-transparent text-muted-foreground hover:text-foreground"
-                }`}
-              >
-                Social Login
+                <Apple size={15} />
+                Continue with Apple
+                <span className="ml-auto text-[9px] bg-border/50 px-1.5 py-0.5 rounded font-bold uppercase tracking-wider">Soon</span>
               </button>
             </div>
 
-            {/* ERROR DISPLAY */}
+            {/* Divider */}
+            <div className="relative flex items-center gap-3">
+              <div className="flex-1 border-t border-border/60" />
+              <span className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest">or</span>
+              <div className="flex-1 border-t border-border/60" />
+            </div>
+
+            {/* Method tabs */}
+            <div className="flex gap-1 text-[10px]">
+              {(["email", "magic", "phone"] as const).map((m) => (
+                <button
+                  key={m}
+                  type="button"
+                  onClick={() => { setMethod(m); setError(""); setSuccess(""); }}
+                  className={`flex-1 py-1.5 rounded font-bold uppercase tracking-wider transition-all ${
+                    method === m
+                      ? "bg-primary/15 text-primary-glow border border-primary/30"
+                      : "text-muted-foreground hover:text-white"
+                  }`}
+                >
+                  {m === "magic" ? "Magic Link" : m === "phone" ? "Phone OTP" : "Email"}
+                </button>
+              ))}
+            </div>
+
+            {/* Alert messages */}
             {error && (
-              <div className="bg-red-500/10 border border-red-500/30 text-red-400 rounded-md p-3 text-xs flex gap-2 text-left animate-shake">
-                <AlertCircle size={16} className="shrink-0 mt-0.5" />
+              <div className="bg-red-500/10 border border-red-500/30 text-red-400 rounded-md p-3 text-xs flex gap-2 text-left">
+                <AlertCircle size={14} className="shrink-0 mt-0.5" />
                 <span>{error}</span>
               </div>
             )}
+            {success && (
+              <div className="bg-green-500/10 border border-green-500/30 text-green-400 rounded-md p-3 text-xs flex gap-2 text-left">
+                <CheckCircle size={14} className="shrink-0 mt-0.5" />
+                <span>{success}</span>
+              </div>
+            )}
 
-            {/* FORM VIEW */}
-            {authMethod !== "social" ? (
-              <form onSubmit={handleLoginSubmit} className="space-y-4 text-left">
-                {authMethod === "email" ? (
-                  <div className="space-y-1.5">
-                    <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">
-                      Email Address *
-                    </label>
+            {/* Email / Password form */}
+            {method === "email" && (
+              <form onSubmit={handleEmailSubmit} className="space-y-3.5">
+                {mode === "signup" && (
+                  <div className="space-y-1">
+                    <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-bold">Full Name</label>
                     <div className="relative">
-                      <Mail className="absolute left-3 top-3 text-muted-foreground" size={14} />
+                      <User className="absolute left-3 top-2.5 text-muted-foreground" size={13} />
                       <input
-                        type="email"
-                        placeholder="e.g. contact@bandname.com"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        className="w-full bg-secondary border border-border rounded-md pl-9 pr-3.5 py-2.5 text-sm focus:outline-none focus:border-primary text-white"
-                        required
+                        type="text"
+                        placeholder="Your artist / band name"
+                        value={fullName}
+                        onChange={(e) => setFullName(e.target.value)}
+                        className="w-full bg-secondary border border-border rounded-md pl-9 pr-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-primary transition"
                       />
                     </div>
                   </div>
-                ) : (
-                  <div className="space-y-1.5">
-                    <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">
-                      Phone Number *
-                    </label>
+                )}
+
+                <div className="space-y-1">
+                  <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-bold">Email *</label>
+                  <div className="relative">
+                    <Mail className="absolute left-3 top-2.5 text-muted-foreground" size={13} />
+                    <input
+                      type="email"
+                      placeholder="contact@bandname.com"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      className="w-full bg-secondary border border-border rounded-md pl-9 pr-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-primary transition"
+                      required
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-bold">Password *</label>
+                  <div className="relative">
+                    <Lock className="absolute left-3 top-2.5 text-muted-foreground" size={13} />
+                    <input
+                      type={showPassword ? "text" : "password"}
+                      placeholder={mode === "signup" ? "Min. 6 characters" : "••••••••"}
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      className="w-full bg-secondary border border-border rounded-md pl-9 pr-9 py-2.5 text-xs text-white focus:outline-none focus:border-primary transition"
+                      required
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword((v) => !v)}
+                      className="absolute right-3 top-2.5 text-muted-foreground hover:text-white"
+                    >
+                      {showPassword ? <EyeOff size={13} /> : <Eye size={13} />}
+                    </button>
+                  </div>
+                </div>
+
+                {mode === "signup" && (
+                  <div className="space-y-1">
+                    <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-bold">Confirm Password *</label>
                     <div className="relative">
-                      <Phone className="absolute left-3 top-3 text-muted-foreground" size={14} />
+                      <Lock className="absolute left-3 top-2.5 text-muted-foreground" size={13} />
                       <input
-                        type="tel"
-                        placeholder="e.g. +91 98765 43210"
-                        value={phone}
-                        onChange={(e) => setPhone(e.target.value)}
-                        className="w-full bg-secondary border border-border rounded-md pl-9 pr-3.5 py-2.5 text-sm focus:outline-none focus:border-primary text-white"
+                        type="password"
+                        placeholder="Repeat your password"
+                        value={confirmPassword}
+                        onChange={(e) => setConfirmPassword(e.target.value)}
+                        className="w-full bg-secondary border border-border rounded-md pl-9 pr-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-primary transition"
                         required
                       />
                     </div>
                   </div>
                 )}
 
-                <div className="space-y-1.5">
-                  <div className="flex justify-between items-center">
-                    <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">
-                      {authMethod === "phone" ? "OTP Passcode *" : "Password *"}
-                    </label>
-                    {authMethod === "phone" && (
-                      <button
-                        type="button"
-                        onClick={() => alert("Verification code sent to: " + phone)}
-                        className="text-[10px] font-bold text-primary-glow hover:underline cursor-pointer"
-                      >
-                        Send OTP
-                      </button>
-                    )}
-                  </div>
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="w-full btn-primary btn-primary-hover py-2.5 rounded-lg text-xs font-bold text-white flex items-center justify-center gap-1.5 disabled:opacity-50 transition"
+                >
+                  {loading ? (
+                    <div className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  ) : (
+                    <>
+                      {mode === "signin" ? "Sign In" : "Create Account"}
+                      <ArrowRight size={13} />
+                    </>
+                  )}
+                </button>
+              </form>
+            )}
 
+            {/* Magic Link form */}
+            {method === "magic" && (
+              <form onSubmit={handleMagicLink} className="space-y-3.5">
+                <div className="bg-primary/5 border border-primary/20 rounded-lg p-3 flex gap-2 items-start text-xs text-muted-foreground">
+                  <Zap size={13} className="text-primary-glow shrink-0 mt-0.5" />
+                  <span>Enter your email and we'll send a magic link — no password needed.</span>
+                </div>
+                <div className="space-y-1">
+                  <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-bold">Email *</label>
                   <div className="relative">
-                    <Lock className="absolute left-3 top-3 text-muted-foreground" size={14} />
+                    <Mail className="absolute left-3 top-2.5 text-muted-foreground" size={13} />
                     <input
-                      type="password"
-                      placeholder={authMethod === "phone" ? "Enter 6-digit OTP code" : "••••••••"}
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      className="w-full bg-secondary border border-border rounded-md pl-9 pr-3.5 py-2.5 text-sm focus:outline-none focus:border-primary text-white"
+                      type="email"
+                      placeholder="contact@bandname.com"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      className="w-full bg-secondary border border-border rounded-md pl-9 pr-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-primary transition"
                       required
                     />
                   </div>
                 </div>
-
                 <button
                   type="submit"
-                  disabled={loading}
-                  className="w-full btn-primary btn-primary-hover py-3 rounded-md text-xs font-semibold text-white flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50 transition"
+                  disabled={loading || !isSupabaseConfigured}
+                  className="w-full btn-primary btn-primary-hover py-2.5 rounded-lg text-xs font-bold text-white flex items-center justify-center gap-1.5 disabled:opacity-50 transition"
                 >
-                  {loading ? "Authenticating..." : "Continue"}
-                  <ArrowRight size={14} />
+                  {loading ? (
+                    <div className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  ) : (
+                    <>Send Magic Link <Zap size={13} /></>
+                  )}
                 </button>
+                {!isSupabaseConfigured && (
+                  <p className="text-[10px] text-amber-400/80 text-center">Requires Supabase configuration.</p>
+                )}
               </form>
-            ) : (
-              /* SOCIAL SIGN IN */
-              <div className="space-y-3">
-                <button
-                  onClick={() => handleSocialMockLogin("Google")}
-                  disabled={loading}
-                  className="w-full border border-border bg-secondary hover:bg-slate-800 text-white rounded-md py-3 text-xs font-semibold flex items-center justify-center gap-2 cursor-pointer transition disabled:opacity-50"
-                >
-                  <Chrome size={16} className="text-red-400" />
-                  Continue with Google
-                </button>
-                <button
-                  onClick={() => handleSocialMockLogin("Apple")}
-                  disabled={loading}
-                  className="w-full border border-border bg-secondary hover:bg-slate-800 text-white rounded-md py-3 text-xs font-semibold flex items-center justify-center gap-2 cursor-pointer transition disabled:opacity-50"
-                >
-                  <Apple size={16} className="text-white" />
-                  Continue with Apple
+            )}
+
+            {/* Phone OTP (placeholder) */}
+            {method === "phone" && (
+              <div className="space-y-3.5">
+                <div className="bg-amber-500/10 border border-amber-500/25 rounded-lg p-3 flex gap-2 items-start text-xs text-amber-400/90">
+                  <Phone size={13} className="shrink-0 mt-0.5" />
+                  <span>Phone OTP authentication is coming soon. Please use Email or Google for now.</span>
+                </div>
+                <div className="space-y-1">
+                  <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-bold">Mobile Number</label>
+                  <div className="relative">
+                    <Phone className="absolute left-3 top-2.5 text-muted-foreground" size={13} />
+                    <input
+                      type="tel"
+                      placeholder="+91 98765 43210"
+                      value={phone}
+                      onChange={(e) => setPhone(e.target.value)}
+                      disabled
+                      className="w-full bg-secondary border border-border rounded-md pl-9 pr-3.5 py-2.5 text-xs text-white focus:outline-none opacity-50 cursor-not-allowed"
+                    />
+                  </div>
+                </div>
+                <button disabled className="w-full py-2.5 rounded-lg text-xs font-bold bg-secondary border border-border text-muted-foreground cursor-not-allowed opacity-50">
+                  Send OTP — Coming Soon
                 </button>
               </div>
             )}
 
-            {/* DEMO ACC BYPASS */}
-            <div className="relative flex items-center justify-center py-2">
-              <div className="absolute w-full border-t border-border" />
-              <span className="relative z-10 px-3 bg-slate-950 text-[10px] text-muted-foreground uppercase font-bold">
-                Ecosystem Sandbox
-              </span>
-            </div>
+            {/* Switch mode nudge */}
+            <p className="text-[11px] text-muted-foreground text-center">
+              {mode === "signin" ? (
+                <>
+                  New to the league?{" "}
+                  <button type="button" onClick={() => switchMode("signup")} className="text-primary-glow font-bold hover:underline">
+                    Create your account
+                  </button>
+                </>
+              ) : (
+                <>
+                  Already have an account?{" "}
+                  <button type="button" onClick={() => switchMode("signin")} className="text-primary-glow font-bold hover:underline">
+                    Sign in here
+                  </button>
+                </>
+              )}
+            </p>
+          </div>
 
+          {/* New to League / Onboard CTA */}
+          <div className="bpl-card p-4 flex items-center justify-between gap-3 border-primary/20 bg-primary/5">
+            <div className="text-xs">
+              <p className="font-bold text-white">New to Kalakshetra?</p>
+              <p className="text-muted-foreground text-[10px] mt-0.5">Register as Band, Artist, Venue and more.</p>
+            </div>
+            <Link
+              to="/onboarding"
+              className="shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-lg bg-primary hover:bg-primary/90 text-primary-foreground text-[11px] font-bold transition"
+            >
+              <Sparkles size={11} />
+              Onboard Here
+            </Link>
+          </div>
+
+          {/* Sandbox / Demo */}
+          <div className="space-y-2">
+            <div className="relative flex items-center gap-3">
+              <div className="flex-1 border-t border-border/40" />
+              <span className="text-[9px] text-muted-foreground font-bold uppercase tracking-widest">Ecosystem Sandbox</span>
+              <div className="flex-1 border-t border-border/40" />
+            </div>
             <div className="grid grid-cols-2 gap-2">
               <button
                 onClick={() => handleDemoLogin(false)}
                 disabled={loading}
-                className="bg-secondary hover:bg-slate-800 border border-border text-white rounded-md py-2.5 text-[10px] font-bold flex items-center justify-center gap-1 cursor-pointer transition disabled:opacity-50"
+                className="bg-secondary/60 hover:bg-secondary border border-border text-white rounded-md py-2 text-[10px] font-bold flex items-center justify-center gap-1 cursor-pointer transition disabled:opacity-50"
               >
-                <Sparkles size={11} className="text-primary-glow" />
-                Demo User
+                <Sparkles size={10} className="text-primary-glow" /> Demo User
               </button>
               <button
                 onClick={() => handleDemoLogin(true)}
                 disabled={loading}
-                className="bg-secondary hover:bg-slate-800 border border-border text-white rounded-md py-2.5 text-[10px] font-bold flex items-center justify-center gap-1 cursor-pointer transition disabled:opacity-50"
+                className="bg-secondary/60 hover:bg-secondary border border-border text-white rounded-md py-2 text-[10px] font-bold flex items-center justify-center gap-1 cursor-pointer transition disabled:opacity-50"
               >
-                <UserCheck size={11} className="text-primary-glow" />
-                Organizer (Admin)
+                <UserCheck size={10} className="text-primary-glow" /> Organizer
               </button>
             </div>
-
-            <p className="text-[10px] text-muted-foreground text-center">
-              New to the league?{" "}
-              <Link to="/join" className="text-primary-glow font-bold hover:underline">
-                Onboard here
-              </Link>
-            </p>
           </div>
         </div>
       </div>
-    </PageShell>
+    </div>
   );
 }

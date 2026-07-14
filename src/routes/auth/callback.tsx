@@ -1,0 +1,97 @@
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
+import { supabase } from "@/lib/supabase";
+import { db } from "@/lib/db";
+import { Music } from "lucide-react";
+
+export const Route = createFileRoute("/auth/callback" as any)({
+  head: () => ({
+    meta: [{ title: "Authenticating — Kalakshetra" }],
+  }),
+  component: AuthCallbackPage,
+});
+
+function AuthCallbackPage() {
+  const navigate = useNavigate();
+  const [status, setStatus] = useState<"loading" | "error">("loading");
+  const [errorMsg, setErrorMsg] = useState("");
+
+  useEffect(() => {
+    async function handleCallback() {
+      try {
+        if (!supabase) {
+          // No Supabase — redirect back to login
+          navigate({ to: "/login" });
+          return;
+        }
+
+        // Supabase SDK auto-exchanges the code/hash for a session when
+        // detectSessionInUrl: true. Just call getSession().
+        const {
+          data: { session },
+          error,
+        } = await supabase.auth.getSession();
+
+        if (error || !session) {
+          setStatus("error");
+          setErrorMsg(error?.message || "Authentication failed. Please try again.");
+          return;
+        }
+
+        const email = session.user.email || "";
+        const name =
+          session.user.user_metadata?.full_name ||
+          session.user.user_metadata?.name ||
+          email.split("@")[0];
+
+        // Link the Supabase-authenticated user to the localStorage account system
+        const account = db.linkSupabaseUserToAccount(email, name, session.user.id);
+
+        if (account.workspaces && account.workspaces.length > 0) {
+          navigate({ to: "/dashboard" });
+        } else {
+          navigate({ to: "/onboarding" });
+        }
+      } catch (err: any) {
+        setStatus("error");
+        setErrorMsg(err?.message || "Something went wrong.");
+      }
+    }
+
+    handleCallback();
+  }, [navigate]);
+
+  return (
+    <div className="flex min-h-screen items-center justify-center bg-background px-4">
+      <div className="text-center space-y-6">
+        {/* Logo */}
+        <div className="flex items-center justify-center gap-2 mb-4">
+          <div className="h-10 w-10 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center">
+            <Music size={20} className="text-primary-glow" />
+          </div>
+          <span className="text-lg font-display font-bold text-white">Kalakshetra</span>
+        </div>
+
+        {status === "loading" ? (
+          <>
+            <div className="h-10 w-10 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto" />
+            <div className="space-y-1">
+              <p className="text-sm font-semibold text-white">Authenticating your account</p>
+              <p className="text-xs text-muted-foreground">Please wait while we set up your workspace...</p>
+            </div>
+          </>
+        ) : (
+          <div className="space-y-4">
+            <p className="text-sm text-red-400">{errorMsg}</p>
+            <a
+              href="/login"
+              className="inline-flex items-center justify-center px-4 py-2 bg-primary text-white rounded-md text-xs font-bold"
+            >
+              Back to Login
+            </a>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}

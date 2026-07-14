@@ -1236,4 +1236,64 @@ export const db = {
     const invites = JSON.parse(localStorage.getItem("bpl_band_invitations") || "[]");
     return invites.filter((i: any) => i.artistId === artistId && i.status === "pending");
   },
+
+  /**
+   * Links a Supabase-authenticated user (OAuth or magic-link) to the
+   * localStorage account system. Finds an existing account by email, or
+   * creates a fresh one. Sets it as the active session account.
+   */
+  linkSupabaseUserToAccount(email: string, name: string, supabaseUserId: string): UserAccount {
+    if (typeof window === "undefined") {
+      return {
+        id: supabaseUserId,
+        email,
+        workspaces: [],
+        onboarded: false,
+        createdAt: new Date().toISOString(),
+      };
+    }
+
+    const accounts = JSON.parse(localStorage.getItem("bpl_accounts") || "[]") as UserAccount[];
+    let account = accounts.find(
+      (a) => a.email.toLowerCase() === email.toLowerCase() || (a as any).supabaseId === supabaseUserId,
+    );
+
+    if (!account) {
+      // First time this Supabase user logs in — create account entry
+      account = {
+        id: "acc_" + supabaseUserId.replace(/-/g, "").substring(0, 12),
+        email: email.trim().toLowerCase(),
+        workspaces: [],
+        onboarded: false,
+        createdAt: new Date().toISOString(),
+      };
+      (account as any).supabaseId = supabaseUserId;
+      (account as any).displayName = name;
+      accounts.push(account);
+      localStorage.setItem("bpl_accounts", JSON.stringify(accounts));
+    } else {
+      // Update supabaseId if it changed (e.g. email match without ID)
+      if (!(account as any).supabaseId) {
+        (account as any).supabaseId = supabaseUserId;
+        (account as any).displayName = name;
+        const idx = accounts.findIndex((a) => a.id === account!.id);
+        if (idx !== -1) {
+          accounts[idx] = account;
+          localStorage.setItem("bpl_accounts", JSON.stringify(accounts));
+        }
+      }
+      // Auto-select first workspace if none active
+      if (!account.activeWorkspaceId && account.workspaces.length > 0) {
+        account.activeWorkspaceId = account.workspaces[0].id;
+      }
+    }
+
+    // Set as current active account in session
+    localStorage.setItem("bpl_current_account", JSON.stringify(account));
+    if (account.onboarded) {
+      localStorage.setItem("bpl_user_onboarded", "true");
+    }
+
+    return account;
+  },
 };

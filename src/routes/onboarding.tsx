@@ -2,6 +2,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { PageShell } from "@/components/layout/PageShell";
 import { useEffect, useState } from "react";
 import { db } from "@/lib/db";
+import { useAuth } from "@/hooks/useAuth";
 import {
   Music,
   User,
@@ -102,16 +103,25 @@ const ROLE_CARDS = [
 
 function OnboardingSelectionPage() {
   const navigate = useNavigate();
+  const { session, loading: authLoading, isSupabaseConfigured } = useAuth();
   const [account, setAccount] = useState<any>(null);
 
   useEffect(() => {
+    // Wait for Supabase auth to resolve
+    if (isSupabaseConfigured && authLoading) return;
+
+    if (isSupabaseConfigured && !session) {
+      navigate({ to: "/login" });
+      return;
+    }
+
     const currentAccount = db.getCurrentAccount();
-    if (!currentAccount) {
+    if (!isSupabaseConfigured && !currentAccount) {
       navigate({ to: "/login" });
       return;
     }
     setAccount(currentAccount);
-  }, [navigate]);
+  }, [navigate, authLoading, session, isSupabaseConfigured]);
 
   if (!account) {
     return (

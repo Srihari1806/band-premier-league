@@ -3,6 +3,7 @@ import { PageShell } from "@/components/layout/PageShell";
 import { useState, useEffect, useRef } from "react";
 import { db, WorkspaceItem, Message, Notification } from "@/lib/db";
 import { isOperatorSessionActive, clearOperatorSession } from "@/lib/security";
+import { useAuth } from "@/hooks/useAuth";
 import {
   User,
   MapPin,
@@ -69,6 +70,7 @@ const PROFESSIONAL_ROLES = [
 
 function DashboardPage() {
   const navigate = useNavigate();
+  const { session, loading: authLoading, isSupabaseConfigured, signOut: supabaseSignOut } = useAuth();
 
   // Session state
   const [currentAccount, setCurrentAccount] = useState<any>(null);
@@ -137,6 +139,14 @@ function DashboardPage() {
 
   // 1. Initial Load
   useEffect(() => {
+    // When Supabase is configured, enforce session guard first
+    if (isSupabaseConfigured && !authLoading && !session) {
+      navigate({ to: "/login" });
+      return;
+    }
+    // Still loading Supabase session — wait
+    if (isSupabaseConfigured && authLoading) return;
+
     const account = db.getCurrentAccount();
     const user = db.getCurrentUser();
     const isAdminActive = isOperatorSessionActive();
@@ -245,7 +255,7 @@ function DashboardPage() {
     }
 
     setLoading(false);
-  }, [navigate]);
+  }, [navigate, authLoading, session, isSupabaseConfigured]);
 
   // Load chat channels and active messages
   useEffect(() => {
@@ -474,11 +484,13 @@ function DashboardPage() {
     }
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
     if (currentUser?.role === "admin") {
       clearOperatorSession();
     }
     db.logoutUser();
+    // Also clear Supabase session if configured
+    await supabaseSignOut();
     navigate({ to: "/login" });
     window.location.reload();
   };

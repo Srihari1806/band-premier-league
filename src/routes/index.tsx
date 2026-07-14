@@ -2,7 +2,6 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { PageShell } from "@/components/layout/PageShell";
 import {
   Play,
-  Ticket,
   MapPin,
   ArrowRight,
   Music,
@@ -18,8 +17,6 @@ import { db, type BandApplication, type LeagueStats } from "@/lib/db";
 import { isOperatorSessionActive } from "@/lib/security";
 import heroImg from "@/assets/hero-concert.jpg";
 import crowdImg from "@/assets/crowd.jpg";
-import bandImg from "@/assets/band-1.jpg";
-import venueImg from "@/assets/venue-1.jpg";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -43,34 +40,13 @@ export const Route = createFileRoute("/")({
 
 const EVENTS = [
   { title: "Kurukshetra Campus Clash", date: "12 OCT 2026", city: "Bangalore", img: crowdImg },
-  { title: "Indie Night Live", date: "18 OCT 2026", city: "Mumbai", img: bandImg },
+  { title: "Indie Night Live", date: "18 OCT 2026", city: "Mumbai", img: heroImg },
   { title: "Echoes of Earth", date: "26 OCT 2026", city: "Delhi", img: heroImg },
   { title: "Amplify Sessions", date: "02 NOV 2026", city: "Hyderabad", img: crowdImg },
 ];
 
-const STATIC_BANDS = [
-  { name: "The F16s", genre: "Rock" },
-  { name: "Kryptos", genre: "Metal" },
-  { name: "Paper Plane", genre: "Indie" },
-  { name: "When Chai Met Toast", genre: "Folk Rock" },
-  { name: "Blakc", genre: "Alternative" },
-];
-
-const HOUSES = ["Kraftworks", "antiSOCIAL", "Red Wolf", "OLIVE TREE", "SoA"];
-
-const VENUES = [
-  { name: "AntiSOCIAL", city: "Mumbai", pax: "600 Pax", img: venueImg },
-  { name: "Hard Rock Cafe", city: "Bangalore", pax: "500 Pax", img: venueImg },
-  { name: "BlueFROG", city: "Delhi", pax: "700 Pax", img: venueImg },
-  { name: "FANDOM", city: "Hyderabad", pax: "600 Pax", img: venueImg },
-];
-
-const SONGS = [
-  { name: "Runaway", artist: "The F16s", genre: "Rock", len: "03:45" },
-  { name: "Kehna Tha", artist: "Paper Plane", genre: "Indie", len: "04:12" },
-  { name: "Zinda", artist: "Kryptos", genre: "Metal", len: "04:40" },
-  { name: "Safarnama", artist: "When Chai Met Toast", genre: "Folk", len: "03:58" },
-];
+// No static/fabricated band, venue, or production-house data.
+// The homepage shows only dynamically approved records from the registry.
 
 function Home() {
   const [stats, setStats] = useState<LeagueStats | null>(null);
@@ -310,106 +286,86 @@ function Home() {
         </div>
       </Section>
 
-      {/* FEATURED BANDS */}
+      {/* FEATURED BANDS — only real approved registrations */}
       <Section title="Featured Bands" ctaTo="/bands">
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-6">
-          {/* Dynamic Approved Bands */}
-          {dynBands.slice(0, 5).map((b) => (
-            <Link
-              key={b.id}
-              to="/bands/$bandId"
-              params={{ bandId: b.id }}
-              className="text-center group block"
-            >
-              <div className="mx-auto h-28 w-28 rounded-full overflow-hidden border-2 border-border group-hover:border-primary transition bg-surface">
-                <img
-                  src={b.profile_image}
-                  alt={b.band_name}
-                  loading="lazy"
-                  className="h-full w-full object-cover"
-                />
-              </div>
-              <p className="mt-3 font-semibold truncate px-2 text-white">{b.band_name}</p>
-              <p className="text-xs text-muted-foreground truncate">{b.genre}</p>
-            </Link>
-          ))}
-          {/* Static Bands Fallback */}
-          {dynBands.length < 5 &&
-            STATIC_BANDS.slice(0, 5 - dynBands.length).map((b) => (
-              <Link key={b.name} to="/bands" className="text-center group block animate-fade-in">
-                <div className="mx-auto h-28 w-28 rounded-full overflow-hidden border-2 border-border group-hover:border-primary transition">
-                  <img
-                    src={bandImg}
-                    alt={b.name}
-                    loading="lazy"
-                    className="h-full w-full object-cover"
-                  />
+        {dynBands.length > 0 ? (
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-6">
+            {dynBands.slice(0, 5).map((b) => (
+              <Link
+                key={b.id}
+                to="/bands/$bandId"
+                params={{ bandId: b.id }}
+                className="text-center group block"
+              >
+                <div className="mx-auto h-28 w-28 rounded-full overflow-hidden border-2 border-border group-hover:border-primary transition bg-surface">
+                  <img src={b.profile_image} alt={b.band_name} loading="lazy" className="h-full w-full object-cover" />
                 </div>
-                <p className="mt-3 font-semibold text-white">{b.name}</p>
-                <p className="text-xs text-muted-foreground">{b.genre}</p>
+                <p className="mt-3 font-semibold truncate px-2 text-white">{b.band_name}</p>
+                <p className="text-xs text-muted-foreground truncate">{b.genre}</p>
               </Link>
             ))}
-        </div>
-      </Section>
-
-      {/* PRODUCTION HOUSES */}
-      <Section title="Partner Production Houses" ctaTo="/production-houses">
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
-          {HOUSES.map((h) => (
-            <div
-              key={h}
-              className="bpl-card px-6 py-8 flex items-center justify-center font-display font-bold text-lg tracking-wide text-white"
-            >
-              {h}
+          </div>
+        ) : (
+          <div className="bpl-card p-10 text-center space-y-3">
+            <div className="h-14 w-14 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center mx-auto">
+              <Music size={24} className="text-primary-glow" />
             </div>
-          ))}
-        </div>
-      </Section>
-
-      {/* VENUES */}
-      <Section title="Venues" ctaTo="/venues">
-        <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-          {VENUES.map((v) => (
-            <Link key={v.name} to="/venues" className="group bpl-card overflow-hidden block">
-              <div className="aspect-[4/3] overflow-hidden">
-                <img
-                  src={v.img}
-                  alt={v.name}
-                  loading="lazy"
-                  className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-                />
-              </div>
-              <div className="p-4 text-left">
-                <h3 className="font-semibold text-white truncate">{v.name}</h3>
-                <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
-                  <MapPin size={12} /> {v.city} · {v.pax}
-                </p>
-              </div>
+            <p className="font-semibold text-white">Season 1 bands announcing soon</p>
+            <p className="text-xs text-muted-foreground max-w-sm mx-auto leading-relaxed">
+              We're onboarding our first cohort of independent bands ahead of the Hyderabad pilot. Applications are open — yours could be one of the first four.
+            </p>
+            <Link to="/join" className="inline-flex items-center gap-1.5 mt-2 px-4 py-2 rounded-lg bg-primary hover:bg-primary/90 text-primary-foreground text-xs font-bold transition">
+              <Sparkles size={12} /> Apply as a Band
             </Link>
-          ))}
+          </div>
+        )}
+      </Section>
+
+      {/* PRODUCTION HOUSES — Season 1 call for bids */}
+      <Section title="Production Partners" ctaTo="/production-houses">
+        <div className="bpl-card p-10 text-center space-y-3">
+          <div className="h-14 w-14 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center mx-auto">
+            <Building2 size={24} className="text-primary-glow" />
+          </div>
+          <p className="font-semibold text-white">Production house bids open — Season 1</p>
+          <p className="text-xs text-muted-foreground max-w-md mx-auto leading-relaxed">
+            Production houses bid to back bands for the full season — not just a single show. Invest in music, share in the revenue. Bidding opens before the Hyderabad pilot.
+          </p>
+          <Link to="/join" className="inline-flex items-center gap-1.5 mt-2 px-4 py-2 rounded-lg bg-primary hover:bg-primary/90 text-primary-foreground text-xs font-bold transition">
+            <Sparkles size={12} /> Register as a Production House
+          </Link>
         </div>
       </Section>
 
-      {/* LATEST SONGS */}
-      <Section title="Latest Songs" ctaTo="/media">
-        <div className="bpl-card divide-y divide-border">
-          {SONGS.map((s, i) => (
-            <div key={s.name} className="flex items-center gap-4 p-4 text-left">
-              <div className="h-10 w-10 rounded-md bg-gradient-to-br from-primary to-primary-glow flex items-center justify-center text-sm font-semibold text-white">
-                {i + 1}
-              </div>
-              <div className="flex-1">
-                <p className="font-medium text-white">{s.name}</p>
-                <p className="text-xs text-muted-foreground">
-                  {s.artist} · {s.genre}
-                </p>
-              </div>
-              <p className="text-xs text-muted-foreground">{s.len}</p>
-              <button className="text-primary-glow cursor-pointer">
-                <Play size={18} />
-              </button>
-            </div>
-          ))}
+      {/* VENUES — Season 1 call for partners */}
+      <Section title="Pilot Venues" ctaTo="/venues">
+        <div className="bpl-card p-10 text-center space-y-3">
+          <div className="h-14 w-14 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center mx-auto">
+            <MapPin size={24} className="text-primary-glow" />
+          </div>
+          <p className="font-semibold text-white">Targeting 6 pilot venues — Hyderabad first</p>
+          <p className="text-xs text-muted-foreground max-w-md mx-auto leading-relaxed">
+            We're onboarding cafes and live music venues to host official Kalakshetra gigs. Partner venues get revenue splits, co-branding, and a permanent spot in the league fixture list.
+          </p>
+          <Link to="/join" className="inline-flex items-center gap-1.5 mt-2 px-4 py-2 rounded-lg bg-primary hover:bg-primary/90 text-primary-foreground text-xs font-bold transition">
+            <Sparkles size={12} /> Register Your Venue
+          </Link>
+        </div>
+      </Section>
+
+      {/* MEDIA — placeholder until real releases are submitted */}
+      <Section title="Music & Media" ctaTo="/media">
+        <div className="bpl-card p-10 text-center space-y-3">
+          <div className="h-14 w-14 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center mx-auto">
+            <Play size={24} className="text-primary-glow" />
+          </div>
+          <p className="font-semibold text-white">Original releases coming with Season 1</p>
+          <p className="text-xs text-muted-foreground max-w-md mx-auto leading-relaxed">
+            Artist and band releases will appear here as they're added through the platform. Register your profile to submit your catalogue.
+          </p>
+          <Link to="/join" className="inline-flex items-center gap-1.5 mt-2 px-4 py-2 rounded-lg border border-border hover:bg-secondary text-white text-xs font-semibold transition">
+            Add Your Music
+          </Link>
         </div>
       </Section>
 
@@ -425,31 +381,34 @@ function Home() {
         </div>
       </Section>
 
-      {/* COMMUNITY */}
-      <Section title="Community" ctaTo="/community">
+      {/* COMMUNITY — Season 2 targets, clearly framed as goals */}
+      <Section title="Community Targets — Season 2" ctaTo="/community">
+        <div className="mb-4 px-1">
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border border-amber-500/30 bg-amber-500/10 text-amber-400 text-[10px] uppercase font-bold tracking-widest">
+            <Sparkles size={9} /> These are Season 2 growth targets, not current numbers
+          </div>
+        </div>
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           {[
-            { icon: Users, v: "2,500+", l: "Student Clubs" },
-            { icon: Music, v: "350+", l: "Cafe Communities" },
-            { icon: MapPin, v: "120+", l: "City Ambassadors" },
-            { icon: Sparkles, v: "1,200+", l: "Volunteers" },
-          ].map(({ icon: Icon, v, l }) => (
-            <div key={l} className="bpl-card p-6 flex items-center gap-4 text-left">
-              <div className="h-12 w-12 rounded-lg bg-primary/15 flex items-center justify-center text-primary-glow">
-                <Icon size={22} />
+            { icon: Users, v: "2,500", l: "Student Clubs by Season 2", sub: "Starting with 3 pilot colleges" },
+            { icon: Music, v: "350", l: "Cafe Communities by Season 2", sub: "Partnering 6 pilot venues first" },
+            { icon: MapPin, v: "120", l: "City Ambassadors by Season 2", sub: "Hyderabad ambassador cohort open" },
+            { icon: Sparkles, v: "1,200", l: "Volunteers by Season 2", sub: "Creative crew applications open" },
+          ].map(({ icon: Icon, v, l, sub }) => (
+            <div key={l} className="bpl-card p-6 flex items-start gap-4 text-left">
+              <div className="h-10 w-10 rounded-lg bg-primary/15 flex items-center justify-center text-primary-glow shrink-0 mt-0.5">
+                <Icon size={18} />
               </div>
               <div>
-                <p className="text-2xl font-display font-bold text-white">{v}</p>
-                <p className="text-xs text-muted-foreground">{l}</p>
+                <p className="text-xl font-display font-bold text-white">{v}</p>
+                <p className="text-xs text-muted-foreground font-medium">{l}</p>
+                <p className="text-[10px] text-muted-foreground/60 mt-0.5 leading-snug">{sub}</p>
               </div>
             </div>
           ))}
         </div>
         <div className="mt-8 text-center">
-          <Link
-            to="/community"
-            className="btn-primary btn-primary-hover inline-flex items-center gap-2 rounded-md px-6 py-3 text-sm font-semibold"
-          >
+          <Link to="/community" className="btn-primary btn-primary-hover inline-flex items-center gap-2 rounded-md px-6 py-3 text-sm font-semibold">
             Join the Movement
           </Link>
         </div>
@@ -476,7 +435,7 @@ function Home() {
               to="/join"
               className="btn-primary btn-primary-hover inline-flex items-center gap-2 rounded-md px-6 py-3 text-sm font-semibold"
             >
-              <Ticket size={16} /> Choose Your Role
+              <Sparkles size={16} /> Choose Your Role
             </Link>
             <Link
               to="/join"
