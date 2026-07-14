@@ -31,30 +31,66 @@ const GENRE_FILTERS = [
 ];
 
 function BandsPage() {
-  const [approvedBands, setApprovedBands] = useState<BandApplication[]>([]);
+  const [rosterItems, setRosterItems] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedGenre, setSelectedGenre] = useState("All");
 
   useEffect(() => {
-    const fetchBands = async () => {
+    const fetchRoster = async () => {
+      setLoading(true);
       try {
-        const bands = await db.getApprovedRecords("band");
-        setApprovedBands(bands);
+        const bandsData = await db.getApprovedRecords("band");
+        const artistsData = await db.getApprovedRecords("artist");
+
+        // Normalize band records
+        const bands = bandsData.map((b) => ({
+          id: b.id,
+          name: b.band_name || "Unnamed Band",
+          type: "band",
+          genre: b.genre || "Indie",
+          city: b.home_city || "Unknown City",
+          image: b.profile_image || "/images/placeholder-band.jpg",
+        }));
+
+        // Normalize solo artist records
+        const artists = artistsData.map((a) => {
+          const artistName = a.name || a.displayName || a.contact_name || "Solo Artist";
+          const artistSkills = a.artistRoles && a.artistRoles.length > 0
+            ? a.artistRoles.join(", ")
+            : a.skills || "Solo Musician";
+          const artistCity = a.homeCity || a.city || a.home_city || "Unknown City";
+          const artistImage = a.profile_image || a.avatarUrl || "/images/placeholder-artist.jpg";
+
+          return {
+            id: a.id,
+            name: artistName,
+            type: "artist",
+            genre: artistSkills,
+            city: artistCity,
+            image: artistImage,
+          };
+        });
+
+        setRosterItems([...bands, ...artists]);
       } catch (err) {
-        console.error("Failed to load approved bands", err);
+        console.error("Failed to load roster items", err);
+      } finally {
+        setLoading(false);
       }
     };
-    fetchBands();
+    fetchRoster();
   }, []);
 
-  // Filter bands based on search query and genre select
-  const filteredBands = approvedBands.filter((band) => {
+  // Filter items based on search query and genre select
+  const filteredRoster = rosterItems.filter((item) => {
     const matchesSearch =
-      band.band_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      band.home_city.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      band.genre.toLowerCase().includes(searchQuery.toLowerCase());
+      item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      item.city.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      item.genre.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      item.type.toLowerCase().includes(searchQuery.toLowerCase());
 
-    const matchesGenre = selectedGenre === "All" || band.genre === selectedGenre;
+    const matchesGenre = selectedGenre === "All" || item.genre.toLowerCase().includes(selectedGenre.toLowerCase());
 
     return matchesSearch && matchesGenre;
   });
@@ -121,34 +157,47 @@ function BandsPage() {
 
       {/* Roster Cards Directory */}
       <section className="mx-auto max-w-7xl px-4 sm:px-6 py-8 pb-20">
-        {filteredBands.length > 0 ? (
+        {loading ? (
+          <div className="flex justify-center py-20">
+            <div className="h-10 w-10 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+          </div>
+        ) : filteredRoster.length > 0 ? (
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6">
-            {filteredBands.map((band) => (
+            {filteredRoster.map((item) => (
               <Link
-                key={band.id}
+                key={item.id}
                 to="/bands/$bandId"
-                params={{ bandId: band.id }}
+                params={{ bandId: item.id }}
                 className="bpl-card p-5 text-center cursor-pointer hover:border-primary hover:scale-[1.02] active:scale-[0.98] transition group block relative overflow-hidden"
               >
-                <div className="absolute top-2.5 right-2.5 text-[8px] uppercase tracking-widest bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-1.5 py-0.5 rounded font-bold">
-                  Verified
+                <div className="absolute top-2.5 right-2.5 flex flex-col gap-1 items-end">
+                  <span className="text-[8px] uppercase tracking-widest bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-1.5 py-0.5 rounded font-bold">
+                    Verified
+                  </span>
+                  <span className={`text-[8px] uppercase tracking-widest px-1.5 py-0.5 rounded font-bold border ${
+                    item.type === "band" 
+                      ? "bg-blue-500/20 text-blue-400 border-blue-500/30" 
+                      : "bg-purple-500/20 text-purple-400 border-purple-500/30"
+                  }`}>
+                    {item.type === "band" ? "Band" : "Solo"}
+                  </span>
                 </div>
 
                 <div className="mx-auto h-24 w-24 rounded-full overflow-hidden border border-border group-hover:border-primary transition bg-slate-900 shadow-md">
                   <img
-                    src={band.profile_image}
-                    alt={band.band_name}
+                    src={item.image}
+                    alt={item.name}
                     className="h-full w-full object-cover"
                   />
                 </div>
                 <h3 className="mt-4 font-semibold text-sm group-hover:text-primary-glow transition truncate text-white">
-                  {band.band_name}
+                  {item.name}
                 </h3>
                 <p className="text-xs text-muted-foreground mt-0.5 truncate uppercase tracking-wider text-[10px] font-bold text-primary-glow">
-                  {band.genre}
+                  {item.genre}
                 </p>
                 <p className="text-xs text-muted-foreground/70 truncate flex items-center justify-center gap-0.5 mt-1.5">
-                  <MapPin size={10} /> {band.home_city}
+                  <MapPin size={10} /> {item.city}
                 </p>
               </Link>
             ))}
@@ -160,11 +209,11 @@ function BandsPage() {
             </div>
 
             <div className="space-y-2">
-              <h3 className="text-lg font-bold text-white">No Verified Bands Found</h3>
+              <h3 className="text-lg font-bold text-white">No Verified Artists Found</h3>
               <p className="text-xs text-muted-foreground leading-relaxed">
-                {approvedBands.length === 0
-                  ? "There are no approved bands in the league registry yet. Be the first to onboard!"
-                  : "Try clearing your search filters to find bands matching your preferences."}
+                {rosterItems.length === 0
+                  ? "There are no approved bands or artists in the league registry yet. Be the first to onboard!"
+                  : "Try clearing your search filters to find members matching your preferences."}
               </p>
             </div>
 
@@ -175,7 +224,7 @@ function BandsPage() {
               >
                 Apply to Join
               </Link>
-              {approvedBands.length > 0 && (
+              {rosterItems.length > 0 && (
                 <button
                   onClick={() => {
                     setSearchQuery("");

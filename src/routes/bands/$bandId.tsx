@@ -22,20 +22,50 @@ import bandImg from "@/assets/band-1.jpg";
 export const Route = createFileRoute("/bands/$bandId")({
   loader: async ({ params }) => {
     // API-Level Security Check: Fetch only if approved
-    const band = await db.getApprovedRecordById("band", params.bandId);
-    if (!band) {
+    let record = await db.getApprovedRecordById("band", params.bandId);
+    if (!record) {
+      record = await db.getApprovedRecordById("artist", params.bandId);
+    }
+    if (!record) {
       throw notFound();
     }
-    return band as any;
+    return record as any;
   },
   component: BandProfilePage,
 });
 
 function BandProfilePage() {
-  const band = Route.useLoaderData();
+  const rawData = Route.useLoaderData();
 
-  // Custom BPL ID Generation
-  const bplId = `BPL-BAND-${band.id.slice(0, 6).toUpperCase()}`;
+  // Normalize data for both band and solo artist profiles
+  const band = {
+    ...rawData,
+    band_name: rawData.band_name || rawData.name || rawData.displayName || rawData.contact_name || "Solo Artist",
+    profile_image: rawData.profile_image || rawData.avatarUrl || "/images/placeholder-artist.jpg",
+    banner_image: rawData.banner_image || "/images/placeholder-banner.jpg",
+    genre: rawData.artistRoles && rawData.artistRoles.length > 0
+      ? rawData.artistRoles.join(", ")
+      : rawData.genre || rawData.skills || "Solo Musician",
+    home_city: rawData.home_city || rawData.city || rawData.homeCity || "Unknown City",
+    bio: rawData.bio || "No biography provided yet.",
+    instagram_url: rawData.instagram_url || rawData.instagramUrl || "",
+    youtube_url: rawData.youtube_url || rawData.youtubeUrl || "",
+    spotify_url: rawData.spotify_url || rawData.spotifyUrl || "",
+    saavn_url: rawData.saavn_url || rawData.saavnUrl || "",
+    apple_url: rawData.apple_url || rawData.appleUrl || "",
+    website_url: rawData.website_url || rawData.websiteUrl || "",
+    demo_video: rawData.demo_video || rawData.demoVideo || "",
+    gallery: rawData.gallery || rawData.performance_photos || [],
+    original_covers: rawData.original_covers || "",
+    members: rawData.members || [],
+    timeline: rawData.timeline || [],
+    releases: rawData.releases || [],
+  };
+
+  const isSoloArtist = !rawData.band_name;
+  const bplId = isSoloArtist 
+    ? `BPL-ARTIST-${band.id.slice(0, 6).toUpperCase()}`
+    : `BPL-BAND-${band.id.slice(0, 6).toUpperCase()}`;
 
   return (
     <PageShell>
@@ -207,6 +237,47 @@ function BandProfilePage() {
                         className="text-[10px] text-primary-glow hover:underline truncate block mt-1"
                       >
                         @{m.instagram.replace("@", "")}
+                      </a>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </Panel>
+          )}
+
+          {/* Solo Artist Timeline & Achievements */}
+          {isSoloArtist && band.timeline && band.timeline.length > 0 && (
+            <Panel title="Career Timeline & Milestones">
+              <div className="relative border-l border-border pl-4 space-y-6 ml-2">
+                {band.timeline.map((t: any, idx: number) => (
+                  <div key={idx} className="relative">
+                    <div className="absolute -left-[21px] top-1.5 h-2 w-2 rounded-full bg-primary border border-background" />
+                    <span className="text-[10px] font-bold text-primary-glow uppercase tracking-wider">{t.year}</span>
+                    <p className="text-xs text-white font-medium mt-0.5">{t.event}</p>
+                  </div>
+                ))}
+              </div>
+            </Panel>
+          )}
+
+          {/* Solo Artist Releases */}
+          {isSoloArtist && band.releases && band.releases.length > 0 && (
+            <Panel title="Featured Releases & Tracks">
+              <div className="grid gap-3 sm:grid-cols-2">
+                {band.releases.map((r: any, idx: number) => (
+                  <div key={idx} className="p-3.5 rounded-lg border border-border/80 bg-secondary/20 flex flex-col justify-between text-left">
+                    <div>
+                      <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest">{r.year}</span>
+                      <h4 className="text-xs font-bold text-white mt-1">{r.title}</h4>
+                    </div>
+                    {r.link && (
+                      <a
+                        href={r.link}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="mt-3 text-[10px] text-primary-glow font-bold hover:underline flex items-center gap-1 w-max"
+                      >
+                        Listen Now <ExternalLink size={10} />
                       </a>
                     )}
                   </div>
