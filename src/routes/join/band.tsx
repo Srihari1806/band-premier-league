@@ -53,7 +53,7 @@ function BandOnboardingPage() {
   const navigate = useNavigate();
   const { type } = Route.useSearch();
   const { profile } = useProfile();
-  const isArtist = type === "artist";
+  const isArtist = type === "artist" || type === "solo";
 
   const [step, setStep] = useState(1);
   const [isSubmitted, setIsSubmitted] = useState(false);

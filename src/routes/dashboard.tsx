@@ -58,7 +58,8 @@ type DashboardTab =
   | "curation"
   | "security"
   | "members"
-  | "invites";
+  | "invites"
+  | "artists";
 
 const PROFESSIONAL_ROLES = [
   "Singer", "Songwriter", "Lyricist", "Composer", "Music Producer", "DJ", "Rapper", "Beatboxer",
@@ -136,6 +137,10 @@ function DashboardPage() {
 
   // Curation Approvals (Organizer only)
   const [curationItems, setCurationItems] = useState<any[]>([]);
+
+  // Solo Artists Directory states
+  const [soloArtists, setSoloArtists] = useState<any[]>([]);
+  const [loadingArtists, setLoadingArtists] = useState(false);
 
   // 1. Initial Load
   useEffect(() => {
@@ -338,6 +343,23 @@ function DashboardPage() {
     setChatMessages((prev) => [...prev, newMsg]);
     setNewMessageText("");
   };
+
+  // Load Solo Artists
+  useEffect(() => {
+    async function loadSoloArtists() {
+      if (activeTab !== "artists") return;
+      setLoadingArtists(true);
+      try {
+        const apps = await db.getApplications("artist");
+        setSoloArtists(apps || []);
+      } catch (e) {
+        console.error("Failed to load solo artists", e);
+      } finally {
+        setLoadingArtists(false);
+      }
+    }
+    loadSoloArtists();
+  }, [activeTab]);
 
   const handleAddCalendarEvent = (e: React.FormEvent) => {
     e.preventDefault();
@@ -739,6 +761,17 @@ function DashboardPage() {
                 Workspace Menu
               </span>
 
+              {/* REDIRECTION ICON TO JOIN HUB */}
+              <Link
+                to={"/join" as any}
+                className="w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-bold transition text-primary-glow bg-primary/5 border border-primary/20 hover:bg-primary/10 mb-3"
+              >
+                <span className="flex items-center gap-2">
+                  <ExternalLink size={13} /> Onboarding & Join Hub
+                </span>
+                <ChevronRight size={13} />
+              </Link>
+
               {/* DASHBOARD OVERVIEW */}
               <button
                 onClick={() => setActiveTab("overview")}
@@ -749,6 +782,18 @@ function DashboardPage() {
                 }`}
               >
                 <LayoutDashboard size={14} /> Workspace Dashboard
+              </button>
+
+              {/* SOLO ARTISTS DIRECTORY */}
+              <button
+                onClick={() => setActiveTab("artists")}
+                className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-xs font-bold transition ${
+                  activeTab === "artists"
+                    ? "bg-primary text-primary-foreground shadow-glow"
+                    : "text-muted-foreground hover:text-foreground hover:bg-secondary/40"
+                }`}
+              >
+                <Users size={14} /> Solo Artists Directory
               </button>
 
               {/* CURATION APPROVALS (Organizer only) */}
@@ -1889,6 +1934,121 @@ function DashboardPage() {
                       </button>
                     </form>
                   </div>
+                </div>
+              )}
+
+              {/* TAB: SOLO ARTISTS DIRECTORY */}
+              {activeTab === "artists" && (
+                <div className="space-y-6 animate-fade-in text-left">
+                  <div className="bpl-card p-6 md:p-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+                    <div className="space-y-1">
+                      <h2 className="text-xl md:text-2xl font-display font-bold text-white tracking-tight">
+                        Solo Artists Directory
+                      </h2>
+                      <p className="text-xs text-muted-foreground">
+                        Discover registered solo musicians, instrumentalists, and singers. You can directly message them to collaborate.
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Search Bar */}
+                  <div className="relative">
+                    <Search className="absolute left-3 top-2.5 text-muted-foreground" size={16} />
+                    <input
+                      type="text"
+                      placeholder="Search by artist name or artistic skills (e.g. Guitarist, Singer)..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="w-full bg-secondary/60 border border-border rounded-lg pl-10 pr-4 py-2.5 text-xs text-white placeholder-muted-foreground focus:outline-none focus:border-primary transition"
+                    />
+                  </div>
+
+                  {loadingArtists ? (
+                    <div className="flex justify-center py-12">
+                      <div className="h-8 w-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                    </div>
+                  ) : (
+                    <>
+                      {(() => {
+                        const filtered = soloArtists.filter((artist: any) => {
+                          const query = searchQuery.trim().toLowerCase();
+                          if (!query) return true;
+                          const nameMatch = (artist.name || artist.displayName || artist.contact_name || "").toLowerCase().includes(query);
+                          const rolesMatch = (artist.artistRoles || []).some((r: string) => r.toLowerCase().includes(query));
+                          const skillsMatch = (artist.skills || "").toLowerCase().includes(query);
+                          return nameMatch || rolesMatch || skillsMatch;
+                        });
+
+                        if (filtered.length === 0) {
+                          return (
+                            <div className="bpl-card p-12 text-center space-y-3">
+                              <User size={36} className="text-muted-foreground mx-auto" />
+                              <p className="text-sm font-semibold text-white">No Solo Artists Found</p>
+                              <p className="text-xs text-muted-foreground max-w-sm mx-auto">
+                                No solo artists match your search query or have registered yet.
+                              </p>
+                            </div>
+                          );
+                        }
+
+                        return (
+                          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                            {filtered.map((artist: any) => {
+                              const artistName = artist.name || artist.displayName || artist.contact_name || "Solo Artist";
+                              const artistSkillsList = artist.artistRoles && artist.artistRoles.length > 0
+                                ? artist.artistRoles.join(", ")
+                                : artist.skills || "Musician / Performer";
+
+                              return (
+                                <div key={artist.id} className="bpl-card p-5 flex flex-col justify-between space-y-4 hover:border-primary/50 transition">
+                                  <div className="space-y-2">
+                                    <div className="h-8 w-8 rounded-full bg-primary/10 border border-primary/25 flex items-center justify-center text-primary-glow font-bold">
+                                      <User size={14} />
+                                    </div>
+                                    <div>
+                                      <h4 className="text-sm font-bold text-white tracking-tight">{artistName}</h4>
+                                      <p className="text-[10px] uppercase font-bold text-primary-glow tracking-wider mt-1">
+                                        Artistic Skills
+                                      </p>
+                                      <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">
+                                        {artistSkillsList}
+                                      </p>
+                                    </div>
+                                  </div>
+
+                                  <button
+                                    onClick={() => {
+                                      // Ensure we have a channel for this artist
+                                      const artistId = artist.id;
+                                      
+                                      // Check if channel already exists
+                                      if (!channels.some((c: any) => c.id === artistId)) {
+                                        setChannels((prev: any[]) => [
+                                          ...prev,
+                                          {
+                                            id: artistId,
+                                            name: artistName,
+                                            role: "artist",
+                                            avatarIcon: User,
+                                          },
+                                        ]);
+                                      }
+                                      
+                                      setActiveChannelId(artistId);
+                                      setActiveTab("messages");
+                                    }}
+                                    className="w-full py-2 px-3 bg-primary hover:bg-primary-glow text-primary-foreground text-xs font-bold rounded transition flex items-center justify-center gap-1.5 cursor-pointer"
+                                  >
+                                    <MessageSquare size={12} /> Direct Message (DM)
+                                  </button>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        );
+                      })()}
+                    </>
+                  )}
                 </div>
               )}
 
