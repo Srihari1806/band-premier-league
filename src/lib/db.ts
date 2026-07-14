@@ -472,62 +472,71 @@ export const db = {
     const searchVal = loginId.trim().toLowerCase();
     
     if (supabase) {
-      const tableName = getTableName(role);
-      const { data, error } = await supabase
-        .from(tableName)
-        .select("*")
-        .or(`contact_email.ilike.${searchVal},username.ilike.${searchVal},contact_phone.ilike.${searchVal}`)
-        .maybeSingle();
-      if (error) throw error;
-      if (!data) {
-        throw new Error(`No registered profile found with ID/Email/Phone: ${loginId}`);
+      try {
+        const tableName = getTableName(role);
+        const { data, error } = await supabase
+          .from(tableName)
+          .select("*")
+          .or(`contact_email.ilike.${searchVal},username.ilike.${searchVal},contact_phone.ilike.${searchVal}`)
+          .maybeSingle();
+        if (error) throw error;
+        if (!data) {
+          throw new Error(`No registered profile found with ID/Email/Phone: ${loginId}`);
+        }
+        
+        const recordPassword = data.password || "kala123";
+        if (recordPassword !== passwordText) {
+          throw new Error("Incorrect password.");
+        }
+        
+        const user = {
+          id: data.id,
+          role,
+          email: data.contact_email,
+          name: data.band_name || data.venue_name || data.company_name || data.name || "User",
+          status: data.status,
+          username: data.username || loginId
+        };
+        localStorage.setItem("bpl_user_onboarded", "true");
+        localStorage.setItem("bpl_current_user", JSON.stringify(user));
+        return user;
+      } catch (err) {
+        console.warn(`Supabase login failed for ${role}, using localStorage fallback`, err);
+        return this.loginLocalUser(searchVal, passwordText, role);
       }
-      
-      const recordPassword = data.password || "kala123";
-      if (recordPassword !== passwordText) {
-        throw new Error("Incorrect password.");
-      }
-      
-      const user = {
-        id: data.id,
-        role,
-        email: data.contact_email,
-        name: data.band_name || data.venue_name || data.company_name || data.name || "User",
-        status: data.status,
-        username: data.username || loginId
-      };
-      localStorage.setItem("bpl_user_onboarded", "true");
-      localStorage.setItem("bpl_current_user", JSON.stringify(user));
-      return user;
     } else {
-      const key = getStorageKey(role);
-      const records = JSON.parse(localStorage.getItem(key) || "[]");
-      const record = records.find((r: any) => 
-        r.username?.toLowerCase() === searchVal ||
-        r.contact_email?.toLowerCase() === searchVal ||
-        r.contact_phone?.toLowerCase() === searchVal
-      );
-      if (!record) {
-        throw new Error(`No registered profile found with ID/Email/Phone: ${loginId}`);
-      }
-      
-      const recordPassword = record.password || "kala123";
-      if (recordPassword !== passwordText) {
-        throw new Error("Incorrect password.");
-      }
-      
-      const user = {
-        id: record.id,
-        role,
-        email: record.contact_email,
-        name: record.band_name || record.venue_name || record.company_name || record.name || "User",
-        status: record.status,
-        username: record.username || loginId
-      };
-      localStorage.setItem("bpl_user_onboarded", "true");
-      localStorage.setItem("bpl_current_user", JSON.stringify(user));
-      return user;
+      return this.loginLocalUser(searchVal, passwordText, role);
     }
+  },
+
+  loginLocalUser(searchVal: string, passwordText: string, role: string) {
+    const key = getStorageKey(role);
+    const records = JSON.parse(localStorage.getItem(key) || "[]");
+    const record = records.find((r: any) => 
+      r.username?.toLowerCase() === searchVal ||
+      r.contact_email?.toLowerCase() === searchVal ||
+      r.contact_phone?.toLowerCase() === searchVal
+    );
+    if (!record) {
+      throw new Error(`No registered profile found with ID/Email/Phone: ${searchVal}`);
+    }
+    
+    const recordPassword = record.password || "kala123";
+    if (recordPassword !== passwordText) {
+      throw new Error("Incorrect password.");
+    }
+    
+    const user = {
+      id: record.id,
+      role,
+      email: record.contact_email,
+      name: record.band_name || record.venue_name || record.company_name || record.name || "User",
+      status: record.status,
+      username: record.username || searchVal
+    };
+    localStorage.setItem("bpl_user_onboarded", "true");
+    localStorage.setItem("bpl_current_user", JSON.stringify(user));
+    return user;
   },
 
   async loginDemoUser(role: string): Promise<any> {
@@ -614,38 +623,47 @@ export const db = {
 
   async updatePassword(role: string, id: string, currentPasswordText: string, newPasswordText: string): Promise<void> {
     if (supabase) {
-      const tableName = getTableName(role);
-      const { data, error: fetchErr } = await supabase
-        .from(tableName)
-        .select("password")
-        .eq("id", id)
-        .maybeSingle();
-      if (fetchErr) throw fetchErr;
-      if (!data) throw new Error("Profile record not found.");
-      
-      const activePassword = data.password || "kala123";
-      if (activePassword !== currentPasswordText) {
-        throw new Error("Current password does not match.");
+      try {
+        const tableName = getTableName(role);
+        const { data, error: fetchErr } = await supabase
+          .from(tableName)
+          .select("password")
+          .eq("id", id)
+          .maybeSingle();
+        if (fetchErr) throw fetchErr;
+        if (!data) throw new Error("Profile record not found.");
+        
+        const activePassword = data.password || "kala123";
+        if (activePassword !== currentPasswordText) {
+          throw new Error("Current password does not match.");
+        }
+        
+        const { error: updateErr } = await supabase
+          .from(tableName)
+          .update({ password: newPasswordText })
+          .eq("id", id);
+        if (updateErr) throw updateErr;
+      } catch (err) {
+        console.warn(`Supabase updatePassword failed, using localStorage fallback`, err);
+        this.updateLocalPassword(role, id, currentPasswordText, newPasswordText);
       }
-      
-      const { error: updateErr } = await supabase
-        .from(tableName)
-        .update({ password: newPasswordText })
-        .eq("id", id);
-      if (updateErr) throw updateErr;
     } else {
-      const key = getStorageKey(role);
-      const records = JSON.parse(localStorage.getItem(key) || "[]");
-      const idx = records.findIndex((r: any) => r.id === id);
-      if (idx === -1) throw new Error("Profile record not found.");
-      
-      const activePassword = records[idx].password || "kala123";
-      if (activePassword !== currentPasswordText) {
-        throw new Error("Current password does not match.");
-      }
-      
-      records[idx].password = newPasswordText;
-      localStorage.setItem(key, JSON.stringify(records));
+      this.updateLocalPassword(role, id, currentPasswordText, newPasswordText);
     }
+  },
+
+  updateLocalPassword(role: string, id: string, currentPasswordText: string, newPasswordText: string) {
+    const key = getStorageKey(role);
+    const records = JSON.parse(localStorage.getItem(key) || "[]");
+    const idx = records.findIndex((r: any) => r.id === id);
+    if (idx === -1) throw new Error("Profile record not found.");
+    
+    const activePassword = records[idx].password || "kala123";
+    if (activePassword !== currentPasswordText) {
+      throw new Error("Current password does not match.");
+    }
+    
+    records[idx].password = newPasswordText;
+    localStorage.setItem(key, JSON.stringify(records));
   },
 };
