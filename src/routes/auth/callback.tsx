@@ -4,7 +4,7 @@ import { supabase, upsertProfile, getProfile } from "@/lib/supabase";
 import { db } from "@/lib/db";
 import { Music } from "lucide-react";
 
-export const Route = createFileRoute("/auth/callback")({
+export const Route = createFileRoute("/auth/callback" as any)({
   head: () => ({
     meta: [{ title: "Authenticating � Kalakshetra" }],
   }),

@@ -1,332 +1,483 @@
-﻿import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { PageShell } from "@/components/layout/PageShell";
+import { motion } from "framer-motion";
 import {
-  Trophy,
-  TrendingUp,
   Users,
-  ShieldCheck,
+  Building2,
+  MapPin,
+  Megaphone,
   Music,
-  Sparkles,
   ArrowRight,
-  BarChart3,
-  Shuffle,
+  TrendingUp,
+  Sparkles,
+  Zap,
+  ShieldCheck,
   DollarSign,
+  Tv,
+  Calendar,
+  Layers,
+  ArrowDown,
   Target,
-  AlertTriangle,
+  FileMusic,
+  HelpCircle
 } from "lucide-react";
 
 export const Route = createFileRoute("/about")({
   head: () => ({
     meta: [
-      { title: "About — Kalakshetra" },
+      { title: "About Kalakshetra — India's Independent Music League" },
       {
         name: "description",
         content:
-          "Kalakshetra is a season-long artist development league — not a booking platform. Production houses invest in bands, a live points table drives competition, and artists can merge into entirely new acts.",
-      },
-      { property: "og:title", content: "About — Kalakshetra" },
-      {
-        property: "og:description",
-        content:
-          "A talent development league for independent music. Season-long investment, a real competition with standings, artist recombination, and built-in financial protection.",
+          "Kalakshetra connects artists, franchises, venues, and communities. Production houses invest in original music production, bands compete on a live points table, and we build long-term value.",
       },
     ],
   }),
   component: AboutPage,
 });
 
-const DIFFERENTIATORS = [
+const PROBLEMS = [
   {
-    icon: Trophy,
-    title: "Season-long investment",
-    body:
-      "Production houses don't book a single show — they bid to back bands for the entire season. Investment in music production, video content, and audience-building. In return, they share in the revenue those bands generate through ticket sales, streams, and fan growth.",
-    color: "text-amber-400",
-    bg: "bg-amber-400/10",
-    border: "border-amber-400/20",
+    title: "Artist Opportunity Gap",
+    desc: "Independent artists struggle to discover opportunities and find stable revenue streams.",
+    icon: Music,
+    color: "from-amber-500/20 to-amber-500/5",
+    glow: "shadow-amber-500/10",
   },
   {
-    icon: BarChart3,
-    title: "A real competition with standings",
-    body:
-      "Bands compete on a live points table — built from audience turnout, engagement, and verified votes. At the end of the season, top-performing bands compete for a final prize pool decided by the audience they built themselves. The scoring formula is public. Everything is transparent.",
-    color: "text-blue-400",
-    bg: "bg-blue-400/10",
-    border: "border-blue-400/20",
+    title: "Talent Discovery",
+    desc: "Production houses and labels struggle to discover vetted, high-quality independent talent.",
+    icon: Building2,
+    color: "from-blue-500/20 to-blue-500/5",
+    glow: "shadow-blue-500/10",
   },
   {
-    icon: Shuffle,
-    title: "Artist recombination",
-    body:
-      "Individual artists can be matched and merged into entirely new bands — a singer, a guitarist, and a drummer who've never played together, brought into one act through the league itself. Fully opt-in. Some of the season's most exciting acts may not exist yet.",
-    color: "text-purple-400",
-    bg: "bg-purple-400/10",
-    border: "border-purple-400/20",
+    title: "Venue Consistency",
+    desc: "Live music venues and cafes struggle to consistently book artists and fill seats on off-peak nights.",
+    icon: MapPin,
+    color: "from-purple-500/20 to-purple-500/5",
+    glow: "shadow-purple-500/10",
   },
   {
-    icon: ShieldCheck,
-    title: "Built-in financial protection",
-    body:
-      "Every stakeholder operates in a structured, ROI-protected model with transparent revenue splits agreed before the season starts. We built the systems so no one loses money by trusting the league, and no one can game their way to the top of the table.",
-    color: "text-green-400",
-    bg: "bg-green-400/10",
-    border: "border-green-400/20",
+    title: "Sponsor Activation",
+    desc: "Brands and corporate sponsors struggle to directly engage local music communities and youth demographics.",
+    icon: Megaphone,
+    color: "from-rose-500/20 to-rose-500/5",
+    glow: "shadow-rose-500/10",
+  },
+  {
+    title: "Disconnected Silos",
+    desc: "The entire live music ecosystem operates in disconnected segments, leaving value on the table.",
+    icon: Layers,
+    color: "from-emerald-500/20 to-emerald-500/5",
+    glow: "shadow-emerald-500/10",
   },
 ];
 
-const MECHANICS = [
-  {
-    icon: BarChart3,
-    title: "Points Table — How It Works",
-    items: [
-      "Scoring formula is public: 40% attendance, 30% revenue, 30% verified votes.",
-      "Votes are tied to verified ticket purchases — one vote per verified account per show.",
-      "Raw vote count alone is never the deciding factor; it must cost something real to cast.",
-      "All score inputs trace back to actual payment processor records, not self-reported numbers.",
-    ],
-  },
-  {
-    icon: DollarSign,
-    title: "Prize Pool — Where It Comes From",
-    items: [
-      "A defined cut of event revenue per show goes into a ring-fenced prize pool account.",
-      "Sponsor contributions are tracked separately and transparently alongside event revenue.",
-      "Pool funds are held in a dedicated account, separate from operating revenue.",
-      "The full structure is disclosed before Season 1 begins — no surprises at the final.",
-    ],
-  },
-  {
-    icon: Shuffle,
-    title: "Artist Merging — How It's Protected",
-    items: [
-      "Fully opt-in. Artists list instruments, genres, and availability; express interest; the league facilitates.",
-      "No league-assigned pairings — an artist never gets placed in a band they didn't agree to join.",
-      "Merged bands start fresh on the points table — no inherited points from member solo performances.",
-      "Prevents gaming: merging with a strong performer doesn't buy standing.",
-    ],
-  },
-  {
-    icon: AlertTriangle,
-    title: "Anti-Cheating Framework",
-    items: [
-      "Fake ticket sales (inflating attendance scores) → all sales go through the payment processor; no self-reporting.",
-      "Vote manipulation → votes are tied to verified phone accounts with purchase history.",
-      "Venue-band collusion to fake attendance → cross-verified with independent door count and revenue data.",
-      "Every score input must trace to a real, verifiable transaction.",
-    ],
-  },
+const FLOW_NODES = [
+  { id: "artists", label: "Artists & Bands", icon: Music, color: "text-amber-400 bg-amber-400/10 border-amber-400/20" },
+  { id: "houses", label: "Production Houses", icon: Building2, color: "text-blue-400 bg-blue-400/10 border-blue-400/20" },
+  { id: "operator", label: "Kalakshetra Operator", icon: Sparkles, color: "text-primary-glow bg-primary/10 border-primary/20" },
+  { id: "venues", label: "Venues · Sponsors · Events", icon: MapPin, color: "text-purple-400 bg-purple-400/10 border-purple-400/20" },
+  { id: "audience", label: "Audience & Fans", icon: Users, color: "text-emerald-400 bg-emerald-400/10 border-emerald-400/20" },
+];
+
+const TIMELINE_STEPS = [
+  { title: "Artists & Bands Register", desc: "Build portfolios and enter the ecosystem database." },
+  { title: "Production Houses Discover Talent", desc: "Scan the database to sign promising creators." },
+  { title: "Investment & Partnership", desc: "Franchises invest in original music production based on the number of franchises and registered bands count to build their roster." },
+  { title: "Music + Video Production", desc: "Produce high-quality original singles and music videos." },
+  { title: "Live Shows", desc: "Perform live on tour across partner venues and cafe stages." },
+  { title: "Season Points Table", desc: "Bands earn points from attendance, revenue, and verified votes." },
+  { title: "Top 25% Qualify", desc: "The highest ranking acts secure their spot in the grand finals." },
+  { title: "Kalakshetra League", desc: "Broadcasted final matches to determine the season champion." },
+  { title: "Audience", desc: "Fans stream the music, attend the matches, and vote for winners." },
+];
+
+const PILOT_CITIES = [
+  { name: "Hyderabad", status: "Launching Season I", desc: "Pilot cohort of 4 bands, 6 venues, and 24 live tournament shows." },
+  { name: "Visakhapatnam", status: "Coming Soon", desc: "Expansion cohort scheduled for Season II qualifiers." },
+  { name: "Vijayawada", status: "Coming Soon", desc: "Regional campus tournaments and cafe fixtures." },
+];
+
+const PARTICIPANTS = [
+  { name: "Artists", desc: "Singers, songwriters, and instrumentalists.", link: "/onboarding", type: "artist" },
+  { name: "Bands", desc: "Multi-member musical acts and touring lineups.", link: "/join/band", type: "band" },
+  { name: "Production Houses", desc: "Labels, studios, and investor franchises.", link: "/join/production-house", type: "production_house" },
+  { name: "Venues", desc: "Cafes, clubs, and performance spaces.", link: "/join/venue", type: "venue" },
+  { name: "Sponsors", desc: "Brand partners seeking community engagement.", link: "/join/sponsor", type: "sponsor" },
+  { name: "Event Managers", desc: "Logistics and on-ground match coordinators.", link: "/join/event-manager", type: "event_manager" },
 ];
 
 function AboutPage() {
   return (
     <PageShell>
-      {/* Hero */}
-      <section className="relative overflow-hidden">
-        <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.015)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.015)_1px,transparent_1px)] bg-[size:48px_48px] pointer-events-none" />
-        <div className="absolute top-0 right-0 h-[500px] w-[500px] rounded-full bg-primary/5 blur-[140px] pointer-events-none" />
-        <div className="absolute bottom-0 left-0 h-[400px] w-[400px] rounded-full bg-amber-500/4 blur-[120px] pointer-events-none" />
+      <div className="bg-background text-white min-h-screen relative overflow-hidden">
+        {/* Glow Effects */}
+        <div className="absolute top-0 right-1/4 h-[500px] w-[500px] rounded-full bg-primary/4 blur-[160px] pointer-events-none" />
+        <div className="absolute bottom-1/4 left-1/4 h-[400px] w-[400px] rounded-full bg-amber-500/3 blur-[140px] pointer-events-none" />
+        <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.01)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.01)_1px,transparent_1px)] bg-[size:48px_48px] pointer-events-none" />
 
-        <div className="relative mx-auto max-w-4xl px-4 sm:px-6 py-24 text-center space-y-6">
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border border-primary/25 bg-primary/8 text-primary-glow text-[10px] uppercase font-bold tracking-widest">
-            <Sparkles size={10} /> About Kalakshetra
-          </div>
-          <h1 className="text-4xl md:text-6xl font-display font-bold text-white tracking-tight leading-tight">
-            Built for the sound{" "}
-            <span className="gradient-text">of a new India.</span>
-          </h1>
-          <p className="text-sm text-muted-foreground max-w-2xl mx-auto leading-relaxed">
-            Kalakshetra isn't just a stage-booking platform — it's a season-long artist development league.
-          </p>
-        </div>
-      </section>
-
-      {/* Core Statement */}
-      <section className="mx-auto max-w-4xl px-4 sm:px-6 py-12">
-        <div className="bpl-card p-8 md:p-12 space-y-5 border-primary/20 bg-primary/3 text-left">
-          <div className="flex items-center gap-2 text-primary-glow text-xs font-bold uppercase tracking-widest">
-            <Music size={14} />
-            The Idea
-          </div>
-          <p className="text-white text-lg leading-relaxed font-medium">
-            Every season, production houses bid to back bands — not just for a single show, but to invest in their music, their video content, and their growth across the season. In return, production houses share in the revenue those bands generate through ticket sales, streams, and audience growth.
-          </p>
-          <p className="text-muted-foreground text-sm leading-relaxed">
-            Bands compete on a live <strong className="text-white">points table</strong> — built from audience turnout, engagement, and votes — not just prize money. At the end of the season, top-performing bands compete for a <strong className="text-white">final prize pool</strong>, decided by the audience they built themselves.
-          </p>
-          <p className="text-muted-foreground text-sm leading-relaxed">
-            Kalakshetra also creates something no other platform does: <strong className="text-white">individual artists can be matched and merged into entirely new bands</strong> — a singer, a guitarist, and a drummer who've never played together, brought into one act through the league itself. Some of the season's most exciting acts may not exist yet.
-          </p>
-          <p className="text-muted-foreground text-sm leading-relaxed">
-            Every stakeholder — bands, production houses, venues, organisers — operates in a structured, ROI-protected model, with transparent revenue splits agreed before the season starts. We built the systems so no one loses money by trusting the league, and no one can game their way to the top of the table.
-          </p>
-        </div>
-      </section>
-
-      {/* Four Differentiators */}
-      <section className="mx-auto max-w-7xl px-4 sm:px-6 py-12">
-        <div className="text-center mb-12 space-y-3">
-          <p className="text-xs uppercase tracking-widest text-primary-glow font-bold">What Makes Us Different</p>
-          <h2 className="text-3xl md:text-4xl font-display font-bold text-white">
-            Four things no booking platform does.
-          </h2>
-          <p className="text-xs text-muted-foreground max-w-md mx-auto">
-            These four structural differences are what make Kalakshetra a league, not a marketplace.
-          </p>
-        </div>
-        <div className="grid md:grid-cols-2 gap-6">
-          {DIFFERENTIATORS.map((d) => {
-            const Icon = d.icon;
-            return (
-              <div
-                key={d.title}
-                className={`bpl-card p-7 text-left space-y-4 hover:border-primary/40 transition-all duration-300 ${d.border}`}
+        {/* HERO SECTION */}
+        <section className="relative pt-28 pb-20 px-4 text-center max-w-5xl mx-auto z-10">
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            className="space-y-6"
+          >
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border border-primary/20 bg-primary/5 text-primary-glow text-[10px] uppercase font-bold tracking-widest">
+              <Sparkles size={10} /> Pitch Deck
+            </div>
+            <h1 className="text-sm font-bold uppercase tracking-[0.4em] text-muted-foreground">
+              KALAKSHETRA
+            </h1>
+            <h2 className="text-4xl md:text-6xl font-display font-extrabold text-white tracking-tight leading-tight">
+              The Home of <span className="gradient-text">Independent Music</span>
+            </h2>
+            <p className="mt-6 text-sm md:text-base text-muted-foreground max-w-2xl mx-auto leading-relaxed">
+              India's creator ecosystem connecting artists, production houses, venues, sponsors, event managers, and audiences through one unified music platform.
+            </p>
+            <div className="mt-10 flex flex-wrap justify-center gap-4">
+              <Link
+                to="/onboarding"
+                className="btn-primary btn-primary-hover inline-flex items-center gap-2 rounded-md px-6 py-3 text-xs font-bold text-white shadow-lg"
               >
-                <div className={`h-12 w-12 rounded-lg ${d.bg} border ${d.border} flex items-center justify-center ${d.color}`}>
-                  <Icon size={22} />
+                Join the Ecosystem <ArrowRight size={14} />
+              </Link>
+              <Link
+                to="/league"
+                className="inline-flex items-center gap-2 rounded-md border border-border bg-secondary/80 backdrop-blur px-6 py-3 text-xs font-bold hover:bg-secondary transition text-white"
+              >
+                Explore League
+              </Link>
+            </div>
+          </motion.div>
+        </section>
+
+        {/* SECTION 1: THE PROBLEM */}
+        <section className="py-20 px-4 max-w-7xl mx-auto relative z-10 border-t border-border/45">
+          <div className="text-center max-w-xl mx-auto mb-16 space-y-3">
+            <h2 className="text-xs uppercase tracking-widest text-primary-glow font-bold">The Problem</h2>
+            <h3 className="text-3xl font-display font-bold text-white">Why the indie music scene is broken.</h3>
+          </div>
+          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-5">
+            {PROBLEMS.map((p, idx) => {
+              const Icon = p.icon;
+              return (
+                <motion.div
+                  key={p.title}
+                  initial={{ opacity: 0, y: 30 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.4, delay: idx * 0.1 }}
+                  className={`bpl-card p-6 flex flex-col justify-between text-left border-border/40 hover:border-primary/30 transition-all duration-300 hover:scale-[1.02] shadow-md ${p.glow}`}
+                >
+                  <div className="space-y-4">
+                    <div className={`h-10 w-10 rounded-lg bg-gradient-to-br ${p.color} border border-white/5 flex items-center justify-center text-white`}>
+                      <Icon size={18} />
+                    </div>
+                    <h4 className="font-bold text-sm text-white leading-tight">{p.title}</h4>
+                    <p className="text-[11px] text-muted-foreground leading-relaxed">{p.desc}</p>
+                  </div>
+                </motion.div>
+              );
+            })}
+          </div>
+        </section>
+
+        {/* SECTION 2: OUR SOLUTION (DIAGRAM) */}
+        <section className="py-20 px-4 max-w-7xl mx-auto relative z-10 border-t border-border/45 bg-slate-950/20">
+          <div className="text-center max-w-xl mx-auto mb-16 space-y-3">
+            <h2 className="text-xs uppercase tracking-widest text-primary-glow font-bold">Our Solution</h2>
+            <h3 className="text-3xl font-display font-bold text-white">One Connected Ecosystem</h3>
+          </div>
+
+          <div className="flex flex-col items-center justify-center py-8 relative">
+            <div className="grid grid-cols-1 md:grid-cols-5 gap-6 md:gap-4 items-center w-full max-w-4xl relative">
+              {FLOW_NODES.map((node, index) => {
+                const Icon = node.icon;
+                return (
+                  <div key={node.id} className="flex flex-col items-center relative group">
+                    <motion.div
+                      whileHover={{ scale: 1.05 }}
+                      className={`w-full p-5 rounded-xl border text-center flex flex-col items-center gap-3 transition-all duration-300 backdrop-blur-sm ${node.color} relative z-10`}
+                    >
+                      <Icon size={22} className="text-primary-glow" />
+                      <span className="text-xs font-bold text-white">{node.label}</span>
+                    </motion.div>
+                    
+                    {/* Node connector line */}
+                    {index < FLOW_NODES.length - 1 && (
+                      <>
+                        {/* Desktop Line */}
+                        <div className="hidden md:block absolute top-1/2 left-full w-full h-[2px] bg-gradient-to-r from-primary/30 to-primary/0 -translate-y-1/2 z-0" />
+                        {/* Mobile Arrow */}
+                        <div className="md:hidden mt-4 flex items-center justify-center">
+                          <ArrowDown size={16} className="text-primary-glow animate-bounce" />
+                        </div>
+                      </>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </section>
+
+        {/* SECTION 3: HOW THE ECOSYSTEM WORKS (TIMELINE) */}
+        <section className="py-20 px-4 max-w-3xl mx-auto relative z-10 border-t border-border/45">
+          <div className="text-center mb-16 space-y-3">
+            <h2 className="text-xs uppercase tracking-widest text-primary-glow font-bold">Execution Pipeline</h2>
+            <h3 className="text-3xl font-display font-bold text-white">How the Ecosystem Works</h3>
+          </div>
+
+          <div className="relative border-l border-border/60 pl-6 space-y-8 text-left">
+            {TIMELINE_STEPS.map((step, idx) => (
+              <motion.div
+                key={step.title}
+                initial={{ opacity: 0, x: -20 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.4, delay: idx * 0.08 }}
+                className="relative group"
+              >
+                {/* Timeline node */}
+                <div className="absolute -left-[31px] top-1 h-4.5 w-4.5 rounded-full border border-primary bg-background flex items-center justify-center group-hover:bg-primary-glow transition-colors duration-200">
+                  <div className="h-1.5 w-1.5 rounded-full bg-primary" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-bold text-white">{d.title}</h3>
-                  <p className="mt-2 text-xs text-muted-foreground leading-relaxed">{d.body}</p>
+                  <h4 className="font-bold text-xs text-white uppercase tracking-wider flex items-center gap-2 group-hover:text-primary-glow transition-colors">
+                    {step.title}
+                    {idx === 2 && (
+                      <span className="text-[9px] bg-amber-500/10 border border-amber-500/30 text-amber-400 px-1.5 py-0.5 rounded font-bold">
+                        Key Franchise Rule
+                      </span>
+                    )}
+                  </h4>
+                  <p className="mt-1 text-xs text-muted-foreground leading-relaxed max-w-xl">
+                    {step.desc}
+                  </p>
                 </div>
-              </div>
-            );
-          })}
-        </div>
-      </section>
+              </motion.div>
+            ))}
+          </div>
+        </section>
 
-      {/* Philosophy */}
-      <section className="mx-auto max-w-7xl px-4 sm:px-6 py-12">
-        <div className="text-center mb-12 space-y-3">
-          <p className="text-xs uppercase tracking-widest text-primary-glow font-bold">Our Foundation</p>
-          <h2 className="text-3xl md:text-4xl font-display font-bold text-white">Ragam · Talam · Pallavi</h2>
-          <p className="text-xs text-muted-foreground max-w-md mx-auto">
-            The three core elements of Indian classical music, re-imagined for the modern independent artist.
-          </p>
-        </div>
-        <div className="grid md:grid-cols-3 gap-6">
-          {[
-            {
-              title: "Raagam",
-              sub: "The Sound of Dreams",
-              body: "Every artist starts with a dream and a unique voice. Raagam represents the melodies, the creative spark, and the sonic identity that define an independent act.",
-              color: "text-amber-400",
-              bg: "bg-amber-400/10",
-              border: "border-amber-400/20",
-            },
-            {
-              title: "Taalam",
-              sub: "The Beat of Community",
-              body: "Music is nothing without listeners. Taalam is the heartbeat of the community — venues, cafes, organisers, and fans that keep the independent movement alive.",
-              color: "text-rose-400",
-              bg: "bg-rose-400/10",
-              border: "border-rose-400/20",
-            },
-            {
-              title: "Pallavi",
-              sub: "The Start of Every Artist",
-              body: "The first verse that launches a thousand songs. Pallavi is the ultimate platform — structured competition, production backing, and real stages that launch bands from garage to national.",
-              color: "text-purple-400",
-              bg: "bg-purple-400/10",
-              border: "border-purple-400/20",
-            },
-          ].map((p) => (
-            <div key={p.title} className={`bpl-card p-8 text-left space-y-4 hover:border-primary/40 transition-all duration-300 ${p.border}`}>
-              <div className={`h-12 w-12 rounded-lg ${p.bg} border ${p.border} flex items-center justify-center`}>
-                <Music size={22} className={p.color} />
-              </div>
-              <div>
-                <h3 className={`text-2xl font-display font-bold text-white`}>{p.title}</h3>
-                <p className={`text-xs font-semibold mt-0.5 ${p.color}`}>{p.sub}</p>
-              </div>
-              <p className="text-xs text-muted-foreground leading-relaxed">{p.body}</p>
-            </div>
-          ))}
-        </div>
-      </section>
+        {/* SECTION 4: PILOT CITIES */}
+        <section className="py-20 px-4 max-w-7xl mx-auto relative z-10 border-t border-border/45 bg-slate-950/20">
+          <div className="text-center max-w-xl mx-auto mb-16 space-y-3">
+            <h2 className="text-xs uppercase tracking-widest text-primary-glow font-bold">Launch Roadmap</h2>
+            <h3 className="text-3xl font-display font-bold text-white">Pilot Cities & Roadmap</h3>
+          </div>
 
-      {/* Mechanics Deep Dive */}
-      <section className="mx-auto max-w-7xl px-4 sm:px-6 py-12">
-        <div className="text-center mb-12 space-y-3">
-          <p className="text-xs uppercase tracking-widest text-primary-glow font-bold">How It Actually Works</p>
-          <h2 className="text-3xl md:text-4xl font-display font-bold text-white">
-            The mechanics, in plain language.
-          </h2>
-          <p className="text-xs text-muted-foreground max-w-md mx-auto">
-            Transparency is not a promise — it's a structural requirement. Here's exactly how each mechanic operates.
-          </p>
-        </div>
-        <div className="grid md:grid-cols-2 gap-6">
-          {MECHANICS.map((m) => {
-            const Icon = m.icon;
-            return (
-              <div key={m.title} className="bpl-card p-7 text-left space-y-5">
-                <div className="flex items-center gap-3">
-                  <div className="h-9 w-9 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center text-primary-glow">
-                    <Icon size={18} />
+          <div className="grid gap-6 md:grid-cols-3">
+            {PILOT_CITIES.map((c, idx) => (
+              <motion.div
+                key={c.name}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.4, delay: idx * 0.15 }}
+                className={`bpl-card p-8 text-left space-y-4 border-border/40 hover:border-primary/30 transition-all duration-300 ${
+                  c.status.includes("Launching") ? "border-primary/25 bg-primary/3" : ""
+                }`}
+              >
+                <div className="flex justify-between items-start">
+                  <h4 className="text-xl font-display font-extrabold text-white">{c.name}</h4>
+                  <span className={`text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded ${
+                    c.status.includes("Launching") ? "bg-primary text-primary-foreground" : "bg-secondary text-muted-foreground border border-border"
+                  }`}>
+                    {c.status}
+                  </span>
+                </div>
+                <p className="text-xs text-muted-foreground leading-relaxed">{c.desc}</p>
+              </motion.div>
+            ))}
+          </div>
+          <div className="mt-10 text-center text-xs text-muted-foreground font-semibold uppercase tracking-widest flex items-center justify-center gap-1.5">
+            <Target size={14} className="text-primary-glow animate-pulse" />
+            Future Expansion cohorts coming soon for Season II.
+          </div>
+        </section>
+
+        {/* SECTION 5: PARTICIPANTS */}
+        <section className="py-20 px-4 max-w-7xl mx-auto relative z-10 border-t border-border/45">
+          <div className="text-center max-w-xl mx-auto mb-16 space-y-3">
+            <h2 className="text-xs uppercase tracking-widest text-primary-glow font-bold">Ecosystem Roles</h2>
+            <h3 className="text-3xl font-display font-bold text-white">Who Participates?</h3>
+          </div>
+
+          <div className="grid gap-4 grid-cols-2 md:grid-cols-3 lg:grid-cols-6">
+            {PARTICIPANTS.map((p, idx) => (
+              <Link
+                key={p.name}
+                to={p.link}
+                search={p.type === "artist" || p.type === "band" ? { type: p.type } : undefined}
+                className="bpl-card p-5 text-left flex flex-col justify-between hover:border-primary/40 hover:bg-secondary/20 transition-all duration-300 group cursor-pointer"
+              >
+                <div className="space-y-2">
+                  <h4 className="font-bold text-sm text-white group-hover:text-primary-glow transition-colors">{p.name}</h4>
+                  <p className="text-[10px] text-muted-foreground leading-normal">{p.desc}</p>
+                </div>
+                <div className="mt-4 text-[9px] font-bold uppercase tracking-wider text-muted-foreground group-hover:text-primary-glow transition-colors flex items-center gap-1">
+                  Onboard here <ArrowRight size={8} />
+                </div>
+              </Link>
+            ))}
+          </div>
+        </section>
+
+        {/* SECTION 6: BUSINESS MODEL */}
+        <section className="py-20 px-4 max-w-6xl mx-auto relative z-10 border-t border-border/45 bg-slate-950/20">
+          <div className="text-center mb-16 space-y-3">
+            <h2 className="text-xs uppercase tracking-widest text-primary-glow font-bold">Economic Model</h2>
+            <h3 className="text-3xl font-display font-bold text-white">Premium Revenue Splits</h3>
+            <p className="text-xs text-muted-foreground max-w-md mx-auto leading-relaxed">
+              Based on the number of franchises and registered bands, franchises invest directly in original music production to develop their roster. Here is how value flows:
+            </p>
+          </div>
+
+          <div className="grid gap-6 md:grid-cols-3 items-stretch">
+            {/* Live Events */}
+            <div className="bpl-card p-8 flex flex-col justify-between text-left space-y-6">
+              <div className="space-y-4">
+                <div className="h-10 w-10 rounded-lg bg-amber-400/10 border border-amber-400/20 flex items-center justify-center text-amber-400">
+                  <Calendar size={18} />
+                </div>
+                <h4 className="text-lg font-bold text-white">Live Events</h4>
+                <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider">Ticket Revenue Splits</p>
+                <div className="space-y-2 pt-2">
+                  <div className="flex justify-between items-center text-xs">
+                    <span className="text-muted-foreground">40% Share</span>
+                    <span className="font-bold text-white">Artist</span>
                   </div>
-                  <h3 className="font-bold text-white text-base">{m.title}</h3>
+                  <div className="w-full h-1 bg-secondary rounded-full overflow-hidden">
+                    <div className="h-full bg-amber-400" style={{ width: "40%" }} />
+                  </div>
+                  <div className="flex justify-between items-center text-xs pt-1">
+                    <span className="text-muted-foreground">30% Share</span>
+                    <span className="font-bold text-white">Franchise (Production House)</span>
+                  </div>
+                  <div className="w-full h-1 bg-secondary rounded-full overflow-hidden">
+                    <div className="h-full bg-blue-400" style={{ width: "30%" }} />
+                  </div>
+                  <div className="flex justify-between items-center text-xs pt-1">
+                    <span className="text-muted-foreground">30% Share</span>
+                    <span className="font-bold text-white">Kalakshetra</span>
+                  </div>
+                  <div className="w-full h-1 bg-secondary rounded-full overflow-hidden">
+                    <div className="h-full bg-primary" style={{ width: "30%" }} />
+                  </div>
                 </div>
-                <ul className="space-y-3">
-                  {m.items.map((item, i) => (
-                    <li key={i} className="flex items-start gap-2.5 text-xs text-muted-foreground leading-relaxed">
-                      <div className="h-4 w-4 rounded-full bg-primary/15 border border-primary/25 flex items-center justify-center text-primary-glow shrink-0 mt-0.5 text-[9px] font-bold">
-                        {i + 1}
-                      </div>
-                      {item}
-                    </li>
-                  ))}
-                </ul>
               </div>
-            );
-          })}
-        </div>
-      </section>
-
-      {/* Season 1 — Current State */}
-      <section className="mx-auto max-w-4xl px-4 sm:px-6 py-12">
-        <div className="bpl-card p-8 border-amber-500/20 bg-amber-500/5">
-          <div className="flex items-start gap-4">
-            <div className="h-10 w-10 rounded-lg bg-amber-500/15 border border-amber-500/25 flex items-center justify-center text-amber-400 shrink-0">
-              <Target size={18} />
-            </div>
-            <div className="space-y-2">
-              <h3 className="font-bold text-white">Where we are right now — Season 1 pilot</h3>
-              <p className="text-xs text-muted-foreground leading-relaxed">
-                We're in the Hyderabad pilot phase — targeting 4 bands, 6 venues, 24 shows over 8 weeks, with ₹11.77L in projected revenue. Applications for bands, artists, venues, and production houses are open. The community numbers shown elsewhere on this site (2,500 student clubs, etc.) are Season 2 growth targets, not current headcounts.
+              <p className="text-[10px] text-muted-foreground leading-normal border-t border-border/30 pt-4">
+                Structured to secure artist livelihoods while keeping venues risk-free.
               </p>
-              <p className="text-xs text-muted-foreground leading-relaxed">
-                Every partner we list on this site is a real registered entity. Every stat we show as current is verified. If something says "target" or "pilot," that's exactly what it means.
+            </div>
+
+            {/* Audio Rights */}
+            <div className="bpl-card p-8 flex flex-col justify-between text-left space-y-6">
+              <div className="space-y-4">
+                <div className="h-10 w-10 rounded-lg bg-blue-400/10 border border-blue-400/20 flex items-center justify-center text-blue-400">
+                  <Music size={18} />
+                </div>
+                <h4 className="text-lg font-bold text-white">Audio Rights</h4>
+                <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider">Streaming & Royalties</p>
+                <div className="space-y-1 pt-2">
+                  <div className="text-[10px] text-muted-foreground leading-relaxed">
+                    Spotify · Apple Music · JioSaavn · YouTube Music
+                  </div>
+                  <div className="flex justify-between items-center text-xs pt-4">
+                    <span className="text-muted-foreground">50% Share</span>
+                    <span className="font-bold text-white">Artist</span>
+                  </div>
+                  <div className="w-full h-1 bg-secondary rounded-full overflow-hidden">
+                    <div className="h-full bg-blue-400" style={{ width: "50%" }} />
+                  </div>
+                  <div className="flex justify-between items-center text-xs pt-2">
+                    <span className="text-muted-foreground">50% Share</span>
+                    <span className="font-bold text-white">Franchise (Production House)</span>
+                  </div>
+                  <div className="w-full h-1 bg-secondary rounded-full overflow-hidden">
+                    <div className="h-full bg-blue-400" style={{ width: "50%" }} />
+                  </div>
+                </div>
+              </div>
+              <p className="text-[10px] text-muted-foreground leading-normal border-t border-border/30 pt-4">
+                Aligns investment with long-term digital IP catalogs.
+              </p>
+            </div>
+
+            {/* Video & Brand Rights */}
+            <div className="bpl-card p-8 flex flex-col justify-between text-left space-y-6">
+              <div className="space-y-4">
+                <div className="h-10 w-10 rounded-lg bg-purple-400/10 border border-purple-400/20 flex items-center justify-center text-purple-400">
+                  <Tv size={18} />
+                </div>
+                <h4 className="text-lg font-bold text-white">Video & Media Rights</h4>
+                <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider">YouTube, Ads & Syncs</p>
+                <div className="space-y-2 pt-2">
+                  <div className="text-[10px] text-muted-foreground leading-relaxed">
+                    YouTube · OTT · Brand Collaborations · Sync Licensing
+                  </div>
+                  <div className="flex justify-between items-center text-xs pt-2">
+                    <span className="text-muted-foreground">50% Share</span>
+                    <span className="font-bold text-white">Artist</span>
+                  </div>
+                  <div className="w-full h-1 bg-secondary rounded-full overflow-hidden">
+                    <div className="h-full bg-purple-400" style={{ width: "50%" }} />
+                  </div>
+                  <div className="flex justify-between items-center text-xs pt-2">
+                    <span className="text-muted-foreground">50% Share</span>
+                    <span className="font-bold text-white">Franchise (Production House)</span>
+                  </div>
+                  <div className="w-full h-1 bg-secondary rounded-full overflow-hidden">
+                    <div className="h-full bg-purple-400" style={{ width: "50%" }} />
+                  </div>
+                </div>
+              </div>
+              <p className="text-[10px] text-muted-foreground leading-normal border-t border-border/30 pt-4">
+                Secures sponsorship ROI and long-term catalog rights.
               </p>
             </div>
           </div>
-        </div>
-      </section>
 
-      {/* CTA */}
-      <section className="relative mx-auto max-w-7xl px-4 sm:px-6 py-20 text-center">
-        <div className="bpl-card p-12 space-y-6">
-          <h2 className="text-3xl md:text-4xl font-display font-bold text-white">
-            Ready to join the league?
-          </h2>
-          <p className="text-sm text-muted-foreground max-w-md mx-auto">
-            Register as a Band, Artist, Venue, Production House, or Creative Crew and be part of building India's first independent music league.
-          </p>
-          <div className="flex flex-wrap justify-center gap-4">
+          {/* League Revenue Box */}
+          <div className="mt-8 bpl-card p-6 border-primary/20 bg-primary/3 text-left">
+            <h4 className="text-sm font-bold text-white flex items-center gap-1.5">
+              <TrendingUp size={16} className="text-primary-glow" />
+              League Revenue & Reinvestment
+            </h4>
+            <p className="mt-2 text-xs text-muted-foreground leading-relaxed">
+              League-level revenues from <strong>Broadcast Rights, Digital Streaming, Advertising, and Sponsors</strong> are collected directly by the Kalakshetra Operator. We reinvest 100% of league-level revenues into prize pools, league on-ground operations, developer platform growth, and marketing future seasons to expand the audience.
+            </p>
+          </div>
+        </section>
+
+        {/* FINAL CTA */}
+        <section className="py-24 px-4 text-center max-w-4xl mx-auto z-10 relative">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            whileInView={{ opacity: 1, scale: 1 }}
+            viewport={{ once: true }}
+            className="bpl-card p-12 space-y-6 border-primary/25 bg-gradient-to-br from-secondary/40 to-transparent"
+          >
+            <h2 className="text-2xl md:text-4xl font-display font-extrabold text-white leading-tight">
+              Building India's largest independent music ecosystem.
+            </h2>
+            <p className="text-xs text-muted-foreground max-w-md mx-auto leading-relaxed">
+              Where talent meets opportunity and every live performance creates long-term value for artists, franchises, and communities.
+            </p>
             <Link
               to="/onboarding"
-              className="btn-primary btn-primary-hover inline-flex items-center gap-2 rounded-md px-6 py-3 text-sm font-semibold"
+              className="btn-primary btn-primary-hover inline-flex items-center gap-2 rounded-md px-6 py-3 text-xs font-bold text-white shadow-lg"
             >
-              <Sparkles size={16} /> Join Kalakshetra
+              Join Kalakshetra <ArrowRight size={14} />
             </Link>
-            <Link
-              to="/league"
-              className="inline-flex items-center gap-2 rounded-md border border-border bg-secondary hover:bg-slate-800 px-6 py-3 text-sm font-semibold text-white transition"
-            >
-              <TrendingUp size={16} /> View the League
-            </Link>
-          </div>
-        </div>
-      </section>
+          </motion.div>
+        </section>
+      </div>
     </PageShell>
   );
 }
