@@ -49,7 +49,7 @@ export function isValidPhone(value: string): boolean {
 }
 
 export function getConfiguredOperatorCredentials() {
-  const loginId = (import.meta.env.VITE_BPL_OPERATOR_ID as string | undefined) || "bplcreator";
+  const loginId = (import.meta.env.VITE_BPL_OPERATOR_ID as string | undefined) || "bploperator";
   const password = (import.meta.env.VITE_BPL_OPERATOR_PASSWORD as string | undefined) || "bpladmin";
 
   return { loginId, password };

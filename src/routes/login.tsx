@@ -52,7 +52,7 @@ function LoginPage() {
 
     try {
       if (role === "operator") {
-        const adminUser = (import.meta.env.VITE_ADMIN_USER as string) || "bplcreator";
+        const adminUser = (import.meta.env.VITE_ADMIN_USER as string) || "bploperator";
         const adminPass = (import.meta.env.VITE_ADMIN_PASS as string) || "bpladmin";
         if (email.trim() === adminUser && password === adminPass) {
           if (typeof window !== "undefined") {
@@ -68,11 +68,11 @@ function LoginPage() {
 
       const inputVal = authMethod === "email" ? email : phone;
       if (!inputVal.trim()) {
-        throw new Error(`Please enter your registered ${authMethod === "email" ? "email address" : "phone number"}`);
+        throw new Error(`Please enter your registered login credentials`);
       }
 
-      // Check registration
-      await db.loginUser(inputVal, role);
+      // Check registration & verify password
+      await db.loginUser(inputVal, password, role);
       
       // Redirect
       navigate({ to: "/dashboard" });
@@ -238,12 +238,12 @@ function LoginPage() {
                   </div>
                 ) : authMethod === "email" ? (
                   <div className="space-y-1.5">
-                    <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Email Address *</label>
+                    <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Username or Email *</label>
                     <div className="relative">
                       <Mail className="absolute left-3 top-3 text-muted-foreground" size={14} />
                       <input
-                        type="email"
-                        placeholder="e.g. contact@bandname.com"
+                        type="text"
+                        placeholder="e.g. kala_band_1234 or contact@bandname.com"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                         className="w-full bg-secondary border border-border rounded-md pl-9 pr-3.5 py-2.5 text-sm focus:outline-none focus:border-primary text-white"

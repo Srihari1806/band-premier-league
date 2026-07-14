@@ -17,6 +17,7 @@ export const Route = createFileRoute("/join/sponsor")({
 function SponsorOnboardingPage() {
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [credentials, setCredentials] = useState<{ username: string; password?: string } | null>(null);
 
   // State
   const [companyName, setCompanyName] = useState("");
@@ -46,7 +47,7 @@ function SponsorOnboardingPage() {
 
     setIsSubmitting(true);
     try {
-      await db.submitApplication("sponsor", {
+      const result = await db.submitApplication("sponsor", {
         company_name: companyName,
         industry: industry || undefined,
         budget_range: budget || undefined,
@@ -57,6 +58,9 @@ function SponsorOnboardingPage() {
         contact_phone: contactPhone,
         contact_email: contactEmail,
       });
+      if (result) {
+        setCredentials({ username: result.username, password: result.password });
+      }
       localStorage.setItem("bpl_user_onboarded", "true");
       setIsSubmitted(true);
     } catch (err) {
@@ -81,6 +85,35 @@ function SponsorOnboardingPage() {
                 Thank you for your interest in sponsoring Kalakshetra. Our sponsorship board will connect with you soon.
               </p>
             </div>
+            {credentials && (
+              <div className="max-w-md mx-auto bpl-card p-6 bg-primary/5 border border-primary/20 rounded-lg text-left space-y-4 my-6">
+                <div>
+                  <h3 className="text-sm font-semibold text-primary-glow font-display">Account Created Successfully</h3>
+                  <p className="text-[10px] text-muted-foreground mt-0.5">Please save these login details. You will need them to access your dashboard and update your profile.</p>
+                </div>
+                <div className="space-y-2 bg-black/40 p-4 rounded border border-border">
+                  <div className="flex justify-between items-center text-xs">
+                    <span className="text-muted-foreground font-semibold uppercase tracking-wider text-[9px]">Username/ID:</span>
+                    <span className="font-mono text-white select-all font-bold">{credentials.username}</span>
+                  </div>
+                  <div className="flex justify-between items-center text-xs">
+                    <span className="text-muted-foreground font-semibold uppercase tracking-wider text-[9px]">Password:</span>
+                    <span className="font-mono text-white select-all font-bold">{credentials.password}</span>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    navigator.clipboard.writeText(`Username: ${credentials.username}\nPassword: ${credentials.password}`);
+                    alert("Credentials copied to clipboard!");
+                  }}
+                  className="w-full py-2 bg-primary/20 hover:bg-primary/30 border border-primary/30 rounded text-[11px] font-bold text-white uppercase tracking-wider transition"
+                >
+                  Copy Credentials
+                </button>
+              </div>
+            )}
+
             <div className="pt-2">
               <Link to="/" className="btn-primary btn-primary-hover px-6 py-3 rounded-md text-sm font-semibold">
                 Back to Home

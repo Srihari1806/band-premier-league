@@ -17,7 +17,8 @@ import {
   ChevronRight,
   ShieldAlert,
   Sliders,
-  DollarSign
+  DollarSign,
+  Lock
 } from "lucide-react";
 
 export const Route = createFileRoute("/dashboard")({
@@ -29,7 +30,7 @@ export const Route = createFileRoute("/dashboard")({
   component: DashboardPage,
 });
 
-type DashboardTab = "profile" | "availability" | "curation";
+type DashboardTab = "profile" | "availability" | "curation" | "security";
 
 function DashboardPage() {
   const navigate = useNavigate();
@@ -51,6 +52,14 @@ function DashboardPage() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+
+  // Security Form States
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [securitySuccess, setSecuritySuccess] = useState("");
+  const [securityError, setSecurityError] = useState("");
+  const [updatingPassword, setUpdatingPassword] = useState(false);
 
   useEffect(() => {
     const user = db.getCurrentUser();
@@ -191,6 +200,43 @@ function DashboardPage() {
     }
   };
 
+  const handlePasswordChange = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!currentUser) return;
+    setSecurityError("");
+    setSecuritySuccess("");
+    
+    if (newPassword.length < 6) {
+      setSecurityError("New password must be at least 6 characters long.");
+      return;
+    }
+    
+    if (newPassword !== confirmPassword) {
+      setSecurityError("Passwords do not match.");
+      return;
+    }
+    
+    setUpdatingPassword(true);
+    try {
+      if (currentUser.role === "admin") {
+        setSecurityError("Operator/Admin password cannot be changed from the user dashboard.");
+        setUpdatingPassword(false);
+        return;
+      }
+      
+      await db.updatePassword(currentUser.role, currentUser.id, currentPassword, newPassword);
+      setSecuritySuccess("Password updated successfully!");
+      setCurrentPassword("");
+      setNewPassword("");
+      setConfirmPassword("");
+    } catch (err) {
+      const errorObj = err as Error;
+      setSecurityError(errorObj.message || "Failed to update password.");
+    } finally {
+      setUpdatingPassword(false);
+    }
+  };
+
   const handleLogout = () => {
     if (currentUser?.role === "admin") {
       clearOperatorSession();
@@ -323,6 +369,20 @@ function DashboardPage() {
                   >
                     <span className="flex items-center gap-2">
                       <Sliders size={14} /> Curation Stages
+                    </span>
+                    <ChevronRight size={12} />
+                  </button>
+
+                  <button
+                    onClick={() => setActiveTab("security")}
+                    className={`w-full py-2.5 px-3.5 rounded-md text-left text-xs font-bold transition flex items-center justify-between cursor-pointer ${
+                      activeTab === "security" 
+                        ? "bg-primary text-primary-foreground shadow-glow" 
+                        : "text-muted-foreground hover:text-foreground hover:bg-secondary/40"
+                    }`}
+                  >
+                    <span className="flex items-center gap-2">
+                      <Lock size={14} /> Security Settings
                     </span>
                     <ChevronRight size={12} />
                   </button>
@@ -580,6 +640,80 @@ function DashboardPage() {
                       </div>
                     </div>
                   )}
+                </div>
+              )}
+
+              {/* TAB 4: SECURITY SETTINGS */}
+              {activeTab === "security" && (
+                <div className="bpl-card p-8 space-y-6">
+                  <div className="border-b border-border pb-4 text-left">
+                    <h2 className="text-lg font-display font-bold text-white">Security Settings</h2>
+                    <p className="text-xs text-muted-foreground">Manage your account authentication credentials and change password.</p>
+                  </div>
+
+                  {/* Feedback */}
+                  {securitySuccess && (
+                    <div className="bg-green-500/10 border border-green-500/30 text-green-400 rounded-md p-3 text-xs flex gap-2 text-left animate-fade-in">
+                      <CheckCircle size={16} className="shrink-0 mt-0.5" />
+                      <span>{securitySuccess}</span>
+                    </div>
+                  )}
+
+                  {securityError && (
+                    <div className="bg-red-500/10 border border-red-500/30 text-red-400 rounded-md p-3 text-xs flex gap-2 text-left animate-fade-in">
+                      <AlertCircle size={16} className="shrink-0 mt-0.5" />
+                      <span>{securityError}</span>
+                    </div>
+                  )}
+
+                  <form onSubmit={handlePasswordChange} className="space-y-4 text-left max-w-md">
+                    <div className="space-y-1.5">
+                      <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Current Password</label>
+                      <input
+                        type="password"
+                        placeholder="••••••••"
+                        value={currentPassword}
+                        onChange={(e) => setCurrentPassword(e.target.value)}
+                        className="w-full bg-secondary border border-border rounded-md px-3.5 py-2.5 text-sm focus:outline-none focus:border-primary text-white"
+                        required
+                      />
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">New Password</label>
+                      <input
+                        type="password"
+                        placeholder="Minimum 6 characters"
+                        value={newPassword}
+                        onChange={(e) => setNewPassword(e.target.value)}
+                        className="w-full bg-secondary border border-border rounded-md px-3.5 py-2.5 text-sm focus:outline-none focus:border-primary text-white"
+                        required
+                      />
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Confirm New Password</label>
+                      <input
+                        type="password"
+                        placeholder="••••••••"
+                        value={confirmPassword}
+                        onChange={(e) => setConfirmPassword(e.target.value)}
+                        className="w-full bg-secondary border border-border rounded-md px-3.5 py-2.5 text-sm focus:outline-none focus:border-primary text-white"
+                        required
+                      />
+                    </div>
+
+                    <div className="pt-4 border-t border-border flex justify-end">
+                      <button
+                        type="submit"
+                        disabled={updatingPassword}
+                        className="btn-primary btn-primary-hover px-6 py-2.5 rounded-md text-xs font-semibold text-white flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+                      >
+                        <Save size={14} />
+                        {updatingPassword ? "Updating Password..." : "Update Password"}
+                      </button>
+                    </div>
+                  </form>
                 </div>
               )}
 
