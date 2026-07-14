@@ -5,7 +5,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { db } from "@/lib/db";
 import { Music, AlertCircle } from "lucide-react";
 
-export const Route = createFileRoute("/signup" as any)({
+export const Route = createFileRoute("/signup")({
   head: () => ({
     meta: [
       { title: "Sign In — Kalakshetra" },
