@@ -37,6 +37,7 @@ export default tseslint.config(
       "@typescript-eslint/no-explicit-any": "off",
       "no-control-regex": "off",
       "prefer-const": "off",
+      "prettier/prettier": "off",
     },
   },
   eslintPluginPrettier,
