@@ -37,7 +37,8 @@ import {
   Settings,
   HelpCircle,
   X,
-  Volume2
+  Volume2,
+  Music,
 } from "lucide-react";
 
 export const Route = createFileRoute("/dashboard")({
