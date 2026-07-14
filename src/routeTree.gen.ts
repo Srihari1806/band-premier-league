@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as VenuesRouteImport } from './routes/venues'
+import { Route as SignupRouteImport } from './routes/signup'
 import { Route as ProductionHousesRouteImport } from './routes/production-houses'
 import { Route as PartnersRouteImport } from './routes/partners'
 import { Route as OnboardingRouteImport } from './routes/onboarding'
@@ -32,11 +33,17 @@ import { Route as JoinInfluencerRouteImport } from './routes/join/influencer'
 import { Route as JoinEventManagerRouteImport } from './routes/join/event-manager'
 import { Route as JoinBandRouteImport } from './routes/join/band'
 import { Route as BandsBandIdRouteImport } from './routes/bands/$bandId'
+import { Route as AuthCallbackRouteImport } from './routes/auth/callback'
 import { Route as AdminApplicationsRouteImport } from './routes/admin/applications'
 
 const VenuesRoute = VenuesRouteImport.update({
   id: '/venues',
   path: '/venues',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SignupRoute = SignupRouteImport.update({
+  id: '/signup',
+  path: '/signup',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ProductionHousesRoute = ProductionHousesRouteImport.update({
@@ -149,6 +156,11 @@ const BandsBandIdRoute = BandsBandIdRouteImport.update({
   path: '/$bandId',
   getParentRoute: () => BandsRoute,
 } as any)
+const AuthCallbackRoute = AuthCallbackRouteImport.update({
+  id: '/auth/callback',
+  path: '/auth/callback',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AdminApplicationsRoute = AdminApplicationsRouteImport.update({
   id: '/admin/applications',
   path: '/admin/applications',
@@ -169,8 +181,10 @@ export interface FileRoutesByFullPath {
   '/onboarding': typeof OnboardingRoute
   '/partners': typeof PartnersRoute
   '/production-houses': typeof ProductionHousesRoute
+  '/signup': typeof SignupRoute
   '/venues': typeof VenuesRoute
   '/admin/applications': typeof AdminApplicationsRoute
+  '/auth/callback': typeof AuthCallbackRoute
   '/bands/$bandId': typeof BandsBandIdRoute
   '/join/band': typeof JoinBandRoute
   '/join/event-manager': typeof JoinEventManagerRoute
@@ -195,8 +209,10 @@ export interface FileRoutesByTo {
   '/onboarding': typeof OnboardingRoute
   '/partners': typeof PartnersRoute
   '/production-houses': typeof ProductionHousesRoute
+  '/signup': typeof SignupRoute
   '/venues': typeof VenuesRoute
   '/admin/applications': typeof AdminApplicationsRoute
+  '/auth/callback': typeof AuthCallbackRoute
   '/bands/$bandId': typeof BandsBandIdRoute
   '/join/band': typeof JoinBandRoute
   '/join/event-manager': typeof JoinEventManagerRoute
@@ -222,8 +238,10 @@ export interface FileRoutesById {
   '/onboarding': typeof OnboardingRoute
   '/partners': typeof PartnersRoute
   '/production-houses': typeof ProductionHousesRoute
+  '/signup': typeof SignupRoute
   '/venues': typeof VenuesRoute
   '/admin/applications': typeof AdminApplicationsRoute
+  '/auth/callback': typeof AuthCallbackRoute
   '/bands/$bandId': typeof BandsBandIdRoute
   '/join/band': typeof JoinBandRoute
   '/join/event-manager': typeof JoinEventManagerRoute
@@ -250,8 +268,10 @@ export interface FileRouteTypes {
     | '/onboarding'
     | '/partners'
     | '/production-houses'
+    | '/signup'
     | '/venues'
     | '/admin/applications'
+    | '/auth/callback'
     | '/bands/$bandId'
     | '/join/band'
     | '/join/event-manager'
@@ -276,8 +296,10 @@ export interface FileRouteTypes {
     | '/onboarding'
     | '/partners'
     | '/production-houses'
+    | '/signup'
     | '/venues'
     | '/admin/applications'
+    | '/auth/callback'
     | '/bands/$bandId'
     | '/join/band'
     | '/join/event-manager'
@@ -302,8 +324,10 @@ export interface FileRouteTypes {
     | '/onboarding'
     | '/partners'
     | '/production-houses'
+    | '/signup'
     | '/venues'
     | '/admin/applications'
+    | '/auth/callback'
     | '/bands/$bandId'
     | '/join/band'
     | '/join/event-manager'
@@ -329,8 +353,10 @@ export interface RootRouteChildren {
   OnboardingRoute: typeof OnboardingRoute
   PartnersRoute: typeof PartnersRoute
   ProductionHousesRoute: typeof ProductionHousesRoute
+  SignupRoute: typeof SignupRoute
   VenuesRoute: typeof VenuesRoute
   AdminApplicationsRoute: typeof AdminApplicationsRoute
+  AuthCallbackRoute: typeof AuthCallbackRoute
   JoinBandRoute: typeof JoinBandRoute
   JoinEventManagerRoute: typeof JoinEventManagerRoute
   JoinInfluencerRoute: typeof JoinInfluencerRoute
@@ -348,6 +374,13 @@ declare module '@tanstack/react-router' {
       path: '/venues'
       fullPath: '/venues'
       preLoaderRoute: typeof VenuesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/signup': {
+      id: '/signup'
+      path: '/signup'
+      fullPath: '/signup'
+      preLoaderRoute: typeof SignupRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/production-houses': {
@@ -504,6 +537,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof BandsBandIdRouteImport
       parentRoute: typeof BandsRoute
     }
+    '/auth/callback': {
+      id: '/auth/callback'
+      path: '/auth/callback'
+      fullPath: '/auth/callback'
+      preLoaderRoute: typeof AuthCallbackRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/admin/applications': {
       id: '/admin/applications'
       path: '/admin/applications'
@@ -538,8 +578,10 @@ const rootRouteChildren: RootRouteChildren = {
   OnboardingRoute: OnboardingRoute,
   PartnersRoute: PartnersRoute,
   ProductionHousesRoute: ProductionHousesRoute,
+  SignupRoute: SignupRoute,
   VenuesRoute: VenuesRoute,
   AdminApplicationsRoute: AdminApplicationsRoute,
+  AuthCallbackRoute: AuthCallbackRoute,
   JoinBandRoute: JoinBandRoute,
   JoinEventManagerRoute: JoinEventManagerRoute,
   JoinInfluencerRoute: JoinInfluencerRoute,
