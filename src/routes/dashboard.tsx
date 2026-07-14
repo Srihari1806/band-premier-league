@@ -142,6 +142,12 @@ function DashboardPage() {
   const [soloArtists, setSoloArtists] = useState<any[]>([]);
   const [loadingArtists, setLoadingArtists] = useState(false);
 
+  // DM Inbox states
+  const [dmInbox, setDmInbox] = useState<any[]>([]);
+  const [dmLoading, setDmLoading] = useState(false);
+  const [selectedDm, setSelectedDm] = useState<any | null>(null);
+
+
   // 1. Initial Load
   useEffect(() => {
     // When Supabase is configured, enforce session guard first
@@ -361,6 +367,17 @@ function DashboardPage() {
     loadSoloArtists();
   }, [activeTab]);
 
+  // Load DM inbox when messages tab is active
+  useEffect(() => {
+    if (activeTab !== "messages" || !session?.user?.id) return;
+    setDmLoading(true);
+    db.getDMs(session.user.id).then((dms) => {
+      setDmInbox(dms);
+      setDmLoading(false);
+    }).catch(() => setDmLoading(false));
+  }, [activeTab, session]);
+
+
   const handleAddCalendarEvent = (e: React.FormEvent) => {
     e.preventDefault();
     if (!newEventTitle.trim() || !newEventDate) return;
@@ -456,11 +473,13 @@ function DashboardPage() {
         return;
       }
 
-      await db.updateProfile(currentUser.role, currentUser.id, updatedFields);
-      setSuccess("Workspace details updated successfully!");
+      // Use updateApplication which persists to Supabase
+      await db.updateApplication(currentUser.role, currentUser.id, updatedFields);
+      setSuccess("Profile updated successfully! Changes are now live on your public page.");
       // Reload session
       const freshUser = db.getCurrentUser();
       setCurrentUser(freshUser);
+
     } catch (err) {
       const errorObj = err as Error;
       setError(errorObj.message || "Failed to update profile.");
@@ -1841,98 +1860,155 @@ function DashboardPage() {
 
               {/* TAB 4: CHAT MESSAGES */}
               {activeTab === "messages" && (
-                <div className="grid grid-cols-1 md:grid-cols-3 bpl-card min-h-[500px] overflow-hidden animate-fade-in text-left">
-                  {/* Channels Sidebar List */}
-                  <div className="md:col-span-1 border-r border-border bg-slate-950/40 flex flex-col">
-                    <div className="p-3 border-b border-border text-xs font-bold text-white uppercase tracking-wider bg-surface/30">
-                      Chat Channels
-                    </div>
-                    <div className="flex-1 overflow-y-auto divide-y divide-border/40 max-h-[450px]">
-                      {channels.length === 0 ? (
-                        <div className="p-4 text-center text-xs text-muted-foreground">No channels found.</div>
-                      ) : (
-                        channels.map((chan) => {
-                          const Icon = chan.avatarIcon || User;
-                          return (
-                            <button
-                              key={chan.id}
-                              onClick={() => setActiveChannelId(chan.id)}
-                              className={`w-full flex items-center gap-2.5 p-3 text-left transition ${
-                                activeChannelId === chan.id
-                                  ? "bg-primary/10 border-l-2 border-primary text-white"
-                                  : "text-muted-foreground hover:text-foreground hover:bg-secondary/20"
-                              }`}
-                            >
-                              <div className="p-1.5 rounded bg-secondary text-primary-glow shrink-0">
-                                <Icon size={12} />
-                              </div>
-                              <div className="truncate text-xs">
-                                <p className="font-bold truncate text-white">{chan.name}</p>
-                                <p className="text-[9px] uppercase tracking-wider text-muted-foreground font-semibold">
-                                  {chan.role}
-                                </p>
-                              </div>
-                            </button>
-                          );
-                        })
+                <div className="space-y-6 animate-fade-in">
+                  {/* DM INBOX */}
+                  <div className="bpl-card overflow-hidden">
+                    <div className="p-4 border-b border-border bg-surface/30 flex items-center justify-between">
+                      <div>
+                        <h3 className="font-bold text-white text-sm">Direct Messages (DM Inbox)</h3>
+                        <p className="text-[10px] text-muted-foreground mt-0.5">Messages sent to you from the public artist directory</p>
+                      </div>
+                      {dmInbox.length > 0 && (
+                        <span className="text-[10px] bg-primary/20 text-primary-glow border border-primary/30 rounded-full px-2 py-0.5 font-bold">
+                          {dmInbox.length} message{dmInbox.length !== 1 ? "s" : ""}
+                        </span>
                       )}
                     </div>
-                  </div>
-
-                  {/* Message conversation area */}
-                  <div className="md:col-span-2 flex flex-col justify-between h-[500px]">
-                    {/* Header of conversation */}
-                    <div className="p-3 border-b border-border flex items-center gap-2 text-xs bg-surface/20">
-                      <span className="font-bold text-white">
-                        {channels.find((c) => c.id === activeChannelId)?.name || "Select Channel"}
-                      </span>
-                    </div>
-
-                    {/* Messages logs */}
-                    <div className="flex-1 p-4 overflow-y-auto space-y-3 bg-black/15 max-h-[380px]">
-                      {chatMessages.length === 0 ? (
-                        <div className="h-full flex items-center justify-center text-xs text-muted-foreground">
-                          No messages yet. Start the conversation!
-                        </div>
-                      ) : (
-                        chatMessages.map((m) => {
-                          const isMe = m.fromId === currentUser.id;
+                    {dmLoading ? (
+                      <div className="p-8 flex justify-center">
+                        <div className="h-6 w-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                      </div>
+                    ) : dmInbox.length === 0 ? (
+                      <div className="p-8 text-center text-xs text-muted-foreground">
+                        No DMs yet. When artists contact you from your public profile, messages appear here.
+                      </div>
+                    ) : (
+                      <div className="divide-y divide-border/40">
+                        {dmInbox.map((dm) => {
+                          const isFromMe = dm.sender_id === session?.user?.id;
                           return (
-                            <div key={m.id} className={`flex ${isMe ? "justify-end" : "justify-start"}`}>
-                              <div
-                                className={`max-w-[70%] p-3 rounded-lg text-xs leading-normal ${
-                                  isMe ? "bg-primary text-primary-foreground font-semibold" : "bg-secondary text-white border border-border"
-                                }`}
-                              >
-                                <p>{m.text}</p>
-                                <span className={`text-[8px] block mt-1 text-right ${isMe ? "text-primary-foreground/70" : "text-muted-foreground"}`}>
-                                  {new Date(m.timestamp).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                            <div
+                              key={dm.id}
+                              className={`p-4 cursor-pointer hover:bg-secondary/20 transition ${selectedDm?.id === dm.id ? "bg-primary/5 border-l-2 border-primary" : ""}`}
+                              onClick={() => setSelectedDm(selectedDm?.id === dm.id ? null : dm)}
+                            >
+                              <div className="flex items-start justify-between gap-3">
+                                <div className="flex items-center gap-2 min-w-0">
+                                  <div className="h-8 w-8 rounded-full bg-primary/15 border border-primary/30 flex items-center justify-center shrink-0">
+                                    <User size={14} className="text-primary-glow" />
+                                  </div>
+                                  <div className="min-w-0">
+                                    <p className="text-xs font-bold text-white truncate">
+                                      {isFromMe ? `To: ${dm.recipient_name}` : dm.sender_name}
+                                    </p>
+                                    <p className="text-[10px] text-muted-foreground">{isFromMe ? "You sent" : dm.sender_email}</p>
+                                  </div>
+                                </div>
+                                <span className="text-[9px] text-muted-foreground shrink-0">
+                                  {new Date(dm.created_at).toLocaleDateString("en-IN", { day: "numeric", month: "short" })}
                                 </span>
                               </div>
+                              {selectedDm?.id === dm.id && (
+                                <div className="mt-3 p-3 bg-secondary/30 rounded-lg border border-border text-xs text-white leading-relaxed">
+                                  {dm.message}
+                                </div>
+                              )}
+                              {selectedDm?.id !== dm.id && (
+                                <p className="mt-1.5 text-[10px] text-muted-foreground line-clamp-1 ml-10">{dm.message}</p>
+                              )}
                             </div>
                           );
-                        })
-                      )}
-                      <div ref={chatBottomRef} />
-                    </div>
+                        })}
+                      </div>
+                    )}
+                  </div>
 
-                    {/* Message send form */}
-                    <form onSubmit={handleSendMessage} className="p-3 border-t border-border bg-slate-950 flex gap-2">
-                      <input
-                        type="text"
-                        value={newMessageText}
-                        onChange={(e) => setNewMessageText(e.target.value)}
-                        placeholder="Type message here..."
-                        className="flex-1 bg-secondary border border-border rounded px-3 py-2 text-xs focus:outline-none text-white focus:border-primary"
-                        required
-                      />
-                      <button
-                        type="submit"
-                        className="p-2 bg-primary hover:bg-primary-glow border border-primary text-primary-foreground rounded shrink-0 flex items-center justify-center transition cursor-pointer"
-                      >
-                        <Send size={14} />
-                      </button>
-                    </form>
+                  {/* CHANNEL CHAT (existing) */}
+                  <div className="bpl-card overflow-hidden">
+                    <div className="p-4 border-b border-border bg-surface/30">
+                      <h3 className="font-bold text-white text-sm">Community Chat</h3>
+                      <p className="text-[10px] text-muted-foreground mt-0.5">Chat with bands, venues, and production houses in the ecosystem</p>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-3 min-h-[400px] overflow-hidden text-left">
+                      {/* Channels Sidebar List */}
+                      <div className="md:col-span-1 border-r border-border bg-slate-950/40 flex flex-col">
+                        <div className="p-3 border-b border-border text-xs font-bold text-white uppercase tracking-wider bg-surface/30">
+                          Channels
+                        </div>
+                        <div className="flex-1 overflow-y-auto divide-y divide-border/40 max-h-[350px]">
+                          {channels.length === 0 ? (
+                            <div className="p-4 text-center text-xs text-muted-foreground">No channels found.</div>
+                          ) : (
+                            channels.map((chan) => {
+                              const Icon = chan.avatarIcon || User;
+                              return (
+                                <button
+                                  key={chan.id}
+                                  onClick={() => setActiveChannelId(chan.id)}
+                                  className={`w-full flex items-center gap-2.5 p-3 text-left transition cursor-pointer ${
+                                    activeChannelId === chan.id
+                                      ? "bg-primary/10 border-l-2 border-primary text-white"
+                                      : "text-muted-foreground hover:text-foreground hover:bg-secondary/20"
+                                  }`}
+                                >
+                                  <div className="p-1.5 rounded bg-secondary text-primary-glow shrink-0">
+                                    <Icon size={12} />
+                                  </div>
+                                  <div className="truncate text-xs">
+                                    <p className="font-bold truncate text-white">{chan.name}</p>
+                                    <p className="text-[9px] uppercase tracking-wider text-muted-foreground font-semibold">{chan.role}</p>
+                                  </div>
+                                </button>
+                              );
+                            })
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Message conversation area */}
+                      <div className="md:col-span-2 flex flex-col justify-between h-[400px]">
+                        <div className="p-3 border-b border-border flex items-center gap-2 text-xs bg-surface/20">
+                          <span className="font-bold text-white">
+                            {channels.find((c) => c.id === activeChannelId)?.name || "Select a Channel"}
+                          </span>
+                        </div>
+                        <div className="flex-1 p-4 overflow-y-auto space-y-3 bg-black/15">
+                          {chatMessages.length === 0 ? (
+                            <div className="h-full flex items-center justify-center text-xs text-muted-foreground">
+                              No messages yet. Start the conversation!
+                            </div>
+                          ) : (
+                            chatMessages.map((m) => {
+                              const isMe = m.fromId === currentUser.id;
+                              return (
+                                <div key={m.id} className={`flex ${isMe ? "justify-end" : "justify-start"}`}>
+                                  <div className={`max-w-[70%] p-3 rounded-lg text-xs leading-normal ${isMe ? "bg-primary text-primary-foreground font-semibold" : "bg-secondary text-white border border-border"}`}>
+                                    <p>{m.text}</p>
+                                    <span className={`text-[8px] block mt-1 text-right ${isMe ? "text-primary-foreground/70" : "text-muted-foreground"}`}>
+                                      {new Date(m.timestamp).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                                    </span>
+                                  </div>
+                                </div>
+                              );
+                            })
+                          )}
+                          <div ref={chatBottomRef} />
+                        </div>
+                        <form onSubmit={handleSendMessage} className="p-3 border-t border-border bg-slate-950 flex gap-2">
+                          <input
+                            type="text"
+                            value={newMessageText}
+                            onChange={(e) => setNewMessageText(e.target.value)}
+                            placeholder="Type message here..."
+                            className="flex-1 bg-secondary border border-border rounded px-3 py-2 text-xs focus:outline-none text-white focus:border-primary"
+                            required
+                          />
+                          <button type="submit" className="p-2 bg-primary hover:bg-primary-glow border border-primary text-primary-foreground rounded shrink-0 flex items-center justify-center transition cursor-pointer">
+                            <Send size={14} />
+                          </button>
+                        </form>
+                      </div>
+                    </div>
                   </div>
                 </div>
               )}

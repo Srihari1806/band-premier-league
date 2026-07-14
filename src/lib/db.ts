@@ -493,6 +493,92 @@ export const db = {
     return apps.find((app: any) => app.id === id) || null;
   },
 
+  // --- Profile Update ---
+  async updateApplication(role: string, id: string, data: any): Promise<any> {
+    const cleanData = { ...data };
+    delete cleanData.id;
+    delete cleanData.created_at;
+    delete cleanData.status;
+    if (supabase) {
+      const { data: updated, error } = await supabase
+        .from(getTableName(role))
+        .update(cleanData)
+        .eq("id", id)
+        .select()
+        .single();
+      if (error) {
+        console.warn(`Supabase update failed for ${role}, using localStorage fallback`, error);
+        return this.updateLocalRecord(role, id, cleanData);
+      }
+      return updated;
+    } else {
+      return this.updateLocalRecord(role, id, cleanData);
+    }
+  },
+
+  updateLocalRecord(role: string, id: string, data: any): any {
+    if (typeof window === "undefined") return data;
+    const key = getStorageKey(role);
+    const apps = JSON.parse(localStorage.getItem(key) || "[]");
+    const updated = apps.map((app: any) => app.id === id ? { ...app, ...data } : app);
+    localStorage.setItem(key, JSON.stringify(updated));
+    return updated.find((a: any) => a.id === id);
+  },
+
+  // --- DM Messaging ---
+  async sendDM(senderId: string, senderName: string, senderEmail: string, recipientId: string, recipientName: string, message: string): Promise<void> {
+    const dmRecord = {
+      id: crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).slice(2),
+      created_at: new Date().toISOString(),
+      sender_id: senderId,
+      sender_name: senderName,
+      sender_email: senderEmail,
+      recipient_id: recipientId,
+      recipient_name: recipientName,
+      message,
+      read: false,
+    };
+    if (supabase) {
+      const { error } = await supabase.from("dm_messages").insert([dmRecord]);
+      if (error) {
+        console.warn("Supabase DM insert failed, using localStorage fallback", error);
+        this.saveLocalDM(dmRecord);
+      }
+    } else {
+      this.saveLocalDM(dmRecord);
+    }
+  },
+
+  saveLocalDM(dm: any) {
+    if (typeof window === "undefined") return;
+    const dms = JSON.parse(localStorage.getItem("bpl_dm_messages") || "[]");
+    dms.push(dm);
+    localStorage.setItem("bpl_dm_messages", JSON.stringify(dms));
+  },
+
+  async getDMs(userId: string): Promise<any[]> {
+    if (supabase) {
+      const { data, error } = await supabase
+        .from("dm_messages")
+        .select("*")
+        .or(`sender_id.eq.${userId},recipient_id.eq.${userId}`)
+        .order("created_at", { ascending: false });
+      if (error) {
+        console.warn("Supabase DM fetch failed, using localStorage fallback", error);
+        return this.getLocalDMs(userId);
+      }
+      return data || [];
+    } else {
+      return this.getLocalDMs(userId);
+    }
+  },
+
+  getLocalDMs(userId: string): any[] {
+    if (typeof window === "undefined") return [];
+    const dms = JSON.parse(localStorage.getItem("bpl_dm_messages") || "[]");
+    return dms.filter((d: any) => d.sender_id === userId || d.recipient_id === userId);
+  },
+
   // --- Stats / Numbers ---
   async getStats(): Promise<LeagueStats> {
     if (supabase) {

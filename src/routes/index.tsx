@@ -11,6 +11,11 @@ import {
   Music2,
   Drum,
   Mic,
+  User,
+  Tv,
+  Megaphone,
+  Award,
+  CalendarRange,
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { db, type BandApplication } from "@/lib/db";
@@ -41,10 +46,37 @@ export const Route = createFileRoute("/")({
 // No static/fabricated band, venue, or production-house data.
 // The homepage shows only dynamically approved records from the registry.
 
+type CommunityTab = "band" | "artist" | "venue" | "production_house" | "influencer" | "event_manager" | "sponsor" | "volunteer";
+
+const COMMUNITY_TABS: { key: CommunityTab; label: string; icon: any; color: string }[] = [
+  { key: "band",            label: "Bands",            icon: Music,        color: "blue" },
+  { key: "artist",          label: "Solo Artists",     icon: User,         color: "purple" },
+  { key: "venue",           label: "Venues",           icon: MapPin,       color: "amber" },
+  { key: "production_house",label: "Production Houses",icon: Tv,           color: "cyan" },
+  { key: "influencer",      label: "Influencers",      icon: Megaphone,    color: "pink" },
+  { key: "event_manager",   label: "Event Managers",   icon: CalendarRange,color: "orange" },
+  { key: "sponsor",         label: "Sponsors",         icon: Award,        color: "emerald" },
+  { key: "volunteer",       label: "Volunteers",       icon: Users,        color: "violet" },
+];
+
+const COLOR_MAP: Record<string, string> = {
+  blue:    "bg-blue-500/15 text-blue-400 border-blue-500/30",
+  purple:  "bg-purple-500/15 text-purple-400 border-purple-500/30",
+  amber:   "bg-amber-500/15 text-amber-400 border-amber-500/30",
+  cyan:    "bg-cyan-500/15 text-cyan-400 border-cyan-500/30",
+  pink:    "bg-pink-500/15 text-pink-400 border-pink-500/30",
+  orange:  "bg-orange-500/15 text-orange-400 border-orange-500/30",
+  emerald: "bg-emerald-500/15 text-emerald-400 border-emerald-500/30",
+  violet:  "bg-violet-500/15 text-violet-400 border-violet-500/30",
+};
+
 function Home() {
   const [dynBands, setDynBands] = useState<BandApplication[]>([]);
   const [isLogged, setIsLogged] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [communityTab, setCommunityTab] = useState<CommunityTab>("band");
+  const [communityData, setCommunityData] = useState<Record<string, any[]>>({});
+  const [communityLoading, setCommunityLoading] = useState(false);
 
   useEffect(() => {
     const loadHomeData = async () => {
@@ -64,6 +96,16 @@ function Home() {
       setIsAdmin(isOperatorSessionActive());
     }
   }, []);
+
+  // Load community data when tab changes
+  useEffect(() => {
+    if (communityData[communityTab] !== undefined) return;
+    setCommunityLoading(true);
+    db.getApprovedRecords(communityTab).then((data) => {
+      setCommunityData((prev) => ({ ...prev, [communityTab]: data }));
+      setCommunityLoading(false);
+    }).catch(() => setCommunityLoading(false));
+  }, [communityTab]);
 
   return (
     <PageShell>
@@ -251,88 +293,118 @@ function Home() {
         </div>
       </Section>
 
-      {/* FEATURED BANDS — only real approved registrations */}
-      <Section title="Featured Bands" ctaTo="/bands">
-        {dynBands.length > 0 ? (
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-6">
-            {dynBands.slice(0, 5).map((b) => (
-              <Link
-                key={b.id}
-                to="/bands/$bandId"
-                params={{ bandId: b.id }}
-                className="text-center group block"
+      {/* COMMUNITY DIRECTORY — unified tabbed section */}
+      <section className="mx-auto max-w-7xl px-4 sm:px-6 py-16">
+        <div className="flex items-end justify-between mb-8">
+          <div>
+            <p className="text-xs uppercase tracking-widest text-primary-glow font-bold mb-1">Who's Here</p>
+            <h2 className="text-3xl font-display font-bold tracking-tight text-white">Our Community</h2>
+          </div>
+          <Link
+            to="/bands"
+            className="text-xs uppercase tracking-widest text-primary-glow hover:text-primary flex items-center gap-1 font-semibold"
+          >
+            View All <ArrowRight size={14} />
+          </Link>
+        </div>
+
+        {/* Tab pills — horizontal scroll on mobile */}
+        <div className="flex gap-2 overflow-x-auto pb-2 mb-6 scrollbar-none">
+          {COMMUNITY_TABS.map((t) => {
+            const Icon = t.icon;
+            const active = communityTab === t.key;
+            return (
+              <button
+                key={t.key}
+                onClick={() => setCommunityTab(t.key)}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-bold uppercase tracking-wider shrink-0 transition border cursor-pointer ${
+                  active
+                    ? "bg-primary border-primary text-primary-foreground shadow"
+                    : "border-border bg-secondary/40 text-muted-foreground hover:text-white"
+                }`}
               >
-                <div className="mx-auto h-28 w-28 rounded-full overflow-hidden border-2 border-border group-hover:border-primary transition bg-surface">
-                  <img src={b.profile_image} alt={b.band_name} loading="lazy" className="h-full w-full object-cover" />
+                <Icon size={12} /> {t.label}
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Cards */}
+        {communityLoading ? (
+          <div className="flex justify-center py-16">
+            <div className="h-8 w-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+          </div>
+        ) : (communityData[communityTab] || []).length > 0 ? (
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
+            {(communityData[communityTab] || []).slice(0, 10).map((item: any) => {
+              const tab = COMMUNITY_TABS.find((t) => t.key === communityTab)!;
+              const Icon = tab.icon;
+              const displayName =
+                item.band_name || item.name || item.venue_name ||
+                item.company_name || item.contact_name || "Member";
+              const displaySub =
+                item.genre || item.type || item.city || item.address ||
+                item.role_type || item.industry || tab.label;
+              const image = item.profile_image || item.logo_image || item.avatarUrl || "";
+              const linkId = item.id;
+              const isArtistOrBand = communityTab === "band" || communityTab === "artist";
+              return (
+                <div key={item.id} className="text-center group block">
+                  {isArtistOrBand ? (
+                    <Link to="/bands/$bandId" params={{ bandId: linkId }} className="block">
+                      <div className={`mx-auto h-20 w-20 rounded-full overflow-hidden border-2 border-border group-hover:border-primary transition bg-slate-900`}>
+                        {image ? (
+                          <img src={image} alt={displayName} loading="lazy" className="h-full w-full object-cover" />
+                        ) : (
+                          <div className="h-full w-full flex items-center justify-center">
+                            <Icon size={24} className="text-muted-foreground" />
+                          </div>
+                        )}
+                      </div>
+                      <p className="mt-2.5 font-semibold text-xs truncate px-1 text-white group-hover:text-primary-glow transition">{displayName}</p>
+                      <p className="text-[10px] text-muted-foreground truncate">{displaySub}</p>
+                    </Link>
+                  ) : (
+                    <div className="block cursor-default">
+                      <div className={`mx-auto h-20 w-20 rounded-full overflow-hidden border-2 border-border bg-slate-900 flex items-center justify-center`}>
+                        {image ? (
+                          <img src={image} alt={displayName} loading="lazy" className="h-full w-full object-cover" />
+                        ) : (
+                          <Icon size={24} className="text-muted-foreground" />
+                        )}
+                      </div>
+                      <p className="mt-2.5 font-semibold text-xs truncate px-1 text-white">{displayName}</p>
+                      <p className="text-[10px] text-muted-foreground truncate">{displaySub}</p>
+                    </div>
+                  )}
+                  {/* Role badge */}
+                  <span className={`mt-1.5 inline-block text-[8px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded border ${COLOR_MAP[tab.color]}`}>
+                    {tab.label}
+                  </span>
                 </div>
-                <p className="mt-3 font-semibold truncate px-2 text-white">{b.band_name}</p>
-                <p className="text-xs text-muted-foreground truncate">{b.genre}</p>
-              </Link>
-            ))}
+              );
+            })}
           </div>
         ) : (
           <div className="bpl-card p-10 text-center space-y-3">
             <div className="h-14 w-14 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center mx-auto">
-              <Music size={24} className="text-primary-glow" />
+              {(() => { const tab = COMMUNITY_TABS.find((t) => t.key === communityTab)!; const Icon = tab.icon; return <Icon size={24} className="text-primary-glow" />; })()}
             </div>
-            <p className="font-semibold text-white">Season 1 bands announcing soon</p>
-            <p className="text-xs text-muted-foreground max-w-sm mx-auto leading-relaxed">
-              We're onboarding our first cohort of independent bands for Season 1. Applications are open — yours could be among the first.
+            <p className="font-semibold text-white">
+              No {COMMUNITY_TABS.find((t) => t.key === communityTab)?.label} registered yet
             </p>
-            <Link to="/join" className="inline-flex items-center gap-1.5 mt-2 px-4 py-2 rounded-lg bg-primary hover:bg-primary/90 text-primary-foreground text-xs font-bold transition">
-              <Sparkles size={12} /> Apply as a Band
+            <p className="text-xs text-muted-foreground max-w-sm mx-auto leading-relaxed">
+              Be among the first to join the Kalakshetra ecosystem in this category.
+            </p>
+            <Link
+              to="/join"
+              className="inline-flex items-center gap-1.5 mt-2 px-4 py-2 rounded-lg bg-primary hover:bg-primary/90 text-primary-foreground text-xs font-bold transition"
+            >
+              <Sparkles size={12} /> Register Now
             </Link>
           </div>
         )}
-      </Section>
-
-      {/* PRODUCTION HOUSES — Season 1 call for bids */}
-      <Section title="Production Partners" ctaTo="/production-houses">
-        <div className="bpl-card p-10 text-center space-y-3">
-          <div className="h-14 w-14 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center mx-auto">
-            <Building2 size={24} className="text-primary-glow" />
-          </div>
-          <p className="font-semibold text-white">Production house bids open — Season 1</p>
-          <p className="text-xs text-muted-foreground max-w-md mx-auto leading-relaxed">
-            Production houses bid to back bands for the full season — not just a single show. Invest in music, share in the revenue. Bidding opens ahead of Season 1.
-          </p>
-          <Link to="/join" className="inline-flex items-center gap-1.5 mt-2 px-4 py-2 rounded-lg bg-primary hover:bg-primary/90 text-primary-foreground text-xs font-bold transition">
-            <Sparkles size={12} /> Register as a Production House
-          </Link>
-        </div>
-      </Section>
-
-      {/* VENUES — Season 1 call for partners */}
-      <Section title="Pilot Venues" ctaTo="/venues">
-        <div className="bpl-card p-10 text-center space-y-3">
-          <div className="h-14 w-14 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center mx-auto">
-            <MapPin size={24} className="text-primary-glow" />
-          </div>
-          <p className="font-semibold text-white">Venue partners for Season 1 being onboarded</p>
-          <p className="text-xs text-muted-foreground max-w-md mx-auto leading-relaxed">
-            We're onboarding cafes and live music venues to host official Kalakshetra gigs. Partner venues get revenue splits, co-branding, and a permanent spot in the league fixture list.
-          </p>
-          <Link to="/join" className="inline-flex items-center gap-1.5 mt-2 px-4 py-2 rounded-lg bg-primary hover:bg-primary/90 text-primary-foreground text-xs font-bold transition">
-            <Sparkles size={12} /> Register Your Venue
-          </Link>
-        </div>
-      </Section>
-
-      {/* MEDIA — placeholder until real releases are submitted */}
-      <Section title="Music & Media" ctaTo="/media">
-        <div className="bpl-card p-10 text-center space-y-3">
-          <div className="h-14 w-14 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center mx-auto">
-            <Play size={24} className="text-primary-glow" />
-          </div>
-          <p className="font-semibold text-white">Original releases coming with Season 1</p>
-          <p className="text-xs text-muted-foreground max-w-md mx-auto leading-relaxed">
-            Artist and band releases will appear here as they're added through the platform. Register your profile to submit your catalogue.
-          </p>
-          <Link to="/join" className="inline-flex items-center gap-1.5 mt-2 px-4 py-2 rounded-lg border border-border hover:bg-secondary text-white text-xs font-semibold transition">
-            Add Your Music
-          </Link>
-        </div>
-      </Section>
+      </section>
 
       {/* BECOME A PARTNER */}
       <section className="relative mt-20">
