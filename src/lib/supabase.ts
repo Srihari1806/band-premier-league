@@ -16,7 +16,7 @@ export const supabase =
     : null;
 
 export async function signInWithGoogle() {
-  if (!supabase) throw new Error("Supabase not configured — add VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY to your .env");
+  if (!supabase) throw new Error("Supabase not configured ï¿½ add VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY to your .env");
   const redirectTo = `${window.location.origin}/auth/callback`;
   const { error } = await supabase.auth.signInWithOAuth({
     provider: "google",
@@ -67,4 +67,57 @@ export async function getSession() {
   if (!supabase) return null;
   const { data: { session } } = await supabase.auth.getSession();
   return session;
+}
+
+export async function sendSignupOTP(email: string) {
+  if (!supabase) throw new Error("Supabase not configured â€” add VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY to your .env");
+  const { error } = await supabase.auth.signInWithOtp({
+    email: email.trim().toLowerCase(),
+    options: { shouldCreateUser: true },
+  });
+  if (error) throw error;
+}
+
+export async function verifyEmailOTP(email: string, token: string) {
+  if (!supabase) throw new Error("Supabase not configured");
+  const { data, error } = await supabase.auth.verifyOtp({
+    email: email.trim().toLowerCase(),
+    token,
+    type: "email",
+  });
+  if (error) throw error;
+  return data;
+}
+
+export interface ProfileData {
+  full_name: string;
+  phone?: string;
+  city?: string;
+  role?: string | null;
+}
+
+export async function upsertProfile(userId: string, profile: ProfileData) {
+  if (!supabase) throw new Error("Supabase not configured");
+  const { error } = await supabase.from("profiles").upsert({
+    id: userId,
+    ...profile,
+  });
+  if (error) throw error;
+}
+
+export async function getProfile(userId: string) {
+  if (!supabase) return null;
+  const { data } = await supabase
+    .from("profiles")
+    .select("*")
+    .eq("id", userId)
+    .single();
+  return data as {
+    id: string;
+    full_name: string;
+    phone: string | null;
+    city: string | null;
+    role: string | null;
+    created_at: string;
+  } | null;
 }

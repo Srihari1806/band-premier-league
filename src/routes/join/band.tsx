@@ -28,6 +28,7 @@ import {
   Link2
 } from "lucide-react";
 import { db } from "@/lib/db";
+import { useProfile } from "@/hooks/useProfile";
 
 export const Route = createFileRoute("/join/band")({
   validateSearch: (search: Record<string, unknown>): { type?: string } => {
@@ -51,6 +52,7 @@ const PROFESSIONAL_ROLES = [
 function BandOnboardingPage() {
   const navigate = useNavigate();
   const { type } = Route.useSearch();
+  const { profile } = useProfile();
   const isArtist = type === "artist";
 
   const [step, setStep] = useState(1);
@@ -135,9 +137,15 @@ function BandOnboardingPage() {
       navigate({ to: "/login" });
       return;
     }
-    // Set default contact email from current account if logged in
     setContactEmail(currentAccount.email);
   }, [navigate]);
+
+  // Pre-fill contact fields from the Supabase profile (users with no role yet)
+  useEffect(() => {
+    if (!profile) return;
+    if (profile.full_name && !contactName) setContactName(profile.full_name);
+    if (profile.phone && !contactPhone) setContactPhone(profile.phone);
+  }, [profile]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Load draft
   useEffect(() => {

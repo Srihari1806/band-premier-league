@@ -104,7 +104,7 @@ export function SiteHeader() {
           ) : (
             <>
               <Link
-                to="/login"
+                to={"/signup" as any}
                 className="px-4 py-1.5 rounded-md border border-border bg-secondary/35 text-white text-xs font-semibold hover:bg-secondary/60 hover:border-muted transition-all"
               >
                 Login
@@ -191,7 +191,7 @@ export function SiteHeader() {
               ) : (
                 <div className="grid grid-cols-2 gap-2.5">
                   <Link
-                    to="/login"
+                    to={"/signup" as any}
                     onClick={() => setOpen(false)}
                     className="text-center py-2 rounded-md border border-border bg-secondary/35 text-white text-xs font-semibold"
                   >

@@ -1,12 +1,12 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { supabase } from "@/lib/supabase";
+import { supabase, upsertProfile, getProfile } from "@/lib/supabase";
 import { db } from "@/lib/db";
 import { Music } from "lucide-react";
 
 export const Route = createFileRoute("/auth/callback" as any)({
   head: () => ({
-    meta: [{ title: "Authenticating — Kalakshetra" }],
+    meta: [{ title: "Authenticating ï¿½ Kalakshetra" }],
   }),
   component: AuthCallbackPage,
 });
@@ -20,7 +20,7 @@ function AuthCallbackPage() {
     async function handleCallback() {
       try {
         if (!supabase) {
-          // No Supabase — redirect back to login
+          // No Supabase ï¿½ redirect back to login
           navigate({ to: "/login" });
           return;
         }
@@ -46,6 +46,16 @@ function AuthCallbackPage() {
 
         // Link the Supabase-authenticated user to the localStorage account system
         const account = db.linkSupabaseUserToAccount(email, name, session.user.id);
+
+        // Create a profiles row for OAuth users who don't have one yet
+        try {
+          const existing = await getProfile(session.user.id);
+          if (!existing) {
+            await upsertProfile(session.user.id, { full_name: name });
+          }
+        } catch {
+          // Non-critical â€” proceed to redirect regardless
+        }
 
         if (account.workspaces && account.workspaces.length > 0) {
           navigate({ to: "/dashboard" });
