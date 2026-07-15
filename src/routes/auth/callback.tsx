@@ -4,35 +4,21 @@ import { supabase, upsertProfile, getProfile } from "@/lib/supabase";
 import { db } from "@/lib/db";
 import { Music } from "lucide-react";
 
-export interface CallbackSearch {
-  code?: string;
-  error?: string;
-  error_description?: string;
-  error_code?: string;
-}
-
 export const Route = createFileRoute("/auth/callback")({
   head: () => ({
     meta: [{ title: "Authenticating — Kalakshetra" }],
   }),
-  validateSearch: (search: Record<string, unknown>): CallbackSearch => {
-    return {
-      code: search.code as string | undefined,
-      error: search.error as string | undefined,
-      error_description: search.error_description as string | undefined,
-      error_code: search.error_code as string | undefined,
-    };
-  },
   component: AuthCallbackPage,
 });
 
 function AuthCallbackPage() {
   const navigate = useNavigate();
-  const search = Route.useSearch();
   const [status, setStatus] = useState<"loading" | "error">("loading");
   const [errorMsg, setErrorMsg] = useState("");
 
   useEffect(() => {
+    let active = true;
+
     async function handleCallback() {
       try {
         if (!supabase) {
@@ -40,57 +26,20 @@ function AuthCallbackPage() {
           return;
         }
 
-        // ── Step 1: Exchange the OAuth code for a session ──────────────────
-        // Read directly from validated search object
-        let session: any = null;
-        
-        // Parse hash params in case of implicit flow errors or redirects
-        const hashParams = new URLSearchParams(
-          window.location.hash.substring(1) // remove the leading '#'
-        );
+        // ── Step 1: Wait for session from Supabase Client ──────────────────
+        // The Supabase SDK automatically handles hash/code parsing asynchronously.
+        // We read it, and if not present, listen to auth state changes until it's set.
+        let session = (await supabase.auth.getSession()).data.session;
 
-        // Check for error parameters in query or hash
-        const urlError = search.error || hashParams.get("error");
-        const urlErrorDesc = search.error_description || hashParams.get("error_description");
-        const urlErrorCode = search.error_code || hashParams.get("error_code");
-
-        if (urlError) {
-          setStatus("error");
-          setErrorMsg(`Supabase Auth Error: ${urlErrorDesc || urlError} (Code: ${urlErrorCode || "unknown"})`);
-          return;
-        }
-
-        const code = search.code;
-
-
-        if (code) {
-          const { data, error } = await supabase.auth.exchangeCodeForSession(code);
-          if (error) {
-            setStatus("error");
-            setErrorMsg(`Code Exchange Error: ${error.message}`);
-            return;
-          }
-          session = data.session;
-        } else {
-          // Implicit / already-exchanged flow — just read existing session
-          const { data, error } = await supabase.auth.getSession();
-          if (error) {
-            setStatus("error");
-            setErrorMsg(`Get Session Error: ${error.message}`);
-            return;
-          }
-          session = data.session;
-        }
-
-        // If session still null, listen to auth state changes briefly (in case SDK is processing hash in BG)
-        if (!session) {
+        if (!session && active) {
+          // Wait up to 3 seconds for the client to parse the URL and trigger auth change
           session = await new Promise((resolve) => {
             const timeout = setTimeout(() => {
               subscription.unsubscribe();
               resolve(null);
-            }, 2500);
+            }, 3000);
 
-            const { data: { subscription } } = supabase!.auth.onAuthStateChange((event, currentSession) => {
+            const { data: { subscription } } = supabase!.auth.onAuthStateChange((_event, currentSession) => {
               if (currentSession) {
                 clearTimeout(timeout);
                 subscription.unsubscribe();
@@ -100,18 +49,15 @@ function AuthCallbackPage() {
           });
         }
 
-        // Final check
+        if (!active) return;
+
         if (!session) {
           setStatus("error");
-          const searchDebug = window.location.search ? `Query: ${window.location.search}` : "No query parameters";
-          const hashDebug = window.location.hash ? `Hash: ${window.location.hash.substring(0, 100)}...` : "No hash parameters";
-          const parsedDebug = Object.keys(search).length > 0 ? `Parsed keys: ${Object.keys(search).join(", ")}` : "No parsed keys";
-          setErrorMsg(`Authentication failed. Session could not be established.\nDebug: ${searchDebug} | ${hashDebug} | ${parsedDebug}`);
+          setErrorMsg("Authentication failed. Session could not be established. Please try logging in again.");
           return;
         }
 
-
-        // ── Step 2: Link Supabase user to local account system ─────────────
+        // ── Step 2: Link Supabase user to localStorage account ──────────────
         const email = session.user.email || "";
         const name =
           session.user.user_metadata?.full_name ||
@@ -127,7 +73,7 @@ function AuthCallbackPage() {
           })
           .catch(() => {});
 
-        // ── Step 3: Check all tables in parallel for an existing profile ────
+        // ── Step 3: Check Supabase for existing workspaces (Chrome fix) ─────
         const TABLES = [
           { table: "artist_applications",           role: "artist",           nameField: "name" },
           { table: "band_applications",             role: "band",             nameField: "band_name" },
@@ -139,45 +85,52 @@ function AuthCallbackPage() {
           { table: "event_manager_applications",    role: "event_manager",    nameField: "company_name" },
         ];
 
-        // Start with workspaces already in localStorage as the baseline
         let foundProfile = account.workspaces && account.workspaces.length > 0;
 
-        const results = await Promise.all(
-          TABLES.map(({ table, role, nameField }) =>
-            Promise.resolve(
+        try {
+          const results = await Promise.all(
+            TABLES.map(({ table, role, nameField }) =>
               supabase!
                 .from(table)
                 .select("id, " + nameField)
                 .eq("contact_email", email)
                 .maybeSingle()
+                .then((res) => ({ data: res?.data as any, role, nameField }))
+                .catch(() => ({ data: null, role, nameField }))
             )
-              .then((res) => ({ data: res.data as any, role, nameField }))
-              .catch(() => ({ data: null as any, role, nameField }))
-          )
-        );
+          );
 
-        for (const { data, role, nameField } of results) {
-          if (data?.id) {
-            const displayName = (data as any)[nameField] || name;
-            db.addWorkspaceToAccount(account.id, role, data.id, displayName);
-            foundProfile = true;
-            break;
+          for (const { data, role, nameField } of results) {
+            if (data?.id) {
+              const displayName = data[nameField] || name;
+              db.addWorkspaceToAccount(account.id, role, data.id, displayName);
+              foundProfile = true;
+              break;
+            }
           }
+        } catch (e) {
+          console.warn("Error looking up existing profiles in Supabase", e);
         }
 
-        // ── Step 4: Redirect ───────────────────────────────────────────────
+        // ── Step 4: Navigate ────────────────────────────────────────────────
         if (foundProfile) {
           navigate({ to: "/dashboard" });
         } else {
           navigate({ to: "/onboarding" });
         }
       } catch (err: any) {
-        setStatus("error");
-        setErrorMsg(err?.message || "Something went wrong. Please try again.");
+        if (active) {
+          setStatus("error");
+          setErrorMsg(err?.message || "Something went wrong. Please try again.");
+        }
       }
     }
 
     handleCallback();
+
+    return () => {
+      active = false;
+    };
   }, [navigate]);
 
   return (
