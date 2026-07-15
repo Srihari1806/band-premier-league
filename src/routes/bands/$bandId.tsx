@@ -43,24 +43,27 @@ function BandProfilePage() {
     band_name: rawData.band_name || rawData.name || rawData.displayName || rawData.contact_name || "Solo Artist",
     profile_image: rawData.profile_image || rawData.avatarUrl || "/images/placeholder-artist.jpg",
     banner_image: rawData.banner_image || "/images/placeholder-banner.jpg",
-    genre: rawData.artistRoles && rawData.artistRoles.length > 0
-      ? rawData.artistRoles.join(", ")
-      : rawData.genre || rawData.skills || "Solo Musician",
+    genre: Array.isArray(rawData.roles) && rawData.roles.length > 0
+      ? rawData.roles.join(", ")
+      : Array.isArray(rawData.artistRoles) && rawData.artistRoles.length > 0
+        ? rawData.artistRoles.join(", ")
+        : rawData.genre || (Array.isArray(rawData.skills) ? rawData.skills.join(", ") : rawData.skills) || "Solo Musician",
     home_city: rawData.home_city || rawData.city || rawData.homeCity || "Unknown City",
-    bio: rawData.bio || "No biography provided yet.",
-    instagram_url: rawData.instagram_url || rawData.instagramUrl || "",
-    youtube_url: rawData.youtube_url || rawData.youtubeUrl || "",
-    spotify_url: rawData.spotify_url || rawData.spotifyUrl || "",
-    saavn_url: rawData.saavn_url || rawData.saavnUrl || "",
-    apple_url: rawData.apple_url || rawData.appleUrl || "",
-    website_url: rawData.website_url || rawData.websiteUrl || "",
-    demo_video: rawData.demo_video || rawData.demoVideo || "",
+    bio: rawData.bio || rawData.about || "No biography provided yet.",
+    instagram_url: rawData.instagram_url || rawData.instagramUrl || rawData.social_links?.instagram || "",
+    youtube_url: rawData.youtube_url || rawData.youtubeUrl || rawData.social_links?.youtube || "",
+    spotify_url: rawData.spotify_url || rawData.spotifyUrl || rawData.social_links?.spotify || "",
+    saavn_url: rawData.saavn_url || rawData.saavnUrl || rawData.social_links?.saavn || "",
+    apple_url: rawData.apple_url || rawData.appleUrl || rawData.social_links?.apple || "",
+    website_url: rawData.website_url || rawData.websiteUrl || rawData.social_links?.website || "",
+    demo_video: rawData.demo_video || rawData.demoVideo || (Array.isArray(rawData.videos) && rawData.videos[0]) || "",
     gallery: rawData.gallery || rawData.performance_photos || [],
     original_covers: rawData.original_covers || "",
     members: rawData.members || [],
     timeline: rawData.timeline || [],
     releases: rawData.releases || [],
   };
+
 
   const isSoloArtist = !rawData.band_name;
   const bplId = isSoloArtist 
