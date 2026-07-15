@@ -6,7 +6,7 @@ import { Music } from "lucide-react";
 
 export const Route = createFileRoute("/auth/callback")({
   head: () => ({
-    meta: [{ title: "Authenticating � Kalakshetra" }],
+    meta: [{ title: "Authenticating — Kalakshetra" }],
   }),
   component: AuthCallbackPage,
 });
@@ -24,37 +24,63 @@ function AuthCallbackPage() {
           return;
         }
 
-        const {
-          data: { session },
-          error,
-        } = await supabase.auth.getSession();
+        // ── Step 1: Exchange the OAuth code for a session ──────────────────
+        // With PKCE flow (detectSessionInUrl: true), the callback URL has
+        // ?code=… which must be exchanged. getSession() alone can be too early.
+        let session: any = null;
 
-        if (error || !session) {
+        const params = new URLSearchParams(window.location.search);
+        const code = params.get("code");
+
+        if (code) {
+          const { data, error } = await supabase.auth.exchangeCodeForSession(code);
+          if (error) {
+            setStatus("error");
+            setErrorMsg(error.message || "Authentication failed. Please try again.");
+            return;
+          }
+          session = data.session;
+        } else {
+          // Implicit / already-exchanged flow — just read existing session
+          const { data, error } = await supabase.auth.getSession();
+          if (error) {
+            setStatus("error");
+            setErrorMsg(error.message || "Authentication failed. Please try again.");
+            return;
+          }
+          session = data.session;
+        }
+
+        // If session still null, wait briefly and retry once
+        if (!session) {
+          await new Promise((r) => setTimeout(r, 800));
+          const { data } = await supabase.auth.getSession();
+          session = data.session;
+        }
+
+        if (!session) {
           setStatus("error");
-          setErrorMsg(error?.message || "Authentication failed. Please try again.");
+          setErrorMsg("Authentication failed. Please try again or clear browser cookies.");
           return;
         }
 
+        // ── Step 2: Link Supabase user to local account system ─────────────
         const email = session.user.email || "";
         const name =
           session.user.user_metadata?.full_name ||
           session.user.user_metadata?.name ||
           email.split("@")[0];
 
-        // Link the Supabase-authenticated user to the localStorage account system
         const account = db.linkSupabaseUserToAccount(email, name, session.user.id);
 
-        // Create a profiles row for OAuth users who don't have one yet
-        try {
-          const existing = await getProfile(session.user.id);
-          if (!existing) {
-            await upsertProfile(session.user.id, { full_name: name });
-          }
-        } catch {
-          // Non-critical — proceed to redirect regardless
-        }
+        // Upsert profile row (non-blocking)
+        getProfile(session.user.id)
+          .then((existing) => {
+            if (!existing) upsertProfile(session.user.id, { full_name: name });
+          })
+          .catch(() => {});
 
-        // Check all tables in parallel (single round-trip instead of 8 sequential)
+        // ── Step 3: Check all tables in parallel for an existing profile ────
         const TABLES = [
           { table: "artist_applications",           role: "artist",           nameField: "name" },
           { table: "band_applications",             role: "band",             nameField: "band_name" },
@@ -66,6 +92,7 @@ function AuthCallbackPage() {
           { table: "event_manager_applications",    role: "event_manager",    nameField: "company_name" },
         ];
 
+        // Start with workspaces already in localStorage as the baseline
         let foundProfile = account.workspaces && account.workspaces.length > 0;
 
         const results = await Promise.all(
@@ -91,16 +118,15 @@ function AuthCallbackPage() {
           }
         }
 
-        // Navigate based on whether a registered profile exists in Supabase
+        // ── Step 4: Redirect ───────────────────────────────────────────────
         if (foundProfile) {
           navigate({ to: "/dashboard" });
         } else {
-          // No profile anywhere — send to onboarding to pick role and register
           navigate({ to: "/onboarding" });
         }
       } catch (err: any) {
         setStatus("error");
-        setErrorMsg(err?.message || "Something went wrong.");
+        setErrorMsg(err?.message || "Something went wrong. Please try again.");
       }
     }
 
@@ -110,7 +136,6 @@ function AuthCallbackPage() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
       <div className="text-center space-y-6">
-        {/* Logo */}
         <div className="flex items-center justify-center gap-2 mb-4">
           <div className="h-10 w-10 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center">
             <Music size={20} className="text-primary-glow" />
