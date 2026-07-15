@@ -189,7 +189,10 @@ function OnboardingSelectionPage() {
     );
   }
 
-  const hasWorkspaces = account.workspaces && account.workspaces.length > 0;
+  const workspaces = account?.workspaces || [];
+  const hasArtist = workspaces.some((w: any) => w.role === "artist");
+  const hasBand = workspaces.some((w: any) => w.role === "band");
+  const hasOtherRole = workspaces.some((w: any) => w.role !== "artist" && w.role !== "band");
 
   return (
     <PageShell>
@@ -210,8 +213,8 @@ function OnboardingSelectionPage() {
             <p className="text-sm text-primary-glow/80 uppercase font-semibold tracking-widest max-w-md mx-auto">
               The Home of Independent Music
             </p>
-            <p className="text-xs text-muted-foreground max-w-sm mx-auto leading-normal">
-              Choose how you'd like to participate in the ecosystem. You can register multiple roles under one account.
+            <p className="text-xs text-muted-foreground max-w-lg mx-auto leading-normal">
+              Choose your role to participate. Each account is limited to <strong>one primary role</strong> (e.g., Venue or Sponsor), with the exception of <strong>Artists</strong> who can also form or join a <strong>Band</strong>.
             </p>
           </div>
 
@@ -219,40 +222,76 @@ function OnboardingSelectionPage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-left">
             {ROLE_CARDS.map((card) => {
               const Icon = card.icon;
+
+              // Enforce Role Restriction Rules
+              let isDisabled = false;
+              let tooltipText = "";
+
+              if (hasOtherRole) {
+                // Locked into another primary role (e.g. Venue, Production House)
+                const existingRoleName = workspaces.map((w: any) => w.role).join(", ");
+                isDisabled = true;
+                tooltipText = `Your account is already registered as ${existingRoleName}. Each account is limited to one primary role.`;
+              } else if (hasArtist || hasBand) {
+                // If they have artist or band, they can only register/edit artist and band. Other roles are disabled.
+                if (card.role !== "artist" && card.role !== "band") {
+                  isDisabled = true;
+                  tooltipText = "Music accounts (Artist/Band) cannot register corporate/venue roles.";
+                }
+              }
+
+              // Special Rule for Band: Must register as Solo Artist first
+              if (card.role === "band" && !hasArtist && !isDisabled) {
+                isDisabled = true;
+                tooltipText = "To register a Band, you must first register as a Solo Artist. Bands are formed and managed by Solo Artists.";
+              }
+
               return (
-                <button
-                  key={card.role}
-                  disabled={saving}
-                  onClick={() => handleSelectRole(card)}
-                  className="bpl-card p-5 hover:border-primary/40 hover:bg-secondary/40 transition-all duration-300 group flex flex-col justify-between cursor-pointer w-full text-left disabled:opacity-50"
-                >
-                  <div className="space-y-4 w-full">
-                    <div className="flex justify-between items-start">
-                      <div className="p-2.5 rounded-lg bg-primary/10 border border-primary/20 text-primary-glow group-hover:scale-105 transition-transform duration-300">
-                        <Icon size={20} />
+                <div key={card.role} className="relative group/wrapper">
+                  <button
+                    disabled={isDisabled || saving}
+                    onClick={() => handleSelectRole(card)}
+                    className={`bpl-card p-5 hover:border-primary/40 hover:bg-secondary/40 transition-all duration-300 group flex flex-col justify-between cursor-pointer w-full text-left min-h-[220px] ${
+                      isDisabled ? "opacity-40 cursor-not-allowed border-border/10" : ""
+                    }`}
+                  >
+                    <div className="space-y-4 w-full">
+                      <div className="flex justify-between items-start">
+                        <div className="p-2.5 rounded-lg bg-primary/10 border border-primary/20 text-primary-glow group-hover:scale-105 transition-transform duration-300">
+                          <Icon size={20} />
+                        </div>
+                        {card.badge && (
+                          <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider bg-secondary border border-border px-2 py-0.5 rounded">
+                            {card.badge}
+                          </span>
+                        )}
                       </div>
-                      {card.badge && (
-                        <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider bg-secondary border border-border px-2 py-0.5 rounded">
-                          {card.badge}
-                        </span>
-                      )}
+                      <div className="space-y-1.5">
+                        <h3 className="font-semibold text-white group-hover:text-primary-glow transition-colors duration-200">
+                          {card.title}
+                        </h3>
+                        <p className="text-[11px] text-muted-foreground leading-normal line-clamp-3">
+                          {card.description}
+                        </p>
+                      </div>
                     </div>
-                    <div className="space-y-1.5">
-                      <h3 className="font-semibold text-white group-hover:text-primary-glow transition-colors duration-200">
-                        {card.title}
-                      </h3>
-                      <p className="text-[11px] text-muted-foreground leading-normal line-clamp-3">
-                        {card.description}
-                      </p>
+                    <div className="mt-4 pt-3 border-t border-border/30 flex items-center justify-between text-[10px] font-bold uppercase tracking-wider text-muted-foreground group-hover:text-primary-glow transition-colors duration-200 w-full">
+                      {workspaces.some((w: any) => w.role === card.role) ? "Edit Workspace" : "Register Role"}{" "}
+                      <ArrowRight size={10} className="group-hover:translate-x-1 transition-transform" />
                     </div>
-                  </div>
-                  <div className="mt-4 pt-3 border-t border-border/30 flex items-center justify-between text-[10px] font-bold uppercase tracking-wider text-muted-foreground group-hover:text-primary-glow transition-colors duration-200 w-full">
-                    Register Role <ArrowRight size={10} className="group-hover:translate-x-1 transition-transform" />
-                  </div>
-                </button>
+                  </button>
+
+                  {/* Tooltip on Hover for disabled cards */}
+                  {isDisabled && (
+                    <div className="absolute inset-x-0 -top-12 z-50 hidden group-hover/wrapper:block bg-black/90 border border-red-500/30 text-red-400 text-[10px] p-2 rounded shadow-xl text-center leading-relaxed">
+                      {tooltipText}
+                    </div>
+                  )}
+                </div>
               );
             })}
           </div>
+
 
           {/* Footer controls & Skip for now */}
           <div className="flex flex-col items-center gap-3 pt-6 border-t border-border/30 max-w-md mx-auto text-xs text-muted-foreground leading-relaxed">
@@ -267,7 +306,8 @@ function OnboardingSelectionPage() {
             <p className="flex items-center gap-1.5 mt-2">
               <ShieldCheck size={14} className="text-primary-glow" /> Users can manage multiple roles and workspaces from their dashboard.
             </p>
-            {hasWorkspaces && (
+            {workspaces.length > 0 && (
+
               <Link
                 to="/dashboard"
                 className="mt-2 inline-flex items-center gap-1.5 px-4 py-2 rounded-md bg-secondary hover:bg-slate-800 border border-border text-white text-xs font-semibold transition"

@@ -1165,10 +1165,60 @@ export const db = {
     );
   },
 
-  sendBandInvitation(bandId: string, artistId: string, position: string) {
+  async sendBandInvitation(bandId: string, artistId: string, position: string) {
+    const key = "bpl_band_invitations";
+    const localInvites = typeof window !== "undefined" ? JSON.parse(localStorage.getItem(key) || "[]") : [];
+
+    if (supabase) {
+      // 1. Fetch band name
+      const { data: band } = await supabase
+        .from("band_applications")
+        .select("band_name, contact_email")
+        .eq("id", bandId)
+        .single();
+        
+      // 2. Fetch artist name
+      const { data: artist } = await supabase
+        .from("artist_applications")
+        .select("name, contact_email")
+        .eq("id", artistId)
+        .single();
+
+      if (!band || !artist) throw new Error("Band or Artist not found in Supabase.");
+
+      // Check duplicate
+      const { data: existing } = await supabase
+        .from("band_invitations")
+        .select("id")
+        .eq("band_id", bandId)
+        .eq("artist_id", artistId)
+        .eq("status", "pending")
+        .maybeSingle();
+
+      if (existing) throw new Error("An invitation is already pending for this artist.");
+
+      const newInvite = {
+        band_id: bandId,
+        band_name: band.band_name,
+        artist_id: artistId,
+        artist_name: artist.name,
+        position,
+        status: "pending",
+      };
+
+      const { error } = await supabase.from("band_invitations").insert([newInvite]);
+      if (error) {
+        console.warn("Failed to save invitation in Supabase, using localStorage", error);
+        this.sendLocalBandInvitation(bandId, artistId, position);
+      }
+    } else {
+      this.sendLocalBandInvitation(bandId, artistId, position);
+    }
+  },
+
+  sendLocalBandInvitation(bandId: string, artistId: string, position: string) {
     if (typeof window === "undefined") return;
     const invites = JSON.parse(localStorage.getItem("bpl_band_invitations") || "[]");
-    
     const bands = JSON.parse(localStorage.getItem("bpl_band_applications") || "[]");
     const artists = JSON.parse(localStorage.getItem("bpl_artist_applications") || "[]");
     const band = bands.find((b: any) => b.id === bandId);
@@ -1192,26 +1242,67 @@ export const db = {
 
     invites.push(newInvite);
     localStorage.setItem("bpl_band_invitations", JSON.stringify(invites));
+  },
 
-    const accounts = JSON.parse(localStorage.getItem("bpl_accounts") || "[]");
-    const artistAccount = accounts.find((a: any) => a.email.toLowerCase() === artist.contact_email.toLowerCase());
-    if (artistAccount) {
-      const allNotifs = JSON.parse(localStorage.getItem("bpl_notifications") || "[]");
-      const newNotif = {
-        id: "notif_" + Math.random().toString(36).substring(2, 11),
-        userId: artistAccount.id,
-        title: "Band Invitation",
-        body: `${band.band_name} invited you to join as ${position}.`,
-        timestamp: new Date().toISOString(),
-        read: false,
-        type: "invite"
-      };
-      allNotifs.unshift(newNotif);
-      localStorage.setItem("bpl_notifications", JSON.stringify(allNotifs));
+  async respondToInvitation(inviteId: string, accept: boolean) {
+    if (supabase) {
+      const statusText = accept ? "accepted" : "declined";
+      
+      // Update invitation status in Supabase
+      const { data: invite, error: updateError } = await supabase
+        .from("band_invitations")
+        .update({ status: statusText })
+        .eq("id", inviteId)
+        .select()
+        .single();
+
+      if (updateError || !invite) {
+        console.warn("Failed to update invitation in Supabase, using localStorage", updateError);
+        this.respondToLocalInvitation(inviteId, accept);
+        return;
+      }
+
+      if (accept) {
+        // Append member to Band members JSONB array in Supabase
+        const { data: band } = await supabase
+          .from("band_applications")
+          .select("members, band_name")
+          .eq("id", invite.band_id)
+          .single();
+
+        if (band) {
+          const currentMembers = Array.isArray(band.members) ? band.members : [];
+          
+          if (!currentMembers.some((m: any) => m.artistId === invite.artist_id)) {
+            const { data: artist } = await supabase
+              .from("artist_applications")
+              .select("username")
+              .eq("id", invite.artist_id)
+              .single();
+
+            const updatedMembers = [
+              ...currentMembers,
+              {
+                artistId: invite.artist_id,
+                name: invite.artist_name,
+                username: artist?.username || invite.artist_id,
+                position: invite.position
+              }
+            ];
+
+            await supabase
+              .from("band_applications")
+              .update({ members: updatedMembers })
+              .eq("id", invite.band_id);
+          }
+        }
+      }
+    } else {
+      this.respondToLocalInvitation(inviteId, accept);
     }
   },
 
-  respondToInvitation(inviteId: string, accept: boolean) {
+  respondToLocalInvitation(inviteId: string, accept: boolean) {
     if (typeof window === "undefined") return;
     const invites = JSON.parse(localStorage.getItem("bpl_band_invitations") || "[]");
     const idx = invites.findIndex((i: any) => i.id === inviteId);
@@ -1258,6 +1349,7 @@ export const db = {
                 status: "approved"
               });
               accounts[userAccIdx] = account;
+
               localStorage.setItem("bpl_accounts", JSON.stringify(accounts));
               
               const curr = localStorage.getItem("bpl_current_account");
@@ -1345,6 +1437,34 @@ export const db = {
     const invites = JSON.parse(localStorage.getItem("bpl_band_invitations") || "[]");
     return invites.filter((i: any) => i.artistId === artistId && i.status === "pending");
   },
+
+  async getPendingInvitationsSupabase(artistId: string): Promise<any[]> {
+    if (supabase) {
+      const { data, error } = await supabase
+        .from("band_invitations")
+        .select("*")
+        .eq("artist_id", artistId)
+        .eq("status", "pending");
+
+      if (error) {
+        console.warn("Failed to get pending invitations from Supabase, using localStorage", error);
+        return this.getPendingInvitations(artistId);
+      }
+      return (data || []).map((d: any) => ({
+        id: d.id,
+        bandId: d.band_id,
+        bandName: d.band_name,
+        artistId: d.artist_id,
+        artistName: d.artist_name,
+        position: d.position,
+        status: d.status,
+        timestamp: d.created_at,
+      }));
+    } else {
+      return this.getPendingInvitations(artistId);
+    }
+  },
+
 
   /**
    * Links a Supabase-authenticated user (OAuth or magic-link) to the

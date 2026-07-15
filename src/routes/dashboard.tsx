@@ -147,6 +147,11 @@ function DashboardPage() {
   const [dmLoading, setDmLoading] = useState(false);
   const [selectedDm, setSelectedDm] = useState<any | null>(null);
 
+  // Band invites states
+  const [pendingBandInvites, setPendingBandInvites] = useState<any[]>([]);
+  const [invitesLoading, setInvitesLoading] = useState(false);
+
+
 
   // 1. Initial Load
   useEffect(() => {
@@ -376,6 +381,17 @@ function DashboardPage() {
       setDmLoading(false);
     }).catch(() => setDmLoading(false));
   }, [activeTab, session]);
+
+  // Load Band Invitations when invites tab is active
+  useEffect(() => {
+    if (activeTab !== "invites" || !currentUser?.id) return;
+    setInvitesLoading(true);
+    db.getPendingInvitationsSupabase(currentUser.id).then((invs) => {
+      setPendingBandInvites(invs);
+      setInvitesLoading(false);
+    }).catch(() => setInvitesLoading(false));
+  }, [activeTab, currentUser]);
+
 
 
   const handleAddCalendarEvent = (e: React.FormEvent) => {
@@ -1503,14 +1519,18 @@ function DashboardPage() {
                     Review band joining invitations sent to your profile. Accepting an invitation links you to their active roster.
                   </p>
 
-                  {db.getPendingInvitations(currentUser.id).length === 0 ? (
+                  {invitesLoading ? (
+                    <div className="py-8 flex justify-center">
+                      <div className="h-6 w-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                    </div>
+                  ) : pendingBandInvites.length === 0 ? (
                     <div className="py-8 text-center border border-dashed border-border/45 rounded-lg">
                       <Bell size={24} className="mx-auto text-muted-foreground mb-2" />
                       <p className="text-xs text-muted-foreground">No pending invitations at the moment.</p>
                     </div>
                   ) : (
                     <div className="space-y-3">
-                      {db.getPendingInvitations(currentUser.id).map((invite: any) => (
+                      {pendingBandInvites.map((invite: any) => (
                         <div key={invite.id} className="flex flex-col sm:flex-row justify-between sm:items-center p-4 bg-secondary/30 border border-border rounded-lg gap-4 text-xs">
                           <div>
                             <span className="font-bold text-white text-sm">{invite.bandName}</span>
@@ -1523,28 +1543,34 @@ function DashboardPage() {
                           <div className="flex gap-2 shrink-0">
                             <button
                               type="button"
-                              onClick={() => {
-                                db.respondToInvitation(invite.id, false);
+                              onClick={async () => {
+                                await db.respondToInvitation(invite.id, false);
+                                // Refresh invites
+                                const refreshedInvs = await db.getPendingInvitationsSupabase(currentUser.id);
+                                setPendingBandInvites(refreshedInvs);
                                 const refreshedAccount = db.getCurrentAccount();
                                 setCurrentAccount(refreshedAccount);
                                 const refreshedUser = db.getCurrentUser();
                                 setCurrentUser(refreshedUser);
                               }}
-                              className="px-4 py-2 border border-border bg-secondary hover:bg-slate-800 text-white rounded text-[10px] font-bold uppercase transition"
+                              className="px-4 py-2 border border-border bg-secondary hover:bg-slate-800 text-white rounded text-[10px] font-bold uppercase transition cursor-pointer"
                             >
                               Decline
                             </button>
                             <button
                               type="button"
-                              onClick={() => {
-                                db.respondToInvitation(invite.id, true);
+                              onClick={async () => {
+                                await db.respondToInvitation(invite.id, true);
                                 alert(`You have joined ${invite.bandName}!`);
+                                // Refresh invites
+                                const refreshedInvs = await db.getPendingInvitationsSupabase(currentUser.id);
+                                setPendingBandInvites(refreshedInvs);
                                 const refreshedAccount = db.getCurrentAccount();
                                 setCurrentAccount(refreshedAccount);
                                 const refreshedUser = db.getCurrentUser();
                                 setCurrentUser(refreshedUser);
                               }}
-                              className="px-4 py-2 bg-primary hover:bg-primary-glow border border-primary text-primary-foreground rounded text-[10px] font-bold uppercase transition"
+                              className="px-4 py-2 bg-primary hover:bg-primary-glow border border-primary text-primary-foreground rounded text-[10px] font-bold uppercase transition cursor-pointer"
                             >
                               Accept & Join
                             </button>
@@ -1555,6 +1581,7 @@ function DashboardPage() {
                   )}
                 </div>
               )}
+
 
               {/* TAB: MANAGE MEMBERS (BAND OWNERS ONLY) */}
               {activeTab === "members" && currentUser?.role === "band" && (
@@ -1634,21 +1661,22 @@ function DashboardPage() {
                                       </select>
                                       <button
                                         type="button"
-                                        onClick={() => {
+                                        onClick={async () => {
                                           const posSelect = document.getElementById(`pos-${artist.id}`) as HTMLSelectElement;
                                           const pos = posSelect ? posSelect.value : "Lead Vocal";
                                           try {
-                                            db.sendBandInvitation(currentUser.id, artist.id, pos);
+                                            await db.sendBandInvitation(currentUser.id, artist.id, pos);
                                             alert(`Invitation sent to ${artist.name} as ${pos}!`);
                                             setSearchQuery("");
                                           } catch (e: any) {
                                             alert(e.message || "Failed to send invitation.");
                                           }
                                         }}
-                                        className="bg-primary hover:bg-primary-glow text-primary-foreground rounded text-[10px] px-3 py-1 font-bold uppercase transition"
+                                        className="bg-primary hover:bg-primary-glow text-primary-foreground rounded text-[10px] px-3 py-1 font-bold uppercase transition cursor-pointer"
                                       >
                                         Invite
                                       </button>
+
                                     </div>
                                   )}
                                 </div>
