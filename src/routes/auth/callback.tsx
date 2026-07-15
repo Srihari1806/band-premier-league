@@ -30,13 +30,30 @@ function AuthCallbackPage() {
         let session: any = null;
 
         const params = new URLSearchParams(window.location.search);
+        
+        // Parse hash params in case of implicit flow errors or redirects
+        const hashParams = new URLSearchParams(
+          window.location.hash.substring(1) // remove the leading '#'
+        );
+
+        // Check for error parameters in query or hash
+        const urlError = params.get("error") || hashParams.get("error");
+        const urlErrorDesc = params.get("error_description") || hashParams.get("error_description");
+        const urlErrorCode = params.get("error_code") || hashParams.get("error_code");
+
+        if (urlError) {
+          setStatus("error");
+          setErrorMsg(`Supabase Auth Error: ${urlErrorDesc || urlError} (Code: ${urlErrorCode || "unknown"})`);
+          return;
+        }
+
         const code = params.get("code");
 
         if (code) {
           const { data, error } = await supabase.auth.exchangeCodeForSession(code);
           if (error) {
             setStatus("error");
-            setErrorMsg(error.message || "Authentication failed. Please try again.");
+            setErrorMsg(`Code Exchange Error: ${error.message}`);
             return;
           }
           session = data.session;
@@ -45,24 +62,39 @@ function AuthCallbackPage() {
           const { data, error } = await supabase.auth.getSession();
           if (error) {
             setStatus("error");
-            setErrorMsg(error.message || "Authentication failed. Please try again.");
+            setErrorMsg(`Get Session Error: ${error.message}`);
             return;
           }
           session = data.session;
         }
 
-        // If session still null, wait briefly and retry once
+        // If session still null, listen to auth state changes briefly (in case SDK is processing hash in BG)
         if (!session) {
-          await new Promise((r) => setTimeout(r, 800));
-          const { data } = await supabase.auth.getSession();
-          session = data.session;
+          session = await new Promise((resolve) => {
+            const timeout = setTimeout(() => {
+              subscription.unsubscribe();
+              resolve(null);
+            }, 2500);
+
+            const { data: { subscription } } = supabase!.auth.onAuthStateChange((event, currentSession) => {
+              if (currentSession) {
+                clearTimeout(timeout);
+                subscription.unsubscribe();
+                resolve(currentSession);
+              }
+            });
+          });
         }
 
+        // Final check
         if (!session) {
           setStatus("error");
-          setErrorMsg("Authentication failed. Please try again or clear browser cookies.");
+          const searchDebug = window.location.search ? `Query: ${window.location.search}` : "No query parameters";
+          const hashDebug = window.location.hash ? `Hash: ${window.location.hash.substring(0, 100)}...` : "No hash parameters";
+          setErrorMsg(`Authentication failed. Session could not be established.\nDebug: ${searchDebug} | ${hashDebug}`);
           return;
         }
+
 
         // ── Step 2: Link Supabase user to local account system ─────────────
         const email = session.user.email || "";
