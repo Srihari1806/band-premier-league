@@ -20,13 +20,10 @@ function AuthCallbackPage() {
     async function handleCallback() {
       try {
         if (!supabase) {
-          // No Supabase � redirect back to login
           navigate({ to: "/login" });
           return;
         }
 
-        // Supabase SDK auto-exchanges the code/hash for a session when
-        // detectSessionInUrl: true. Just call getSession().
         const {
           data: { session },
           error,
@@ -57,9 +54,48 @@ function AuthCallbackPage() {
           // Non-critical — proceed to redirect regardless
         }
 
-        if (account.workspaces && account.workspaces.length > 0) {
+        // --- Key fix: check Supabase for an existing artist/band record by email ---
+        // This ensures the same user on any device/browser gets linked to their profile
+        const TABLES = [
+          { table: "artist_applications", role: "artist", nameField: "name" },
+          { table: "band_applications",   role: "band",   nameField: "band_name" },
+          { table: "venue_applications",  role: "venue",  nameField: "venue_name" },
+          { table: "production_house_applications", role: "production_house", nameField: "company_name" },
+          { table: "volunteer_applications",        role: "volunteer",        nameField: "name" },
+          { table: "influencer_applications",       role: "influencer",       nameField: "name" },
+          { table: "sponsor_applications",          role: "sponsor",          nameField: "company_name" },
+          { table: "event_manager_applications",    role: "event_manager",    nameField: "company_name" },
+        ];
+
+        let foundProfile = false;
+        for (const { table, role, nameField } of TABLES) {
+          try {
+            const { data } = await supabase
+              .from(table)
+              .select("id, " + nameField)
+              .eq("contact_email", email)
+              .maybeSingle();
+
+            if (data?.id) {
+              const displayName = data[nameField] || name;
+              // Auto-link workspace so dashboard shows correctly on this device
+              if (!account.workspaces.some((w: any) => w.id === data.id)) {
+                db.addWorkspaceToAccount(account.id, role, data.id, displayName);
+              }
+              foundProfile = true;
+              break;
+            }
+          } catch {
+            // table might not exist, continue
+          }
+        }
+
+        // Redirect: if they have a workspace (locally or just found in Supabase), go to dashboard
+        const freshAccount = db.getCurrentAccount();
+        if (freshAccount?.workspaces && freshAccount.workspaces.length > 0) {
           navigate({ to: "/dashboard" });
         } else {
+          // No profile found anywhere — send to onboarding to pick role and register
           navigate({ to: "/onboarding" });
         }
       } catch (err: any) {
