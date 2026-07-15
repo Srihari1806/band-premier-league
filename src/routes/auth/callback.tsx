@@ -54,12 +54,11 @@ function AuthCallbackPage() {
           // Non-critical — proceed to redirect regardless
         }
 
-        // --- Key fix: check Supabase for an existing artist/band record by email ---
-        // This ensures the same user on any device/browser gets linked to their profile
+        // Check all tables in parallel (single round-trip instead of 8 sequential)
         const TABLES = [
-          { table: "artist_applications", role: "artist", nameField: "name" },
-          { table: "band_applications",   role: "band",   nameField: "band_name" },
-          { table: "venue_applications",  role: "venue",  nameField: "venue_name" },
+          { table: "artist_applications",           role: "artist",           nameField: "name" },
+          { table: "band_applications",             role: "band",             nameField: "band_name" },
+          { table: "venue_applications",            role: "venue",            nameField: "venue_name" },
           { table: "production_house_applications", role: "production_house", nameField: "company_name" },
           { table: "volunteer_applications",        role: "volunteer",        nameField: "name" },
           { table: "influencer_applications",       role: "influencer",       nameField: "name" },
@@ -67,26 +66,25 @@ function AuthCallbackPage() {
           { table: "event_manager_applications",    role: "event_manager",    nameField: "company_name" },
         ];
 
-        let foundProfile = false;
-        for (const { table, role, nameField } of TABLES) {
-          try {
-            const { data } = await supabase
+        const results = await Promise.all(
+          TABLES.map(({ table, role, nameField }) =>
+            supabase
               .from(table)
               .select("id, " + nameField)
               .eq("contact_email", email)
-              .maybeSingle();
+              .maybeSingle()
+              .then(({ data }) => ({ data, role, nameField }))
+              .catch(() => ({ data: null, role, nameField }))
+          )
+        );
 
-            if (data?.id) {
-              const displayName = data[nameField] || name;
-              // Auto-link workspace so dashboard shows correctly on this device
-              if (!account.workspaces.some((w: any) => w.id === data.id)) {
-                db.addWorkspaceToAccount(account.id, role, data.id, displayName);
-              }
-              foundProfile = true;
-              break;
+        for (const { data, role, nameField } of results) {
+          if (data?.id) {
+            const displayName = (data as any)[nameField] || name;
+            if (!account.workspaces.some((w: any) => w.id === data.id)) {
+              db.addWorkspaceToAccount(account.id, role, data.id, displayName);
             }
-          } catch {
-            // table might not exist, continue
+            break;
           }
         }
 
