@@ -4,15 +4,31 @@ import { supabase, upsertProfile, getProfile } from "@/lib/supabase";
 import { db } from "@/lib/db";
 import { Music } from "lucide-react";
 
+export interface CallbackSearch {
+  code?: string;
+  error?: string;
+  error_description?: string;
+  error_code?: string;
+}
+
 export const Route = createFileRoute("/auth/callback")({
   head: () => ({
     meta: [{ title: "Authenticating — Kalakshetra" }],
   }),
+  validateSearch: (search: Record<string, unknown>): CallbackSearch => {
+    return {
+      code: search.code as string | undefined,
+      error: search.error as string | undefined,
+      error_description: search.error_description as string | undefined,
+      error_code: search.error_code as string | undefined,
+    };
+  },
   component: AuthCallbackPage,
 });
 
 function AuthCallbackPage() {
   const navigate = useNavigate();
+  const search = Route.useSearch();
   const [status, setStatus] = useState<"loading" | "error">("loading");
   const [errorMsg, setErrorMsg] = useState("");
 
@@ -25,11 +41,8 @@ function AuthCallbackPage() {
         }
 
         // ── Step 1: Exchange the OAuth code for a session ──────────────────
-        // With PKCE flow (detectSessionInUrl: true), the callback URL has
-        // ?code=… which must be exchanged. getSession() alone can be too early.
+        // Read directly from validated search object
         let session: any = null;
-
-        const params = new URLSearchParams(window.location.search);
         
         // Parse hash params in case of implicit flow errors or redirects
         const hashParams = new URLSearchParams(
@@ -37,9 +50,9 @@ function AuthCallbackPage() {
         );
 
         // Check for error parameters in query or hash
-        const urlError = params.get("error") || hashParams.get("error");
-        const urlErrorDesc = params.get("error_description") || hashParams.get("error_description");
-        const urlErrorCode = params.get("error_code") || hashParams.get("error_code");
+        const urlError = search.error || hashParams.get("error");
+        const urlErrorDesc = search.error_description || hashParams.get("error_description");
+        const urlErrorCode = search.error_code || hashParams.get("error_code");
 
         if (urlError) {
           setStatus("error");
@@ -47,7 +60,8 @@ function AuthCallbackPage() {
           return;
         }
 
-        const code = params.get("code");
+        const code = search.code;
+
 
         if (code) {
           const { data, error } = await supabase.auth.exchangeCodeForSession(code);
@@ -91,7 +105,8 @@ function AuthCallbackPage() {
           setStatus("error");
           const searchDebug = window.location.search ? `Query: ${window.location.search}` : "No query parameters";
           const hashDebug = window.location.hash ? `Hash: ${window.location.hash.substring(0, 100)}...` : "No hash parameters";
-          setErrorMsg(`Authentication failed. Session could not be established.\nDebug: ${searchDebug} | ${hashDebug}`);
+          const parsedDebug = Object.keys(search).length > 0 ? `Parsed keys: ${Object.keys(search).join(", ")}` : "No parsed keys";
+          setErrorMsg(`Authentication failed. Session could not be established.\nDebug: ${searchDebug} | ${hashDebug} | ${parsedDebug}`);
           return;
         }
 
