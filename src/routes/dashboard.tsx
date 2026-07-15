@@ -214,13 +214,63 @@ function DashboardPage() {
     setCurrentUser(resolvedUser);
 
     if (resolvedUser) {
-      setProfileData(resolvedUser.profileData || resolvedUser);
-      setName(resolvedUser.name || "");
-      setTagline(resolvedUser.profileData?.tagline || resolvedUser.tagline || "");
-      setBio(resolvedUser.profileData?.bio || resolvedUser.profileData?.company_profile || resolvedUser.bio || "");
-      setCity(resolvedUser.profileData?.home_city || resolvedUser.profileData?.address || resolvedUser.city || "");
-      setGenre(resolvedUser.profileData?.genre || "");
-      setFeeRange(resolvedUser.profileData?.fee_range || resolvedUser.profileData?.pricing || "");
+      const syncProfile = async () => {
+        if (
+          resolvedUser.role !== "user" &&
+          resolvedUser.role !== "admin" &&
+          resolvedUser.role !== "band_member"
+        ) {
+          try {
+            let profile = await db.getApplicationById(resolvedUser.role, resolvedUser.id);
+            if (!profile) {
+              console.log("No profile found in DB, auto-creating/approving...");
+              profile = await db.updateApplication(resolvedUser.role, resolvedUser.id, {
+                name: resolvedUser.name || "Solo Artist",
+              });
+            }
+            if (profile) {
+              setProfileData(profile);
+              setName(
+                profile.band_name ||
+                  profile.venue_name ||
+                  profile.company_name ||
+                  profile.name ||
+                  resolvedUser.name ||
+                  ""
+              );
+              setTagline(profile.tagline || "");
+              setBio(profile.bio || profile.about || profile.company_profile || "");
+              setCity(profile.home_city || profile.address || "");
+              setGenre(profile.genre || "");
+              setFeeRange(profile.fee_range || profile.pricing || "");
+              if (profile.roles) setArtistRoles(profile.roles);
+              if (profile.skills)
+                setSkills(Array.isArray(profile.skills) ? profile.skills.join(", ") : profile.skills);
+              if (profile.releases) setReleases(profile.releases);
+              if (profile.timeline) setTimeline(profile.timeline);
+            }
+          } catch (e) {
+            console.error("Error syncing profile data", e);
+          }
+        } else {
+          setProfileData(resolvedUser.profileData || resolvedUser);
+          setName(resolvedUser.name || "");
+          setTagline(resolvedUser.profileData?.tagline || resolvedUser.tagline || "");
+          setBio(
+            resolvedUser.profileData?.bio ||
+              resolvedUser.profileData?.company_profile ||
+              resolvedUser.bio ||
+              ""
+          );
+          setCity(
+            resolvedUser.profileData?.home_city ||
+              resolvedUser.profileData?.address ||
+              resolvedUser.city ||
+              ""
+          );
+        }
+      };
+      syncProfile();
 
       // Load mock calendar events
       const mockEvents = [

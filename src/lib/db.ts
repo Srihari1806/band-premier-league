@@ -360,7 +360,25 @@ export const db = {
     const apps = JSON.parse(localStorage.getItem(key) || "[]");
     apps.push(app);
     localStorage.setItem(key, JSON.stringify(apps));
-    return app;
+  },
+
+  async getApplicationById(role: string, id: string): Promise<any | null> {
+    if (supabase) {
+      const { data, error } = await supabase
+        .from(getTableName(role))
+        .select("*")
+        .eq("id", id)
+        .maybeSingle();
+      if (error) {
+        console.warn(`Supabase fetch by ID failed for ${role}/${id}`, error);
+        return null;
+      }
+      return data;
+    } else {
+      const key = getStorageKey(role);
+      const apps = JSON.parse(localStorage.getItem(key) || "[]");
+      return apps.find((app: any) => app.id === id) || null;
+    }
   },
 
   // --- Unified Application Retrieval for Admin (No filters, password protected page) ---
