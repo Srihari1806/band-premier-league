@@ -94,7 +94,7 @@ function AuthCallbackPage() {
                 supabase!
                   .from(table)
                   .select("id, " + nameField)
-                  .eq("contact_email", email)
+                  .ilike("contact_email", email)
                   .maybeSingle()
               )
                 .then((res) => ({ data: res?.data as any, role, nameField }))

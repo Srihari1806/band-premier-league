@@ -222,10 +222,11 @@ function DashboardPage() {
         ) {
           try {
             let profile = await db.getApplicationById(resolvedUser.role, resolvedUser.id);
-            if (!profile) {
-              console.log("No profile found in DB, auto-creating/approving...");
+            if (!profile || profile.status !== "approved") {
+              console.log("Profile missing or not approved, auto-upserting/approving...");
               profile = await db.updateApplication(resolvedUser.role, resolvedUser.id, {
                 name: resolvedUser.name || "Solo Artist",
+                ...profile, // Preserve any existing field details
               });
             }
             if (profile) {
