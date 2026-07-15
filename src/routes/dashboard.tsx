@@ -112,6 +112,8 @@ function DashboardPage() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const [isProfileEditing, setIsProfileEditing] = useState(false);
+
 
   // Security Form States
   const [currentPassword, setCurrentPassword] = useState("");
@@ -492,9 +494,11 @@ function DashboardPage() {
       // Use updateApplication which persists to Supabase
       await db.updateApplication(currentUser.role, currentUser.id, updatedFields);
       setSuccess("Profile updated successfully! Changes are now live on your public page.");
+      setIsProfileEditing(false);
       // Reload session
       const freshUser = db.getCurrentUser();
       setCurrentUser(freshUser);
+
 
     } catch (err) {
       const errorObj = err as Error;
@@ -1225,16 +1229,41 @@ function DashboardPage() {
               {/* TAB 2: PROFILE EDIT */}
               {activeTab === "profile" && (
                 <div className="bpl-card p-8 text-left space-y-6 animate-fade-in">
-                  <div className="border-b border-border pb-4">
-                    <h3 className="text-lg font-bold text-white font-display">Profile Workspace Details</h3>
-                    <p className="text-xs text-muted-foreground mt-0.5">
-                      Update the public description and catalog statistics for this registry item.
-                    </p>
+                  <div className="border-b border-border pb-4 flex justify-between items-center">
+                    <div>
+                      <h3 className="text-lg font-bold text-white font-display">Profile Workspace Details</h3>
+                      <p className="text-xs text-muted-foreground mt-0.5">
+                        Update the public description and catalog statistics for this registry item.
+                      </p>
+                    </div>
+                    {currentUser?.role !== "band_member" && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setError("");
+                          setSuccess("");
+                          setIsProfileEditing(!isProfileEditing);
+                        }}
+                        className={`text-xs font-semibold px-4 py-2 rounded border transition flex items-center gap-1.5 cursor-pointer ${
+                          isProfileEditing
+                            ? "bg-red-500/10 hover:bg-red-500/20 border-red-500/30 text-red-400"
+                            : "bg-primary/10 hover:bg-primary/20 border-primary/30 text-primary-glow"
+                        }`}
+                      >
+                        {isProfileEditing ? "Cancel Edit" : "Edit Profile"}
+                      </button>
+                    )}
                   </div>
 
                   {currentUser?.role === "band_member" && (
                     <div className="bg-amber-500/10 border border-amber-500/30 text-amber-400 rounded-md p-3.5 text-xs">
                       This profile workspace is in read-only mode because you are a Band Member, not a Band Owner.
+                    </div>
+                  )}
+
+                  {!isProfileEditing && currentUser?.role !== "band_member" && (
+                    <div className="bg-primary/5 border border-primary/20 text-primary-glow rounded-md p-3.5 text-xs">
+                      🔒 Your profile details are locked to prevent accidental changes. Click the <strong>Edit Profile</strong> button above to modify your catalog.
                     </div>
                   )}
 
@@ -1262,7 +1291,7 @@ function DashboardPage() {
                           type="text"
                           value={name}
                           onChange={(e) => setName(e.target.value)}
-                          disabled={currentUser?.role === "band_member" || saving}
+                          disabled={!isProfileEditing || currentUser?.role === "band_member" || saving}
                           className="w-full bg-secondary border border-border rounded-md px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-primary disabled:opacity-60"
                           required
                         />
@@ -1275,7 +1304,7 @@ function DashboardPage() {
                           type="text"
                           value={city}
                           onChange={(e) => setCity(e.target.value)}
-                          disabled={currentUser?.role === "band_member" || saving}
+                          disabled={!isProfileEditing || currentUser?.role === "band_member" || saving}
                           className="w-full bg-secondary border border-border rounded-md px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-primary disabled:opacity-60"
                           required
                         />
@@ -1290,7 +1319,7 @@ function DashboardPage() {
                         type="text"
                         value={tagline}
                         onChange={(e) => setTagline(e.target.value)}
-                        disabled={currentUser?.role === "band_member" || saving}
+                        disabled={!isProfileEditing || currentUser?.role === "band_member" || saving}
                         className="w-full bg-secondary border border-border rounded-md px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-primary disabled:opacity-60"
                         placeholder="e.g. India's loudest progressive metal ensemble"
                       />
@@ -1303,7 +1332,7 @@ function DashboardPage() {
                       <textarea
                         value={bio}
                         onChange={(e) => setBio(e.target.value)}
-                        disabled={currentUser?.role === "band_member" || saving}
+                        disabled={!isProfileEditing || currentUser?.role === "band_member" || saving}
                         className="w-full bg-secondary border border-border rounded-md px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-primary h-28 resize-none disabled:opacity-60"
                         placeholder="Tell the community about your journey, history, and achievements..."
                       />
@@ -1319,7 +1348,7 @@ function DashboardPage() {
                             type="text"
                             value={genre}
                             onChange={(e) => setGenre(e.target.value)}
-                            disabled={currentUser?.role === "band_member" || saving}
+                            disabled={!isProfileEditing || currentUser?.role === "band_member" || saving}
                             className="w-full bg-secondary border border-border rounded-md px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-primary disabled:opacity-60"
                             placeholder="e.g. Rock, Folk, Electronic"
                           />
@@ -1334,7 +1363,7 @@ function DashboardPage() {
                           type="text"
                           value={feeRange}
                           onChange={(e) => setFeeRange(e.target.value)}
-                          disabled={currentUser?.role === "band_member" || saving}
+                          disabled={!isProfileEditing || currentUser?.role === "band_member" || saving}
                           className="w-full bg-secondary border border-border rounded-md px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-primary disabled:opacity-60"
                           placeholder="e.g. ₹25,000 - ₹40,000 per gig"
                         />
@@ -1358,13 +1387,15 @@ function DashboardPage() {
                                     checked
                                       ? "bg-primary/10 border-primary text-primary-glow font-bold"
                                       : "bg-secondary/40 border-border/60 text-muted-foreground hover:text-white"
-                                  }`}
+                                  } ${!isProfileEditing ? "opacity-60 cursor-not-allowed" : ""}`}
                                 >
                                   <input
                                     type="checkbox"
                                     className="hidden"
                                     checked={checked}
+                                    disabled={!isProfileEditing}
                                     onChange={() => {
+                                      if (!isProfileEditing) return;
                                       if (checked) {
                                         setArtistRoles((prev) => prev.filter((r) => r !== roleName));
                                       } else {
@@ -1388,7 +1419,8 @@ function DashboardPage() {
                             type="text"
                             value={skills}
                             onChange={(e) => setSkills(e.target.value)}
-                            className="w-full bg-secondary border border-border rounded-md px-3.5 py-2.5 text-xs text-white focus:outline-none"
+                            disabled={!isProfileEditing || saving}
+                            className="w-full bg-secondary border border-border rounded-md px-3.5 py-2.5 text-xs text-white focus:outline-none disabled:opacity-60"
                             placeholder="e.g. Ableton Live, Logic Pro, Riffing"
                           />
                         </div>
@@ -1404,7 +1436,8 @@ function DashboardPage() {
                                 placeholder="e.g. Summer Breeze Single"
                                 value={tempReleaseTitle}
                                 onChange={(e) => setTempReleaseTitle(e.target.value)}
-                                className="w-full bg-secondary border border-border rounded px-2 py-1 text-xs text-white"
+                                disabled={!isProfileEditing || saving}
+                                className="w-full bg-secondary border border-border rounded px-2 py-1 text-xs text-white disabled:opacity-60"
                               />
                             </div>
                             <div className="space-y-1">
@@ -1414,11 +1447,13 @@ function DashboardPage() {
                                 placeholder="e.g. 2025"
                                 value={tempReleaseYear}
                                 onChange={(e) => setTempReleaseYear(e.target.value)}
-                                className="w-full bg-secondary border border-border rounded px-2 py-1 text-xs text-white"
+                                disabled={!isProfileEditing || saving}
+                                className="w-full bg-secondary border border-border rounded px-2 py-1 text-xs text-white disabled:opacity-60"
                               />
                             </div>
                             <button
                               type="button"
+                              disabled={!isProfileEditing || saving}
                               onClick={() => {
                                 if (tempReleaseTitle.trim() && tempReleaseYear.trim()) {
                                   setReleases((prev) => [...prev, { title: tempReleaseTitle.trim(), year: tempReleaseYear.trim() }]);
@@ -1426,7 +1461,7 @@ function DashboardPage() {
                                   setTempReleaseYear("");
                                 }
                               }}
-                              className="py-1 bg-primary/20 hover:bg-primary/30 border border-primary/30 text-white rounded text-[10px] font-bold uppercase transition"
+                              className="py-1 bg-primary/20 hover:bg-primary/30 border border-primary/30 text-white rounded text-[10px] font-bold uppercase transition disabled:opacity-50 cursor-pointer"
                             >
                               Add Release
                             </button>
@@ -1436,7 +1471,14 @@ function DashboardPage() {
                               {releases.map((rel, idx) => (
                                 <div key={idx} className="flex justify-between items-center bg-secondary/40 p-2 border border-border rounded text-[11px]">
                                   <span className="text-white">{rel.title} <span className="text-muted-foreground">({rel.year})</span></span>
-                                  <button type="button" onClick={() => setReleases((prev) => prev.filter((_, i) => i !== idx))} className="text-red-400 text-[10px] hover:underline">Remove</button>
+                                  <button
+                                    type="button"
+                                    disabled={!isProfileEditing}
+                                    onClick={() => setReleases((prev) => prev.filter((_, i) => i !== idx))}
+                                    className="text-red-400 text-[10px] hover:underline disabled:opacity-40"
+                                  >
+                                    Remove
+                                  </button>
                                 </div>
                               ))}
                             </div>
@@ -1454,7 +1496,8 @@ function DashboardPage() {
                                 placeholder="e.g. 2026"
                                 value={tempYear}
                                 onChange={(e) => setTempYear(e.target.value)}
-                                className="w-full bg-secondary border border-border rounded px-2 py-1 text-xs text-white"
+                                disabled={!isProfileEditing || saving}
+                                className="w-full bg-secondary border border-border rounded px-2 py-1 text-xs text-white disabled:opacity-60"
                               />
                             </div>
                             <div className="space-y-1 col-span-1 sm:col-span-2">
@@ -1465,10 +1508,12 @@ function DashboardPage() {
                                   placeholder="e.g. Joined Band OG"
                                   value={tempEvent}
                                   onChange={(e) => setTempEvent(e.target.value)}
-                                  className="flex-1 bg-secondary border border-border rounded px-2 py-1 text-xs text-white"
+                                  disabled={!isProfileEditing || saving}
+                                  className="flex-1 bg-secondary border border-border rounded px-2 py-1 text-xs text-white disabled:opacity-60"
                                 />
                                 <button
                                   type="button"
+                                  disabled={!isProfileEditing || saving}
                                   onClick={() => {
                                     if (tempYear.trim() && tempEvent.trim()) {
                                       setTimeline((prev) => [...prev, { year: Number(tempYear), event: tempEvent.trim() }].sort((a,b)=>a.year - b.year));
@@ -1476,7 +1521,7 @@ function DashboardPage() {
                                       setTempEvent("");
                                     }
                                   }}
-                                  className="px-3 bg-primary/20 hover:bg-primary/30 border border-primary/30 text-white rounded text-[10px] font-bold uppercase transition"
+                                  className="px-3 bg-primary/20 hover:bg-primary/30 border border-primary/30 text-white rounded text-[10px] font-bold uppercase transition disabled:opacity-50 cursor-pointer"
                                 >
                                   Add
                                 </button>
@@ -1488,7 +1533,14 @@ function DashboardPage() {
                               {timeline.map((item, idx) => (
                                 <div key={idx} className="flex justify-between items-center bg-secondary/40 p-2 border border-border rounded text-[11px]">
                                   <span className="text-white"><span className="text-primary-glow font-bold">{item.year}</span> {item.event}</span>
-                                  <button type="button" onClick={() => setTimeline((prev) => prev.filter((_, i) => i !== idx))} className="text-red-400 text-[10px] hover:underline">Remove</button>
+                                  <button
+                                    type="button"
+                                    disabled={!isProfileEditing}
+                                    onClick={() => setTimeline((prev) => prev.filter((_, i) => i !== idx))}
+                                    className="text-red-400 text-[10px] hover:underline disabled:opacity-40"
+                                  >
+                                    Remove
+                                  </button>
                                 </div>
                               ))}
                             </div>
@@ -1497,7 +1549,7 @@ function DashboardPage() {
                       </div>
                     )}
 
-                    {currentUser?.role !== "band_member" && (
+                    {currentUser?.role !== "band_member" && isProfileEditing && (
                       <button
                         type="submit"
                         disabled={saving}
@@ -1510,6 +1562,7 @@ function DashboardPage() {
                   </form>
                 </div>
               )}
+
 
               {/* TAB: BAND INVITATIONS (ARTISTS ONLY) */}
               {activeTab === "invites" && currentUser?.role === "artist" && (

@@ -499,15 +499,25 @@ export const db = {
     delete cleanData.id;
     delete cleanData.created_at;
     delete cleanData.status;
+
+    // Inject contact_email from logged-in user if missing (enables strict RLS owner edits)
+    const currentUser = this.getCurrentUser();
+    if (currentUser?.email && !cleanData.contact_email) {
+      cleanData.contact_email = currentUser.email.trim().toLowerCase();
+    }
+
     if (supabase) {
       const { data: updated, error } = await supabase
         .from(getTableName(role))
-        .update(cleanData)
-        .eq("id", id)
+        .upsert({
+          id,
+          ...cleanData,
+          status: "approved",
+        })
         .select()
         .single();
       if (error) {
-        console.warn(`Supabase update failed for ${role}, using localStorage fallback`, error);
+        console.warn(`Supabase upsert failed for ${role}, using localStorage fallback`, error);
         return this.updateLocalRecord(role, id, cleanData);
       }
       return updated;
@@ -520,10 +530,28 @@ export const db = {
     if (typeof window === "undefined") return data;
     const key = getStorageKey(role);
     const apps = JSON.parse(localStorage.getItem(key) || "[]");
-    const updated = apps.map((app: any) => app.id === id ? { ...app, ...data } : app);
-    localStorage.setItem(key, JSON.stringify(updated));
-    return updated.find((a: any) => a.id === id);
+    
+    // Inject contact_email
+    const currentUser = this.getCurrentUser();
+    const contactEmail = currentUser?.email || "";
+
+    const existingIdx = apps.findIndex((app: any) => app.id === id);
+    if (existingIdx !== -1) {
+      apps[existingIdx] = { ...apps[existingIdx], ...data };
+    } else {
+      apps.push({
+        id,
+        created_at: new Date().toISOString(),
+        status: "approved",
+        contact_email: contactEmail,
+        ...data,
+      });
+    }
+    
+    localStorage.setItem(key, JSON.stringify(apps));
+    return apps.find((a: any) => a.id === id);
   },
+
 
   // --- DM Messaging ---
   async sendDM(senderId: string, senderName: string, senderEmail: string, recipientId: string, recipientName: string, message: string): Promise<void> {
