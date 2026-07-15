@@ -3,8 +3,8 @@ import { PageShell } from "@/components/layout/PageShell";
 import { useEffect, useState } from "react";
 import { db } from "@/lib/db";
 import { useAuth } from "@/hooks/useAuth";
-import { useProfile } from "@/hooks/useProfile";
 import { upsertProfile } from "@/lib/supabase";
+
 import {
   Music,
   User,
@@ -112,9 +112,9 @@ const ROLE_CARDS = [
 function OnboardingSelectionPage() {
   const navigate = useNavigate();
   const { session, loading: authLoading, isSupabaseConfigured } = useAuth();
-  const { profile, loading: profileLoading } = useProfile();
   const [account, setAccount] = useState<any>(null);
   const [saving, setSaving] = useState(false);
+
 
   useEffect(() => {
     // Wait for Supabase auth to resolve
@@ -138,14 +138,13 @@ function OnboardingSelectionPage() {
     setSaving(true);
     try {
       if (isSupabaseConfigured && session) {
-        // Save role in Supabase profiles
-        await upsertProfile(session.user.id, {
-          full_name: profile?.full_name || session.user.email?.split("@")[0] || "",
-          phone: profile?.phone || "",
-          city: profile?.city || "",
+        // Save role in Supabase profiles (non-blocking, fire and forget)
+        upsertProfile(session.user.id, {
+          full_name: session.user.user_metadata?.full_name || session.user.email?.split("@")[0] || "",
           role: card.role,
-        });
+        }).catch(() => {});
       }
+
       
       // Update local storage role
       const currentAccount = db.getCurrentAccount();
@@ -178,7 +177,9 @@ function OnboardingSelectionPage() {
     navigate({ to: "/dashboard" });
   };
 
-  if (!account || (isSupabaseConfigured && profileLoading)) {
+  // Only block render while auth is still resolving — profile fetch is non-critical
+  if (!account || (isSupabaseConfigured && authLoading)) {
+
     return (
       <PageShell>
         <div className="flex min-h-screen items-center justify-center bg-background">
