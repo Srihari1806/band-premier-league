@@ -75,8 +75,8 @@ function AuthCallbackPage() {
                 .eq("contact_email", email)
                 .maybeSingle()
             )
-              .then(({ data }) => ({ data, role, nameField }))
-              .catch(() => ({ data: null, role, nameField }))
+              .then((res) => ({ data: res.data as any, role, nameField }))
+              .catch(() => ({ data: null as any, role, nameField }))
           )
         );
 
