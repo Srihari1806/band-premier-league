@@ -66,6 +66,8 @@ function AuthCallbackPage() {
           { table: "event_manager_applications",    role: "event_manager",    nameField: "company_name" },
         ];
 
+        let foundProfile = account.workspaces && account.workspaces.length > 0;
+
         const results = await Promise.all(
           TABLES.map(({ table, role, nameField }) =>
             Promise.resolve(
@@ -83,19 +85,17 @@ function AuthCallbackPage() {
         for (const { data, role, nameField } of results) {
           if (data?.id) {
             const displayName = (data as any)[nameField] || name;
-            if (!account.workspaces.some((w: any) => w.id === data.id)) {
-              db.addWorkspaceToAccount(account.id, role, data.id, displayName);
-            }
+            db.addWorkspaceToAccount(account.id, role, data.id, displayName);
+            foundProfile = true;
             break;
           }
         }
 
-        // Redirect: if they have a workspace (locally or just found in Supabase), go to dashboard
-        const freshAccount = db.getCurrentAccount();
-        if (freshAccount?.workspaces && freshAccount.workspaces.length > 0) {
+        // Navigate based on whether a registered profile exists in Supabase
+        if (foundProfile) {
           navigate({ to: "/dashboard" });
         } else {
-          // No profile found anywhere — send to onboarding to pick role and register
+          // No profile anywhere — send to onboarding to pick role and register
           navigate({ to: "/onboarding" });
         }
       } catch (err: any) {
