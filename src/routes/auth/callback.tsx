@@ -68,11 +68,13 @@ function AuthCallbackPage() {
 
         const results = await Promise.all(
           TABLES.map(({ table, role, nameField }) =>
-            supabase
-              .from(table)
-              .select("id, " + nameField)
-              .eq("contact_email", email)
-              .maybeSingle()
+            Promise.resolve(
+              supabase!
+                .from(table)
+                .select("id, " + nameField)
+                .eq("contact_email", email)
+                .maybeSingle()
+            )
               .then(({ data }) => ({ data, role, nameField }))
               .catch(() => ({ data: null, role, nameField }))
           )
