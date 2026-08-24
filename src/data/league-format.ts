@@ -261,9 +261,11 @@ export const ZONES: Zone[] = [
     headline: "The Hindi belt, entered once the format has a track record.",
     languages: ["Hindi", "Bhojpuri", "Punjabi", "Bengali"],
     hubCities: [
-      { city: "New Delhi", state: "Delhi NCR", note: "National brand and sponsorship centre" },
-      { city: "Gurgaon", state: "Delhi NCR", note: "Corporate sponsor and venue density" },
-      { city: "Noida", state: "Delhi NCR", note: "Campus belt and production base" },
+      {
+        city: "Delhi NCR",
+        state: "Delhi · Haryana · UP",
+        note: "National brand and sponsorship centre, with venue density in Gurgaon and the campus belt and production base in Noida",
+      },
       { city: "Mumbai", state: "Maharashtra", note: "Label, sync and OTT decision-makers" },
       { city: "Pune", state: "Maharashtra", note: "Large student audience, active gig scene" },
       { city: "Kolkata", state: "West Bengal", note: "Long-standing band culture" },
