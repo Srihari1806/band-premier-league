@@ -338,7 +338,7 @@ function BandCulturePage() {
                   className="bpl-card group relative flex flex-col justify-between overflow-hidden border border-border/80 bg-surface/50 hover:bg-surface hover:border-primary/60 transition-all duration-300 cursor-pointer shadow-lg hover:shadow-primary/5 hover:-translate-y-1"
                 >
                   {/* Card Visual Header with Accent Gradient */}
-                  <div className="relative h-28 w-full overflow-hidden bg-slate-900 border-b border-border/50 flex items-center justify-center">
+                  <div className="relative h-40 w-full overflow-hidden bg-slate-900 border-b border-border/50 flex items-center justify-center">
                     <div
                       className={`absolute inset-0 opacity-40 group-hover:opacity-60 transition-opacity bg-gradient-to-br ${band.accentColor}`}
                     />
@@ -360,9 +360,9 @@ function BandCulturePage() {
                     {/* Band Visual / Avatar Circle */}
                     <BandAvatar
                       band={band}
-                      sizeClass="h-16 w-16"
-                      iconSize={24}
-                      className="relative z-10 border-2 border-white/20 group-hover:scale-105 transition-transform"
+                      sizeClass="h-26 w-26"
+                      iconSize={40}
+                      className="relative z-10 ring-[3px] ring-white/30 ring-offset-2 ring-offset-slate-900/60 group-hover:scale-105 transition-transform"
                     />
                   </div>
 
@@ -514,7 +514,7 @@ function BandCulturePage() {
         >
           <div className="relative w-full max-w-lg bg-surface border border-border rounded-2xl shadow-2xl overflow-hidden animate-scaleIn">
             {/* Modal Header Cover */}
-            <div className="relative h-32 bg-slate-900 overflow-hidden flex items-center justify-center border-b border-border">
+            <div className="relative h-44 bg-slate-900 overflow-hidden flex items-center justify-center border-b border-border">
               <div
                 className={`absolute inset-0 opacity-50 bg-gradient-to-br ${activeModalBand.accentColor}`}
               />
@@ -533,9 +533,9 @@ function BandCulturePage() {
                 <BandAvatar
                   key={activeModalBand.id}
                   band={activeModalBand}
-                  sizeClass="h-16 w-16"
-                  iconSize={28}
-                  className="border-2 border-white/30"
+                  sizeClass="h-28 w-28"
+                  iconSize={44}
+                  className="ring-[3px] ring-white/35 ring-offset-2 ring-offset-slate-900/60"
                 />
               </div>
             </div>
