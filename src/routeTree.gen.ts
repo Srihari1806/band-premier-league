@@ -21,6 +21,7 @@ import { Route as EventsRouteImport } from './routes/events'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as CommunityRouteImport } from './routes/community'
 import { Route as BandsRouteImport } from './routes/bands'
+import { Route as BandCultureRouteImport } from './routes/band-culture'
 import { Route as AnalyticsRouteImport } from './routes/analytics'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as IndexRouteImport } from './routes/index'
@@ -94,6 +95,11 @@ const CommunityRoute = CommunityRouteImport.update({
 const BandsRoute = BandsRouteImport.update({
   id: '/bands',
   path: '/bands',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BandCultureRoute = BandCultureRouteImport.update({
+  id: '/band-culture',
+  path: '/band-culture',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AnalyticsRoute = AnalyticsRouteImport.update({
@@ -171,6 +177,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/analytics': typeof AnalyticsRoute
+  '/band-culture': typeof BandCultureRoute
   '/bands': typeof BandsRouteWithChildren
   '/community': typeof CommunityRoute
   '/dashboard': typeof DashboardRoute
@@ -199,6 +206,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/analytics': typeof AnalyticsRoute
+  '/band-culture': typeof BandCultureRoute
   '/bands': typeof BandsRouteWithChildren
   '/community': typeof CommunityRoute
   '/dashboard': typeof DashboardRoute
@@ -228,6 +236,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/analytics': typeof AnalyticsRoute
+  '/band-culture': typeof BandCultureRoute
   '/bands': typeof BandsRouteWithChildren
   '/community': typeof CommunityRoute
   '/dashboard': typeof DashboardRoute
@@ -258,6 +267,7 @@ export interface FileRouteTypes {
     | '/'
     | '/about'
     | '/analytics'
+    | '/band-culture'
     | '/bands'
     | '/community'
     | '/dashboard'
@@ -286,6 +296,7 @@ export interface FileRouteTypes {
     | '/'
     | '/about'
     | '/analytics'
+    | '/band-culture'
     | '/bands'
     | '/community'
     | '/dashboard'
@@ -314,6 +325,7 @@ export interface FileRouteTypes {
     | '/'
     | '/about'
     | '/analytics'
+    | '/band-culture'
     | '/bands'
     | '/community'
     | '/dashboard'
@@ -343,6 +355,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AboutRoute: typeof AboutRoute
   AnalyticsRoute: typeof AnalyticsRoute
+  BandCultureRoute: typeof BandCultureRoute
   BandsRoute: typeof BandsRouteWithChildren
   CommunityRoute: typeof CommunityRoute
   DashboardRoute: typeof DashboardRoute
@@ -451,6 +464,13 @@ declare module '@tanstack/react-router' {
       path: '/bands'
       fullPath: '/bands'
       preLoaderRoute: typeof BandsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/band-culture': {
+      id: '/band-culture'
+      path: '/band-culture'
+      fullPath: '/band-culture'
+      preLoaderRoute: typeof BandCultureRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/analytics': {
@@ -568,6 +588,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AboutRoute: AboutRoute,
   AnalyticsRoute: AnalyticsRoute,
+  BandCultureRoute: BandCultureRoute,
   BandsRoute: BandsRouteWithChildren,
   CommunityRoute: CommunityRoute,
   DashboardRoute: DashboardRoute,

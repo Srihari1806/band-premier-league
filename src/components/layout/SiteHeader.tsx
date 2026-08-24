@@ -9,6 +9,7 @@ const NAV = [
   { to: "/", label: "Home" },
   { to: "/league", label: "League" },
   { to: "/bands", label: "Bands" },
+  { to: "/band-culture", label: "Band Culture" },
   { to: "/events", label: "Events" },
   { to: "/venues", label: "Venues" },
   { to: "/about", label: "About" },

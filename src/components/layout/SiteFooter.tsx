@@ -26,6 +26,7 @@ export function SiteFooter() {
             ["Home", "/"],
             ["Events", "/events"],
             ["Bands", "/bands"],
+            ["Band Culture (AP/TS)", "/band-culture"],
             ["Venues", "/venues"],
             ["League", "/league"],
           ]}
