@@ -233,7 +233,7 @@ function EconomicsPage() {
               icon={<Ticket size={13} />}
               value={inr(show.netRevenue)}
               label="Net Per Show"
-              hint={`After ${SHOW_BASELINE.platformCommissionPct}% platform commission`}
+              hint={`After the ${SHOW_BASELINE.platformCommissionPct}% ticketing partner cut`}
               accent="text-emerald-400"
             />
             <Stat
@@ -356,13 +356,18 @@ function EconomicsPage() {
 
               <div className="flex items-center justify-between text-sm border-t border-border/60 pt-3">
                 <span className="text-rose-300 flex items-center gap-1.5">
-                  <ArrowRight size={13} /> Platform commission (
+                  <ArrowRight size={13} /> Ticketing partner commission (
                   {SHOW_BASELINE.platformCommissionPct}%)
                 </span>
                 <span className="font-bold text-rose-300 tabular-nums">
                   −{inr(show.platformCommission)}
                 </span>
               </div>
+
+              <p className="text-[11px] text-muted-foreground -mt-1">
+                Retained by the third-party ticketing platform that sells and settles the tickets.
+                It leaves the pool before anyone in the league is paid.
+              </p>
 
               <div className="flex items-center justify-between border-t border-border/60 pt-3">
                 <span className="text-sm font-bold text-white">Net revenue to split</span>
@@ -897,8 +902,8 @@ function EconomicsPage() {
             results or a guarantee of future performance. Ticket, attendance and rights estimates
             assume the Hyderabad pilot configuration; production house bid levels are modelled, not
             contracted. The calculator above changes only ticket price, attendance and show volume —
-            all other assumptions, including the {SHOW_BASELINE.platformCommissionPct}% platform
-            commission and the {EVENT_SPLIT.bands}/{EVENT_SPLIT.productionHouse}/
+            all other assumptions, including the {SHOW_BASELINE.platformCommissionPct}%
+            ticketing commission and the {EVENT_SPLIT.bands}/{EVENT_SPLIT.productionHouse}/
             {EVENT_SPLIT.operator} split, are held constant. Contracted event managers are paid out
             of the operator&apos;s share rather than taking a fourth cut.
           </p>
