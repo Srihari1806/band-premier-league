@@ -18,6 +18,7 @@ import { Route as MediaRouteImport } from './routes/media'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as LeagueRouteImport } from './routes/league'
 import { Route as EventsRouteImport } from './routes/events'
+import { Route as EconomicsRouteImport } from './routes/economics'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as CommunityRouteImport } from './routes/community'
 import { Route as BandsRouteImport } from './routes/bands'
@@ -80,6 +81,11 @@ const LeagueRoute = LeagueRouteImport.update({
 const EventsRoute = EventsRouteImport.update({
   id: '/events',
   path: '/events',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const EconomicsRoute = EconomicsRouteImport.update({
+  id: '/economics',
+  path: '/economics',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DashboardRoute = DashboardRouteImport.update({
@@ -181,6 +187,7 @@ export interface FileRoutesByFullPath {
   '/bands': typeof BandsRouteWithChildren
   '/community': typeof CommunityRoute
   '/dashboard': typeof DashboardRoute
+  '/economics': typeof EconomicsRoute
   '/events': typeof EventsRoute
   '/league': typeof LeagueRoute
   '/login': typeof LoginRoute
@@ -210,6 +217,7 @@ export interface FileRoutesByTo {
   '/bands': typeof BandsRouteWithChildren
   '/community': typeof CommunityRoute
   '/dashboard': typeof DashboardRoute
+  '/economics': typeof EconomicsRoute
   '/events': typeof EventsRoute
   '/league': typeof LeagueRoute
   '/login': typeof LoginRoute
@@ -240,6 +248,7 @@ export interface FileRoutesById {
   '/bands': typeof BandsRouteWithChildren
   '/community': typeof CommunityRoute
   '/dashboard': typeof DashboardRoute
+  '/economics': typeof EconomicsRoute
   '/events': typeof EventsRoute
   '/league': typeof LeagueRoute
   '/login': typeof LoginRoute
@@ -271,6 +280,7 @@ export interface FileRouteTypes {
     | '/bands'
     | '/community'
     | '/dashboard'
+    | '/economics'
     | '/events'
     | '/league'
     | '/login'
@@ -300,6 +310,7 @@ export interface FileRouteTypes {
     | '/bands'
     | '/community'
     | '/dashboard'
+    | '/economics'
     | '/events'
     | '/league'
     | '/login'
@@ -329,6 +340,7 @@ export interface FileRouteTypes {
     | '/bands'
     | '/community'
     | '/dashboard'
+    | '/economics'
     | '/events'
     | '/league'
     | '/login'
@@ -359,6 +371,7 @@ export interface RootRouteChildren {
   BandsRoute: typeof BandsRouteWithChildren
   CommunityRoute: typeof CommunityRoute
   DashboardRoute: typeof DashboardRoute
+  EconomicsRoute: typeof EconomicsRoute
   EventsRoute: typeof EventsRoute
   LeagueRoute: typeof LeagueRoute
   LoginRoute: typeof LoginRoute
@@ -443,6 +456,13 @@ declare module '@tanstack/react-router' {
       path: '/events'
       fullPath: '/events'
       preLoaderRoute: typeof EventsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/economics': {
+      id: '/economics'
+      path: '/economics'
+      fullPath: '/economics'
+      preLoaderRoute: typeof EconomicsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/dashboard': {
@@ -592,6 +612,7 @@ const rootRouteChildren: RootRouteChildren = {
   BandsRoute: BandsRouteWithChildren,
   CommunityRoute: CommunityRoute,
   DashboardRoute: DashboardRoute,
+  EconomicsRoute: EconomicsRoute,
   EventsRoute: EventsRoute,
   LeagueRoute: LeagueRoute,
   LoginRoute: LoginRoute,
