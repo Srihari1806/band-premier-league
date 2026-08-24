@@ -94,10 +94,9 @@ export interface ContentStream {
 
 export const CONTENT_STREAMS: ContentStream[] = [
   { source: "YouTube Monetization", annual: 150000, note: "Ad revenue on show films and originals" },
-  { source: "Spotify / Apple Music", annual: 80000, note: "Streaming royalties on original tracks" },
-  { source: "JioSaavn / Gaana", annual: 50000, note: "Regional streaming platforms" },
+  { source: "Music Platforms", annual: 130000, note: "Streaming royalties across global and regional platforms" },
   { source: "Exclusive Music Partner", annual: 60000, note: "Partner catalogue placement" },
-  { source: "Brand Collabs / Sync", annual: 100000, note: "Ad and film sync placements" },
+  { source: "Sponsorships & Brand Collabs", annual: 100000, note: "Band-level sponsor deals, ad and film sync placements" },
 ];
 
 export const CONTENT_TOTAL = CONTENT_STREAMS.reduce((sum, s) => sum + s.annual, 0);
