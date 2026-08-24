@@ -42,7 +42,7 @@ export const Route = createFileRoute("/band-culture")({
 });
 
 type CategoryFilter = "all" | "band" | "unplugged" | "club" | "curator";
-type RegionFilter = "all" | "Hyderabad / TS" | "Visakhapatnam / AP" | "Pan AP & TS";
+type RegionFilter = "all" | "Hyderabad / TS" | "Visakhapatnam / AP" | "Pan AP & TS" | "International";
 
 /**
  * Band profile photo pulled from the band's Instagram DP (mirrored under
@@ -98,7 +98,8 @@ function BandCulturePage() {
         selectedRegion === "all" ||
         (selectedRegion === "Hyderabad / TS" && band.region === "Hyderabad / TS") ||
         (selectedRegion === "Visakhapatnam / AP" && band.region === "Visakhapatnam / AP") ||
-        (selectedRegion === "Pan AP & TS" && (band.region === "Pan AP & TS" || band.region === "Andhra Pradesh" || band.region === "Telangana"));
+        (selectedRegion === "Pan AP & TS" && (band.region === "Pan AP & TS" || band.region === "Andhra Pradesh" || band.region === "Telangana")) ||
+        (selectedRegion === "International" && band.region === "International");
 
       const query = searchQuery.trim().toLowerCase();
       const matchesSearch =
@@ -271,6 +272,7 @@ function BandCulturePage() {
                   <option value="Hyderabad / TS" className="bg-surface text-white">Hyderabad / TS</option>
                   <option value="Visakhapatnam / AP" className="bg-surface text-white">Visakhapatnam / AP</option>
                   <option value="Pan AP & TS" className="bg-surface text-white">Pan AP & TS</option>
+                  <option value="International" className="bg-surface text-white">International</option>
                 </select>
               </div>
 

@@ -6,7 +6,7 @@ export interface ApTsBand {
   imageUrl?: string;
   genre: string;
   location: string;
-  region: "Hyderabad / TS" | "Visakhapatnam / AP" | "Andhra Pradesh" | "Telangana" | "Pan AP & TS";
+  region: "Hyderabad / TS" | "Visakhapatnam / AP" | "Andhra Pradesh" | "Telangana" | "Pan AP & TS" | "International";
   category: "band" | "unplugged" | "club" | "curator";
   categoryLabel: string;
   bio: string;
@@ -23,8 +23,8 @@ export const AP_TS_BANDS: ApTsBand[] = [
     instagramUrl: "https://www.instagram.com/band.lehari/",
     imageUrl: "/bands/band-lehari.jpg",
     genre: "Telugu Fusion & Pop Live",
-    location: "Hyderabad, Telangana",
-    region: "Hyderabad / TS",
+    location: "United States",
+    region: "International",
     category: "band",
     categoryLabel: "Live Band",
     bio: "Dynamic live performance band delivering high-energy Telugu pop, indie melodies, and crowd-electrifying fusion hits across AP & Telangana.",
@@ -487,8 +487,8 @@ export const AP_TS_BANDS: ApTsBand[] = [
     instagramUrl: "https://www.instagram.com/swaram.musicclub/",
     imageUrl: "/bands/swaram-music-club.jpg",
     genre: "Grassroots Music Club & Community",
-    location: "AP & TS Circuit",
-    region: "Pan AP & TS",
+    location: "Vijayawada, Andhra Pradesh",
+    region: "Andhra Pradesh",
     category: "club",
     categoryLabel: "Music Club & Hub",
     bio: "Grassroots music community empowering aspiring musicians, organizing open mic jams, and nurturing emerging band talent.",
@@ -535,8 +535,8 @@ export const AP_TS_BANDS: ApTsBand[] = [
     instagramUrl: "https://www.instagram.com/hostandhype.in/",
     imageUrl: "/bands/host-and-hype.jpg",
     genre: "Band Promoters & Gig Curators",
-    location: "Hyderabad, Telangana",
-    region: "Hyderabad / TS",
+    location: "Visakhapatnam, Andhra Pradesh",
+    region: "Visakhapatnam / AP",
     category: "curator",
     categoryLabel: "Promoter / Curator",
     bio: "The premier hype engine backing indie bands, curating packed gig nights, and driving live music culture forward.",
