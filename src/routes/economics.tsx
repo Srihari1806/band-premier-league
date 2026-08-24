@@ -33,6 +33,7 @@ import {
   PILOT_OPERATOR_INCOME,
   PILOT_OPERATOR_GROSS,
   REVENUE_STREAMS,
+  PARTNER_ROLES,
   PITCH_POINTS,
 } from "@/data/economics";
 
@@ -138,6 +139,34 @@ function SectionHeading({
   );
 }
 
+/** Visual treatment per partner tier. */
+const TIER_STYLE: Record<string, { ring: string; text: string; chip: string; label: string }> = {
+  music: {
+    ring: "border-cyan-500/40",
+    text: "text-cyan-300",
+    chip: "bg-cyan-500/10 border-cyan-500/30",
+    label: "Music",
+  },
+  sponsor: {
+    ring: "border-amber-500/40",
+    text: "text-amber-300",
+    chip: "bg-amber-500/10 border-amber-500/30",
+    label: "Sponsor",
+  },
+  platform: {
+    ring: "border-purple-500/40",
+    text: "text-purple-300",
+    chip: "bg-purple-500/10 border-purple-500/30",
+    label: "Platform",
+  },
+  community: {
+    ring: "border-emerald-500/40",
+    text: "text-emerald-300",
+    chip: "bg-emerald-500/10 border-emerald-500/30",
+    label: "Community",
+  },
+};
+
 function EconomicsPage() {
   const [ticketPrice, setTicketPrice] = useState<number>(SHOW_BASELINE.ticketPrice);
   const [attendance, setAttendance] = useState<number>(SHOW_BASELINE.attendance);
@@ -162,6 +191,7 @@ function EconomicsPage() {
   // Production house Year 1 recovery against what they put in.
   const phRecoveryPct = (PH_RETURN.totalYear1 / PH_INVESTMENT.totalEcosystemBudget) * 100;
   const operatorNet = PILOT_OPERATOR_GROSS - PILOT_OPERATOR_COSTS_TOTAL;
+  const operatorMarginPct = (operatorNet / PILOT_OPERATOR_GROSS) * 100;
 
   return (
     <PageShell>
@@ -208,9 +238,9 @@ function EconomicsPage() {
             />
             <Stat
               icon={<PieChart size={13} />}
-              value={`${EVENT_SPLIT.bands}/${EVENT_SPLIT.eventManagement}/${EVENT_SPLIT.operator}`}
+              value={`${EVENT_SPLIT.bands}/${EVENT_SPLIT.productionHouse}/${EVENT_SPLIT.operator}`}
               label="Live Split"
-              hint="Bands / Event Mgmt / Operator"
+              hint="Bands / Production House / Operator"
               accent="text-amber-400"
             />
             <Stat
@@ -350,7 +380,7 @@ function EconomicsPage() {
                   />
                   <div
                     className="bg-gradient-to-r from-cyan-500 to-blue-500"
-                    style={{ width: `${EVENT_SPLIT.eventManagement}%` }}
+                    style={{ width: `${EVENT_SPLIT.productionHouse}%` }}
                   />
                   <div
                     className="bg-gradient-to-r from-purple-500 to-fuchsia-500"
@@ -373,13 +403,13 @@ function EconomicsPage() {
                   note: "Paid to the performing act",
                 },
                 {
-                  who: "Event Management",
-                  pct: EVENT_SPLIT.eventManagement,
-                  amount: show.eventManagementShare,
+                  who: "Production House",
+                  pct: EVENT_SPLIT.productionHouse,
+                  amount: show.productionHouseShare,
                   icon: <Building2 size={14} />,
                   ring: "border-cyan-500/40",
                   text: "text-cyan-300",
-                  note: "Venue, production, staffing",
+                  note: "Franchise that signed the band",
                 },
                 {
                   who: "League Operator",
@@ -388,7 +418,7 @@ function EconomicsPage() {
                   icon: <Sparkles size={14} />,
                   ring: "border-purple-500/40",
                   text: "text-purple-300",
-                  note: "Platform, curation, growth",
+                  note: "Platform, curation, event ops",
                 },
               ].map((s) => (
                 <div
@@ -576,7 +606,8 @@ function EconomicsPage() {
                 </span>
               </div>
               <p className="text-xs text-muted-foreground pl-4">
-                Across {PH_RETURN.eventShowsCounted} shows in the season
+                {EVENT_SPLIT.productionHouse}% of net across {PH_RETURN.eventShowsCounted} shows in
+                the season
               </p>
             </div>
 
@@ -703,9 +734,9 @@ function EconomicsPage() {
               </p>
               <p className="text-sm text-muted-foreground max-w-xl leading-relaxed">
                 {inr(PILOT_OPERATOR_GROSS)} gross less {inr(PILOT_OPERATOR_COSTS_TOTAL)} of
-                operating cost. The pilot is built to prove the format and seed the catalogue, not
-                to return a margin — margin arrives in year two on 8+ bands and 20+ shows a month,
-                against largely the same central overhead.
+                operating cost. The pilot covers its own overhead while seeding the catalogue, on a
+                cost base that is mostly fixed — so year two widens the margin on 8+ bands and 20+
+                shows a month without a matching rise in central spend.
               </p>
             </div>
             <div className="text-center shrink-0">
@@ -713,8 +744,14 @@ function EconomicsPage() {
                 {operatorNet < 0 ? "−" : "+"}
                 {inr(Math.abs(operatorNet))}
               </p>
-              <p className="text-[11px] text-amber-300 font-semibold mt-0.5">
-                Essentially break-even
+              <p
+                className={`text-[11px] font-semibold mt-0.5 ${
+                  operatorNet < 0 ? "text-amber-300" : "text-emerald-300"
+                }`}
+              >
+                {operatorNet < 0
+                  ? "Essentially break-even"
+                  : `Operating surplus · ${operatorMarginPct.toFixed(0)}% margin`}
               </p>
             </div>
           </div>
@@ -759,6 +796,39 @@ function EconomicsPage() {
                 ))}
               </tbody>
             </table>
+          </div>
+        </div>
+      </section>
+
+      {/* ================= PARTNER ROLES ================= */}
+      <section className="border-t border-border bg-surface/20">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 py-14">
+          <SectionHeading
+            eyebrow="Partner Architecture"
+            title="The roles that sit around the league"
+            sub="Each slot carries a defined commercial scope. Partner identities are held commercially and shared under discussion rather than published here."
+          />
+
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {PARTNER_ROLES.map((p) => {
+              const style = TIER_STYLE[p.tier];
+              return (
+                <div
+                  key={p.role}
+                  className={`bpl-card p-5 border ${style.ring} bg-surface/50 space-y-2 hover:-translate-y-0.5 transition`}
+                >
+                  <div className="flex items-start justify-between gap-2">
+                    <h3 className={`font-display font-bold text-sm ${style.text}`}>{p.role}</h3>
+                    <span
+                      className={`text-[9px] uppercase tracking-wider font-bold px-2 py-0.5 rounded-full border shrink-0 ${style.chip} ${style.text}`}
+                    >
+                      {style.label}
+                    </span>
+                  </div>
+                  <p className="text-xs text-muted-foreground leading-relaxed">{p.scope}</p>
+                </div>
+              );
+            })}
           </div>
         </div>
       </section>
@@ -828,8 +898,9 @@ function EconomicsPage() {
             assume the Hyderabad pilot configuration; production house bid levels are modelled, not
             contracted. The calculator above changes only ticket price, attendance and show volume —
             all other assumptions, including the {SHOW_BASELINE.platformCommissionPct}% platform
-            commission and the {EVENT_SPLIT.bands}/{EVENT_SPLIT.eventManagement}/
-            {EVENT_SPLIT.operator} split, are held constant.
+            commission and the {EVENT_SPLIT.bands}/{EVENT_SPLIT.productionHouse}/
+            {EVENT_SPLIT.operator} split, are held constant. Contracted event managers are paid out
+            of the operator&apos;s share rather than taking a fourth cut.
           </p>
         </div>
       </section>

@@ -31,11 +31,16 @@ export const SHOW_BASELINE = {
   showsPerMonth: 10,
 } as const;
 
-/** Live-event split, applied to net revenue after platform commission. */
+/**
+    * Live-event split, applied to net revenue after platform commission.
+    * Matches the split published on the About page. Event management is not a
+    * fourth party — contracted event managers are paid out of the operator's
+    * 30% share.
+    */
 export const EVENT_SPLIT = {
   bands: 40,
-  eventManagement: 40,
-  operator: 20,
+  productionHouse: 30,
+  operator: 30,
 } as const;
 
 /** Audio/video IP split (SRS 7.1 / 8.2). */
@@ -49,7 +54,7 @@ export interface ShowEconomics {
   platformCommission: number;
   netRevenue: number;
   bandsShare: number;
-  eventManagementShare: number;
+  productionHouseShare: number;
   operatorShare: number;
 }
 
@@ -62,13 +67,18 @@ export function computeShowEconomics(
   const grossTicketRevenue = ticketPrice * attendance;
   const platformCommission = grossTicketRevenue * (commissionPct / 100);
   const netRevenue = grossTicketRevenue - platformCommission;
+  // Round the first two shares and give the operator the remainder, so the
+  // three figures on screen always add back to netRevenue exactly. Splitting a
+  // 30% share of an odd net lands on .5 and would otherwise drift by a rupee.
+  const bandsShare = Math.round(netRevenue * (EVENT_SPLIT.bands / 100));
+  const productionHouseShare = Math.round(netRevenue * (EVENT_SPLIT.productionHouse / 100));
   return {
     grossTicketRevenue,
     platformCommission,
     netRevenue,
-    bandsShare: netRevenue * (EVENT_SPLIT.bands / 100),
-    eventManagementShare: netRevenue * (EVENT_SPLIT.eventManagement / 100),
-    operatorShare: netRevenue * (EVENT_SPLIT.operator / 100),
+    bandsShare,
+    productionHouseShare,
+    operatorShare: netRevenue - bandsShare - productionHouseShare,
   };
 }
 
@@ -86,7 +96,7 @@ export const CONTENT_STREAMS: ContentStream[] = [
   { source: "YouTube Monetization", annual: 150000, note: "Ad revenue on show films and originals" },
   { source: "Spotify / Apple Music", annual: 80000, note: "Streaming royalties on original tracks" },
   { source: "JioSaavn / Gaana", annual: 50000, note: "Regional streaming platforms" },
-  { source: "Kavi Audio (Special)", annual: 60000, note: "Partner catalogue placement" },
+  { source: "Exclusive Music Partner", annual: 60000, note: "Partner catalogue placement" },
   { source: "Brand Collabs / Sync", annual: 100000, note: "Ad and film sync placements" },
 ];
 
@@ -108,8 +118,9 @@ export const PH_INVESTMENT = {
 
 export const PH_RETURN = {
   contentYear1: 220000,
-  eventsYear1: 107460,
-  totalYear1: 327460,
+  /** 10 shows × the franchise's 30% of ₹26,865 net. */
+  eventsYear1: 80595,
+  totalYear1: 300595,
   eventShowsCounted: 10,
 } as const;
 
@@ -145,12 +156,12 @@ export const PILOT_OPERATOR_COSTS_TOTAL = 380000;
 
 /** What the operator itself takes home — a subset of ecosystem revenue. */
 export const PILOT_OPERATOR_INCOME: LineItem[] = [
-  { label: "Event Revenue", amount: 161190, detail: "20% of ₹8,05,950" },
+  { label: "Event Revenue", amount: 241785, detail: "30% of ₹8,05,950" },
   { label: "Sponsorship", amount: 150000, detail: "League operator share" },
   { label: "Membership Revenue", amount: 59800 },
 ];
 
-export const PILOT_OPERATOR_GROSS = 370990;
+export const PILOT_OPERATOR_GROSS = 451585;
 
 /* ------------------------------------------------------------------ *
  * SRS 7.1 — Revenue streams and who they pay
@@ -163,10 +174,10 @@ export interface RevenueStream {
 }
 
 export const REVENUE_STREAMS: RevenueStream[] = [
-  { stream: "Event Ticket Sales", source: "Live show tickets via ticketing partners", beneficiaries: "Bands 40% · Event Mgmt 40% · Operator 20%" },
-  { stream: "Audio Rights", source: "Spotify, JioSaavn, Gaana, Apple Music, Kavi Audio", beneficiaries: "Artists 50% · Production House 50%" },
+  { stream: "Event Ticket Sales", source: "Live show tickets via ticketing partners", beneficiaries: "Bands 40% · Production House 30% · Operator 30%" },
+  { stream: "Audio Rights", source: "Spotify, JioSaavn, Gaana, Apple Music, exclusive music partner", beneficiaries: "Artists 50% · Production House 50%" },
   { stream: "Video Rights", source: "YouTube monetization, brand collabs, OTT sync", beneficiaries: "Artists 50% · Production House 50%" },
-  { stream: "Sponsorship", source: "Title sponsors, co-sponsors, venue sponsors", beneficiaries: "Operator + Event Mgmt" },
+  { stream: "Sponsorship", source: "Title sponsors, co-sponsors, venue sponsors", beneficiaries: "Operator + Production Houses" },
   { stream: "Ticketing Commission", source: "Share of ticket sales via partner platforms", beneficiaries: "Ticketing partner" },
   { stream: "Membership Passes", source: "Recurring audience memberships", beneficiaries: "Operator" },
   { stream: "Merchandise", source: "Band merch at events", beneficiaries: "Bands + Operator" },
@@ -192,4 +203,58 @@ export const PITCH_POINTS: PitchPoint[] = [
   { title: "Low Competition", detail: "No structured franchise music ecosystem exists in India's regional markets today." },
   { title: "Scalable Playbook", detail: "The Hyderabad model replicates city by city on largely fixed central overhead." },
   { title: "Creator Economy Alignment", detail: "Sits across three fast-growing markets at once: live events, music streaming and the creator economy." },
+];
+
+/* ------------------------------------------------------------------ *
+ * Partner architecture — role tiers, deliberately unnamed
+ *
+ * These describe the slots in the ecosystem rather than the companies
+ * filling them, so the page can show the commercial structure without
+ * disclosing partner identities.
+ * ------------------------------------------------------------------ */
+
+export type PartnerTier = "music" | "sponsor" | "platform" | "community";
+
+export interface PartnerRole {
+  role: string;
+  scope: string;
+  tier: PartnerTier;
+}
+
+export const PARTNER_ROLES: PartnerRole[] = [
+  {
+    role: "Exclusive Music Partner",
+    scope: "Catalogue placement and audio distribution for every league original.",
+    tier: "music",
+  },
+  {
+    role: "Title Sponsor",
+    scope: "Season naming rights across all shows, films and league branding.",
+    tier: "sponsor",
+  },
+  {
+    role: "Co-Sponsors",
+    scope: "Category presence through the season with on-ground activation at shows.",
+    tier: "sponsor",
+  },
+  {
+    role: "Venue Sponsors",
+    scope: "Host billing on the fixtures they carry, plus footfall from the league calendar.",
+    tier: "sponsor",
+  },
+  {
+    role: "Production Houses",
+    scope: "Franchise investors financing music and video production for their signed band.",
+    tier: "platform",
+  },
+  {
+    role: "Ticketing Partner",
+    scope: "Ticket sales, entry and settlement across the full fixture calendar.",
+    tier: "platform",
+  },
+  {
+    role: "Community Partners",
+    scope: "Campus and city networks driving audience turnout show after show.",
+    tier: "community",
+  },
 ];

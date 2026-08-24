@@ -26,6 +26,35 @@ import {
   CheckCircle2
 } from "lucide-react";
 
+const CAMPUS_STAGES = [
+  {
+    step: "01",
+    title: "Campus Clubs Activate",
+    desc: "A student ambassador is appointed per college and the campus music club becomes a local chapter — promoting fixtures, running watch parties and selling into their own year groups.",
+  },
+  {
+    step: "02",
+    title: "Colleges Compete",
+    desc: "An inter-college table ranks campuses on tickets sold, turnout, shares and content views. The winning college hosts a live fixture on their own campus.",
+  },
+  {
+    step: "03",
+    title: "Circles Merge",
+    desc: "Club-to-club rivalry turns into one connected inter-community circuit across cities — the audience stops being per-college and becomes regional.",
+  },
+  {
+    step: "04",
+    title: "Talent Registers",
+    desc: "Musicians inside those circles — players, vocalists, producers, sound engineers, filmmakers — register on the platform and enter the ecosystem as artists, bands and crew.",
+  },
+];
+
+const CAMPUS_FOOTPRINT = [
+  { city: "Hyderabad", campuses: "5–10 campuses", ambassadors: "5–10 ambassadors" },
+  { city: "Visakhapatnam", campuses: "3–5 campuses", ambassadors: "3–5 ambassadors" },
+  { city: "Vijayawada", campuses: "2–4 campuses", ambassadors: "2–4 ambassadors" },
+];
+
 export const Route = createFileRoute("/about")({
   head: () => ({
     meta: [
@@ -305,6 +334,88 @@ function AboutPage() {
           <div className="mt-10 text-center text-xs text-muted-foreground font-semibold uppercase tracking-widest flex items-center justify-center gap-1.5">
             <Target size={14} className="text-primary-glow animate-pulse" />
             Future Expansion cohorts coming soon for Season II.
+          </div>
+        </section>
+
+        {/* SECTION 4B: CAMPUS / INTER-COLLEGE EXPANSION */}
+        <section className="py-20 px-4 max-w-7xl mx-auto relative z-10 border-t border-border/45">
+          <div className="text-center max-w-2xl mx-auto mb-16 space-y-3">
+            <h2 className="text-xs uppercase tracking-widest text-primary-glow font-bold">
+              Later Expansion
+            </h2>
+            <h3 className="text-3xl font-display font-bold text-white">
+              College Clubs Are The Growth Engine
+            </h3>
+            <p className="text-sm text-muted-foreground leading-relaxed">
+              The league does not scale by buying audiences. It scales by plugging into campus music
+              clubs, letting those communities grow into each other, and turning the musicians
+              inside them into the next season&apos;s roster.
+            </p>
+          </div>
+
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 mb-12">
+            {CAMPUS_STAGES.map((stage, idx) => (
+              <motion.div
+                key={stage.step}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.4, delay: idx * 0.12 }}
+                className="bpl-card p-6 text-left space-y-3 border-border/40 hover:border-primary/30 transition-all duration-300 relative"
+              >
+                <span className="text-3xl font-display font-extrabold text-primary/20 leading-none">
+                  {stage.step}
+                </span>
+                <h4 className="text-sm font-display font-bold text-white">{stage.title}</h4>
+                <p className="text-xs text-muted-foreground leading-relaxed">{stage.desc}</p>
+              </motion.div>
+            ))}
+          </div>
+
+          <div className="grid gap-6 lg:grid-cols-[1fr_340px] items-start">
+            {/* Footprint */}
+            <div className="bpl-card p-6 border-border/40 space-y-4">
+              <h4 className="text-sm font-bold text-white flex items-center gap-2">
+                <MapPin size={15} className="text-primary-glow" /> Target Campus Footprint
+              </h4>
+              <div className="space-y-3">
+                {CAMPUS_FOOTPRINT.map((f) => (
+                  <div
+                    key={f.city}
+                    className="flex flex-wrap items-center justify-between gap-2 pb-3 border-b border-border/40 last:border-0 last:pb-0"
+                  >
+                    <span className="text-sm font-semibold text-white">{f.city}</span>
+                    <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                      <span>{f.campuses}</span>
+                      <span className="text-primary-glow font-semibold">{f.ambassadors}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <p className="text-[10px] text-muted-foreground leading-relaxed">
+                Ambassadors earn per-show incentives against tickets sold, plus a season pass and
+                merchandise. Specific campuses are confirmed ahead of each season rather than
+                announced in advance.
+              </p>
+            </div>
+
+            {/* Why it compounds */}
+            <div className="bpl-card p-6 border-primary/25 bg-primary/5 space-y-3">
+              <h4 className="text-sm font-bold text-white flex items-center gap-2">
+                <Megaphone size={15} className="text-primary-glow" /> Why It Compounds
+              </h4>
+              <p className="text-xs text-muted-foreground leading-relaxed">
+                A campus club is an audience and a talent pool at the same time. Every college the
+                league activates brings both people who buy tickets and people who want to play —
+                so audience growth and roster growth arrive together instead of costing separately.
+              </p>
+              <Link
+                to="/join"
+                className="inline-flex items-center gap-1.5 text-xs font-bold text-primary-glow hover:gap-2.5 transition-all"
+              >
+                Register your club or band <ArrowRight size={12} />
+              </Link>
+            </div>
           </div>
         </section>
 
