@@ -1,14 +1,21 @@
 /**
- * Economics model for the investor-facing breakdown.
+ * Economics engine for the investor-facing breakdown.
  *
- * These are illustrative projections at the assumptions stated below, not
- * audited results. Structure and splits follow the league operating plan and
- * the League page; the money figures are a worked demo scenario.
+ * These are illustrative projections at the inputs stated below, not audited
+ * results. Structure and splits follow the league operating plan and the
+ * League page; the money figures are a worked demo scenario.
  *
- * Almost everything here is DERIVED from ASSUMPTIONS rather than typed in, so
- * changing a base input flows through the whole page and the totals cannot
- * drift out of agreement with each other. Only genuinely independent inputs —
- * catalogue revenue, licensing, broadcast fees, operator costs — are literals.
+ * NOTHING here is a hardcoded output. `computeEconomics(inputs)` is a pure
+ * function: every figure the page renders — per show, per band, per franchise,
+ * per season, league-wide — derives from one `EconomicsInputs` object. Move an
+ * input in an investor meeting and the whole page re-derives, so the totals can
+ * never drift out of agreement with each other.
+ *
+ * The one structural subtlety worth reading before editing: a "versus" fixture
+ * is ONE ticketed night shared by competing acts. The gate is split between
+ * them, so a shared night pays each band less than a solo night — but it pulls
+ * both fanbases into the room, so the room is bigger. Both effects are modelled
+ * via `soloSharePct` and `coHeadlineUplift`.
  */
 
 /** Indian-format rupee string, e.g. 805950 -> "₹8,05,950". */
@@ -24,266 +31,38 @@ export function inrCompact(value: number): string {
   return inr(value);
 }
 
-/* ------------------------------------------------------------------ *
- * Base assumptions — every derived figure on the page traces to these
- * ------------------------------------------------------------------ */
+/**
+ * Compact plain-number string, e.g. 4400000 -> "44.0L".
+ *
+ * Keeps a decimal below 10K so small counts (an extra 1,260 people in the room
+ * across a season) do not collapse to a meaningless "1K".
+ */
+export function numCompact(value: number): string {
+  const abs = Math.abs(value);
+  if (abs >= 1e7) return (value / 1e7).toFixed(2) + "Cr";
+  if (abs >= 1e5) return (value / 1e5).toFixed(1) + "L";
+  if (abs >= 1e4) return (value / 1e3).toFixed(0) + "K";
+  if (abs >= 1e3) return (value / 1e3).toFixed(1) + "K";
+  return String(Math.round(value));
+}
 
-export const ASSUMPTIONS = {
-  /** Mid-scale ticketed room, the level the league is built to operate at. */
-  ticketPrice: 399,
-  attendance: 300,
-  /** Retained by the third-party ticketing platform before any split. */
-  ticketingCommissionPct: 10,
-  /** A season runs 4 months; the league runs 3 a year (see the League page). */
-  monthsPerSeason: 4,
-  seasonsPerYear: 3,
-  /** Fixtures a single band plays inside one season. */
-  showsPerBandPerSeason: 12,
-  /** Franchises (and therefore bands) contesting a season. */
-  bandsPerSeason: 4,
-  /** Typical line-up size, used for the per-musician figure. */
-  bandMembers: 5,
-} as const;
+/* ------------------------------------------------------------------ *
+ * Fixed structure — league rules, not user-adjustable
+ * ------------------------------------------------------------------ */
 
 /** Live-event split of net gate. Event managers are paid from the operator's share. */
-export const EVENT_SPLIT = {
-  bands: 40,
-  productionHouse: 30,
-  operator: 30,
-} as const;
+export const EVENT_SPLIT = { bands: 40, productionHouse: 30, operator: 30 } as const;
 
 /** Audio/video IP split between the artist and the franchise that financed it. */
-export const CONTENT_SPLIT = {
-  artists: 50,
-  productionHouse: 50,
-} as const;
+export const CONTENT_SPLIT = { artists: 50, productionHouse: 50 } as const;
 
-/** Defaults the live calculator opens on. */
-export const SHOW_BASELINE = {
-  ticketPrice: ASSUMPTIONS.ticketPrice,
-  attendance: ASSUMPTIONS.attendance,
-  platformCommissionPct: ASSUMPTIONS.ticketingCommissionPct,
-  showsPerMonth: 12,
-} as const;
+export const SEASON_STRUCTURE = { seasonsPerYear: 3, monthsPerSeason: 4 } as const;
 
-export const SEASON_STRUCTURE = {
-  seasonsPerYear: ASSUMPTIONS.seasonsPerYear,
-  monthsPerSeason: ASSUMPTIONS.monthsPerSeason,
-  showsPerSeasonPerBand: ASSUMPTIONS.showsPerBandPerSeason,
-} as const;
+/** Operator's half of the league-level broadcast and sponsorship pools. */
+const OPERATOR_RIGHTS_SHARE_PCT = 50;
 
-export const SHOWS_PER_YEAR_PER_BAND =
-  ASSUMPTIONS.seasonsPerYear * ASSUMPTIONS.showsPerBandPerSeason;
-
-/** Distinct fixtures the league stages in one season. */
-export const SHOWS_PER_SEASON_LEAGUE =
-  ASSUMPTIONS.bandsPerSeason * ASSUMPTIONS.showsPerBandPerSeason;
-
-/* ------------------------------------------------------------------ *
- * Per-show economics
- * ------------------------------------------------------------------ */
-
-export interface ShowEconomics {
-  grossTicketRevenue: number;
-  platformCommission: number;
-  netRevenue: number;
-  bandsShare: number;
-  productionHouseShare: number;
-  operatorShare: number;
-}
-
-/** Single source of truth for the per-show maths, used by the calculator. */
-export function computeShowEconomics(
-  ticketPrice: number,
-  attendance: number,
-  commissionPct: number,
-): ShowEconomics {
-  const grossTicketRevenue = ticketPrice * attendance;
-  const platformCommission = grossTicketRevenue * (commissionPct / 100);
-  const netRevenue = grossTicketRevenue - platformCommission;
-  // Round the first two shares and give the operator the remainder, so the
-  // three figures on screen always add back to netRevenue exactly.
-  const bandsShare = Math.round(netRevenue * (EVENT_SPLIT.bands / 100));
-  const productionHouseShare = Math.round(netRevenue * (EVENT_SPLIT.productionHouse / 100));
-  return {
-    grossTicketRevenue,
-    platformCommission,
-    netRevenue,
-    bandsShare,
-    productionHouseShare,
-    operatorShare: netRevenue - bandsShare - productionHouseShare,
-  };
-}
-
-/** The baseline show, which every downstream season figure derives from. */
-export const BASE_SHOW = computeShowEconomics(
-  ASSUMPTIONS.ticketPrice,
-  ASSUMPTIONS.attendance,
-  ASSUMPTIONS.ticketingCommissionPct,
-);
-
-/* ------------------------------------------------------------------ *
- * Catalogue revenue (per band, annual)
- * ------------------------------------------------------------------ */
-
-export interface ContentStream {
-  source: string;
-  annual: number;
-  note: string;
-}
-
-export const CONTENT_STREAMS: ContentStream[] = [
-  { source: "YouTube Monetization", annual: 220000, note: "Ad revenue on show films, originals and shorts" },
-  { source: "Music Platforms", annual: 180000, note: "Streaming royalties across global and regional platforms" },
-  { source: "Exclusive Music Partner", annual: 90000, note: "First-window catalogue placement" },
-  { source: "Sponsorships & Brand Collabs", annual: 170000, note: "Band-level sponsor deals and brand tie-ins" },
-];
-
-export const CONTENT_TOTAL = CONTENT_STREAMS.reduce((sum, s) => sum + s.annual, 0);
-
-/** Each side's annual half of the catalogue. */
-export const CONTENT_HALF_ANNUAL = CONTENT_TOTAL * (CONTENT_SPLIT.artists / 100);
-/** One season's share of that half. */
-export const CONTENT_HALF_PER_SEASON = Math.round(
-  CONTENT_HALF_ANNUAL / ASSUMPTIONS.seasonsPerYear,
-);
-
-/* ------------------------------------------------------------------ *
- * Franchise investment and one-season return
- * ------------------------------------------------------------------ */
-
-/**
- * The franchise's own capital is the winning bid alone. The event budget is
- * funded by the title sponsor, so it belongs to the ecosystem total rather
- * than to the production house's risk.
- */
-export const PH_INVESTMENT = {
-  /** Franchise capital at risk. */
-  winningBid: 520000,
-  musicProduction: 250000,
-  videoProduction: 270000,
-  /** Title-sponsor funded, not franchise capital. */
-  sponsorEventBudget: 300000,
-  marketing: 200000,
-  travelLogistics: 100000,
-  totalEcosystemBudget: 820000,
-} as const;
-
-export interface ReturnStream {
-  label: string;
-  amount: number;
-  detail: string;
-}
-
-/** What a franchise earns back across one 4-month season. */
-export const PH_SEASON_RETURN: ReturnStream[] = [
-  {
-    label: "Event Revenue Share",
-    amount: BASE_SHOW.productionHouseShare * ASSUMPTIONS.showsPerBandPerSeason,
-    detail: `${EVENT_SPLIT.productionHouse}% of net gate across ${ASSUMPTIONS.showsPerBandPerSeason} fixtures`,
-  },
-  {
-    label: "Catalogue Share",
-    amount: CONTENT_HALF_PER_SEASON,
-    detail: `${CONTENT_SPLIT.productionHouse}% of the band's audio and video rights`,
-  },
-  {
-    label: "Third-Party Content Licensing",
-    amount: 140000,
-    detail: "OTT, syndication and platform deals on season footage and originals",
-  },
-  {
-    label: "Broadcast Rights Share",
-    amount: 100000,
-    detail: "Franchise share of league broadcast and streaming distribution fees",
-  },
-  {
-    label: "Sync & Brand Placements",
-    amount: 70000,
-    detail: "Film, ad and brand sync against franchise-owned masters",
-  },
-];
-
-export const PH_SEASON_TOTAL = PH_SEASON_RETURN.reduce((s, r) => s + r.amount, 0);
-export const PH_SEASON_PROFIT = PH_SEASON_TOTAL - PH_INVESTMENT.winningBid;
-export const PH_SEASON_MULTIPLE = PH_SEASON_TOTAL / PH_INVESTMENT.winningBid;
-
-/* ------------------------------------------------------------------ *
- * What the artists earn
- * ------------------------------------------------------------------ */
-
-export const ARTIST_SEASON_RETURN: ReturnStream[] = [
-  {
-    label: "Live Performance Share",
-    amount: BASE_SHOW.bandsShare * ASSUMPTIONS.showsPerBandPerSeason,
-    detail: `${EVENT_SPLIT.bands}% of net gate across ${ASSUMPTIONS.showsPerBandPerSeason} fixtures`,
-  },
-  {
-    label: "Catalogue Share",
-    amount: CONTENT_HALF_PER_SEASON,
-    detail: `${CONTENT_SPLIT.artists}% of the audio and video rights they created`,
-  },
-];
-
-export const ARTIST_SEASON_TOTAL = ARTIST_SEASON_RETURN.reduce((s, r) => s + r.amount, 0);
-export const ARTIST_YEAR_TOTAL = ARTIST_SEASON_TOTAL * ASSUMPTIONS.seasonsPerYear;
-export const ARTIST_PER_MEMBER_SEASON = Math.round(
-  ARTIST_SEASON_TOTAL / ASSUMPTIONS.bandMembers,
-);
-export const ARTIST_PER_MEMBER_YEAR = Math.round(ARTIST_YEAR_TOTAL / ASSUMPTIONS.bandMembers);
-
-/* ------------------------------------------------------------------ *
- * League-wide season position
- * ------------------------------------------------------------------ */
-
-export interface LineItem {
-  label: string;
-  amount: number;
-  detail?: string;
-}
-
-/** Independent inputs for the season that are not derived from the gate. */
-const SPONSORSHIP_SEASON = 300000;
-const SPONSORSHIP_OPERATOR_SHARE = 150000;
-const MEMBERS_COUNT = 500;
-const MEMBERSHIP_PRICE = 299;
-const BROADCAST_SEASON = 600000;
-const BROADCAST_OPERATOR_SHARE = 300000;
-
-export const SEASON_NET_GATE_POOL = BASE_SHOW.netRevenue * SHOWS_PER_SEASON_LEAGUE;
-export const MEMBERSHIP_REVENUE = MEMBERS_COUNT * MEMBERSHIP_PRICE;
-export const SEASON_CATALOGUE_POOL = Math.round(
-  (CONTENT_TOTAL * ASSUMPTIONS.bandsPerSeason) / ASSUMPTIONS.seasonsPerYear,
-);
-
-export const PILOT_REVENUE: LineItem[] = [
-  {
-    label: "Ticket Sales (net)",
-    amount: SEASON_NET_GATE_POOL,
-    detail: `${SHOWS_PER_SEASON_LEAGUE} fixtures × ${inr(BASE_SHOW.netRevenue)} net`,
-  },
-  {
-    label: "Production House Bids",
-    amount: PH_INVESTMENT.winningBid * ASSUMPTIONS.bandsPerSeason,
-    detail: `${ASSUMPTIONS.bandsPerSeason} franchises × ${inr(PH_INVESTMENT.winningBid)}`,
-  },
-  {
-    label: "Catalogue Revenue",
-    amount: SEASON_CATALOGUE_POOL,
-    detail: `${ASSUMPTIONS.bandsPerSeason} bands, one season's share`,
-  },
-  { label: "Broadcast Rights", amount: BROADCAST_SEASON, detail: "League distribution fees" },
-  { label: "Sponsorship", amount: SPONSORSHIP_SEASON, detail: "Title + co-sponsors" },
-  {
-    label: "Membership Passes",
-    amount: MEMBERSHIP_REVENUE,
-    detail: `${MEMBERS_COUNT} fans × ${inr(MEMBERSHIP_PRICE)}`,
-  },
-];
-
-export const PILOT_REVENUE_TOTAL = PILOT_REVENUE.reduce((s, r) => s + r.amount, 0);
-
-export const PILOT_OPERATOR_COSTS: LineItem[] = [
+/** Central cost base for one season. Largely fixed — that is the scaling story. */
+export const OPERATOR_COSTS: { label: string; amount: number }[] = [
   { label: "Marketing (Operator share)", amount: 250000 },
   { label: "Operations & Logistics", amount: 200000 },
   { label: "Platform / Tech", amount: 150000 },
@@ -291,28 +70,657 @@ export const PILOT_OPERATOR_COSTS: LineItem[] = [
   { label: "Legal + Contracts", amount: 50000 },
 ];
 
-export const PILOT_OPERATOR_COSTS_TOTAL = PILOT_OPERATOR_COSTS.reduce((s, c) => s + c.amount, 0);
+export const OPERATOR_COSTS_TOTAL = OPERATOR_COSTS.reduce((s, c) => s + c.amount, 0);
 
-/** What the operator itself takes home — a subset of ecosystem revenue. */
-export const PILOT_OPERATOR_INCOME: LineItem[] = [
-  {
-    label: "Event Revenue",
-    amount: BASE_SHOW.operatorShare * SHOWS_PER_SEASON_LEAGUE,
-    detail: `${EVENT_SPLIT.operator}% of net across ${SHOWS_PER_SEASON_LEAGUE} fixtures`,
-  },
-  {
-    label: "Broadcast Share",
-    amount: BROADCAST_OPERATOR_SHARE,
-    detail: "Operator half of distribution fees",
-  },
-  { label: "Sponsorship", amount: SPONSORSHIP_OPERATOR_SHARE, detail: "League operator share" },
-  { label: "Membership Revenue", amount: MEMBERSHIP_REVENUE },
-];
-
-export const PILOT_OPERATOR_GROSS = PILOT_OPERATOR_INCOME.reduce((s, r) => s + r.amount, 0);
+/** Acts sharing one versus night. Two is the format; named rather than magic. */
+export const ACTS_PER_SHARED_SHOW = 2;
 
 /* ------------------------------------------------------------------ *
- * Revenue streams and who they pay
+ * Inputs — everything the page can move
+ * ------------------------------------------------------------------ */
+
+export interface EconomicsInputs {
+  /* Base parameters */
+  ticketPrice: number;
+  /** Draw for a SOLO showcase. A shared night applies coHeadlineUplift to this. */
+  attendance: number;
+  /** Fixtures a single band plays inside one season. */
+  showsPerBand: number;
+  numFranchises: number;
+  /** Bands signed per production house. 1 in the pilot, 4 in the regional league. */
+  bandsPerFranchise: number;
+  winningBid: number;
+  bandMembers: number;
+
+  /* Fixture format mix */
+  /** Share of a band's fixtures that are solo showcases; the rest are versus nights. */
+  soloSharePct: number;
+  /** Footfall multiplier on a shared night — two fanbases in one room. */
+  coHeadlineUplift: number;
+
+  /* Contracted inputs, per franchise per season */
+  ticketingCommissionPct: number;
+  licensingRights: number;
+  broadcastRights: number;
+  syncPlacements: number;
+
+  /* Catalogue, per band per year */
+  youtubeViewsAnnual: number;
+  /** Revenue per 1,000 monetised views, in rupees. */
+  youtubeRpm: number;
+  musicPlatformsAnnual: number;
+  exclusivePartnerAnnual: number;
+  bandSponsorshipAnnual: number;
+
+  /* League-level pools, per season */
+  leagueBroadcastSeason: number;
+  leagueSponsorshipSeason: number;
+  membersCount: number;
+  membershipPrice: number;
+
+  /* Platform upside — web-native streams, excluded from the base case */
+  inHouseTicketingPct: number;
+  ppvPrice: number;
+  ppvBuyersPerFixture: number;
+  merchAttachPct: number;
+  merchMargin: number;
+  fanPassPrice: number;
+  fanPassBuyersPerFixture: number;
+  sponsorPortalPerFixture: number;
+}
+
+export const DEFAULT_INPUTS: EconomicsInputs = {
+  ticketPrice: 399,
+  attendance: 300,
+  showsPerBand: 12,
+  numFranchises: 4,
+  bandsPerFranchise: 1,
+  winningBid: 520000,
+  bandMembers: 5,
+
+  soloSharePct: 38,
+  coHeadlineUplift: 1.6,
+
+  ticketingCommissionPct: 10,
+  licensingRights: 140000,
+  broadcastRights: 100000,
+  syncPlacements: 70000,
+
+  youtubeViewsAnnual: 4400000,
+  youtubeRpm: 50,
+  musicPlatformsAnnual: 180000,
+  exclusivePartnerAnnual: 90000,
+  bandSponsorshipAnnual: 170000,
+
+  leagueBroadcastSeason: 600000,
+  leagueSponsorshipSeason: 300000,
+  membersCount: 500,
+  membershipPrice: 299,
+
+  inHouseTicketingPct: 0,
+  ppvPrice: 0,
+  ppvBuyersPerFixture: 0,
+  merchAttachPct: 0,
+  merchMargin: 0,
+  fanPassPrice: 0,
+  fanPassBuyersPerFixture: 0,
+  sponsorPortalPerFixture: 0,
+};
+
+/** Sensible "switch the web-native streams on" values for the upside panel. */
+export const PLATFORM_UPSIDE_ON: Partial<EconomicsInputs> = {
+  inHouseTicketingPct: 60,
+  ppvPrice: 99,
+  ppvBuyersPerFixture: 150,
+  merchAttachPct: 8,
+  merchMargin: 250,
+  fanPassPrice: 49,
+  fanPassBuyersPerFixture: 120,
+  sponsorPortalPerFixture: 15000,
+};
+
+/* ------------------------------------------------------------------ *
+ * Scenario presets for live investor discussion
+ * ------------------------------------------------------------------ */
+
+export interface Preset {
+  id: string;
+  label: string;
+  blurb: string;
+  patch: Partial<EconomicsInputs>;
+}
+
+export const PRESETS: Preset[] = [
+  {
+    id: "conservative",
+    label: "Conservative",
+    blurb: "Independent-band pricing into a smaller room — the level a new format actually opens at.",
+    patch: { ticketPrice: 249, attendance: 200, showsPerBand: 10, numFranchises: 4, bandsPerFranchise: 1, winningBid: 520000 },
+  },
+  {
+    id: "base",
+    label: "Base Case",
+    blurb: "The league's operating plan: a mid-scale ticketed room across a full fixture calendar.",
+    patch: { ticketPrice: 399, attendance: 300, showsPerBand: 12, numFranchises: 4, bandsPerFranchise: 1, winningBid: 520000 },
+  },
+  {
+    id: "bull",
+    label: "Bull Case",
+    blurb: "Format has traction — bigger rooms, higher yield, a wider franchise field.",
+    patch: { ticketPrice: 599, attendance: 500, showsPerBand: 14, numFranchises: 6, bandsPerFranchise: 1, winningBid: 750000 },
+  },
+  {
+    id: "regional",
+    label: "Stage 2 · AP/TS",
+    blurb: "The 2-month regional league: 5 production houses, 4 bands each, 8 fixtures per band.",
+    patch: { ticketPrice: 299, attendance: 250, showsPerBand: 8, numFranchises: 5, bandsPerFranchise: 4, winningBid: 900000 },
+  },
+];
+
+/* ------------------------------------------------------------------ *
+ * Per-show economics
+ * ------------------------------------------------------------------ */
+
+export interface ShowEconomics {
+  acts: number;
+  attendance: number;
+  grossTicketRevenue: number;
+  platformCommission: number;
+  netRevenue: number;
+  /** 40% of net, for ALL acts on the night combined. */
+  bandPool: number;
+  /** What one act on that night is paid. */
+  bandPerAct: number;
+  /** 30% of net, across all production houses represented. */
+  productionHousePool: number;
+  /** What one act's house is paid for that night. */
+  productionHousePerAct: number;
+  operatorShare: number;
+}
+
+/**
+ * Single source of truth for the per-night maths.
+ *
+ * `acts` is how many bands share the night. The gate does not grow with the act
+ * count — the split does. The caller passes the attendance that format draws.
+ */
+export function computeShowEconomics(
+  ticketPrice: number,
+  attendance: number,
+  commissionPct: number,
+  acts: number = 1,
+): ShowEconomics {
+  const safeActs = Math.max(1, Math.round(acts));
+  const grossTicketRevenue = ticketPrice * attendance;
+  const platformCommission = grossTicketRevenue * (commissionPct / 100);
+  const netRevenue = grossTicketRevenue - platformCommission;
+  // Round the first two pools and give the operator the remainder, so the three
+  // figures on screen always add back to netRevenue exactly.
+  const bandPool = Math.round(netRevenue * (EVENT_SPLIT.bands / 100));
+  const productionHousePool = Math.round(netRevenue * (EVENT_SPLIT.productionHouse / 100));
+  return {
+    acts: safeActs,
+    attendance,
+    grossTicketRevenue,
+    platformCommission,
+    netRevenue,
+    bandPool,
+    bandPerAct: bandPool / safeActs,
+    productionHousePool,
+    productionHousePerAct: productionHousePool / safeActs,
+    operatorShare: netRevenue - bandPool - productionHousePool,
+  };
+}
+
+/* ------------------------------------------------------------------ *
+ * Sensitivity markers
+ * ------------------------------------------------------------------ */
+
+/** How certain a line of income is — drives the markers next to every figure. */
+export type Certainty = "gate" | "contracted" | "modelled";
+
+export const CERTAINTY_META: Record<Certainty, { label: string; short: string; note: string }> = {
+  gate: {
+    label: "Gate-backed",
+    short: "Gate",
+    note: "Earned from tickets the league sells itself. Moves only with price and attendance.",
+  },
+  contracted: {
+    label: "Contracted upside",
+    short: "Contract",
+    note: "Requires a signed counterparty deal. Worth zero until that contract lands.",
+  },
+  modelled: {
+    label: "Modelled upside",
+    short: "Modelled",
+    note: "Platform-dependent and variable. Estimated from view and streaming assumptions.",
+  },
+};
+
+export interface ReturnStream {
+  label: string;
+  amount: number;
+  detail: string;
+  certainty: Certainty;
+}
+
+export interface LineItem {
+  label: string;
+  amount: number;
+  detail?: string;
+}
+
+export interface ContentStream {
+  source: string;
+  annual: number;
+  note: string;
+  certainty: Certainty;
+}
+
+/* ------------------------------------------------------------------ *
+ * The engine
+ * ------------------------------------------------------------------ */
+
+export interface EconomicsModel {
+  inputs: EconomicsInputs;
+
+  /* Fixture mix */
+  soloShowsPerBand: number;
+  sharedShowsPerBand: number;
+  soloShow: ShowEconomics;
+  sharedShow: ShowEconomics;
+  totalBands: number;
+  soloFixtures: number;
+  sharedFixtures: number;
+  totalFixtures: number;
+  totalAdmissions: number;
+  showsPerYearPerBand: number;
+
+  /* Run rate — the same season expressed as a cadence */
+  /** Ticketed nights the league stages per month. */
+  showsPerMonth: number;
+  monthlyNetGate: number;
+  annualNetGate: number;
+  annualAdmissions: number;
+  annualEcosystemTotal: number;
+
+  /* Catalogue, per band */
+  contentStreams: ContentStream[];
+  contentTotal: number;
+  contentHalfAnnual: number;
+  contentHalfPerSeason: number;
+
+  /* Band */
+  bandGateSeason: number;
+  artistSeasonReturn: ReturnStream[];
+  artistSeasonTotal: number;
+  artistYearTotal: number;
+  artistPerMemberSeason: number;
+  artistPerMemberYear: number;
+  /** What the band would earn if every fixture were a solo showcase. */
+  bandGateSeasonAllSolo: number;
+  /** Extra people in the room across the season because nights are shared. */
+  sharedNightExtraFootfall: number;
+
+  /* Franchise */
+  phGatePerBandSeason: number;
+  phSeasonReturn: ReturnStream[];
+  phSeasonTotal: number;
+  phSeasonProfit: number;
+  phSeasonMultiple: number;
+  phGateBackedTotal: number;
+  phGateBackedMultiple: number;
+  phVariableTotal: number;
+  phVariablePct: number;
+  phCapitalRecoveredPct: number;
+
+  /* League season */
+  seasonNetGatePool: number;
+  seasonGrossGatePool: number;
+  seasonCataloguePool: number;
+  membershipRevenue: number;
+  bidsPool: number;
+  ecosystemRevenue: LineItem[];
+  ecosystemTotal: number;
+  operatorIncome: LineItem[];
+  operatorGross: number;
+  operatorCosts: { label: string; amount: number }[];
+  operatorCostsTotal: number;
+  operatorNet: number;
+  operatorMarginPct: number;
+
+  /* Platform upside — excluded from every figure above */
+  platformUpside: LineItem[];
+  platformUpsideTotal: number;
+}
+
+export function computeEconomics(inputs: EconomicsInputs): EconomicsModel {
+  const {
+    ticketPrice,
+    attendance,
+    showsPerBand,
+    numFranchises,
+    bandsPerFranchise,
+    winningBid,
+    bandMembers,
+    soloSharePct,
+    coHeadlineUplift,
+    ticketingCommissionPct,
+  } = inputs;
+
+  /* ---- fixture mix -------------------------------------------------- */
+  const soloShowsPerBand = Math.min(
+    showsPerBand,
+    Math.max(0, Math.round((showsPerBand * soloSharePct) / 100)),
+  );
+  const sharedShowsPerBand = showsPerBand - soloShowsPerBand;
+
+  const sharedAttendance = Math.round(attendance * coHeadlineUplift);
+  const soloShow = computeShowEconomics(ticketPrice, attendance, ticketingCommissionPct, 1);
+  const sharedShow = computeShowEconomics(
+    ticketPrice,
+    sharedAttendance,
+    ticketingCommissionPct,
+    ACTS_PER_SHARED_SHOW,
+  );
+
+  const totalBands = Math.max(1, numFranchises * bandsPerFranchise);
+  const soloFixtures = totalBands * soloShowsPerBand;
+  // A versus night is one ticketed event shared by ACTS_PER_SHARED_SHOW bands.
+  const sharedFixtures = Math.round((totalBands * sharedShowsPerBand) / ACTS_PER_SHARED_SHOW);
+  const totalFixtures = soloFixtures + sharedFixtures;
+  const totalAdmissions = soloFixtures * attendance + sharedFixtures * sharedAttendance;
+
+  /* ---- catalogue, per band per year ---------------------------------- */
+  const youtubeAnnual = Math.round((inputs.youtubeViewsAnnual / 1000) * inputs.youtubeRpm);
+  const contentStreams: ContentStream[] = [
+    {
+      source: "YouTube Monetization",
+      annual: youtubeAnnual,
+      note: `${numCompact(inputs.youtubeViewsAnnual)} monetised views a year at ${inr(inputs.youtubeRpm)} RPM`,
+      certainty: "modelled",
+    },
+    {
+      source: "Music Platforms",
+      annual: inputs.musicPlatformsAnnual,
+      note: "Streaming royalties across global and regional platforms",
+      certainty: "modelled",
+    },
+    {
+      source: "Exclusive Music Partner",
+      annual: inputs.exclusivePartnerAnnual,
+      note: "First-window catalogue placement",
+      certainty: "contracted",
+    },
+    {
+      source: "Sponsorships & Brand Collabs",
+      annual: inputs.bandSponsorshipAnnual,
+      note: "Band-level sponsor deals and brand tie-ins",
+      certainty: "contracted",
+    },
+  ];
+  const contentTotal = contentStreams.reduce((s, c) => s + c.annual, 0);
+  const contentHalfAnnual = contentTotal * (CONTENT_SPLIT.artists / 100);
+  const contentHalfPerSeason = Math.round(contentHalfAnnual / SEASON_STRUCTURE.seasonsPerYear);
+
+  /* ---- what one band earns off the gate ------------------------------ */
+  const bandGateSeason = Math.round(
+    soloShowsPerBand * soloShow.bandPool + sharedShowsPerBand * sharedShow.bandPerAct,
+  );
+  const bandGateSeasonAllSolo = soloShow.bandPool * showsPerBand;
+  const sharedNightExtraFootfall = sharedShowsPerBand * (sharedAttendance - attendance);
+
+  const artistSeasonReturn: ReturnStream[] = [
+    {
+      label: "Live Performance Share",
+      amount: bandGateSeason,
+      detail:
+        sharedShowsPerBand > 0
+          ? `${EVENT_SPLIT.bands}% of net on ${soloShowsPerBand} solo ${soloShowsPerBand === 1 ? "night" : "nights"}, split with the rival act on ${sharedShowsPerBand} versus ${sharedShowsPerBand === 1 ? "night" : "nights"}`
+          : `${EVENT_SPLIT.bands}% of net gate across ${showsPerBand} solo fixtures`,
+      certainty: "gate",
+    },
+    {
+      label: "Catalogue Share",
+      amount: contentHalfPerSeason,
+      detail: `${CONTENT_SPLIT.artists}% of the audio and video rights they created`,
+      certainty: "modelled",
+    },
+  ];
+  const artistSeasonTotal = artistSeasonReturn.reduce((s, r) => s + r.amount, 0);
+  const artistYearTotal = artistSeasonTotal * SEASON_STRUCTURE.seasonsPerYear;
+
+  /* ---- what one franchise earns -------------------------------------- */
+  const phGatePerBandSeason = Math.round(
+    soloShowsPerBand * soloShow.productionHousePool +
+      sharedShowsPerBand * sharedShow.productionHousePerAct,
+  );
+
+  const phSeasonReturn: ReturnStream[] = [
+    {
+      label: "Event Revenue Share",
+      amount: phGatePerBandSeason * bandsPerFranchise,
+      detail:
+        bandsPerFranchise > 1
+          ? `${EVENT_SPLIT.productionHouse}% of net gate across ${bandsPerFranchise} signed bands`
+          : `${EVENT_SPLIT.productionHouse}% of net gate across ${showsPerBand} fixtures`,
+      certainty: "gate",
+    },
+    {
+      label: "Catalogue Share",
+      amount: contentHalfPerSeason * bandsPerFranchise,
+      detail: `${CONTENT_SPLIT.productionHouse}% of the audio and video rights it financed`,
+      certainty: "modelled",
+    },
+    {
+      label: "Third-Party Content Licensing",
+      amount: inputs.licensingRights,
+      detail: "OTT, syndication and platform deals on season footage and originals",
+      certainty: "contracted",
+    },
+    {
+      label: "Broadcast Rights Share",
+      amount: inputs.broadcastRights,
+      detail: "Franchise share of league broadcast and streaming distribution fees",
+      certainty: "contracted",
+    },
+    {
+      label: "Sync & Brand Placements",
+      amount: inputs.syncPlacements,
+      detail: "Film, ad and brand sync against franchise-owned masters",
+      certainty: "contracted",
+    },
+  ];
+
+  const phSeasonTotal = phSeasonReturn.reduce((s, r) => s + r.amount, 0);
+  const phGateBackedTotal = phSeasonReturn
+    .filter((r) => r.certainty === "gate")
+    .reduce((s, r) => s + r.amount, 0);
+  const phVariableTotal = phSeasonTotal - phGateBackedTotal;
+
+  /* ---- league season -------------------------------------------------- */
+  const seasonNetGatePool =
+    soloFixtures * soloShow.netRevenue + sharedFixtures * sharedShow.netRevenue;
+  const seasonGrossGatePool =
+    soloFixtures * soloShow.grossTicketRevenue + sharedFixtures * sharedShow.grossTicketRevenue;
+  const seasonCataloguePool = Math.round(
+    (contentTotal * totalBands) / SEASON_STRUCTURE.seasonsPerYear,
+  );
+  const membershipRevenue = inputs.membersCount * inputs.membershipPrice;
+  const bidsPool = winningBid * numFranchises;
+  const operatorGateIncome =
+    soloFixtures * soloShow.operatorShare + sharedFixtures * sharedShow.operatorShare;
+  const broadcastOperatorShare = Math.round(
+    inputs.leagueBroadcastSeason * (OPERATOR_RIGHTS_SHARE_PCT / 100),
+  );
+  const sponsorshipOperatorShare = Math.round(
+    inputs.leagueSponsorshipSeason * (OPERATOR_RIGHTS_SHARE_PCT / 100),
+  );
+
+  const ecosystemRevenue: LineItem[] = [
+    {
+      label: "Ticket Sales (net)",
+      amount: seasonNetGatePool,
+      detail: `${totalFixtures} fixtures — ${soloFixtures} solo, ${sharedFixtures} versus`,
+    },
+    {
+      label: "Production House Bids",
+      amount: bidsPool,
+      detail: `${numFranchises} franchises × ${inr(winningBid)}`,
+    },
+    {
+      label: "Catalogue Revenue",
+      amount: seasonCataloguePool,
+      detail: `${totalBands} bands, one season's share`,
+    },
+    {
+      label: "Broadcast Rights",
+      amount: inputs.leagueBroadcastSeason,
+      detail: "League distribution fees",
+    },
+    {
+      label: "Sponsorship",
+      amount: inputs.leagueSponsorshipSeason,
+      detail: "Title + co-sponsors",
+    },
+    {
+      label: "Membership Passes",
+      amount: membershipRevenue,
+      detail: `${inputs.membersCount} fans × ${inr(inputs.membershipPrice)}`,
+    },
+  ];
+
+  const operatorIncome: LineItem[] = [
+    {
+      label: "Event Revenue",
+      amount: operatorGateIncome,
+      detail: `${EVENT_SPLIT.operator}% of net across ${totalFixtures} fixtures`,
+    },
+    {
+      label: "Broadcast Share",
+      amount: broadcastOperatorShare,
+      detail: "Operator half of distribution fees",
+    },
+    { label: "Sponsorship", amount: sponsorshipOperatorShare, detail: "League operator share" },
+    { label: "Membership Revenue", amount: membershipRevenue },
+  ];
+  const operatorGross = operatorIncome.reduce((s, r) => s + r.amount, 0);
+  const operatorNet = operatorGross - OPERATOR_COSTS_TOTAL;
+
+  /* ---- platform upside, deliberately outside everything above ---------- */
+  const retainedTicketing = Math.round(
+    seasonGrossGatePool * (ticketingCommissionPct / 100) * (inputs.inHouseTicketingPct / 100),
+  );
+  const ppvRevenue = Math.round(inputs.ppvPrice * inputs.ppvBuyersPerFixture * totalFixtures);
+  const merchRevenue = Math.round(
+    totalAdmissions * (inputs.merchAttachPct / 100) * inputs.merchMargin,
+  );
+  const fanPassRevenue = Math.round(
+    inputs.fanPassPrice * inputs.fanPassBuyersPerFixture * totalFixtures,
+  );
+  const sponsorPortalRevenue = Math.round(inputs.sponsorPortalPerFixture * totalFixtures);
+
+  const platformUpside: LineItem[] = [
+    {
+      label: "Retained Ticketing Margin",
+      amount: retainedTicketing,
+      detail: `${inputs.inHouseTicketingPct}% of tickets sold in-house — the ${ticketingCommissionPct}% fee stays in the league`,
+    },
+    {
+      label: "Livestream / PPV Passes",
+      amount: ppvRevenue,
+      detail: `${inputs.ppvBuyersPerFixture} passes per fixture × ${inr(inputs.ppvPrice)}`,
+    },
+    {
+      label: "Merch Pre-Orders at Checkout",
+      amount: merchRevenue,
+      detail: `${inputs.merchAttachPct}% of ${numCompact(totalAdmissions)} admissions × ${inr(inputs.merchMargin)} margin`,
+    },
+    {
+      label: "Fan Pass & Paid Voting",
+      amount: fanPassRevenue,
+      detail: `${inputs.fanPassBuyersPerFixture} fans per fixture × ${inr(inputs.fanPassPrice)}`,
+    },
+    {
+      label: "Micro-Sponsorship Portal",
+      amount: sponsorPortalRevenue,
+      detail: `Local brands bidding per fixture × ${totalFixtures} fixtures`,
+    },
+  ];
+  const platformUpsideTotal = platformUpside.reduce((s, r) => s + r.amount, 0);
+
+  return {
+    inputs,
+
+    soloShowsPerBand,
+    sharedShowsPerBand,
+    soloShow,
+    sharedShow,
+    totalBands,
+    soloFixtures,
+    sharedFixtures,
+    totalFixtures,
+    totalAdmissions,
+    showsPerYearPerBand: showsPerBand * SEASON_STRUCTURE.seasonsPerYear,
+
+    // Cadence is derived from the fixture calendar, not set independently —
+    // shows per month is an OUTPUT of how many bands play how many fixtures.
+    showsPerMonth: totalFixtures / SEASON_STRUCTURE.monthsPerSeason,
+    monthlyNetGate: seasonNetGatePool / SEASON_STRUCTURE.monthsPerSeason,
+    annualNetGate: seasonNetGatePool * SEASON_STRUCTURE.seasonsPerYear,
+    annualAdmissions: totalAdmissions * SEASON_STRUCTURE.seasonsPerYear,
+    annualEcosystemTotal:
+      ecosystemRevenue.reduce((s, r) => s + r.amount, 0) * SEASON_STRUCTURE.seasonsPerYear,
+
+    contentStreams,
+    contentTotal,
+    contentHalfAnnual,
+    contentHalfPerSeason,
+
+    bandGateSeason,
+    artistSeasonReturn,
+    artistSeasonTotal,
+    artistYearTotal,
+    artistPerMemberSeason: Math.round(artistSeasonTotal / Math.max(1, bandMembers)),
+    artistPerMemberYear: Math.round(artistYearTotal / Math.max(1, bandMembers)),
+    bandGateSeasonAllSolo,
+    sharedNightExtraFootfall,
+
+    phGatePerBandSeason,
+    phSeasonReturn,
+    phSeasonTotal,
+    phSeasonProfit: phSeasonTotal - winningBid,
+    phSeasonMultiple: phSeasonTotal / Math.max(1, winningBid),
+    phGateBackedTotal,
+    phGateBackedMultiple: phGateBackedTotal / Math.max(1, winningBid),
+    phVariableTotal,
+    phVariablePct: phSeasonTotal > 0 ? (phVariableTotal / phSeasonTotal) * 100 : 0,
+    phCapitalRecoveredPct: (phGateBackedTotal / Math.max(1, winningBid)) * 100,
+
+    seasonNetGatePool,
+    seasonGrossGatePool,
+    seasonCataloguePool,
+    membershipRevenue,
+    bidsPool,
+    ecosystemRevenue,
+    ecosystemTotal: ecosystemRevenue.reduce((s, r) => s + r.amount, 0),
+    operatorIncome,
+    operatorGross,
+    operatorCosts: OPERATOR_COSTS,
+    operatorCostsTotal: OPERATOR_COSTS_TOTAL,
+    operatorNet,
+    operatorMarginPct: operatorGross > 0 ? (operatorNet / operatorGross) * 100 : 0,
+
+    platformUpside,
+    platformUpsideTotal,
+  };
+}
+
+/** The scenario the page opens on. */
+export const BASE_MODEL = computeEconomics(DEFAULT_INPUTS);
+
+/* ------------------------------------------------------------------ *
+ * Static narrative content
  * ------------------------------------------------------------------ */
 
 export interface RevenueStream {
@@ -330,13 +738,100 @@ export const REVENUE_STREAMS: RevenueStream[] = [
   { stream: "Sponsorship", source: "Title sponsors, co-sponsors, venue sponsors", beneficiaries: "Operator + Production Houses" },
   { stream: "Ticketing Commission", source: "Share of ticket sales via partner platforms", beneficiaries: "Ticketing partner" },
   { stream: "Membership Passes", source: "Recurring audience memberships", beneficiaries: "Operator" },
-  { stream: "Merchandise", source: "Band merch at events", beneficiaries: "Bands + Operator" },
+  { stream: "Merchandise", source: "Band merch at events and at ticket checkout", beneficiaries: "Bands + Operator" },
   { stream: "Sync Licensing", source: "Film and ad placements for original music", beneficiaries: "Artists 50% · Production House 50%" },
 ];
 
-/* ------------------------------------------------------------------ *
- * Future revenue — upside not counted in any figure above
- * ------------------------------------------------------------------ */
+/**
+ * The assumption risk register. This is the honest counterweight to the model —
+ * it names where the projection is most likely to be wrong and what to do about
+ * it, rather than leaving an investor to find the soft spots themselves.
+ */
+export interface RiskRow {
+  assumption: string;
+  projection: string;
+  risk: "moderate" | "high" | "low";
+  assessment: string;
+  mitigation: string;
+}
+
+export const RISK_REGISTER: RiskRow[] = [
+  {
+    assumption: "Ticket Price & Gate",
+    projection: "₹399 into a 300-capacity room",
+    risk: "moderate",
+    assessment:
+      "Independent-band ticketing in Tier 1 and Tier 2 Indian cities often caps at ₹199–₹299 without an established headliner on the bill.",
+    mitigation:
+      "Run dual-tier pricing — early bird ₹249, regular ₹399 — and test merch-inclusive bundles before committing to a single price.",
+  },
+  {
+    assumption: "Franchise Return Multiple",
+    projection: "Return on the winning bid inside one season",
+    risk: "high",
+    assessment:
+      "Only the event revenue line is gate-backed. The majority of the modelled return leans on licensing, broadcast and sync contracts that are not yet signed.",
+    mitigation:
+      "Quote gate-backed return and contracted upside as two separate numbers — which is how this page now presents them — and sign at least one rights deal before the bid round.",
+  },
+  {
+    assumption: "Catalogue & YouTube IP",
+    projection: "Annual streaming and AdSense per band",
+    risk: "high",
+    assessment:
+      "The YouTube line needs roughly 4–5 million targeted views per band per year at typical Indian RPMs. That is a real audience, not a rounding error.",
+    mitigation:
+      "Partner with a digital distributor for upfront advance guarantees, so a share of catalogue income is contracted rather than view-dependent.",
+  },
+  {
+    assumption: "Ticketing Partner Commission",
+    projection: "10% of gross to the platform",
+    risk: "low",
+    assessment: "Accurate. This is the standard rate for third-party ticketing platforms in India.",
+    mitigation:
+      "Direct ticketing on our own platform recovers this fee as league margin — modelled in the platform upside panel below.",
+  },
+];
+
+/** Web-native revenue the site itself can capture. Not in any figure above. */
+export interface PlatformIdea {
+  title: string;
+  detail: string;
+  status: string;
+}
+
+export const PLATFORM_IDEAS: PlatformIdea[] = [
+  {
+    title: "In-House Ticketing & Checkout",
+    detail:
+      "Sell tickets directly on the platform instead of routing every fixture through a third party. The commission that currently leaves the pool becomes league margin, and the buyer relationship stays with us.",
+    status: "Recovers the ticketing fee",
+  },
+  {
+    title: "Micro-Sponsorship & Venue Portal",
+    detail:
+      "An automated portal where local brands and venue owners bid for fixture hosting or stage naming rights, without a sales call for every small deal.",
+    status: "New operator line",
+  },
+  {
+    title: "Livestream & PPV Passes",
+    detail:
+      "A paywalled stream for fans outside the host city. The room has a capacity ceiling; the stream does not, which is what makes a fixture calendar scale past its venues.",
+    status: "Breaks the capacity ceiling",
+  },
+  {
+    title: "Merch Pre-Orders at Checkout",
+    detail:
+      "Band merchandise offered inside the ticket purchase flow, so cash arrives before show night rather than depending on a queue at a table.",
+    status: "Pre-show cash flow",
+  },
+  {
+    title: "Fan Pass & Paid Voting",
+    detail:
+      "Paid fan passes carry verified votes during the match window, plus badge access and behind-the-scenes content. Monetises engagement that the points table already depends on.",
+    status: "Ties revenue to engagement",
+  },
+];
 
 export interface FutureStream {
   title: string;
@@ -364,16 +859,12 @@ export const FUTURE_STREAMS: FutureStream[] = [
     horizon: "Live from Season 1",
   },
   {
-    title: "City Franchise Expansion",
+    title: "Zonal & National Expansion",
     detail:
-      "The playbook replicated city by city, with a fresh round of franchise bids in each new market against largely the same central overhead.",
+      "The playbook replicated zone by zone, with a fresh round of franchise bids in each new market against largely the same central overhead.",
     horizon: "Year 2+",
   },
 ];
-
-/* ------------------------------------------------------------------ *
- * Partner architecture — role tiers, deliberately unnamed
- * ------------------------------------------------------------------ */
 
 export type PartnerTier = "music" | "sponsor" | "platform" | "community";
 
@@ -388,15 +879,11 @@ export const PARTNER_ROLES: PartnerRole[] = [
   { role: "Title Sponsor", scope: "Season naming rights across all shows, films and league branding.", tier: "sponsor" },
   { role: "Co-Sponsors", scope: "Category presence through the season with on-ground activation at shows.", tier: "sponsor" },
   { role: "Venue Sponsors", scope: "Host billing on the fixtures they carry, plus footfall from the league calendar.", tier: "sponsor" },
-  { role: "Production Houses", scope: "Franchise investors financing music and video production for their signed band.", tier: "platform" },
+  { role: "Production Houses", scope: "Franchise investors financing music and video production for their signed bands.", tier: "platform" },
   { role: "Broadcast Partner", scope: "Network and streaming distribution of the fixture calendar and finale.", tier: "platform" },
   { role: "Ticketing Partner", scope: "Ticket sales, entry and settlement across the full fixture calendar.", tier: "platform" },
   { role: "Community Partners", scope: "Campus and city networks driving audience turnout show after show.", tier: "community" },
 ];
-
-/* ------------------------------------------------------------------ *
- * Investor thesis
- * ------------------------------------------------------------------ */
 
 export interface PitchPoint {
   title: string;
@@ -405,10 +892,10 @@ export interface PitchPoint {
 
 export const PITCH_POINTS: PitchPoint[] = [
   { title: "Proven Template", detail: "The franchise league model is battle-tested. This applies it to independent music — a large, underserved market with no structured incumbent." },
+  { title: "A Distribution Engine", detail: "The league exists to put original music in front of mass audiences. Every fixture is a release event with a paying room already in it." },
   { title: "Diversified Income", detail: "Gate, catalogue, licensing, broadcast, sponsorship and memberships mean no single stream carries the business." },
   { title: "Compounding IP", detail: "Every season produces ownable audio and video catalogue that keeps earning long after the show ends." },
   { title: "Network Effects", detail: "More bands drive more fixtures, which grow audiences, which lift sponsorship, which pulls in more franchise capital." },
   { title: "Low Competition", detail: "No structured franchise music ecosystem exists in India's regional markets today." },
-  { title: "Scalable Playbook", detail: "The model replicates city by city on largely fixed central overhead." },
-  { title: "Creator Economy Alignment", detail: "Sits across three fast-growing markets at once: live events, music streaming and the creator economy." },
+  { title: "Scalable Playbook", detail: "The model replicates city by city and zone by zone on largely fixed central overhead." },
 ];

@@ -16,7 +16,6 @@ import { Route as PartnersRouteImport } from './routes/partners'
 import { Route as OnboardingRouteImport } from './routes/onboarding'
 import { Route as MediaRouteImport } from './routes/media'
 import { Route as LoginRouteImport } from './routes/login'
-import { Route as LeagueRouteImport } from './routes/league'
 import { Route as EventsRouteImport } from './routes/events'
 import { Route as EconomicsRouteImport } from './routes/economics'
 import { Route as DashboardRouteImport } from './routes/dashboard'
@@ -26,7 +25,9 @@ import { Route as BandCultureRouteImport } from './routes/band-culture'
 import { Route as AnalyticsRouteImport } from './routes/analytics'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as LeagueIndexRouteImport } from './routes/league/index'
 import { Route as JoinIndexRouteImport } from './routes/join/index'
+import { Route as LeagueZoneRouteImport } from './routes/league/$zone'
 import { Route as JoinVolunteerRouteImport } from './routes/join/volunteer'
 import { Route as JoinVenueRouteImport } from './routes/join/venue'
 import { Route as JoinSponsorRouteImport } from './routes/join/sponsor'
@@ -71,11 +72,6 @@ const MediaRoute = MediaRouteImport.update({
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
   path: '/login',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const LeagueRoute = LeagueRouteImport.update({
-  id: '/league',
-  path: '/league',
   getParentRoute: () => rootRouteImport,
 } as any)
 const EventsRoute = EventsRouteImport.update({
@@ -123,9 +119,19 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const LeagueIndexRoute = LeagueIndexRouteImport.update({
+  id: '/league/',
+  path: '/league/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const JoinIndexRoute = JoinIndexRouteImport.update({
   id: '/join/',
   path: '/join/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LeagueZoneRoute = LeagueZoneRouteImport.update({
+  id: '/league/$zone',
+  path: '/league/$zone',
   getParentRoute: () => rootRouteImport,
 } as any)
 const JoinVolunteerRoute = JoinVolunteerRouteImport.update({
@@ -189,7 +195,6 @@ export interface FileRoutesByFullPath {
   '/dashboard': typeof DashboardRoute
   '/economics': typeof EconomicsRoute
   '/events': typeof EventsRoute
-  '/league': typeof LeagueRoute
   '/login': typeof LoginRoute
   '/media': typeof MediaRoute
   '/onboarding': typeof OnboardingRoute
@@ -207,7 +212,9 @@ export interface FileRoutesByFullPath {
   '/join/sponsor': typeof JoinSponsorRoute
   '/join/venue': typeof JoinVenueRoute
   '/join/volunteer': typeof JoinVolunteerRoute
+  '/league/$zone': typeof LeagueZoneRoute
   '/join/': typeof JoinIndexRoute
+  '/league/': typeof LeagueIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -219,7 +226,6 @@ export interface FileRoutesByTo {
   '/dashboard': typeof DashboardRoute
   '/economics': typeof EconomicsRoute
   '/events': typeof EventsRoute
-  '/league': typeof LeagueRoute
   '/login': typeof LoginRoute
   '/media': typeof MediaRoute
   '/onboarding': typeof OnboardingRoute
@@ -237,7 +243,9 @@ export interface FileRoutesByTo {
   '/join/sponsor': typeof JoinSponsorRoute
   '/join/venue': typeof JoinVenueRoute
   '/join/volunteer': typeof JoinVolunteerRoute
+  '/league/$zone': typeof LeagueZoneRoute
   '/join': typeof JoinIndexRoute
+  '/league': typeof LeagueIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -250,7 +258,6 @@ export interface FileRoutesById {
   '/dashboard': typeof DashboardRoute
   '/economics': typeof EconomicsRoute
   '/events': typeof EventsRoute
-  '/league': typeof LeagueRoute
   '/login': typeof LoginRoute
   '/media': typeof MediaRoute
   '/onboarding': typeof OnboardingRoute
@@ -268,7 +275,9 @@ export interface FileRoutesById {
   '/join/sponsor': typeof JoinSponsorRoute
   '/join/venue': typeof JoinVenueRoute
   '/join/volunteer': typeof JoinVolunteerRoute
+  '/league/$zone': typeof LeagueZoneRoute
   '/join/': typeof JoinIndexRoute
+  '/league/': typeof LeagueIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -282,7 +291,6 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/economics'
     | '/events'
-    | '/league'
     | '/login'
     | '/media'
     | '/onboarding'
@@ -300,7 +308,9 @@ export interface FileRouteTypes {
     | '/join/sponsor'
     | '/join/venue'
     | '/join/volunteer'
+    | '/league/$zone'
     | '/join/'
+    | '/league/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -312,7 +322,6 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/economics'
     | '/events'
-    | '/league'
     | '/login'
     | '/media'
     | '/onboarding'
@@ -330,7 +339,9 @@ export interface FileRouteTypes {
     | '/join/sponsor'
     | '/join/venue'
     | '/join/volunteer'
+    | '/league/$zone'
     | '/join'
+    | '/league'
   id:
     | '__root__'
     | '/'
@@ -342,7 +353,6 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/economics'
     | '/events'
-    | '/league'
     | '/login'
     | '/media'
     | '/onboarding'
@@ -360,7 +370,9 @@ export interface FileRouteTypes {
     | '/join/sponsor'
     | '/join/venue'
     | '/join/volunteer'
+    | '/league/$zone'
     | '/join/'
+    | '/league/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -373,7 +385,6 @@ export interface RootRouteChildren {
   DashboardRoute: typeof DashboardRoute
   EconomicsRoute: typeof EconomicsRoute
   EventsRoute: typeof EventsRoute
-  LeagueRoute: typeof LeagueRoute
   LoginRoute: typeof LoginRoute
   MediaRoute: typeof MediaRoute
   OnboardingRoute: typeof OnboardingRoute
@@ -390,7 +401,9 @@ export interface RootRouteChildren {
   JoinSponsorRoute: typeof JoinSponsorRoute
   JoinVenueRoute: typeof JoinVenueRoute
   JoinVolunteerRoute: typeof JoinVolunteerRoute
+  LeagueZoneRoute: typeof LeagueZoneRoute
   JoinIndexRoute: typeof JoinIndexRoute
+  LeagueIndexRoute: typeof LeagueIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -442,13 +455,6 @@ declare module '@tanstack/react-router' {
       path: '/login'
       fullPath: '/login'
       preLoaderRoute: typeof LoginRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/league': {
-      id: '/league'
-      path: '/league'
-      fullPath: '/league'
-      preLoaderRoute: typeof LeagueRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/events': {
@@ -514,11 +520,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/league/': {
+      id: '/league/'
+      path: '/league'
+      fullPath: '/league/'
+      preLoaderRoute: typeof LeagueIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/join/': {
       id: '/join/'
       path: '/join'
       fullPath: '/join/'
       preLoaderRoute: typeof JoinIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/league/$zone': {
+      id: '/league/$zone'
+      path: '/league/$zone'
+      fullPath: '/league/$zone'
+      preLoaderRoute: typeof LeagueZoneRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/join/volunteer': {
@@ -614,7 +634,6 @@ const rootRouteChildren: RootRouteChildren = {
   DashboardRoute: DashboardRoute,
   EconomicsRoute: EconomicsRoute,
   EventsRoute: EventsRoute,
-  LeagueRoute: LeagueRoute,
   LoginRoute: LoginRoute,
   MediaRoute: MediaRoute,
   OnboardingRoute: OnboardingRoute,
@@ -631,7 +650,9 @@ const rootRouteChildren: RootRouteChildren = {
   JoinSponsorRoute: JoinSponsorRoute,
   JoinVenueRoute: JoinVenueRoute,
   JoinVolunteerRoute: JoinVolunteerRoute,
+  LeagueZoneRoute: LeagueZoneRoute,
   JoinIndexRoute: JoinIndexRoute,
+  LeagueIndexRoute: LeagueIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
