@@ -44,6 +44,45 @@ export const Route = createFileRoute("/band-culture")({
 type CategoryFilter = "all" | "band" | "unplugged" | "club" | "curator";
 type RegionFilter = "all" | "Hyderabad / TS" | "Visakhapatnam / AP" | "Pan AP & TS";
 
+/**
+ * Band profile photo pulled from the band's Instagram DP (mirrored under
+ * /public/bands). Falls back to the Music glyph when a band has no photo yet
+ * or the file fails to load.
+ */
+function BandAvatar({
+  band,
+  sizeClass,
+  iconSize,
+  className = "",
+}: {
+  band: ApTsBand;
+  sizeClass: string;
+  iconSize: number;
+  className?: string;
+}) {
+  const [failed, setFailed] = useState(false);
+  const showPhoto = Boolean(band.imageUrl) && !failed;
+
+  return (
+    <div
+      className={`${sizeClass} rounded-full overflow-hidden bg-background/90 flex items-center justify-center shadow-xl ${className}`}
+    >
+      {showPhoto ? (
+        <img
+          src={band.imageUrl}
+          alt={`${band.name} profile photo`}
+          loading="lazy"
+          decoding="async"
+          onError={() => setFailed(true)}
+          className="h-full w-full object-cover"
+        />
+      ) : (
+        <Music size={iconSize} className="text-primary-glow" />
+      )}
+    </div>
+  );
+}
+
 function BandCulturePage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<CategoryFilter>("all");
@@ -319,9 +358,12 @@ function BandCulturePage() {
                     </div>
 
                     {/* Band Visual / Avatar Circle */}
-                    <div className="relative z-10 h-16 w-16 rounded-full border-2 border-white/20 bg-background/90 flex items-center justify-center shadow-xl group-hover:scale-105 transition-transform">
-                      <Music size={24} className="text-primary-glow" />
-                    </div>
+                    <BandAvatar
+                      band={band}
+                      sizeClass="h-16 w-16"
+                      iconSize={24}
+                      className="relative z-10 border-2 border-white/20 group-hover:scale-105 transition-transform"
+                    />
                   </div>
 
                   {/* Card Body */}
@@ -488,9 +530,13 @@ function BandCulturePage() {
               </button>
 
               <div className="relative z-10 flex flex-col items-center">
-                <div className="h-16 w-16 rounded-full border-2 border-white/30 bg-background/90 flex items-center justify-center shadow-xl">
-                  <Music size={28} className="text-primary-glow" />
-                </div>
+                <BandAvatar
+                  key={activeModalBand.id}
+                  band={activeModalBand}
+                  sizeClass="h-16 w-16"
+                  iconSize={28}
+                  className="border-2 border-white/30"
+                />
               </div>
             </div>
 
