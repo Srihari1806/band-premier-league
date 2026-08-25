@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { PageShell } from "@/components/layout/PageShell";
-import { useState, useMemo, useCallback, Fragment } from "react";
+import { useState, useMemo, useCallback, useEffect, useRef, Fragment } from "react";
 import {
   TrendingUp,
   Ticket,
@@ -26,6 +26,8 @@ import {
   Wallet,
   Filter,
   MapPin,
+  ChevronUp,
+  Gavel,
 } from "lucide-react";
 import {
   inr,
@@ -74,6 +76,19 @@ import {
   type AssumptionOverrides,
   type SponsorRoiInputs,
 } from "@/data/event-model";
+import {
+  REVENUE_MODULES,
+  AUCTION,
+  DEFAULT_BIDS,
+  SPEND_CAPS,
+  CENTRAL_POOLS,
+  PRIZE_SPLIT,
+  APPROVAL_RULES,
+  ROSTER_NOTES,
+  FAIRNESS_RULE,
+  evaluatePurse,
+  houseCommitment,
+} from "@/data/regulations";
 import {
   SEASONS,
   SLICEABLE_ZONES,
@@ -211,6 +226,26 @@ function DimSelect({
           </option>
         ))}
       </select>
+    </div>
+  );
+}
+
+/**
+ * A value the slicer decides. Shown in the same row as the sliders so the bar
+ * reads consistently, but deliberately not a control — an input that cannot
+ * change anything is worse than no input at all.
+ */
+function Derived({ label, value, from }: { label: string; value: string; from: string }) {
+  return (
+    <div className="space-y-1">
+      <div className="flex items-baseline justify-between gap-2">
+        <label className="text-xs font-semibold text-muted-foreground">{label}</label>
+        <span className="text-sm font-bold text-white tabular-nums">{value}</span>
+      </div>
+      <div className="h-[6px] rounded-full bg-secondary/50 border border-border/50" />
+      <p className="text-[10px] text-muted-foreground leading-snug">
+        <span className="text-primary-glow font-semibold">Set by slice</span> · {from}
+      </p>
     </div>
   );
 }
@@ -437,7 +472,7 @@ function EventEconomics({ scope }: { scope: Scope }) {
         <SectionHeading
           eyebrow="Event Economics"
           title="Does one night wash its own face?"
-          sub={`${scope.breadcrumb[1]} \u00b7 ${scope.city ? scope.city.city : "all cities"}. The room, the ticket and the cost stack are sized to the market in the slicer; every cost is pulled from the shared assumption registry. Change the format below to override the default room for this fixture type.`}
+          sub={`${scope.breadcrumb[1]} · ${scope.city ? scope.city.city : "all cities"}. The room, the ticket and the cost stack are sized to the market in the slicer; every cost is pulled from the shared assumption registry. Change the format below to override the default room for this fixture type.`}
         />
 
         {/* Preset + tier selectors */}
@@ -1239,7 +1274,7 @@ function SponsorEconomics({ scope, fixturesInScope }: { scope: Scope; fixturesIn
       <SectionHeading
         eyebrow="Sponsor Economics"
         title="What a brand actually gets for the money"
-        sub={`A sponsor does not buy a logo on a banner \u2014 they buy reach at a cost per engagement they can compare against everything else in their media plan. Sized here to the ${fixturesInScope} ${fixturesInScope === 1 ? "night" : "nights"} inside ${scope.label}.`}
+        sub={`A sponsor does not buy a logo on a banner — they buy reach at a cost per engagement they can compare against everything else in their media plan. Sized here to the ${fixturesInScope} ${fixturesInScope === 1 ? "night" : "nights"} inside ${scope.label}.`}
       />
 
       <div className="grid lg:grid-cols-3 gap-5">
@@ -1400,6 +1435,349 @@ function SponsorEconomics({ scope, fixturesInScope }: { scope: Scope; fixturesIn
   );
 }
 
+/* ------------------------------------------------------------------ *
+ * Two modules — the distinction the whole commercial model rests on
+ * ------------------------------------------------------------------ */
+
+function TwoModules() {
+  return (
+    <section id="modules" className="border-y border-border bg-surface/20 scroll-mt-24">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 py-14">
+        <SectionHeading
+          eyebrow="Commercial Architecture"
+          title="Two modules, and the operator is only in one of them"
+          sub="The league runs the stage; it does not own the songs played on it. Blending those two things is the mistake that would make every production house walk away, so they are kept structurally separate."
+        />
+
+        <div className="grid lg:grid-cols-2 gap-5">
+          {REVENUE_MODULES.map((mod) => (
+            <div
+              key={mod.id}
+              className={`bpl-card p-6 space-y-5 border ${
+                mod.operatorTakes ? "border-primary/25 bg-primary/5" : "border-blue-400/25 bg-blue-400/5"
+              }`}
+            >
+              <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                  {mod.operatorTakes ? (
+                    <Ticket size={15} className="text-primary-glow" />
+                  ) : (
+                    <Music size={15} className="text-blue-400" />
+                  )}
+                  <h3 className="text-sm font-bold text-white">{mod.name}</h3>
+                </div>
+                <p className="text-[11px] text-muted-foreground leading-relaxed">{mod.scope}</p>
+              </div>
+
+              {/* Split bar */}
+              <div className="space-y-2">
+                <div className="flex h-2.5 w-full rounded-full overflow-hidden border border-border/50">
+                  {mod.splits.map((sp) => (
+                    <div key={sp.party} className={sp.accent} style={{ width: `${sp.pct}%` }} />
+                  ))}
+                </div>
+                <div className="space-y-1.5">
+                  {mod.splits.map((sp) => (
+                    <div key={sp.party} className="flex items-baseline justify-between gap-2">
+                      <span className="text-[11px] text-muted-foreground">{sp.party}</span>
+                      <span className="text-sm font-bold text-white tabular-nums">{sp.pct}%</span>
+                    </div>
+                  ))}
+                  {!mod.operatorTakes && (
+                    <div className="flex items-baseline justify-between gap-2 border-t border-border/40 pt-1.5">
+                      <span className="text-[11px] font-semibold text-rose-300">League Operator</span>
+                      <span className="text-sm font-bold text-rose-300 tabular-nums">0%</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <p
+                className={`text-[10px] leading-relaxed border-t border-border/40 pt-3 ${
+                  mod.operatorTakes ? "text-muted-foreground" : "text-blue-100/80"
+                }`}
+              >
+                {mod.operatorNote}
+              </p>
+
+              <div className="flex flex-wrap gap-1.5">
+                {mod.monetises.map((x) => (
+                  <span
+                    key={x}
+                    className="text-[9px] px-2 py-0.5 rounded-full border border-border/60 bg-secondary/30 text-muted-foreground"
+                  >
+                    {x}
+                  </span>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <div className="mt-5 bpl-card p-5 border border-border bg-surface/30 flex gap-3">
+          <Info size={15} className="text-primary-glow shrink-0 mt-0.5" />
+          <p className="text-[11px] text-muted-foreground leading-relaxed">
+            <span className="font-semibold text-white">Everyone else on a record is hired, not vested.</span>{" "}
+            Composers, lyricists, session players, directors, editors and crew are paid a fee out of
+            the band&apos;s creative allocation. They are not inside the band&apos;s 50%. Where a
+            larger name negotiates backend participation instead of — or on top of — a fee, that is a
+            deal between the house and the creator, and it has to be disclosed rather than assumed.
+          </p>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/* ------------------------------------------------------------------ *
+ * The auction purse — a house building its roster inside the rules
+ * ------------------------------------------------------------------ */
+
+function AuctionPurse() {
+  const [bids, setBids] = useState<number[]>(DEFAULT_BIDS);
+  const purse = useMemo(() => evaluatePurse(bids), [bids]);
+  const commitment = useMemo(
+    () => houseCommitment(purse.spent, purse.guarantees),
+    [purse.spent, purse.guarantees],
+  );
+
+  const setBid = (i: number, v: number) =>
+    setBids((prev) => prev.map((b, idx) => (idx === i ? Math.max(0, v) : b)));
+
+  const spentPct = Math.min(100, (purse.spent / AUCTION.purse) * 100);
+
+  return (
+    <section id="auction" className="mx-auto max-w-7xl px-4 sm:px-6 py-14 scroll-mt-24">
+      <SectionHeading
+        eyebrow="Artist Draft"
+        title={`A ${inrCompact(AUCTION.purse)} purse, ${AUCTION.bandsRequired} bands, sealed bids`}
+        sub={`Each house gets the same purse and must finish with exactly ${AUCTION.bandsRequired} bands. A floor of ${inr(AUCTION.minBid)} stops token bids; a ceiling of ${inr(AUCTION.maxBid)} on any single band stops a house sinking everything into one act. Move the bids and watch the roster go legal or illegal.`}
+      />
+
+      <div className="grid lg:grid-cols-5 gap-5">
+        {/* Bid builder */}
+        <div className="lg:col-span-3 bpl-card p-5 border border-border bg-surface/40 space-y-4">
+          <div className="flex flex-wrap items-baseline justify-between gap-2">
+            <h3 className="text-sm font-bold text-white flex items-center gap-2">
+              <Gavel size={14} className="text-amber-400" /> Sealed Bids
+            </h3>
+            <button
+              type="button"
+              onClick={() => setBids(DEFAULT_BIDS)}
+              className="inline-flex items-center gap-1 text-[11px] font-semibold text-muted-foreground hover:text-white transition cursor-pointer"
+            >
+              <RotateCcw size={11} /> Reset roster
+            </button>
+          </div>
+
+          <div className="space-y-3">
+            {purse.rows.map((row, i) => (
+              <div key={i} className="space-y-1.5">
+                <Slider
+                  label={`Band ${i + 1}`}
+                  value={row.bid}
+                  min={0}
+                  max={500000}
+                  step={10000}
+                  onChange={(v) => setBid(i, v)}
+                  format={(v) => inr(v)}
+                />
+                <div className="flex items-center justify-between gap-2">
+                  {row.bracket ? (
+                    <span className="text-[10px] text-muted-foreground">
+                      {row.bracket.label} · guarantee{" "}
+                      <span className="text-white font-semibold">{inr(row.bracket.guarantee)}</span>
+                    </span>
+                  ) : (
+                    <span className="text-[10px] text-muted-foreground">No valid bracket</span>
+                  )}
+                  {row.issue && (
+                    <span className="text-[10px] font-semibold text-rose-300 flex items-center gap-1">
+                      <AlertTriangle size={10} /> {row.issue}
+                    </span>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Purse meter */}
+          <div className="space-y-1.5 border-t border-border/50 pt-4">
+            <div className="flex items-baseline justify-between gap-2">
+              <span className="text-[11px] font-semibold text-muted-foreground">Purse used</span>
+              <span
+                className={`text-sm font-bold tabular-nums ${
+                  purse.remaining < 0 ? "text-rose-300" : "text-white"
+                }`}
+              >
+                {inr(purse.spent)} / {inr(AUCTION.purse)}
+              </span>
+            </div>
+            <div className="h-2.5 w-full rounded-full bg-secondary/60 overflow-hidden border border-border/60">
+              <div
+                className={`h-full ${purse.remaining < 0 ? "bg-rose-500" : "bg-emerald-500"}`}
+                style={{ width: `${spentPct}%` }}
+              />
+            </div>
+            <p className="text-[10px] text-muted-foreground">
+              {purse.remaining >= 0 ? (
+                <>
+                  <span className="text-white font-semibold">{inr(purse.remaining)}</span> unused —
+                  and unused purse expires. It never becomes cash, or houses would simply underbid.
+                </>
+              ) : (
+                <span className="text-rose-300 font-semibold">
+                  {inr(-purse.remaining)} over the purse — this roster is not permitted.
+                </span>
+              )}
+            </p>
+          </div>
+
+          {purse.errors.length > 0 && (
+            <div className="rounded-lg border border-rose-500/30 bg-rose-500/5 p-3 space-y-1">
+              {purse.errors.map((e) => (
+                <p key={e} className="text-[11px] text-rose-200 leading-snug flex gap-2">
+                  <AlertTriangle size={12} className="shrink-0 mt-0.5" />
+                  {e}
+                </p>
+              ))}
+            </div>
+          )}
+          {purse.valid && (
+            <div className="rounded-lg border border-emerald-500/30 bg-emerald-500/5 p-3 flex gap-2">
+              <ShieldCheck size={13} className="text-emerald-400 shrink-0 mt-0.5" />
+              <p className="text-[11px] text-emerald-100/85 leading-snug">
+                Legal roster. {AUCTION.bandsRequired} bands, every bid inside the floor and ceiling,{" "}
+                {inr(purse.spent)} committed against the {inr(AUCTION.purse)} purse.
+              </p>
+            </div>
+          )}
+        </div>
+
+        {/* Commitment + fairness */}
+        <div className="lg:col-span-2 space-y-5">
+          <div className="bpl-card p-5 border border-cyan-500/25 bg-cyan-500/5 space-y-3">
+            <h3 className="text-sm font-bold text-white flex items-center gap-2">
+              <Wallet size={14} className="text-cyan-400" /> Regulated Envelope
+            </h3>
+            <div className="space-y-2 text-xs">
+              <Row label="Acquisition (this roster)" value={inr(commitment.acquisition)} muted />
+              <Row label="Artist guarantees" value={inr(commitment.guarantees)} muted />
+              <Row
+                label={`Creative allocation (${AUCTION.bandsRequired} × ${inr(commitment.creative / AUCTION.bandsRequired)})`}
+                value={inr(commitment.creative)}
+                muted
+              />
+              <Row label="Marketing cap" value={inr(commitment.marketing)} muted />
+              <Row label="Mentor cap" value={inr(commitment.mentor)} muted />
+              <div className="border-t border-border/60 pt-2">
+                <Row
+                  label="Maximum regulated commitment"
+                  value={inr(commitment.total)}
+                  bold
+                  accent="text-cyan-300"
+                />
+              </div>
+            </div>
+            <p className="text-[10px] text-muted-foreground leading-relaxed border-t border-border/40 pt-3">
+              A ceiling, not a bill. Only the acquisition purse and the artist guarantees are
+              committed spend — the rest are caps a house may spend up to, and many will not.
+            </p>
+          </div>
+
+          <div className="bpl-card p-5 border border-amber-500/25 bg-amber-500/5 space-y-3">
+            <h3 className="text-sm font-bold text-white flex items-center gap-2">
+              <ShieldCheck size={14} className="text-amber-400" /> What a bid does not buy
+            </h3>
+            <p className="text-[11px] text-muted-foreground leading-relaxed">{FAIRNESS_RULE}</p>
+            <p className="text-[11px] text-muted-foreground leading-relaxed">
+              A {inr(AUCTION.maxBid)} band and a {inr(AUCTION.minBid)} band get the same fixtures,
+              the same creative allocation, the same mentor framework and the same scoring. The only
+              thing the price changes is the floor under the artist.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Caps + approvals */}
+      <div className="grid lg:grid-cols-2 gap-5 mt-5">
+        <div className="bpl-card p-5 border border-border bg-surface/40 space-y-3">
+          <h3 className="text-sm font-bold text-white">Spending Caps</h3>
+          <div className="space-y-3">
+            {SPEND_CAPS.map((cap) => (
+              <div key={cap.id} className="border-b border-border/30 pb-3 last:border-0 last:pb-0">
+                <div className="flex items-baseline justify-between gap-2">
+                  <span className="text-xs font-bold text-white">{cap.label}</span>
+                  <span className="text-xs font-bold text-primary-glow tabular-nums shrink-0">
+                    {inr(cap.amount)}{" "}
+                    <span className="text-[9px] uppercase text-muted-foreground font-semibold">
+                      {cap.basis}
+                    </span>
+                  </span>
+                </div>
+                <p className="text-[10px] text-muted-foreground leading-relaxed mt-1">{cap.rule}</p>
+              </div>
+            ))}
+          </div>
+          <div className="border-t border-border/50 pt-3 space-y-2">
+            <h4 className="text-[10px] uppercase tracking-wider font-bold text-muted-foreground">
+              Central pools — operator funded
+            </h4>
+            {CENTRAL_POOLS.map((cap) => (
+              <div key={cap.id} className="flex items-baseline justify-between gap-2">
+                <span className="text-[11px] text-muted-foreground">{cap.label}</span>
+                <span className="text-[11px] font-bold text-white tabular-nums">
+                  {inr(cap.amount)}
+                </span>
+              </div>
+            ))}
+            <p className="text-[10px] text-muted-foreground leading-relaxed pt-1">
+              Prize money splits {PRIZE_SPLIT.band}% to the band, {PRIZE_SPLIT.productionHouse}% to
+              the house that backed it.
+            </p>
+          </div>
+        </div>
+
+        <div className="bpl-card p-5 border border-border bg-surface/40 space-y-3">
+          <h3 className="text-sm font-bold text-white">When the League Needs to Be Told</h3>
+          <p className="text-[11px] text-muted-foreground leading-relaxed">
+            The operator checks compliance, never taste. It has no opinion on whether a director is
+            any good — only on whether the arrangement is disclosed, funded from the right place, and
+            incapable of buying points.
+          </p>
+          <div className="space-y-2.5">
+            {APPROVAL_RULES.map((rule) => (
+              <div key={rule.level} className={`rounded-lg border p-3 space-y-1.5 ${rule.accent}`}>
+                <div className="flex items-center gap-2">
+                  <span className="text-[9px] uppercase tracking-wider font-bold">{rule.level}</span>
+                  <span className="text-xs font-bold text-white">{rule.label}</span>
+                </div>
+                <p className="text-[10px] text-muted-foreground leading-relaxed">{rule.trigger}</p>
+                <p className="text-[10px] leading-relaxed font-semibold">{rule.requirement}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Roster rules */}
+      <div className="mt-5 bpl-card p-5 border border-border bg-surface/40 space-y-3">
+        <h3 className="text-sm font-bold text-white flex items-center gap-2">
+          <Users size={14} className="text-primary-glow" /> Roster Rules
+        </h3>
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {ROSTER_NOTES.map((r) => (
+            <div key={r.rule} className="space-y-1">
+              <p className="text-xs font-bold text-white">{r.rule}</p>
+              <p className="text-[10px] text-muted-foreground leading-relaxed">{r.detail}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
 function EconomicsPage() {
   /**
    * One global state object rather than twenty useState calls — the whole page
@@ -1429,6 +1807,54 @@ function EconomicsPage() {
     [],
   );
   const sliceKey = scopeKey(scope);
+
+  /**
+   * The control bar is pinned, which is what makes it useful — but at full
+   * height it eats most of a laptop viewport once you are reading a section
+   * further down. So it condenses to a single summary row on scroll, and
+   * expands again either at the top of the page or on demand.
+   */
+  const [barPinnedOpen, setBarPinnedOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+  /*
+   * A sentinel at the bottom of the hero rather than a scroll handler: it
+   * reports the same thing without running work on every scroll frame, and it
+   * does not care which element is actually doing the scrolling.
+   */
+  const sentinelRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const el = sentinelRef.current;
+    const past = () => {
+      const y = window.scrollY || document.documentElement.scrollTop || 0;
+      if (y > 360) return true;
+      if (el) {
+        const top = el.getBoundingClientRect().top;
+        if (Number.isFinite(top) && top < 0) return true;
+      }
+      return false;
+    };
+    const update = () => setScrolled(past());
+    update();
+
+    // Both signals, because either can be unavailable: IntersectionObserver
+    // needs the page to be painting, and a scroll listener needs the document
+    // to be the thing that scrolls. Together they cover both.
+    let io: IntersectionObserver | undefined;
+    if (el && typeof IntersectionObserver !== "undefined") {
+      io = new IntersectionObserver(([entry]) => setScrolled(!entry.isIntersecting), {
+        threshold: 0,
+      });
+      io.observe(el);
+    }
+    window.addEventListener("scroll", update, { passive: true });
+    window.addEventListener("resize", update, { passive: true });
+    return () => {
+      io?.disconnect();
+      window.removeEventListener("scroll", update);
+      window.removeEventListener("resize", update);
+    };
+  }, []);
+  const barOpen = !scrolled || barPinnedOpen;
 
   const patch = useCallback(
     (p: Partial<EconomicsInputs>) => setInputs((prev) => ({ ...prev, ...p })),
@@ -1541,7 +1967,9 @@ function EconomicsPage() {
           */}
           <div className="flex flex-wrap justify-center gap-2 pt-2">
             {[
+              { href: "#modules", label: "Modules", q: "Where does the operator take a share?" },
               { href: "#event", label: "Event", q: "Which nights make money?" },
+              { href: "#auction", label: "Draft", q: "How is a roster bought?" },
               { href: "#house", label: "Franchise", q: "What is the return on a bid?" },
               { href: "#artist", label: "Artist", q: "What does a musician take home?" },
               { href: "#league", label: "League", q: "What does a season generate?" },
@@ -1560,6 +1988,9 @@ function EconomicsPage() {
         </div>
       </section>
 
+      {/* Sentinel: once this scrolls out of view the control bar condenses. */}
+      <div ref={sentinelRef} aria-hidden="true" className="h-px w-full" />
+
       {/* ================= GLOBAL INPUT BAR ================= */}
       {/*
         Pinned on desktop so an investor can move an input while looking at any
@@ -1567,7 +1998,28 @@ function EconomicsPage() {
         well over half the viewport, which would leave almost no room to read.
       */}
       <section className="relative lg:sticky lg:top-16 z-40 border-b border-border bg-background/85 backdrop-blur-xl">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 py-4 space-y-4">
+        {/* Condensed row — the whole slice in one line once you have scrolled past */}
+        {!barOpen && (
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 py-2.5 flex items-center gap-3">
+            <button
+              type="button"
+              onClick={() => setBarPinnedOpen(true)}
+              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border border-primary/40 bg-primary/10 text-[11px] font-bold text-primary-glow hover:bg-primary/20 transition cursor-pointer shrink-0"
+            >
+              <Filter size={11} /> Slice
+              <ChevronDown size={11} />
+            </button>
+            <p className="text-[11px] text-muted-foreground truncate min-w-0 flex-1">
+              {scope.breadcrumb.join(" · ")}
+            </p>
+            <span className="text-[10px] uppercase tracking-wider font-bold text-white tabular-nums shrink-0 hidden sm:block">
+              {m.totalBands} {m.totalBands === 1 ? "band" : "bands"} · {m.totalFixtures}{" "}
+              {m.totalFixtures === 1 ? "night" : "nights"} · {inrCompact(m.operatorNet)}
+            </span>
+          </div>
+        )}
+
+        <div className={`mx-auto max-w-7xl px-4 sm:px-6 py-4 space-y-4 ${barOpen ? "" : "hidden"}`}>
           {/* Presets */}
           <div className="flex flex-wrap items-center gap-2">
             <span className="text-[10px] uppercase tracking-wider font-bold text-muted-foreground flex items-center gap-1.5 mr-1">
@@ -1607,6 +2059,16 @@ function EconomicsPage() {
                 className="inline-flex items-center gap-1 text-[11px] font-semibold text-muted-foreground hover:text-white transition cursor-pointer"
               >
                 <RotateCcw size={11} /> Reset
+              </button>
+            )}
+            {scrolled && (
+              <button
+                type="button"
+                onClick={() => setBarPinnedOpen(false)}
+                title="Collapse the control bar"
+                className="inline-flex items-center gap-1 text-[11px] font-semibold text-muted-foreground hover:text-white transition cursor-pointer"
+              >
+                <ChevronUp size={12} /> Collapse
               </button>
             )}
           </div>
@@ -1679,16 +2141,23 @@ function EconomicsPage() {
               <span className="font-semibold text-white">{scope.fixture.label}:</span>{" "}
               {scope.fixture.note}{" "}
               {scope.city
-                ? `${scope.city.city} carries ${(scope.cityShare * 100).toFixed(0)}% of the zone calendar, at ${scope.city.priceIdx.toFixed(2)}\u00d7 ticket price and ${scope.city.costIdx.toFixed(2)}\u00d7 staging cost.`
+                ? `${scope.city.city} carries ${(scope.cityShare * 100).toFixed(0)}% of the zone calendar, at ${scope.city.priceIdx.toFixed(2)}× ticket price and ${scope.city.costIdx.toFixed(2)}× staging cost.`
                 : `Averaged across ${scope.zone.hubCities.length} hub cities, weighted by each one's share of the calendar.`}{" "}
               {scope.season.id !== "s1" && scope.season.note}
             </p>
           </div>
 
-          {/* Base parameters */}
+          {/*
+            Base parameters.
+
+            Only the inputs the slicer does NOT already determine are sliders.
+            Fixtures per band and the number of franchises are decided by the
+            Fixture / House / Band dimensions above, so they appear here as
+            read-outs rather than as controls that silently do nothing.
+          */}
           <div className="grid sm:grid-cols-2 lg:grid-cols-5 gap-x-5 gap-y-3">
             <Slider
-              label="Ticket Price"
+              label="Ticket Price (base)"
               value={inputs.ticketPrice}
               min={99}
               max={1499}
@@ -1697,12 +2166,12 @@ function EconomicsPage() {
               format={(v) => inr(v)}
               hint={
                 scopedInputs.ticketPrice !== inputs.ticketPrice
-                  ? `${inr(scopedInputs.ticketPrice)} in this market`
-                  : undefined
+                  ? `× ${scope.priceMult.toFixed(2)} market index = ${inr(scopedInputs.ticketPrice)} used`
+                  : "Market index 1.00 — used as-is"
               }
             />
             <Slider
-              label="Attendance (solo night)"
+              label="Attendance (base, solo night)"
               value={inputs.attendance}
               min={40}
               max={1200}
@@ -1711,36 +2180,30 @@ function EconomicsPage() {
               format={(v) => `${v}`}
               hint={
                 scopedInputs.attendance !== inputs.attendance
-                  ? `${scopedInputs.attendance} in this market`
-                  : undefined
+                  ? `× ${scope.attendanceMult.toFixed(2)} market index = ${scopedInputs.attendance} used`
+                  : "Market index 1.00 — used as-is"
               }
             />
-            <Slider
-              label="Fixtures / Band / Season"
-              value={inputs.showsPerBand}
-              min={4}
-              max={24}
-              step={1}
-              onChange={(v) => patch({ showsPerBand: v })}
-              format={(v) => `${v}`}
-              hint={`Slicer sets ${scopedInputs.showsPerBand} for ${scope.fixture.label.toLowerCase()}`}
+            <Derived
+              label="Fixtures / Band"
+              value={`${scopedInputs.showsPerBand}`}
+              from={scope.fixture.label}
             />
-            <Slider
-              label="Franchises"
-              value={inputs.numFranchises}
-              min={2}
-              max={12}
-              step={1}
-              onChange={(v) => patch({ numFranchises: v })}
-              format={(v) => `${v}`}
-              hint={`Slicer sets ${scopedInputs.numFranchises}`}
+            <Derived
+              label="Houses · Bands each"
+              value={`${scopedInputs.numFranchises} × ${scopedInputs.bandsPerFranchise}`}
+              from={`${m.totalBands} bands in scope`}
             />
             <NumberField
               label="Winning Bid / Franchise"
               value={inputs.winningBid}
               step={10000}
               onChange={(v) => patch({ winningBid: v })}
-              hint={`${m.totalBands} bands in scope${scope.bidMult !== 1 ? ` \u00b7 ${inr(scopedInputs.winningBid)} at ${scope.season.label}` : ""}`}
+              hint={
+                scope.bidMult !== 1
+                  ? `× ${scope.bidMult.toFixed(2)} at ${scope.season.label} = ${inr(scopedInputs.winningBid)}`
+                  : "Used as-is at Season 1"
+              }
             />
           </div>
 
@@ -2045,6 +2508,8 @@ function EconomicsPage() {
         </div>
       </section>
 
+      <TwoModules />
+
       <EventEconomics key={`ev-${sliceKey}`} scope={scope} />
 
       {/* ================= FRANCHISE RETURN ================= */}
@@ -2216,6 +2681,8 @@ function EconomicsPage() {
           </div>
         </div>
       </section>
+
+      <AuctionPurse />
 
       <PortfolioROI
         key={`ph-${sliceKey}`}
