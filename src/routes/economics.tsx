@@ -1110,160 +1110,6 @@ function Row({
 }
 
 /* ------------------------------------------------------------------ *
- * Franchise portfolio — the cost side of a production house
- * ------------------------------------------------------------------ */
-
-function PortfolioROI({
-  bands,
-  bid,
-  seasonReturn,
-  scope,
-}: {
-  bands: number;
-  bid: number;
-  seasonReturn: number;
-  scope: Scope;
-}) {
-  const [devScale, setDevScale] = useState(100);
-  const perBand = Math.round(HOUSE_INVESTMENT_PER_BAND * (devScale / 100));
-  const development = perBand * bands;
-  const capital = bid + development;
-  const recoveryPct = capital > 0 ? (seasonReturn / capital) * 100 : 0;
-  const portfolio = useMemo(() => computePortfolio(bands, perBand), [bands, perBand]);
-
-  return (
-    <section className="mx-auto max-w-7xl px-4 sm:px-6 py-14">
-      <SectionHeading
-        eyebrow="Franchise Cost Base"
-        title="What a house spends before it earns anything"
-        sub={`A return multiple that ignores the development spend is not a return. This is the other half of the franchise ledger, scoped to ${scope.breadcrumb[0].toLowerCase()} in ${scope.zone.shortName} — and the reason a house signs a roster rather than one act.`}
-      />
-
-      <div className="grid lg:grid-cols-5 gap-5">
-        {/* Investment lines */}
-        <div className="lg:col-span-3 bpl-card p-5 border border-border bg-surface/40 space-y-4">
-          <div className="flex flex-wrap items-end justify-between gap-3">
-            <h3 className="text-sm font-bold text-white flex items-center gap-2">
-              <Building2 size={14} className="text-cyan-400" /> Development Spend
-            </h3>
-            <div className="w-48">
-              <Slider
-                label="Spend level"
-                value={devScale}
-                min={40}
-                max={200}
-                step={5}
-                onChange={setDevScale}
-                format={(v) => `${v}%`}
-              />
-            </div>
-          </div>
-
-          <div className="space-y-1.5 text-xs">
-            {HOUSE_INVESTMENT.map((line) => (
-              <Row
-                key={line.id}
-                label={line.label}
-                value={inr(Math.round(line.perBand * (devScale / 100)))}
-                note={line.detail}
-                muted
-              />
-            ))}
-            <div className="border-t border-border/60 pt-2">
-              <Row label="Per band, per season" value={inr(perBand)} bold />
-            </div>
-            <Row
-              label={`Across ${bands} ${bands === 1 ? "band" : "bands"}`}
-              value={inr(development)}
-              bold
-            />
-            <Row label="Franchise bid" value={inr(bid)} muted />
-            <div className="border-t border-border/60 pt-2">
-              <Row label="Total capital deployed" value={inr(capital)} bold accent="text-cyan-300" />
-            </div>
-          </div>
-        </div>
-
-        {/* Two lenses */}
-        <div className="lg:col-span-2 space-y-5">
-          <div className="bpl-card p-5 border border-emerald-500/25 bg-emerald-500/5 space-y-3">
-            <div className="flex items-center gap-2">
-              <Wallet size={14} className="text-emerald-400" />
-              <h3 className="text-sm font-bold text-white">Lens 1 — Cash, this season</h3>
-            </div>
-            <div className="space-y-2 text-xs">
-              <Row label="Capital deployed" value={inr(capital)} muted />
-              <Row label="Season revenue share" value={inr(seasonReturn)} muted />
-              <div className="border-t border-border/60 pt-2">
-                <Row
-                  label="Capital recovered"
-                  value={`${recoveryPct.toFixed(0)}%`}
-                  bold
-                  accent={recoveryPct >= 100 ? "text-emerald-300" : "text-amber-300"}
-                />
-              </div>
-            </div>
-            <p className="text-[10px] text-muted-foreground leading-relaxed border-t border-border/40 pt-3">
-              {recoveryPct >= 100
-                ? "The season clears the full outlay before catalogue value is counted at all."
-                : "The season does not clear the full outlay on its own — which is the honest position. The balance has to come from the catalogue, which keeps earning after the season ends."}
-            </p>
-          </div>
-
-          <div className="bpl-card p-5 border border-purple-500/25 bg-purple-500/5 space-y-3">
-            <div className="flex items-center gap-2">
-              <FlaskConical size={14} className="text-purple-400" />
-              <h3 className="text-sm font-bold text-white">Lens 2 — The portfolio</h3>
-            </div>
-            <p className="text-[11px] text-muted-foreground leading-relaxed">
-              {bands > 1
-                ? `Illustrative outcome spread across a ${bands}-band roster over the life of the catalogue. Most of the value sits in one position — and nobody can pick which one in advance.`
-                : "Illustrative outcome spread over the life of the catalogue, shown per position."}
-            </p>
-            {bands < PORTFOLIO_OUTCOMES.length && (
-              <div className="flex gap-2 p-3 rounded-lg border border-amber-500/30 bg-amber-500/5">
-                <AlertTriangle size={13} className="text-amber-400 shrink-0 mt-0.5" />
-                <p className="text-[10px] text-amber-100/80 leading-relaxed">
-                  {bands === 1 ? "A one-band franchise has no portfolio at all" : `A ${bands}-band roster is thinly diversified`}
-                  {" — it is a single bet on a single act. The Stage 2 structure signs "}
-                  {PORTFOLIO_OUTCOMES.length} bands per house precisely so one write-down does not
-                  take the franchise with it. Switch to the{" "}
-                  <span className="font-semibold text-amber-200">Stage 2 · AP/TS</span> scenario
-                  above to model it properly.
-                </p>
-              </div>
-            )}
-            <div className="space-y-1.5 text-xs">
-              {portfolio.rows.map((r) => (
-                <Row
-                  key={r.outcome.label}
-                  label={`${r.outcome.label} — ${r.outcome.returnMultiple}×`}
-                  value={inr(Math.round(r.returned))}
-                  note={`${r.bands % 1 === 0 ? r.bands : r.bands.toFixed(2)} of ${bands} · ${r.outcome.detail}`}
-                  muted
-                />
-              ))}
-              <div className="border-t border-border/60 pt-2">
-                <Row
-                  label="Portfolio ROI on development"
-                  value={`${portfolio.roiPct >= 0 ? "+" : ""}${portfolio.roiPct.toFixed(0)}%`}
-                  bold
-                  accent={portfolio.roiPct >= 0 ? "text-purple-300" : "text-rose-300"}
-                />
-              </div>
-            </div>
-            <p className="text-[10px] text-muted-foreground leading-relaxed border-t border-border/40 pt-3">
-              Outcome multiples are modelled, not observed — they describe the shape of
-              entertainment returns, not a forecast for any particular act.
-            </p>
-          </div>
-        </div>
-      </div>
-    </section>
-  );
-}
-
-/* ------------------------------------------------------------------ *
  * Artist Index — who is becoming valuable, as opposed to who is winning
  * ------------------------------------------------------------------ */
 
@@ -1602,7 +1448,7 @@ function TwoModules() {
  * The auction purse — a house building its roster inside the rules
  * ------------------------------------------------------------------ */
 
-function AuctionPurse() {
+function AuctionPurse({ seasonReturn }: { seasonReturn: number }) {
   const [bids, setBids] = useState<number[]>(DEFAULT_BIDS);
   /** Caps are planning regulations, so they are editable like everything else. */
   const [capOverrides, setCapOverrides] = useState<Record<string, number>>({});
@@ -1629,6 +1475,15 @@ function AuctionPurse() {
     setBids((prev) => prev.map((b, idx) => (idx === i ? Math.max(0, v) : b)));
 
   const spentPct = Math.min(100, (purse.spent / AUCTION.purse) * 100);
+
+  // Both lenses read the SAME envelope, so the page can no longer state two
+  // different totals for what a house spends in a season.
+  const recoveryPct = commitment.total > 0 ? (seasonReturn / commitment.total) * 100 : 0;
+  const perBandCapital = Math.round(commitment.total / AUCTION.bandsRequired);
+  const portfolio = useMemo(
+    () => computePortfolio(AUCTION.bandsRequired, perBandCapital),
+    [perBandCapital],
+  );
 
   return (
     <section id="auction" className="mx-auto max-w-7xl px-4 sm:px-6 py-14 scroll-mt-24">
@@ -1813,6 +1668,105 @@ function AuctionPurse() {
               thing the price changes is the floor under the artist.
             </p>
           </div>
+        </div>
+      </div>
+
+      {/* Two lenses on the same envelope — one place, not two competing ones */}
+      <div className="grid lg:grid-cols-2 gap-5 mt-5">
+        <div className="bpl-card p-5 border border-emerald-500/25 bg-emerald-500/5 space-y-3">
+          <div className="flex items-center gap-2">
+            <Wallet size={14} className="text-emerald-400" />
+            <h3 className="text-sm font-bold text-white">Lens 1 — Cash, this season</h3>
+          </div>
+          <div className="space-y-2 text-xs">
+            <Row label="Total committed (envelope above)" value={inr(commitment.total)} muted />
+            <Row label="Season revenue share" value={inr(seasonReturn)} muted />
+            <div className="border-t border-border/60 pt-2">
+              <Row
+                label="Capital recovered"
+                value={`${recoveryPct.toFixed(0)}%`}
+                bold
+                accent={recoveryPct >= 100 ? "text-emerald-300" : "text-amber-300"}
+              />
+            </div>
+          </div>
+          <p className="text-[10px] text-muted-foreground leading-relaxed border-t border-border/40 pt-3">
+            {recoveryPct >= 100
+              ? "The season clears the full outlay before catalogue value is counted at all."
+              : "The season does not clear the full outlay on its own — the honest position. The balance has to come from the catalogue, which keeps earning after the season ends, and from a second season where the purse is not paid again."}
+          </p>
+        </div>
+
+        <div className="bpl-card p-5 border border-purple-500/25 bg-purple-500/5 space-y-3">
+          <div className="flex items-center gap-2">
+            <FlaskConical size={14} className="text-purple-400" />
+            <h3 className="text-sm font-bold text-white">Lens 2 — The portfolio</h3>
+          </div>
+          <div className="rounded-lg border border-border/60 bg-surface/40 p-2.5">
+            <p className="text-[10px] text-muted-foreground leading-relaxed">
+              <span className="font-semibold text-white">Not prize money.</span> These are
+              illustrative lifetime returns on the capital placed behind each band — catalogue,
+              touring and brand value over the life of the songs. Prize money is separate: a{" "}
+              {inrCompact(CENTRAL_POOLS[0].amount)} central pool split {PRIZE_SPLIT.band}/
+              {PRIZE_SPLIT.productionHouse} band to house.
+            </p>
+          </div>
+          <p className="text-[11px] text-muted-foreground leading-relaxed">
+            Spread across the {AUCTION.bandsRequired}-band roster at{" "}
+            {inr(perBandCapital)} committed per band. Most of the value sits in one position, and
+            nobody can pick which one in advance.
+          </p>
+          <div className="space-y-1.5 text-xs">
+            {portfolio.rows.map((r) => (
+              <Row
+                key={r.outcome.label}
+                label={`${r.outcome.label} — ${r.outcome.returnMultiple}×`}
+                value={inr(Math.round(r.returned))}
+                note={r.outcome.detail}
+                muted
+              />
+            ))}
+            <div className="border-t border-border/60 pt-2">
+              <Row
+                label="Portfolio return on committed capital"
+                value={`${portfolio.roiPct >= 0 ? "+" : ""}${portfolio.roiPct.toFixed(0)}%`}
+                bold
+                accent={portfolio.roiPct >= 0 ? "text-purple-300" : "text-rose-300"}
+              />
+            </div>
+          </div>
+          <p className="text-[10px] text-muted-foreground leading-relaxed border-t border-border/40 pt-3">
+            Outcome multiples are modelled, not observed — they describe the shape of entertainment
+            returns, not a forecast for any particular act.
+          </p>
+        </div>
+      </div>
+
+      {/* Creative allocation breakdown */}
+      <div className="mt-5 bpl-card p-5 border border-border bg-surface/40 space-y-3">
+        <div className="flex flex-wrap items-baseline justify-between gap-2">
+          <h3 className="text-sm font-bold text-white flex items-center gap-2">
+            <Building2 size={14} className="text-cyan-400" /> What the creative allocation buys
+          </h3>
+          <span className="text-sm font-bold text-primary-glow tabular-nums">
+            {inr(HOUSE_INVESTMENT_PER_BAND)} / band
+          </span>
+        </div>
+        <p className="text-[10px] text-muted-foreground leading-relaxed">
+          A breakdown of the allocation line in the envelope above — not a second budget. The house
+          moves money between these however it wants; unused budget rolls forward to that band&apos;s
+          next release and never to a different band.
+        </p>
+        <div className="grid sm:grid-cols-2 lg:grid-cols-5 gap-3">
+          {HOUSE_INVESTMENT.map((line) => (
+            <div key={line.id} className="border border-border/50 rounded-lg p-3 bg-surface/30">
+              <p className="text-sm font-display font-extrabold text-white tabular-nums">
+                {inr(line.perBand)}
+              </p>
+              <p className="text-[10px] font-bold text-white mt-0.5">{line.label}</p>
+              <p className="text-[10px] text-muted-foreground leading-snug mt-1">{line.detail}</p>
+            </div>
+          ))}
         </div>
       </div>
 
@@ -2687,51 +2641,7 @@ function EconomicsPage() {
             </div>
           </div>
 
-          <div className="grid md:grid-cols-2 gap-6">
-            <div className="bpl-card p-5 border border-border/80 bg-surface/50 space-y-4">
-              <h3 className="text-sm font-bold text-white flex items-center gap-1.5">
-                <Building2 size={15} className="text-rose-400" /> Capital At Risk
-              </h3>
-
-              <div className="flex justify-between items-baseline">
-                <span className="text-sm text-white font-semibold">Winning Bid</span>
-                <span className="text-2xl font-display font-extrabold text-rose-300 tabular-nums">
-                  {inr(scopedInputs.winningBid)}
-                </span>
-              </div>
-              <p className="text-[11px] text-muted-foreground leading-relaxed">
-                Funds music and video production for the{" "}
-                {scopedInputs.bandsPerFranchise > 1
-                  ? `${scopedInputs.bandsPerFranchise} bands the house signs`
-                  : "band the house signs"}
-                , plus its own overhead. It is the only figure the franchise carries.
-              </p>
-
-              <div className="pt-3 border-t border-border/50 space-y-1.5">
-                <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
-                  Funded separately by the title sponsor
-                </p>
-                <p className="text-[10px] text-muted-foreground leading-relaxed">
-                  Event marketing, travel and on-ground logistics sit in the title sponsor's event
-                  budget, not on the franchise's balance sheet. Contracted event managers are paid
-                  out of the operator's {EVENT_SPLIT.operator}% rather than taking a fourth cut.
-                </p>
-              </div>
-
-              <div className="pt-3 border-t border-border/50 space-y-1.5">
-                <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
-                  Break-even
-                </p>
-                <p className="text-[10px] text-muted-foreground leading-relaxed">
-                  On gate alone the house recovers {m.phCapitalRecoveredPct.toFixed(0)}% of the bid
-                  this season. The remaining{" "}
-                  {inr(Math.max(0, inputs.winningBid - m.phGateBackedTotal))} has to come from rights
-                  income — or from the second season, where the catalogue is already built and the
-                  bid is not paid again.
-                </p>
-              </div>
-            </div>
-
+          <div className="grid gap-6">
             <div className="bpl-card p-5 border border-emerald-500/30 bg-emerald-500/5 space-y-4">
               <h3 className="text-sm font-bold text-white flex items-center gap-1.5">
                 <TrendingUp size={15} className="text-emerald-400" /> Season Return
@@ -2801,15 +2711,8 @@ function EconomicsPage() {
         </div>
       </section>
 
-      <AuctionPurse />
+      <AuctionPurse seasonReturn={m.phSeasonTotal} />
 
-      <PortfolioROI
-        key={`ph-${sliceKey}`}
-        bands={scopedInputs.bandsPerFranchise}
-        bid={scopedInputs.winningBid}
-        seasonReturn={m.phSeasonTotal}
-        scope={scope}
-      />
 
       {/* ================= ARTIST EARNINGS ================= */}
       <section id="artist" className="mx-auto max-w-7xl px-4 sm:px-6 py-14 scroll-mt-24">

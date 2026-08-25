@@ -422,3 +422,86 @@ export const NATIONAL_LADDER: LadderStage[] = [
     detail: "One night, one champion, packaged as the broadcast centrepiece of the year.",
   },
 ];
+
+/* ------------------------------------------------------------------ *
+ * Release rotation
+ *
+ * Two rules drive it: a band waits a full cycle between its own releases, and
+ * the houses rotate so no two consecutive releases come from the same stable.
+ *
+ * Those two rules turn out to be the same rule seen from different ends. A
+ * four-band house at a 60-day band cycle releases every 60/4 = 15 days exactly,
+ * which is why the 15-day house cadence and the two-month band gap agree
+ * without anything having to be forced.
+ * ------------------------------------------------------------------ */
+
+export const BAND_RELEASE_CYCLE_DAYS = 60;
+
+export interface ReleaseCadence {
+  zone: NationalZone;
+  bands: number;
+  /** Days between one band's own releases. */
+  bandCycleDays: number;
+  /** Days between releases from any single house. */
+  houseCadenceDays: number;
+  /** Days between releases anywhere in the zone. */
+  zoneCadenceDays: number;
+  perWeek: number;
+}
+
+export function releaseCadence(
+  zone: NationalZone,
+  cycleDays = BAND_RELEASE_CYCLE_DAYS,
+): ReleaseCadence {
+  const bands = zone.houses * zone.bandsPerHouse;
+  const zoneCadenceDays = cycleDays / bands;
+  return {
+    zone,
+    bands,
+    bandCycleDays: cycleDays,
+    houseCadenceDays: cycleDays / zone.bandsPerHouse,
+    zoneCadenceDays,
+    perWeek: 7 / zoneCadenceDays,
+  };
+}
+
+export const RELEASE_CADENCE = NATIONAL_ZONES.map((z) => releaseCadence(z));
+
+export const NATIONAL_RELEASE_CADENCE = {
+  bands: TOTAL_BANDS,
+  everyDays: BAND_RELEASE_CYCLE_DAYS / TOTAL_BANDS,
+  perWeek: (7 * TOTAL_BANDS) / BAND_RELEASE_CYCLE_DAYS,
+};
+
+export interface RotationSlot {
+  day: number;
+  houseNumber: number;
+  bandNumber: number;
+  label: string;
+}
+
+/**
+ * One full cycle of a zone's rotation. Houses are interleaved rather than run
+ * back to back, so consecutive releases never come from the same house.
+ */
+export function buildReleaseRotation(
+  zone: NationalZone,
+  cycleDays = BAND_RELEASE_CYCLE_DAYS,
+): RotationSlot[] {
+  const bands = zone.houses * zone.bandsPerHouse;
+  const step = cycleDays / bands;
+  const slots: RotationSlot[] = [];
+  for (let i = 0; i < bands; i += 1) {
+    // Cycle the house on every slot and advance the band only after a full
+    // pass, so the rotation reads H1B1, H2B1, H3B1 … then H1B2, H2B2 …
+    const houseNumber = (i % zone.houses) + 1;
+    const bandNumber = Math.floor(i / zone.houses) + 1;
+    slots.push({
+      day: Math.round(i * step),
+      houseNumber,
+      bandNumber,
+      label: `H${houseNumber}·B${bandNumber}`,
+    });
+  }
+  return slots;
+}

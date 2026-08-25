@@ -17,6 +17,7 @@ import {
   Swords,
   Network,
   ChevronRight,
+  CalendarDays,
   Ticket,
   GraduationCap,
 
@@ -40,6 +41,8 @@ import {
   SEASON_PHASES,
   SEASON_WEEKS,
   COMPETITIVE_WEEKS,
+  ANNUAL_CYCLE_WEEKS,
+  COMPETITION_WEEKENDS,
   RELEASE_CYCLE,
   RELEASE_CYCLE_DAYS,
   RELEASE_ELIGIBILITY,
@@ -178,9 +181,10 @@ function LeaguePage() {
           <div className="bpl-card p-8 md:p-12 space-y-6 border-primary/20 bg-primary/3 text-left">
             <h3 className="text-2xl font-display font-extrabold text-white">What is the League?</h3>
             <p className="text-xs text-muted-foreground leading-relaxed">
-              A season runs about <strong>{SEASON_WEEKS} weeks</strong> — roughly six months, of which{" "}
-              {COMPETITIVE_WEEKS} are competitive and the first three are onboarding and
-              pre-production. Rather than chasing one-off gigs, a band enters a fixed calendar with a
+              The regular season runs <strong>{COMPETITION_WEEKENDS} competition weekends</strong>,
+              23 January to 12 June. AP/TS is one of five regional leagues playing those same
+              weekends simultaneously, so no two zones compete for the same audience on the same
+              night. Rather than chasing one-off gigs, a band enters a fixed calendar with a
               production house financing the work behind it.
             </p>
             <p className="text-xs text-muted-foreground leading-relaxed">
@@ -193,7 +197,7 @@ function LeaguePage() {
             </p>
             <div className="grid gap-4 sm:grid-cols-4 pt-4">
               {[
-                { v: `${SEASON_WEEKS} Weeks`, l: "Season Length" },
+                { v: `${COMPETITION_WEEKENDS} Weekends`, l: "Regular Season" },
                 { v: `${STAGE_2_SEASON_FIXTURES} Nights`, l: "Live Fixtures" },
                 { v: `${STAGE_2_MATRIX.totalBands} Bands`, l: "Across 5 Houses" },
                 { v: `Top ${STAGE_2_FINALS.finalists}`, l: "Finals Qualifiers" },
@@ -571,7 +575,24 @@ function LeaguePage() {
             ))}
           </div>
 
-          <div className="mt-6 grid gap-4 md:grid-cols-2">
+          <div className="mt-6 bpl-card p-5 border-primary/20 bg-primary/5 flex gap-3 text-left">
+            <CalendarDays size={16} className="text-primary-glow shrink-0 mt-0.5" />
+            <p className="text-[11px] text-muted-foreground leading-relaxed">
+              <span className="font-semibold text-white">How this sits in the calendar.</span> The
+              national scheduler solves for the {STAGE_2_MATRIX.individualShowsPerBand} individual
+              fixtures — that is the number that has to fit {COMPETITION_WEEKENDS} weekends across
+              five zones at once. Cross nights ride inside a house's own weekends, since both bands
+              are already in town when their house is on. Whether a cross night consumes one of a
+              band's eight slots or sits on top of them is still open, and it changes how many
+              appearances a band actually makes: see the{" "}
+              <Link to="/season" className="text-primary-glow font-semibold hover:underline">
+                season page
+              </Link>{" "}
+              for the capacity working.
+            </p>
+          </div>
+
+          <div className="mt-4 grid gap-4 md:grid-cols-2">
             <div className="bpl-card p-5 border-amber-500/20 bg-amber-500/5 flex gap-3 text-left">
               <Swords size={16} className="text-amber-400 shrink-0 mt-0.5" />
               <p className="text-[11px] text-muted-foreground leading-relaxed">
@@ -864,9 +885,14 @@ function LeaguePage() {
             <h2 className="text-xs uppercase tracking-widest text-primary-glow font-bold">The Schedule</h2>
             <h3 className="text-3xl font-display font-bold text-white">Season Calendar</h3>
             <p className="text-xs text-muted-foreground leading-relaxed">
-              {SEASON_WEEKS} weeks end to end. {COMPETITIVE_WEEKS} of them are competitive; the first
-              three are onboarding and pre-production, because a band that has not rehearsed or
-              written anything yet has nothing to compete with.
+              The league plays {COMPETITION_WEEKENDS} weekends between January and June, but the
+              year does not stop there — {ANNUAL_CYCLE_WEEKS} weeks carry a band from the December
+              draft through regional finals, the national championship and the festival circuit. The
+              full national architecture, including the fixture capacity maths, is on the{" "}
+              <Link to="/season" className="text-primary-glow font-semibold hover:underline">
+                season page
+              </Link>
+              .
             </p>
           </div>
 
@@ -876,7 +902,7 @@ function LeaguePage() {
               <div
                 key={phase.phase}
                 title={`${phase.title} — ${phase.weeks}`}
-                style={{ width: `${(phase.weekCount / SEASON_WEEKS) * 100}%` }}
+                style={{ width: `${(phase.weekCount / ANNUAL_CYCLE_WEEKS) * 100}%` }}
                 className={
                   ["bg-slate-600", "bg-primary", "bg-cyan-500", "bg-purple-500", "bg-amber-500"][
                     idx % 5

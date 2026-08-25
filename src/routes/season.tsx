@@ -46,6 +46,10 @@ import {
   QUALIFIERS_PER_ZONE,
   generateBandFixtures,
   minGapDays,
+  BAND_RELEASE_CYCLE_DAYS,
+  RELEASE_CADENCE,
+  NATIONAL_RELEASE_CADENCE,
+  buildReleaseRotation,
 } from "@/data/national-season";
 
 export const Route = createFileRoute("/season")({
@@ -421,6 +425,137 @@ function SeasonPage() {
                   <p className="text-[10px] text-muted-foreground leading-relaxed">{r.rationale}</p>
                 </Card>
               ))}
+            </div>
+          </section>
+
+          {/* ---------------- RELEASE ROTATION ---------------- */}
+          <section className="py-14 space-y-6">
+            <div className="space-y-2">
+              <p className="text-[11px] uppercase tracking-[0.2em] text-primary-glow font-bold flex items-center gap-2">
+                <RefreshCw size={13} /> Release Rotation
+              </p>
+              <h2 className="text-2xl sm:text-3xl font-display font-bold text-white">
+                Two rules that turn out to be the same rule
+              </h2>
+              <p className="text-sm text-muted-foreground max-w-3xl leading-relaxed">
+                A band waits {BAND_RELEASE_CYCLE_DAYS} days between its own releases, and houses
+                rotate so no two consecutive releases come from the same stable. Those constraints
+                agree exactly: a four-band house at a {BAND_RELEASE_CYCLE_DAYS}-day band cycle
+                releases every {BAND_RELEASE_CYCLE_DAYS}/4 ={" "}
+                {RELEASE_CADENCE[0].houseCadenceDays} days without anything being forced.
+              </p>
+            </div>
+
+            <div className="overflow-x-auto">
+              <table className="w-full text-xs border-collapse min-w-[42rem]">
+                <thead>
+                  <tr className="border-b border-border bg-secondary/30 text-left">
+                    <th className="py-2.5 px-3 font-bold text-primary-glow uppercase tracking-wider text-[10px]">Zone</th>
+                    <th className="py-2.5 px-3 font-bold text-muted-foreground uppercase tracking-wider text-[10px] text-center">Bands</th>
+                    <th className="py-2.5 px-3 font-bold text-muted-foreground uppercase tracking-wider text-[10px] text-center">Band cycle</th>
+                    <th className="py-2.5 px-3 font-bold text-primary-glow uppercase tracking-wider text-[10px] text-center">House releases every</th>
+                    <th className="py-2.5 px-3 font-bold text-muted-foreground uppercase tracking-wider text-[10px] text-center">Zone releases every</th>
+                    <th className="py-2.5 px-3 font-bold text-muted-foreground uppercase tracking-wider text-[10px] text-center">Per week</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-border/40">
+                  {RELEASE_CADENCE.map((c) => (
+                    <tr key={c.zone.id} className="hover:bg-secondary/10">
+                      <td className="py-2.5 px-3 font-bold text-white">{c.zone.name}</td>
+                      <td className="py-2.5 px-3 text-center text-muted-foreground tabular-nums">{c.bands}</td>
+                      <td className="py-2.5 px-3 text-center text-muted-foreground tabular-nums">{c.bandCycleDays}d</td>
+                      <td
+                        className={`py-2.5 px-3 text-center font-bold tabular-nums ${
+                          c.houseCadenceDays === RELEASE_CADENCE[0].houseCadenceDays
+                            ? "text-emerald-300"
+                            : "text-amber-300"
+                        }`}
+                      >
+                        {c.houseCadenceDays}d
+                      </td>
+                      <td className="py-2.5 px-3 text-center text-white font-semibold tabular-nums">
+                        {c.zoneCadenceDays}d
+                      </td>
+                      <td className="py-2.5 px-3 text-center text-muted-foreground tabular-nums">
+                        {c.perWeek.toFixed(1)}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+                <tfoot>
+                  <tr className="border-t border-border bg-primary/5">
+                    <td className="py-2.5 px-3 font-bold text-white">National</td>
+                    <td className="py-2.5 px-3 text-center font-bold text-white tabular-nums">
+                      {NATIONAL_RELEASE_CADENCE.bands}
+                    </td>
+                    <td className="py-2.5 px-3 text-center text-muted-foreground tabular-nums">
+                      {BAND_RELEASE_CYCLE_DAYS}d
+                    </td>
+                    <td className="py-2.5 px-3 text-center text-muted-foreground">—</td>
+                    <td className="py-2.5 px-3 text-center font-extrabold text-primary-glow tabular-nums">
+                      {NATIONAL_RELEASE_CADENCE.everyDays.toFixed(1)}d
+                    </td>
+                    <td className="py-2.5 px-3 text-center font-bold text-white tabular-nums">
+                      {NATIONAL_RELEASE_CADENCE.perWeek.toFixed(1)}
+                    </td>
+                  </tr>
+                </tfoot>
+              </table>
+            </div>
+
+            <div className="bpl-card p-5 border border-amber-500/30 bg-amber-500/5 flex gap-3">
+              <AlertTriangle size={16} className="text-amber-400 shrink-0 mt-0.5" />
+              <div className="space-y-1.5">
+                <p className="text-sm font-bold text-amber-200">
+                  The target was one new song a week. The rules produce{" "}
+                  {NATIONAL_RELEASE_CADENCE.perWeek.toFixed(0)}.
+                </p>
+                <p className="text-[11px] text-muted-foreground leading-relaxed">
+                  {NATIONAL_RELEASE_CADENCE.bands} bands each releasing every{" "}
+                  {BAND_RELEASE_CYCLE_DAYS} days is one release a day nationally, and one every{" "}
+                  {RELEASE_CADENCE[0].zoneCadenceDays} days in AP/TS alone. The rotation property
+                  holds perfectly — never the same band or house twice running — but the rate is
+                  seven times the target, and releases that close together compete with each other
+                  for the same attention.
+                </p>
+                <p className="text-[11px] text-muted-foreground leading-relaxed">
+                  <span className="font-semibold text-white">Three ways out.</span> Keep the daily
+                  cadence but designate one <em>Release of the Week</em> that gets the league's
+                  channels and playlist push, letting the rest ship quietly. Or lengthen the band
+                  cycle. Or cut league-eligible releases per band and move the others outside the
+                  season. The first keeps the catalogue growing without burning the audience, and is
+                  what a label would actually do.
+                </p>
+              </div>
+            </div>
+
+            <div className="bpl-card p-5 border border-border bg-surface/40 space-y-3">
+              <div className="flex flex-wrap items-baseline justify-between gap-2">
+                <h3 className="text-sm font-bold text-white">
+                  One full rotation — {cap.zone.name}
+                </h3>
+                <span className="text-[11px] text-muted-foreground">
+                  {BAND_RELEASE_CYCLE_DAYS} days, {cap.bands} releases, no house twice in a row
+                </span>
+              </div>
+              <div className="flex flex-wrap gap-1.5">
+                {buildReleaseRotation(cap.zone).map((slot, i) => (
+                  <div
+                    key={`${slot.label}-${i}`}
+                    className="rounded-md border border-border/60 bg-surface/40 px-2 py-1.5 text-center min-w-[3.6rem]"
+                  >
+                    <p className="text-[9px] uppercase tracking-wider font-bold text-muted-foreground">
+                      Day {slot.day}
+                    </p>
+                    <p className="text-[11px] font-bold text-white tabular-nums">{slot.label}</p>
+                  </div>
+                ))}
+              </div>
+              <p className="text-[10px] text-muted-foreground leading-relaxed">
+                Houses are interleaved rather than run back to back, so consecutive releases always
+                come from different stables. After the last slot the cycle repeats and every band has
+                had its full {BAND_RELEASE_CYCLE_DAYS}-day gap.
+              </p>
             </div>
           </section>
 

@@ -292,49 +292,63 @@ export interface SeasonPhase {
   detail: string;
 }
 
+/** Competition weekends in the regular season, shared by every zone. */
+export const COMPETITION_WEEKENDS = 20;
+
+/**
+ * The calendar is now the NATIONAL one. AP/TS is a zone inside it, not a season
+ * of its own — all five regional leagues run the same weekends simultaneously,
+ * so a separate 23-week pilot calendar would have contradicted the national
+ * build the moment both were on the site. Full architecture on /season.
+ */
 export const SEASON_PHASES: SeasonPhase[] = [
   {
     phase: "Phase 0",
-    title: "Onboarding & Pre-Production",
-    weeks: "Weeks 1–3",
-    weekCount: 3,
+    title: "Draft & Pre-Season",
+    weeks: "December",
+    weekCount: 4,
     detail:
-      "Franchise draft, band contracts, rehearsal blocks and the first writing sessions. No fixtures and no points — the season is being loaded, not played.",
+      "The artist draft, contracting, rehearsal blocks and the first writing sessions. No fixtures and no points \u2014 the season is being loaded, not played.",
   },
   {
     phase: "Phase 1",
-    title: "Individual Circuit",
-    weeks: "Weeks 4–15",
-    weekCount: 12,
-    detail: `The bulk of the calendar. Each band plays its ${STAGE_2_MATRIX.individualShowsPerBand} solo nights — ${STAGE_2_STRUCTURE.ticketedSoloPerBand} ticketed, ${STAGE_2_STRUCTURE.campusSoloPerBand} campus — across the regional hubs while originals drop on a rolling schedule.`,
+    title: "Regular Season",
+    weeks: "23 Jan \u2013 12 Jun",
+    weekCount: 21,
+    detail: `${COMPETITION_WEEKENDS} competition weekends plus one recovery weekend. Each band plays its ${STAGE_2_MATRIX.individualShowsPerBand} individual fixtures inside its house's own weekends, with originals dropping on a rolling schedule.`,
   },
   {
     phase: "Phase 2",
-    title: "House Cross Phase",
-    weeks: "Weeks 16–19",
+    title: "Regional Finals",
+    weeks: "July",
     weekCount: 4,
-    detail: `Every pairing inside every house — ${STAGE_2_MATRIX.crossPairsPerHouse} nights per house, ${STAGE_2_MATRIX.categories[2].fixtures} in total. Collaborations and mashups, with the House Cup decided on cumulative points.`,
+    detail: `Each zone crowns its champion and sends its top ${5} up. Post-season shows run alongside as commercial gigs rather than fixtures.`,
   },
   {
     phase: "Phase 3",
-    title: "Finalist Rivalry",
-    weeks: "Weeks 20–22",
-    weekCount: 3,
-    detail: `The ${STAGE_2_FINALS.finalists} qualifiers play a full round robin — ${STAGE_2_FINALS.rivalryFixtures} nights that set the knockout seeding.`,
+    title: "National Championship",
+    weeks: "Aug \u2013 Oct",
+    weekCount: 13,
+    detail:
+      "Qualifiers from all five zones meet: 25 down to 10, then 5, then the final. Deliberately placed here so it never collides with the next season's draft.",
   },
   {
     phase: "Phase 4",
-    title: "Eliminator & Grand Final",
-    weeks: "Week 23",
-    weekCount: 1,
+    title: "Tours & Festival Circuit",
+    weeks: "November",
+    weekCount: 4,
     detail:
-      "Two nights, one champion. Packaged as the season's broadcast centrepiece rather than as just another fixture.",
+      "College fests, city tours, brand events and the festival season. The league acts as a booking network, not a competition \u2014 the artist year does not stop when the league does.",
   },
 ];
 
-export const SEASON_WEEKS = SEASON_PHASES.reduce((s, p) => s + p.weekCount, 0);
-/** Competitive weeks only — everything after onboarding. */
-export const COMPETITIVE_WEEKS = SEASON_WEEKS - SEASON_PHASES[0].weekCount;
+export const SEASON_WEEKS = SEASON_PHASES[1].weekCount;
+/** Competitive weeks only \u2014 the regular season, excluding the draft window. */
+export const COMPETITIVE_WEEKS = SEASON_WEEKS;
+/** The whole annual cycle, draft through festival circuit. */
+export const ANNUAL_CYCLE_WEEKS = SEASON_PHASES.reduce((s, p) => s + p.weekCount, 0);
+/** One league season per year. It is an annual competition, not a rolling one. */
+export const SEASONS_PER_YEAR = 1;
 
 /* ------------------------------------------------------------------ *
  * Original music release cycle

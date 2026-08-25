@@ -587,14 +587,22 @@ export interface HouseInvestmentLine {
   detail: string;
 }
 
+/**
+ * This is the BREAKDOWN OF THE CREATIVE ALLOCATION, not a second budget.
+ *
+ * It used to be a parallel per-band investment list that added up to a
+ * different total than the regulated envelope, so the page showed a house
+ * spending two different amounts on the same season. These lines now sum to
+ * exactly the per-band creative allocation in `regulations.ts`, and everything
+ * outside that allocation — acquisition, guarantees, marketing, mentor — is
+ * counted once, in the envelope.
+ */
 export const HOUSE_INVESTMENT: HouseInvestmentLine[] = [
-  { id: "song", label: "Song Production", perBand: 120000, detail: "Studio, session players, mixing and mastering across the season's originals." },
-  { id: "video", label: "Music Video", perBand: 150000, detail: "Shoot, edit and grade for each release the band ships." },
-  { id: "artist-dev", label: "Artist Development", perBand: 60000, detail: "Rehearsal space, vocal and instrument coaching, set design." },
-  { id: "branding", label: "Branding & Photography", perBand: 40000, detail: "Artwork, press shots, visual identity for the act." },
-  { id: "marketing", label: "Marketing & Influencers", perBand: 90000, detail: "Paid social, creator seeding and release campaigns." },
-  { id: "distribution", label: "Distribution & Admin", perBand: 25000, detail: "Distributor fees, publishing registration, contract admin." },
-  { id: "management", label: "Artist Management", perBand: 55000, detail: "Day-to-day management and tour coordination for the roster." },
+  { id: "song", label: "Music Production", perBand: 50000, detail: "Composer, producer, studio, session players, mixing and mastering." },
+  { id: "video", label: "Music Video", perBand: 50000, detail: "Director, shoot, edit and grade for each release the band ships." },
+  { id: "artwork", label: "Artwork & Distribution", perBand: 10000, detail: "Cover art, metadata, distributor fees and publishing registration." },
+  { id: "content", label: "Photography & Content", perBand: 10000, detail: "Press shots, visual identity and release assets." },
+  { id: "contingency", label: "Contingency", perBand: 5000, detail: "Held back within the band's own allocation — it never moves to another band." },
 ];
 
 export const HOUSE_INVESTMENT_PER_BAND = HOUSE_INVESTMENT.reduce((s, l) => s + l.perBand, 0);

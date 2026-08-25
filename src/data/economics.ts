@@ -18,7 +18,7 @@
  * via `soloSharePct` and `coHeadlineUplift`.
  */
 
-import { SEASON_WEEKS } from "./league-format";
+import { SEASON_WEEKS, SEASONS_PER_YEAR } from "./league-format";
 
 /**
  * Indian-format rupee string, e.g. 805950 -> "₹8,05,950".
@@ -79,7 +79,9 @@ export const CONTENT_SPLIT = { artists: 50, productionHouse: 50 } as const;
 const WEEKS_PER_MONTH = 52 / 12;
 export const SEASON_STRUCTURE = {
   seasonWeeks: SEASON_WEEKS,
-  seasonsPerYear: Math.max(1, Math.floor(52 / SEASON_WEEKS)),
+  // Stated, not divided out of 52: the league plays one regular season a year
+  // and spends the other half of the calendar on finals, touring and the draft.
+  seasonsPerYear: SEASONS_PER_YEAR,
   monthsPerSeason: SEASON_WEEKS / WEEKS_PER_MONTH,
 };
 
@@ -160,7 +162,7 @@ export const DEFAULT_INPUTS: EconomicsInputs = {
   showsPerBand: 12,
   numFranchises: 4,
   bandsPerFranchise: 1,
-  winningBid: 520000,
+  winningBid: 1000000,
   bandMembers: 5,
 
   soloSharePct: 38,
@@ -220,25 +222,25 @@ export const PRESETS: Preset[] = [
     id: "conservative",
     label: "Conservative",
     blurb: "Independent-band pricing into a smaller room — the level a new format actually opens at.",
-    patch: { soloSharePct: 40, ticketPrice: 249, attendance: 200, showsPerBand: 10, numFranchises: 4, bandsPerFranchise: 1, winningBid: 520000 },
+    patch: { soloSharePct: 40, ticketPrice: 249, attendance: 200, showsPerBand: 10, numFranchises: 4, bandsPerFranchise: 1, winningBid: 1000000 },
   },
   {
     id: "base",
     label: "Base Case",
     blurb: "The league's operating plan: a mid-scale ticketed room across a full fixture calendar.",
-    patch: { soloSharePct: 38, ticketPrice: 399, attendance: 300, showsPerBand: 12, numFranchises: 4, bandsPerFranchise: 1, winningBid: 520000 },
+    patch: { soloSharePct: 38, ticketPrice: 399, attendance: 300, showsPerBand: 12, numFranchises: 4, bandsPerFranchise: 1, winningBid: 1000000 },
   },
   {
     id: "bull",
     label: "Bull Case",
     blurb: "Format has traction — bigger rooms, higher yield, a wider franchise field.",
-    patch: { soloSharePct: 36, ticketPrice: 599, attendance: 500, showsPerBand: 14, numFranchises: 6, bandsPerFranchise: 1, winningBid: 750000 },
+    patch: { soloSharePct: 36, ticketPrice: 599, attendance: 500, showsPerBand: 14, numFranchises: 6, bandsPerFranchise: 1, winningBid: 1200000 },
   },
   {
     id: "regional",
     label: "Stage 2 · AP/TS",
     blurb: "The full regional league: 5 production houses, 4 bands each, 11 fixtures per band — 8 solo nights plus 3 house cross nights.",
-    patch: { ticketPrice: 299, attendance: 250, showsPerBand: 11, soloSharePct: 73, numFranchises: 5, bandsPerFranchise: 4, winningBid: 900000 },
+    patch: { ticketPrice: 299, attendance: 250, showsPerBand: 11, soloSharePct: 73, numFranchises: 5, bandsPerFranchise: 4, winningBid: 1000000 },
   },
 ];
 
