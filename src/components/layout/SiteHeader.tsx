@@ -11,6 +11,7 @@ const NAV = [
   { to: "/bands", label: "Bands" },
   { to: "/band-culture", label: "Band Culture" },
   { to: "/economics", label: "Economics" },
+  { to: "/season", label: "Season" },
   { to: "/handbook", label: "Handbook" },
   { to: "/events", label: "Events" },
   { to: "/venues", label: "Venues" },

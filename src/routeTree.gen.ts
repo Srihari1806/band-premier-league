@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as VenuesRouteImport } from './routes/venues'
 import { Route as SignupRouteImport } from './routes/signup'
+import { Route as SeasonRouteImport } from './routes/season'
 import { Route as ProductionHousesRouteImport } from './routes/production-houses'
 import { Route as PartnersRouteImport } from './routes/partners'
 import { Route as OnboardingRouteImport } from './routes/onboarding'
@@ -48,6 +49,11 @@ const VenuesRoute = VenuesRouteImport.update({
 const SignupRoute = SignupRouteImport.update({
   id: '/signup',
   path: '/signup',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SeasonRoute = SeasonRouteImport.update({
+  id: '/season',
+  path: '/season',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ProductionHousesRoute = ProductionHousesRouteImport.update({
@@ -207,6 +213,7 @@ export interface FileRoutesByFullPath {
   '/onboarding': typeof OnboardingRoute
   '/partners': typeof PartnersRoute
   '/production-houses': typeof ProductionHousesRoute
+  '/season': typeof SeasonRoute
   '/signup': typeof SignupRoute
   '/venues': typeof VenuesRoute
   '/admin/applications': typeof AdminApplicationsRoute
@@ -239,6 +246,7 @@ export interface FileRoutesByTo {
   '/onboarding': typeof OnboardingRoute
   '/partners': typeof PartnersRoute
   '/production-houses': typeof ProductionHousesRoute
+  '/season': typeof SeasonRoute
   '/signup': typeof SignupRoute
   '/venues': typeof VenuesRoute
   '/admin/applications': typeof AdminApplicationsRoute
@@ -272,6 +280,7 @@ export interface FileRoutesById {
   '/onboarding': typeof OnboardingRoute
   '/partners': typeof PartnersRoute
   '/production-houses': typeof ProductionHousesRoute
+  '/season': typeof SeasonRoute
   '/signup': typeof SignupRoute
   '/venues': typeof VenuesRoute
   '/admin/applications': typeof AdminApplicationsRoute
@@ -306,6 +315,7 @@ export interface FileRouteTypes {
     | '/onboarding'
     | '/partners'
     | '/production-houses'
+    | '/season'
     | '/signup'
     | '/venues'
     | '/admin/applications'
@@ -338,6 +348,7 @@ export interface FileRouteTypes {
     | '/onboarding'
     | '/partners'
     | '/production-houses'
+    | '/season'
     | '/signup'
     | '/venues'
     | '/admin/applications'
@@ -370,6 +381,7 @@ export interface FileRouteTypes {
     | '/onboarding'
     | '/partners'
     | '/production-houses'
+    | '/season'
     | '/signup'
     | '/venues'
     | '/admin/applications'
@@ -403,6 +415,7 @@ export interface RootRouteChildren {
   OnboardingRoute: typeof OnboardingRoute
   PartnersRoute: typeof PartnersRoute
   ProductionHousesRoute: typeof ProductionHousesRoute
+  SeasonRoute: typeof SeasonRoute
   SignupRoute: typeof SignupRoute
   VenuesRoute: typeof VenuesRoute
   AdminApplicationsRoute: typeof AdminApplicationsRoute
@@ -433,6 +446,13 @@ declare module '@tanstack/react-router' {
       path: '/signup'
       fullPath: '/signup'
       preLoaderRoute: typeof SignupRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/season': {
+      id: '/season'
+      path: '/season'
+      fullPath: '/season'
+      preLoaderRoute: typeof SeasonRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/production-houses': {
@@ -660,6 +680,7 @@ const rootRouteChildren: RootRouteChildren = {
   OnboardingRoute: OnboardingRoute,
   PartnersRoute: PartnersRoute,
   ProductionHousesRoute: ProductionHousesRoute,
+  SeasonRoute: SeasonRoute,
   SignupRoute: SignupRoute,
   VenuesRoute: VenuesRoute,
   AdminApplicationsRoute: AdminApplicationsRoute,
