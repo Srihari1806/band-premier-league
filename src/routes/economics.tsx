@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { PageShell } from "@/components/layout/PageShell";
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, Fragment } from "react";
 import {
   TrendingUp,
   Ticket,
@@ -23,6 +23,9 @@ import {
   ChevronDown,
   Megaphone,
   AlertTriangle,
+  Wallet,
+  Filter,
+  MapPin,
 } from "lucide-react";
 import {
   inr,
@@ -47,6 +50,45 @@ import {
   type Certainty,
   type ShowEconomics,
 } from "@/data/economics";
+import {
+  ASSUMPTIONS,
+  ASSUMPTION_CATEGORIES,
+  EVENT_PRESETS,
+  EVENT_TIERS,
+  SPONSOR_INVENTORY,
+  HOUSE_INVESTMENT,
+  HOUSE_INVESTMENT_PER_BAND,
+  ARTIST_INDEX_PILLARS,
+  DEFAULT_SPONSOR_ROI,
+  computeEventPnL,
+  computeSponsorRoi,
+  computePortfolio,
+  computeArtistIndex,
+  PORTFOLIO_OUTCOMES,
+  defaultEventInputs,
+  sponsorInventoryValue,
+  rateOf,
+  varianceOf,
+  formatRate,
+  type EventInputs,
+  type AssumptionOverrides,
+  type SponsorRoiInputs,
+} from "@/data/event-model";
+import {
+  SEASONS,
+  SLICEABLE_ZONES,
+  FIXTURE_DIMS,
+  HOUSES,
+  BAND_SLOTS,
+  DEFAULT_SELECTION,
+  resolveScope,
+  applyScope,
+  scopedEventInputs,
+  scopedSponsorInputs,
+  scopeKey,
+  type DimensionSelection,
+  type Scope,
+} from "@/data/dimensions";
 
 export const Route = createFileRoute("/economics")({
   head: () => ({
@@ -133,6 +175,42 @@ function Slider({
         className="w-full accent-primary cursor-pointer"
       />
       {hint && <p className="text-[10px] text-muted-foreground leading-snug">{hint}</p>}
+    </div>
+  );
+}
+
+/** One dimension of the slicer. Native select — six of these have to work on a phone. */
+function DimSelect({
+  label,
+  value,
+  options,
+  onChange,
+  icon,
+}: {
+  label: string;
+  value: string;
+  options: { id: string; label: string }[];
+  onChange: (v: string) => void;
+  icon?: React.ReactNode;
+}) {
+  return (
+    <div className="space-y-1 min-w-0">
+      <label className="text-[10px] uppercase tracking-wider font-bold text-muted-foreground flex items-center gap-1">
+        {icon}
+        {label}
+      </label>
+      <select
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        aria-label={label}
+        className="w-full rounded-md border border-border bg-background/70 px-2 py-1.5 text-xs font-semibold text-white focus:border-primary/60 focus:outline-none cursor-pointer"
+      >
+        {options.map((o) => (
+          <option key={o.id} value={o.id} className="bg-background text-white">
+            {o.label}
+          </option>
+        ))}
+      </select>
     </div>
   );
 }
@@ -326,6 +404,1002 @@ function ShowCard({
  * Page
  * ------------------------------------------------------------------ */
 
+/* ------------------------------------------------------------------ *
+ * Event economics — one night, costed line by line
+ *
+ * The season model above works in aggregate. This works in the only unit an
+ * operator can actually control: a single room on a single night. Every cost
+ * here is pulled from the shared assumption registry, so editing a rate in the
+ * table below moves this P&L, every preset, and nothing else.
+ * ------------------------------------------------------------------ */
+
+function EventEconomics({ scope }: { scope: Scope }) {
+  const [ev, setEv] = useState<EventInputs>(() => scopedEventInputs(scope));
+  const [overrides, setOverrides] = useState<AssumptionOverrides>({});
+  /**
+   * What a line ACTUALLY cost once a night was settled. Kept separate from the
+   * planning override on purpose: the live rate is what we expect to pay, this
+   * is what we did pay, and the gap between them is the only honest read on
+   * whether the planning assumptions are any good.
+   */
+  const [actuals, setActuals] = useState<AssumptionOverrides>({});
+  const [registryOpen, setRegistryOpen] = useState(false);
+
+  const e = useMemo(() => computeEventPnL(ev, overrides), [ev, overrides]);
+
+  const selectPreset = (id: string) => setEv(defaultEventInputs(id));
+  const dirtyRates = Object.keys(overrides).length;
+
+  return (
+    <>
+      {/* ================= EVENT P&L ================= */}
+      <section id="event" className="mx-auto max-w-7xl px-4 sm:px-6 py-14 scroll-mt-24">
+        <SectionHeading
+          eyebrow="Event Economics"
+          title="Does one night wash its own face?"
+          sub={`${scope.breadcrumb[1]} \u00b7 ${scope.city ? scope.city.city : "all cities"}. The room, the ticket and the cost stack are sized to the market in the slicer; every cost is pulled from the shared assumption registry. Change the format below to override the default room for this fixture type.`}
+        />
+
+        {/* Preset + tier selectors */}
+        <div className="flex flex-wrap items-center gap-2 mb-5">
+          <span className="text-[10px] uppercase tracking-wider font-bold text-muted-foreground flex items-center gap-1.5 mr-1">
+            <Building2 size={12} className="text-primary-glow" /> Format
+          </span>
+          {EVENT_PRESETS.map((p) => (
+            <button
+              key={p.id}
+              type="button"
+              title={p.blurb}
+              onClick={() => selectPreset(p.id)}
+              className={`px-3 py-1.5 rounded-full border text-[11px] font-bold transition cursor-pointer ${
+                ev.presetId === p.id
+                  ? "border-primary/60 bg-primary/15 text-primary-glow"
+                  : "border-border bg-secondary/40 text-muted-foreground hover:text-white hover:border-primary/40"
+              }`}
+            >
+              {p.label}
+            </button>
+          ))}
+        </div>
+
+        <div className="flex flex-wrap items-center gap-2 mb-6">
+          <span className="text-[10px] uppercase tracking-wider font-bold text-muted-foreground flex items-center gap-1.5 mr-1">
+            <Swords size={12} className="text-amber-300" /> Fixture tier
+          </span>
+          {EVENT_TIERS.map((t) => (
+            <button
+              key={t.id}
+              type="button"
+              title={`${t.note} — production spend × ${t.multiplier}`}
+              onClick={() => setEv((prev) => ({ ...prev, tierId: t.id }))}
+              className={`px-3 py-1.5 rounded-full border text-[11px] font-bold transition cursor-pointer ${
+                ev.tierId === t.id
+                  ? "border-amber-500/60 bg-amber-500/15 text-amber-200"
+                  : "border-border bg-secondary/40 text-muted-foreground hover:text-white hover:border-amber-500/40"
+              }`}
+            >
+              {t.label}
+              {t.multiplier !== 1 && (
+                <span className="ml-1 opacity-70 tabular-nums">{t.multiplier}×</span>
+              )}
+            </button>
+          ))}
+        </div>
+
+        <p className="text-xs text-muted-foreground leading-relaxed mb-6 max-w-3xl">
+          {e.preset.blurb}
+        </p>
+
+        {/* Event inputs */}
+        <div className="grid sm:grid-cols-2 lg:grid-cols-5 gap-x-5 gap-y-3 mb-8 p-4 rounded-xl border border-border bg-surface/30">
+          <Slider
+            label="Venue capacity"
+            value={ev.capacity}
+            min={50}
+            max={5000}
+            step={50}
+            onChange={(v) => setEv((p) => ({ ...p, capacity: v }))}
+            format={(v) => `${v}`}
+          />
+          <Slider
+            label="Ticket price"
+            value={ev.ticketPrice}
+            min={0}
+            max={2000}
+            step={10}
+            onChange={(v) => setEv((p) => ({ ...p, ticketPrice: v }))}
+            format={(v) => inr(v)}
+          />
+          <Slider
+            label="Occupancy"
+            value={ev.occupancyPct}
+            min={0}
+            max={100}
+            step={1}
+            onChange={(v) => setEv((p) => ({ ...p, occupancyPct: v }))}
+            format={(v) => `${v}%`}
+            hint={`${e.attendance} in the room`}
+          />
+          <Slider
+            label="Stalls sold"
+            value={ev.stalls}
+            min={0}
+            max={12}
+            step={1}
+            onChange={(v) => setEv((p) => ({ ...p, stalls: v }))}
+            format={(v) => `${v}`}
+          />
+          <Slider
+            label="Acts on the night"
+            value={ev.acts}
+            min={1}
+            max={3}
+            step={1}
+            onChange={(v) => setEv((p) => ({ ...p, acts: v }))}
+            format={(v) => (v === 1 ? "Solo" : `${v} acts`)}
+            hint={`${inr(e.bandPerAct)} per band`}
+          />
+        </div>
+
+        {/* Headline tiles */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-8">
+          <Stat
+            icon={<Ticket size={13} />}
+            value={inr(e.grossGate)}
+            label="Gross Gate"
+            hint={`${e.attendance} × ${inr(ev.ticketPrice)}`}
+            accent="text-emerald-400"
+          />
+          <Stat
+            icon={<Wallet size={13} />}
+            value={inr(e.operatorRevenue)}
+            label="Operator Revenue"
+            hint="Gate share plus ancillary"
+            accent="text-cyan-400"
+          />
+          <Stat
+            icon={<Layers size={13} />}
+            value={inr(e.costTotal)}
+            label="Cost to Stage"
+            hint={`${e.costLines.length} lines${e.tier.multiplier !== 1 ? ` at ${e.tier.multiplier}× tier` : ""}`}
+            accent="text-amber-400"
+          />
+          <Stat
+            icon={<TrendingUp size={13} />}
+            value={inr(e.contribution)}
+            label="Night Contribution"
+            hint={
+              e.contribution >= 0
+                ? `${e.contributionMarginPct.toFixed(0)}% margin`
+                : "Loss on the night"
+            }
+            accent={e.contribution >= 0 ? "text-emerald-400" : "text-rose-400"}
+          />
+        </div>
+
+        <div className="grid lg:grid-cols-3 gap-5">
+          {/* Gate waterfall */}
+          <div className="bpl-card p-5 border border-border bg-surface/40 space-y-3">
+            <h3 className="text-sm font-bold text-white flex items-center gap-2">
+              <Ticket size={14} className="text-emerald-400" /> Gate Waterfall
+            </h3>
+            <div className="space-y-2 text-xs">
+              <Row label="Gross ticket revenue" value={inr(e.grossGate)} />
+              <Row
+                label={`Ticketing & payment (${rateOf("ticketing-fee", overrides)}%)`}
+                value={`− ${inr(e.ticketingCost)}`}
+                muted
+              />
+              <div className="border-t border-border/60 pt-2">
+                <Row label="Net gate" value={inr(e.netGate)} bold />
+              </div>
+              <div className="pt-1 space-y-2">
+                <Row
+                  label={`Bands (${EVENT_SPLIT.bands}%)`}
+                  value={inr(e.bandPool)}
+                  muted
+                  note={e.acts > 1 ? `${inr(e.bandPerAct)} each across ${e.acts} acts` : undefined}
+                />
+                <Row
+                  label={`Production house (${EVENT_SPLIT.productionHouse}%)`}
+                  value={inr(e.housePool)}
+                  muted
+                />
+                <Row
+                  label={`Operator (${EVENT_SPLIT.operator}%)`}
+                  value={inr(e.operatorGateShare)}
+                  bold
+                />
+              </div>
+            </div>
+            <p className="text-[10px] text-muted-foreground leading-relaxed border-t border-border/40 pt-3">
+              The band and house shares leave the building. Only the operator line is available to
+              pay for the room, and it is the only gate line in the contribution below.
+            </p>
+          </div>
+
+          {/* Ancillary */}
+          <div className="bpl-card p-5 border border-border bg-surface/40 space-y-3">
+            <h3 className="text-sm font-bold text-white flex items-center gap-2">
+              <Megaphone size={14} className="text-cyan-400" /> Beyond the Ticket
+            </h3>
+            <div className="space-y-2 text-xs">
+              {e.ancillaryLines.map((l) => (
+                <Row
+                  key={l.label}
+                  label={l.label}
+                  value={inr(l.amount)}
+                  note={l.detail}
+                  muted={l.amount === 0}
+                />
+              ))}
+              <div className="border-t border-border/60 pt-2">
+                <Row label="Ancillary total" value={inr(e.ancillaryTotal)} bold />
+              </div>
+            </div>
+            <p className="text-[10px] text-muted-foreground leading-relaxed border-t border-border/40 pt-3">
+              These sit outside the {EVENT_SPLIT.bands}/{EVENT_SPLIT.productionHouse}/
+              {EVENT_SPLIT.operator} split entirely. On a small room they are frequently the
+              difference between a night that works and one that does not.
+            </p>
+          </div>
+
+          {/* Costs */}
+          <div className="bpl-card p-5 border border-border bg-surface/40 space-y-3">
+            <h3 className="text-sm font-bold text-white flex items-center gap-2">
+              <SlidersHorizontal size={14} className="text-amber-400" /> Cost to Stage
+            </h3>
+            <div className="space-y-1.5 text-xs max-h-[19rem] overflow-y-auto pr-1">
+              {e.costLines.map((l) => (
+                <Row key={l.label} label={l.label} value={inr(l.amount)} muted={l.amount === 0} />
+              ))}
+            </div>
+            <div className="border-t border-border/60 pt-2">
+              <Row label="Total cost" value={inr(e.costTotal)} bold />
+            </div>
+            <button
+              type="button"
+              onClick={() => setRegistryOpen((v) => !v)}
+              className="w-full inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-md border border-border bg-secondary/40 text-[11px] font-bold text-muted-foreground hover:text-white transition cursor-pointer"
+            >
+              <SlidersHorizontal size={11} />
+              {registryOpen ? "Hide" : "Edit"} rate assumptions
+              {dirtyRates > 0 && (
+                <span className="text-primary-glow">
+                  ({dirtyRates} changed)
+                </span>
+              )}
+            </button>
+          </div>
+        </div>
+
+        {/* Contribution + break-even */}
+        <div className="grid lg:grid-cols-2 gap-5 mt-5">
+          <div
+            className={`bpl-card p-6 border space-y-3 ${
+              e.contribution >= 0
+                ? "border-emerald-500/30 bg-emerald-500/5"
+                : "border-rose-500/30 bg-rose-500/5"
+            }`}
+          >
+            <h3 className="text-sm font-bold text-white">The Night, End to End</h3>
+            <div className="space-y-2 text-xs">
+              <Row label="Operator gate share" value={inr(e.operatorGateShare)} muted />
+              <Row label="Ancillary revenue" value={inr(e.ancillaryTotal)} muted />
+              <div className="border-t border-border/60 pt-2">
+                <Row label="Operator revenue" value={inr(e.operatorRevenue)} bold />
+              </div>
+              <Row label="Cost to stage" value={`− ${inr(e.costTotal)}`} muted />
+              <div className="border-t border-border/60 pt-2">
+                <Row
+                  label="Event contribution"
+                  value={inr(e.contribution)}
+                  bold
+                  accent={e.contribution >= 0 ? "text-emerald-300" : "text-rose-300"}
+                />
+              </div>
+            </div>
+            <p className="text-[10px] text-muted-foreground leading-relaxed border-t border-border/40 pt-3">
+              Note what this figure is not: it is the operator's contribution, after the bands and
+              their houses have already been paid in full. A night can be loss-making here and still
+              have paid every musician who played it.
+            </p>
+          </div>
+
+          <div className="bpl-card p-6 border border-border bg-surface/40 space-y-4">
+            <h3 className="text-sm font-bold text-white">Break-Even</h3>
+            {e.breakEvenAttendance === 0 ? (
+              <p className="text-xs text-muted-foreground leading-relaxed">
+                Stalls and the event sponsor already cover the cost stack before a single ticket is
+                sold. Every admission on this format is contribution.
+              </p>
+            ) : (
+              <>
+                <div className="flex items-baseline gap-3">
+                  <p
+                    className={`text-4xl font-display font-extrabold tabular-nums ${
+                      e.breakEvenUnreachable ? "text-rose-400" : "text-white"
+                    }`}
+                  >
+                    {e.breakEvenAttendance}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    paid admissions —{" "}
+                    <span className="font-bold text-white tabular-nums">
+                      {e.breakEvenOccupancyPct.toFixed(0)}%
+                    </span>{" "}
+                    of a {e.capacity}-cap room
+                  </p>
+                </div>
+                {/* Fill bar with the break-even marker */}
+                <div className="relative h-3 w-full rounded-full bg-secondary/60 overflow-hidden border border-border/60">
+                  <div
+                    className={`h-full ${
+                      e.attendance >= e.breakEvenAttendance ? "bg-emerald-500" : "bg-amber-500"
+                    }`}
+                    style={{ width: `${Math.min(100, e.occupancyPct)}%` }}
+                  />
+                  <div
+                    className="absolute top-0 bottom-0 w-0.5 bg-white"
+                    style={{ left: `${Math.min(100, e.breakEvenOccupancyPct)}%` }}
+                    title={`Break-even at ${e.breakEvenAttendance}`}
+                  />
+                </div>
+                <div className="flex justify-between text-[10px] text-muted-foreground">
+                  <span>
+                    Planned turnout: <span className="text-white font-bold">{e.attendance}</span>
+                  </span>
+                  <span>Break-even marker</span>
+                </div>
+                {e.breakEvenUnreachable ? (
+                  <p className="text-[11px] text-rose-300 leading-relaxed border-t border-border/40 pt-3">
+                    This room cannot break even even sold out. The fix is a sponsor on the night, a
+                    cheaper production tier, or a higher ticket — not a bigger marketing push.
+                  </p>
+                ) : (
+                  <p className="text-[10px] text-muted-foreground leading-relaxed border-t border-border/40 pt-3">
+                    Break-even is what turns a booking decision into a number. If a room needs 82% to
+                    clear and the band has never drawn past 60%, that fixture belongs in a smaller
+                    venue.
+                  </p>
+                )}
+              </>
+            )}
+          </div>
+        </div>
+
+        {/*
+          The honest reading of the numbers above. A cafe night at the planning
+          assumptions does not clear its own cost stack, and the page says so
+          rather than papering over it with an optimistic stall rate.
+        */}
+        <div className="mt-5 bpl-card p-5 border border-border bg-surface/30 flex gap-3">
+          <Info size={15} className="text-primary-glow shrink-0 mt-0.5" />
+          <p className="text-[11px] text-muted-foreground leading-relaxed">
+            <span className="font-semibold text-white">Why the calendar is mixed.</span> Not every
+            fixture is supposed to make money on its own. At these assumptions a small ticketed room
+            is thin or negative once the bands and their houses are paid, campus nights are bought
+            reach rather than margin, and a grand final at {EVENT_TIERS[3].multiplier}× production is
+            a deliberate loss-leader funded by central broadcast and title sponsorship. The season
+            clears in aggregate, not fixture by fixture — which is exactly why the{" "}
+            <a href="#league" className="text-primary-glow font-semibold hover:underline">
+              league-wide view
+            </a>{" "}
+            is the one that decides whether the model works. Move the ticket price, drop a
+            production tier, or attach a fixture sponsor above and watch which lever actually
+            closes the gap.
+          </p>
+        </div>
+
+        {/* ---- assumption registry ---- */}
+        {registryOpen && (
+          <div className="mt-6 bpl-card p-5 border border-border bg-surface/40 space-y-4">
+            <div className="flex flex-wrap items-start justify-between gap-3">
+              <div className="space-y-1">
+                <h3 className="text-sm font-bold text-white">Rate Assumption Registry</h3>
+                <p className="text-[11px] text-muted-foreground max-w-2xl leading-relaxed">
+                  Every cost and commercial rate in the model lives here once. <strong>Base</strong>{" "}
+                  is the planning figure we started from, <strong>live</strong> is what the model is
+                  using now. Change a live rate and every preset, every event and every roll-up above
+                  moves with it.
+                </p>
+              </div>
+              {dirtyRates > 0 && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setOverrides({});
+                    setActuals({});
+                  }}
+                  className="inline-flex items-center gap-1 text-[11px] font-semibold text-muted-foreground hover:text-white transition cursor-pointer shrink-0"
+                >
+                  <RotateCcw size={11} /> Reset rates
+                </button>
+              )}
+            </div>
+
+            <div className="overflow-x-auto">
+              <table className="w-full text-xs border-collapse min-w-[46rem]">
+                <thead>
+                  <tr className="border-b border-border text-left">
+                    <th className="py-2 pr-3 font-bold text-muted-foreground uppercase tracking-wider text-[10px]">
+                      KPI
+                    </th>
+                    <th className="py-2 px-3 font-bold text-muted-foreground uppercase tracking-wider text-[10px] text-right">
+                      Base
+                    </th>
+                    <th className="py-2 px-3 font-bold text-primary-glow uppercase tracking-wider text-[10px] text-right">
+                      Live rate
+                    </th>
+                    <th className="py-2 px-3 font-bold text-muted-foreground uppercase tracking-wider text-[10px] text-right">
+                      Actual paid
+                    </th>
+                    <th className="py-2 px-3 font-bold text-muted-foreground uppercase tracking-wider text-[10px] text-right">
+                      Variance
+                    </th>
+                    <th className="py-2 pl-3 font-bold text-muted-foreground uppercase tracking-wider text-[10px]">
+                      Note
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {ASSUMPTION_CATEGORIES.map((cat) => {
+                    const rows = ASSUMPTIONS.filter((a) => a.category === cat);
+                    if (rows.length === 0) return null;
+                    return (
+                      <Fragment key={cat}>
+                        <tr>
+                          <td
+                            colSpan={6}
+                            className="pt-4 pb-1 text-[10px] uppercase tracking-wider font-bold text-primary-glow"
+                          >
+                            {cat}
+                          </td>
+                        </tr>
+                        {rows.map((a) => {
+                          const live = rateOf(a.id, overrides);
+                          const v = varianceOf(a.id, overrides);
+                          const settled = actuals[a.id] ?? a.actual;
+                          const settledDelta = settled === undefined ? 0 : settled - live;
+                          const settledPct = live === 0 ? 0 : (settledDelta / live) * 100;
+                          const inUse = e.preset.costIds.includes(a.id);
+                          return (
+                            <tr
+                              key={a.id}
+                              className={`border-b border-border/30 ${inUse ? "bg-primary/5" : ""}`}
+                            >
+                              <td className="py-1.5 pr-3">
+                                <span className="text-white font-semibold">{a.kpi}</span>
+                                {inUse && (
+                                  <span className="ml-2 text-[9px] uppercase tracking-wider font-bold text-primary-glow">
+                                    in this event
+                                  </span>
+                                )}
+                              </td>
+                              <td className="py-1.5 px-3 text-right text-muted-foreground tabular-nums">
+                                {formatRate(a, a.base)}
+                              </td>
+                              <td className="py-1.5 px-3 text-right">
+                                <input
+                                  type="number"
+                                  value={live}
+                                  min={0}
+                                  step={a.unit === "percent" ? 0.5 : 500}
+                                  aria-label={`${a.kpi} live rate`}
+                                  onChange={(ev2) =>
+                                    setOverrides((prev) => ({
+                                      ...prev,
+                                      [a.id]: Math.max(0, Number(ev2.target.value) || 0),
+                                    }))
+                                  }
+                                  className="w-24 rounded border border-border bg-background/70 px-2 py-1 text-right text-xs font-semibold text-white tabular-nums focus:border-primary/60 focus:outline-none"
+                                />
+                              </td>
+                              <td className="py-1.5 px-3 text-right">
+                                <input
+                                  type="number"
+                                  value={actuals[a.id] ?? ""}
+                                  min={0}
+                                  step={a.unit === "percent" ? 0.5 : 500}
+                                  placeholder="—"
+                                  aria-label={`${a.kpi} actual paid`}
+                                  onChange={(ev3) => {
+                                    const raw = ev3.target.value;
+                                    setActuals((prev) => {
+                                      const next = { ...prev };
+                                      if (raw === "") delete next[a.id];
+                                      else next[a.id] = Math.max(0, Number(raw) || 0);
+                                      return next;
+                                    });
+                                  }}
+                                  className="w-24 rounded border border-border/60 bg-background/40 px-2 py-1 text-right text-xs font-semibold text-white tabular-nums placeholder:text-muted-foreground/50 focus:border-primary/60 focus:outline-none"
+                                />
+                              </td>
+                              <td
+                                className={`py-1.5 px-3 text-right tabular-nums font-semibold ${
+                                  settled === undefined
+                                    ? v.delta === 0
+                                      ? "text-muted-foreground"
+                                      : v.delta < 0
+                                        ? "text-emerald-400"
+                                        : "text-rose-400"
+                                    : settledDelta === 0
+                                      ? "text-muted-foreground"
+                                      : settledDelta < 0
+                                        ? "text-emerald-400"
+                                        : "text-rose-400"
+                                }`}
+                                title={
+                                  settled === undefined
+                                    ? "Live rate against the planning base"
+                                    : "Actual paid against the live rate"
+                                }
+                              >
+                                {settled === undefined
+                                  ? v.delta === 0
+                                    ? "—"
+                                    : `${v.delta > 0 ? "+" : ""}${v.pct.toFixed(0)}%`
+                                  : `${settledDelta > 0 ? "+" : ""}${settledPct.toFixed(0)}%`}
+                              </td>
+                              <td className="py-1.5 pl-3 text-muted-foreground text-[11px] leading-snug max-w-xs">
+                                {a.note ?? ""}
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </Fragment>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+
+            <p className="text-[10px] text-muted-foreground leading-relaxed border-t border-border/40 pt-3">
+              Three columns, deliberately. <strong>Base</strong> is what we planned,{" "}
+              <strong>live rate</strong> is the latest quote driving the model, and{" "}
+              <strong>actual paid</strong> is what a settled night really cost. Variance reads
+              live-against-base until an actual is entered, then switches to actual-against-live —
+              green is under, red is over. Rows already carrying a negotiated rate — café hire,
+              basic sound, ticketing — show that first gap out of the box. Fill the actual column
+              in after a fixture settles and this stops being a projection.
+            </p>
+          </div>
+        )}
+      </section>
+    </>
+  );
+}
+
+/** One label/value line in an event waterfall. */
+function Row({
+  label,
+  value,
+  note,
+  bold,
+  muted,
+  accent,
+}: {
+  label: string;
+  value: string;
+  note?: string;
+  bold?: boolean;
+  muted?: boolean;
+  accent?: string;
+}) {
+  return (
+    <div className="flex items-baseline justify-between gap-3">
+      <div className="min-w-0">
+        <p
+          className={`${bold ? "font-bold text-white" : muted ? "text-muted-foreground" : "text-white"} leading-snug`}
+        >
+          {label}
+        </p>
+        {note && <p className="text-[10px] text-muted-foreground leading-snug">{note}</p>}
+      </div>
+      <span
+        className={`tabular-nums shrink-0 ${accent ?? (bold ? "font-bold text-white" : "text-muted-foreground")}`}
+      >
+        {value}
+      </span>
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ *
+ * Franchise portfolio — the cost side of a production house
+ * ------------------------------------------------------------------ */
+
+function PortfolioROI({
+  bands,
+  bid,
+  seasonReturn,
+  scope,
+}: {
+  bands: number;
+  bid: number;
+  seasonReturn: number;
+  scope: Scope;
+}) {
+  const [devScale, setDevScale] = useState(100);
+  const perBand = Math.round(HOUSE_INVESTMENT_PER_BAND * (devScale / 100));
+  const development = perBand * bands;
+  const capital = bid + development;
+  const recoveryPct = capital > 0 ? (seasonReturn / capital) * 100 : 0;
+  const portfolio = useMemo(() => computePortfolio(bands, perBand), [bands, perBand]);
+
+  return (
+    <section className="mx-auto max-w-7xl px-4 sm:px-6 py-14">
+      <SectionHeading
+        eyebrow="Franchise Cost Base"
+        title="What a house spends before it earns anything"
+        sub={`A return multiple that ignores the development spend is not a return. This is the other half of the franchise ledger, scoped to ${scope.breadcrumb[0].toLowerCase()} in ${scope.zone.shortName} — and the reason a house signs a roster rather than one act.`}
+      />
+
+      <div className="grid lg:grid-cols-5 gap-5">
+        {/* Investment lines */}
+        <div className="lg:col-span-3 bpl-card p-5 border border-border bg-surface/40 space-y-4">
+          <div className="flex flex-wrap items-end justify-between gap-3">
+            <h3 className="text-sm font-bold text-white flex items-center gap-2">
+              <Building2 size={14} className="text-cyan-400" /> Development Spend
+            </h3>
+            <div className="w-48">
+              <Slider
+                label="Spend level"
+                value={devScale}
+                min={40}
+                max={200}
+                step={5}
+                onChange={setDevScale}
+                format={(v) => `${v}%`}
+              />
+            </div>
+          </div>
+
+          <div className="space-y-1.5 text-xs">
+            {HOUSE_INVESTMENT.map((line) => (
+              <Row
+                key={line.id}
+                label={line.label}
+                value={inr(Math.round(line.perBand * (devScale / 100)))}
+                note={line.detail}
+                muted
+              />
+            ))}
+            <div className="border-t border-border/60 pt-2">
+              <Row label="Per band, per season" value={inr(perBand)} bold />
+            </div>
+            <Row
+              label={`Across ${bands} ${bands === 1 ? "band" : "bands"}`}
+              value={inr(development)}
+              bold
+            />
+            <Row label="Franchise bid" value={inr(bid)} muted />
+            <div className="border-t border-border/60 pt-2">
+              <Row label="Total capital deployed" value={inr(capital)} bold accent="text-cyan-300" />
+            </div>
+          </div>
+        </div>
+
+        {/* Two lenses */}
+        <div className="lg:col-span-2 space-y-5">
+          <div className="bpl-card p-5 border border-emerald-500/25 bg-emerald-500/5 space-y-3">
+            <div className="flex items-center gap-2">
+              <Wallet size={14} className="text-emerald-400" />
+              <h3 className="text-sm font-bold text-white">Lens 1 — Cash, this season</h3>
+            </div>
+            <div className="space-y-2 text-xs">
+              <Row label="Capital deployed" value={inr(capital)} muted />
+              <Row label="Season revenue share" value={inr(seasonReturn)} muted />
+              <div className="border-t border-border/60 pt-2">
+                <Row
+                  label="Capital recovered"
+                  value={`${recoveryPct.toFixed(0)}%`}
+                  bold
+                  accent={recoveryPct >= 100 ? "text-emerald-300" : "text-amber-300"}
+                />
+              </div>
+            </div>
+            <p className="text-[10px] text-muted-foreground leading-relaxed border-t border-border/40 pt-3">
+              {recoveryPct >= 100
+                ? "The season clears the full outlay before catalogue value is counted at all."
+                : "The season does not clear the full outlay on its own — which is the honest position. The balance has to come from the catalogue, which keeps earning after the season ends."}
+            </p>
+          </div>
+
+          <div className="bpl-card p-5 border border-purple-500/25 bg-purple-500/5 space-y-3">
+            <div className="flex items-center gap-2">
+              <FlaskConical size={14} className="text-purple-400" />
+              <h3 className="text-sm font-bold text-white">Lens 2 — The portfolio</h3>
+            </div>
+            <p className="text-[11px] text-muted-foreground leading-relaxed">
+              {bands > 1
+                ? `Illustrative outcome spread across a ${bands}-band roster over the life of the catalogue. Most of the value sits in one position — and nobody can pick which one in advance.`
+                : "Illustrative outcome spread over the life of the catalogue, shown per position."}
+            </p>
+            {bands < PORTFOLIO_OUTCOMES.length && (
+              <div className="flex gap-2 p-3 rounded-lg border border-amber-500/30 bg-amber-500/5">
+                <AlertTriangle size={13} className="text-amber-400 shrink-0 mt-0.5" />
+                <p className="text-[10px] text-amber-100/80 leading-relaxed">
+                  {bands === 1 ? "A one-band franchise has no portfolio at all" : `A ${bands}-band roster is thinly diversified`}
+                  {" — it is a single bet on a single act. The Stage 2 structure signs "}
+                  {PORTFOLIO_OUTCOMES.length} bands per house precisely so one write-down does not
+                  take the franchise with it. Switch to the{" "}
+                  <span className="font-semibold text-amber-200">Stage 2 · AP/TS</span> scenario
+                  above to model it properly.
+                </p>
+              </div>
+            )}
+            <div className="space-y-1.5 text-xs">
+              {portfolio.rows.map((r) => (
+                <Row
+                  key={r.outcome.label}
+                  label={`${r.outcome.label} — ${r.outcome.returnMultiple}×`}
+                  value={inr(Math.round(r.returned))}
+                  note={`${r.bands % 1 === 0 ? r.bands : r.bands.toFixed(2)} of ${bands} · ${r.outcome.detail}`}
+                  muted
+                />
+              ))}
+              <div className="border-t border-border/60 pt-2">
+                <Row
+                  label="Portfolio ROI on development"
+                  value={`${portfolio.roiPct >= 0 ? "+" : ""}${portfolio.roiPct.toFixed(0)}%`}
+                  bold
+                  accent={portfolio.roiPct >= 0 ? "text-purple-300" : "text-rose-300"}
+                />
+              </div>
+            </div>
+            <p className="text-[10px] text-muted-foreground leading-relaxed border-t border-border/40 pt-3">
+              Outcome multiples are modelled, not observed — they describe the shape of
+              entertainment returns, not a forecast for any particular act.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/* ------------------------------------------------------------------ *
+ * Artist Index — who is becoming valuable, as opposed to who is winning
+ * ------------------------------------------------------------------ */
+
+const INDEX_DEFAULTS: Record<string, number> = {
+  live: 82,
+  audience: 74,
+  ip: 78,
+  fan: 71,
+  commercial: 64,
+};
+
+function ArtistIndexCard() {
+  const [scores, setScores] = useState<Record<string, number>>(INDEX_DEFAULTS);
+  const index = computeArtistIndex(scores);
+
+  return (
+    <div className="bpl-card p-6 border border-border bg-surface/40 space-y-5">
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <div className="space-y-1">
+          <h3 className="text-sm font-bold text-white flex items-center gap-2">
+            <Sparkles size={14} className="text-amber-400" /> The Kalakshetra Artist Index
+          </h3>
+          <p className="text-[11px] text-muted-foreground max-w-xl leading-relaxed">
+            The points table answers who is winning. This answers a different and commercially more
+            useful question — who is becoming valuable. It is an intelligence metric only, and has no
+            bearing on qualification.
+          </p>
+        </div>
+        <div className="text-right shrink-0">
+          <p className="text-4xl font-display font-extrabold text-amber-300 tabular-nums">
+            {index.toFixed(1)}
+          </p>
+          <p className="text-[10px] uppercase tracking-wider font-bold text-muted-foreground">
+            Index / 100
+          </p>
+        </div>
+      </div>
+
+      <div className="grid sm:grid-cols-2 lg:grid-cols-5 gap-x-5 gap-y-3">
+        {ARTIST_INDEX_PILLARS.map((pillar) => (
+          <div key={pillar.id} className="space-y-1.5">
+            <Slider
+              label={`${pillar.label} · ${pillar.weight}%`}
+              value={scores[pillar.id] ?? 0}
+              min={0}
+              max={100}
+              step={1}
+              onChange={(v) => setScores((prev) => ({ ...prev, [pillar.id]: v }))}
+              format={(v) => `${v}`}
+              hint={pillar.basis}
+            />
+          </div>
+        ))}
+      </div>
+
+      <div className="h-2 w-full rounded-full bg-secondary/60 overflow-hidden border border-border/60">
+        <div
+          className="h-full bg-gradient-to-r from-amber-500 to-emerald-400"
+          style={{ width: `${index}%` }}
+        />
+      </div>
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ *
+ * Sponsor economics — the deal seen from the brand's side of the table
+ * ------------------------------------------------------------------ */
+
+function SponsorEconomics({ scope, fixturesInScope }: { scope: Scope; fixturesInScope: number }) {
+  const [si, setSi] = useState<SponsorRoiInputs>(() => scopedSponsorInputs(scope, fixturesInScope));
+  const r = useMemo(() => computeSponsorRoi(si), [si]);
+  const rateCard = sponsorInventoryValue();
+
+  return (
+    <section id="sponsor" className="mx-auto max-w-7xl px-4 sm:px-6 py-14 scroll-mt-24">
+      <SectionHeading
+        eyebrow="Sponsor Economics"
+        title="What a brand actually gets for the money"
+        sub={`A sponsor does not buy a logo on a banner \u2014 they buy reach at a cost per engagement they can compare against everything else in their media plan. Sized here to the ${fixturesInScope} ${fixturesInScope === 1 ? "night" : "nights"} inside ${scope.label}.`}
+      />
+
+      <div className="grid lg:grid-cols-3 gap-5">
+        <div className="lg:col-span-1 bpl-card p-5 border border-border bg-surface/40 space-y-4">
+          <h3 className="text-sm font-bold text-white flex items-center gap-2">
+            <Megaphone size={14} className="text-amber-400" /> Deal Inputs
+          </h3>
+          <NumberField
+            label="Sponsor spend"
+            value={si.spend}
+            step={50000}
+            onChange={(v) => setSi((p) => ({ ...p, spend: v }))}
+          />
+          <Slider
+            label="Fixtures sponsored"
+            value={si.fixturesSponsored}
+            min={1}
+            max={202}
+            step={1}
+            onChange={(v) => setSi((p) => ({ ...p, fixturesSponsored: v }))}
+            format={(v) => `${v}`}
+          />
+          <Slider
+            label="Room size per fixture"
+            value={si.attendancePerFixture}
+            min={50}
+            max={2000}
+            step={10}
+            onChange={(v) => setSi((p) => ({ ...p, attendancePerFixture: v }))}
+            format={(v) => `${v}`}
+          />
+          <NumberField
+            label="Digital reach per fixture"
+            value={si.digitalReachPerFixture}
+            step={5000}
+            onChange={(v) => setSi((p) => ({ ...p, digitalReachPerFixture: v }))}
+            hint="Across league, house and artist channels"
+          />
+          <Slider
+            label="Engagement rate"
+            value={si.engagementRatePct}
+            min={0.5}
+            max={15}
+            step={0.1}
+            onChange={(v) => setSi((p) => ({ ...p, engagementRatePct: v }))}
+            format={(v) => `${v.toFixed(1)}%`}
+          />
+          <Slider
+            label="Benchmark CPM"
+            value={si.benchmarkCpm}
+            min={20}
+            max={600}
+            step={10}
+            onChange={(v) => setSi((p) => ({ ...p, benchmarkCpm: v }))}
+            format={(v) => inr(v)}
+            hint="What comparable paid reach would cost per 1,000"
+          />
+        </div>
+
+        <div className="lg:col-span-2 space-y-5">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+            <Stat
+              icon={<Users size={13} />}
+              value={numCompact(r.totalImpressions)}
+              label="Total Reach"
+              hint={`${numCompact(r.liveReach)} live · ${numCompact(r.digitalReach)} digital`}
+              accent="text-cyan-400"
+            />
+            <Stat
+              icon={<Sparkles size={13} />}
+              value={numCompact(r.engagements)}
+              label="Engagements"
+              hint={`At ${si.engagementRatePct.toFixed(1)}% of reach`}
+              accent="text-amber-400"
+            />
+            <Stat
+              icon={<Wallet size={13} />}
+              value={`₹${r.costPerEngagement.toFixed(1)}`}
+              label="Cost / Engagement"
+              hint={`CPM ${inr(Math.round(r.cpm))}`}
+              accent="text-emerald-400"
+            />
+            <Stat
+              icon={<TrendingUp size={13} />}
+              value={`${r.mediaMultiple.toFixed(2)}×`}
+              label="Media Multiple"
+              hint={`${inrCompact(r.equivalentMediaValue)} equivalent value`}
+              accent={r.mediaMultiple >= 1 ? "text-emerald-400" : "text-rose-400"}
+            />
+          </div>
+
+          <div className="bpl-card p-4 border border-border bg-surface/30 flex gap-3">
+            <Info size={14} className="text-primary-glow shrink-0 mt-0.5" />
+            <p className="text-[11px] text-muted-foreground leading-relaxed">
+              <span className="font-semibold text-white">Reading the media multiple.</span>{" "}
+              {r.mediaMultiple >= 1
+                ? `At these assumptions the deal returns ${r.mediaMultiple.toFixed(2)}× its cost in comparable paid reach alone — before any value is assigned to live presence, product sampling or artist association.`
+                : `At these assumptions comparable paid reach would have cost ${inrCompact(r.equivalentMediaValue)} against a ${inrCompact(si.spend)} spend, so pure impressions do not cover the cheque on their own. That is the honest starting point, and it is where the rest of the case has to do the work: a brand in the room is sampling, not impressing, and a fixture partner gets an artist integration that no media buy sells.`}{" "}
+              The lever that moves this fastest is digital reach per fixture, not the number of
+              fixtures — drag both and watch which one actually shifts the multiple.
+            </p>
+          </div>
+
+          <div className="bpl-card p-5 border border-border bg-surface/40 space-y-3">
+            <h3 className="text-sm font-bold text-white">Season Rate Card</h3>
+            <p className="text-[11px] text-muted-foreground leading-relaxed">
+              Sponsorship is finite inventory, not an open-ended ask. Sold out at indicative rates,
+              one season's card is worth{" "}
+              <span className="font-bold text-primary-glow">{inrCompact(rateCard)}</span> — but the
+              structural point is that a title partner and forty fixture partners are different
+              products, bought by different people, out of different budgets.
+            </p>
+            <div className="overflow-x-auto">
+              <table className="w-full text-xs border-collapse">
+                <thead>
+                  <tr className="border-b border-border text-left">
+                    <th className="py-2 pr-3 font-bold text-muted-foreground uppercase tracking-wider text-[10px]">
+                      Role
+                    </th>
+                    <th className="py-2 px-3 font-bold text-muted-foreground uppercase tracking-wider text-[10px] text-center">
+                      Slots
+                    </th>
+                    <th className="py-2 px-3 font-bold text-muted-foreground uppercase tracking-wider text-[10px] text-right">
+                      Rate
+                    </th>
+                    <th className="py-2 pl-3 font-bold text-primary-glow uppercase tracking-wider text-[10px] text-right">
+                      Card Value
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-border/30">
+                  {SPONSOR_INVENTORY.map((slot) => (
+                    <tr key={slot.role}>
+                      <td className="py-2 pr-3 text-white font-semibold">{slot.role}</td>
+                      <td className="py-2 px-3 text-center text-muted-foreground tabular-nums">
+                        {slot.slots}
+                      </td>
+                      <td className="py-2 px-3 text-right text-muted-foreground tabular-nums">
+                        {inr(slot.rate)}
+                      </td>
+                      <td className="py-2 pl-3 text-right text-white font-semibold tabular-nums">
+                        {inrCompact(slot.slots * slot.rate)}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <p className="text-[10px] text-muted-foreground leading-relaxed border-t border-border/40 pt-3">
+              Indicative planning rates for a Season I regional league, not signed deals. Reach and
+              engagement figures above are assumptions until a season's worth of scan, entry and
+              channel data replaces them.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
 function EconomicsPage() {
   /**
    * One global state object rather than twenty useState calls — the whole page
@@ -335,12 +1409,35 @@ function EconomicsPage() {
   const [inputs, setInputs] = useState<EconomicsInputs>(DEFAULT_INPUTS);
   const [advancedOpen, setAdvancedOpen] = useState(false);
 
+  /**
+   * The slicer sits ON TOP of the sliders rather than replacing them: the
+   * sliders set the base case, the slicer says which season, market, roster and
+   * fixture type that base case is being asked about. `applyScope` folds the
+   * two together into the one `EconomicsInputs` the engine has always taken, so
+   * nothing downstream had to learn about dimensions.
+   */
+  const [dims, setDims] = useState<DimensionSelection>(DEFAULT_SELECTION);
+  const scope = useMemo(() => resolveScope(dims), [dims]);
+  const setDim = useCallback(
+    (patchDims: Partial<DimensionSelection>) =>
+      setDims((prev) => {
+        const next = { ...prev, ...patchDims };
+        // A city belongs to a zone; changing zone has to drop a stale city.
+        if (patchDims.zoneSlug && patchDims.zoneSlug !== prev.zoneSlug) next.city = "all";
+        return next;
+      }),
+    [],
+  );
+  const sliceKey = scopeKey(scope);
+
   const patch = useCallback(
     (p: Partial<EconomicsInputs>) => setInputs((prev) => ({ ...prev, ...p })),
     [],
   );
 
-  const m = useMemo(() => computeEconomics(inputs), [inputs]);
+  /** What the engine actually sees: the slider base case, scoped. */
+  const scopedInputs = useMemo(() => applyScope(inputs, scope), [inputs, scope]);
+  const m = useMemo(() => computeEconomics(scopedInputs), [scopedInputs]);
 
   const activePreset = PRESETS.find((p) =>
     Object.entries(p.patch).every(
@@ -436,6 +1533,30 @@ function EconomicsPage() {
               accent="text-purple-400"
             />
           </div>
+
+          {/*
+            Five views of the same data. The same season looks completely
+            different depending on whose side of the table you are sitting on,
+            and each of these answers a question a different stakeholder asks.
+          */}
+          <div className="flex flex-wrap justify-center gap-2 pt-2">
+            {[
+              { href: "#event", label: "Event", q: "Which nights make money?" },
+              { href: "#house", label: "Franchise", q: "What is the return on a bid?" },
+              { href: "#artist", label: "Artist", q: "What does a musician take home?" },
+              { href: "#league", label: "League", q: "What does a season generate?" },
+              { href: "#sponsor", label: "Sponsor", q: "What does a brand get back?" },
+            ].map((v) => (
+              <a
+                key={v.href}
+                href={v.href}
+                title={v.q}
+                className="px-3 py-1.5 rounded-full border border-border bg-secondary/40 text-[11px] font-bold text-muted-foreground hover:text-white hover:border-primary/50 transition"
+              >
+                {v.label}
+              </a>
+            ))}
+          </div>
         </div>
       </section>
 
@@ -476,15 +1597,92 @@ function EconomicsPage() {
               <SlidersHorizontal size={11} /> Advanced inputs
               <ChevronDown size={11} className={advancedOpen ? "rotate-180 transition" : "transition"} />
             </button>
-            {!isDefault && (
+            {(!isDefault || !scope.isDefault) && (
               <button
                 type="button"
-                onClick={() => setInputs(DEFAULT_INPUTS)}
+                onClick={() => {
+                  setInputs(DEFAULT_INPUTS);
+                  setDims(DEFAULT_SELECTION);
+                }}
                 className="inline-flex items-center gap-1 text-[11px] font-semibold text-muted-foreground hover:text-white transition cursor-pointer"
               >
                 <RotateCcw size={11} /> Reset
               </button>
             )}
+          </div>
+
+          {/* ---- Dimensional slicer ---- */}
+          <div className="rounded-xl border border-primary/25 bg-primary/5 p-3 space-y-3">
+            <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+              <span className="text-[10px] uppercase tracking-wider font-bold text-primary-glow flex items-center gap-1.5">
+                <Filter size={12} /> Slice
+              </span>
+              <div className="flex flex-wrap items-center gap-1 text-[11px] text-muted-foreground">
+                {scope.breadcrumb.map((crumb, idx) => (
+                  <span key={crumb + idx} className="flex items-center gap-1">
+                    {idx > 0 && <span className="opacity-40">/</span>}
+                    <span className={idx === 0 ? "font-bold text-white" : ""}>{crumb}</span>
+                  </span>
+                ))}
+              </div>
+              <div className="flex-1" />
+              <span className="text-[10px] uppercase tracking-wider font-bold text-muted-foreground tabular-nums">
+                {m.totalBands} {m.totalBands === 1 ? "band" : "bands"} · {m.totalFixtures}{" "}
+                {m.totalFixtures === 1 ? "night" : "nights"}
+              </span>
+            </div>
+
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2">
+              <DimSelect
+                label="Season"
+                value={dims.seasonId}
+                options={SEASONS.map((x) => ({ id: x.id, label: x.label }))}
+                onChange={(v) => setDim({ seasonId: v })}
+              />
+              <DimSelect
+                label="Zone"
+                value={dims.zoneSlug}
+                options={SLICEABLE_ZONES.map((z) => ({ id: z.slug, label: z.shortName }))}
+                onChange={(v) => setDim({ zoneSlug: v })}
+              />
+              <DimSelect
+                label="City"
+                icon={<MapPin size={9} />}
+                value={dims.city}
+                options={[
+                  { id: "all", label: "All cities" },
+                  ...scope.zone.hubCities.map((c) => ({ id: c.city, label: c.city })),
+                ]}
+                onChange={(v) => setDim({ city: v })}
+              />
+              <DimSelect
+                label="House"
+                value={dims.houseId}
+                options={HOUSES}
+                onChange={(v) => setDim({ houseId: v })}
+              />
+              <DimSelect
+                label="Band"
+                value={dims.bandId}
+                options={BAND_SLOTS}
+                onChange={(v) => setDim({ bandId: v })}
+              />
+              <DimSelect
+                label="Fixture"
+                value={dims.fixtureId}
+                options={FIXTURE_DIMS.map((f) => ({ id: f.id, label: f.label }))}
+                onChange={(v) => setDim({ fixtureId: v })}
+              />
+            </div>
+
+            <p className="text-[10px] text-muted-foreground leading-relaxed">
+              <span className="font-semibold text-white">{scope.fixture.label}:</span>{" "}
+              {scope.fixture.note}{" "}
+              {scope.city
+                ? `${scope.city.city} carries ${(scope.cityShare * 100).toFixed(0)}% of the zone calendar, at ${scope.city.priceIdx.toFixed(2)}\u00d7 ticket price and ${scope.city.costIdx.toFixed(2)}\u00d7 staging cost.`
+                : `Averaged across ${scope.zone.hubCities.length} hub cities, weighted by each one's share of the calendar.`}{" "}
+              {scope.season.id !== "s1" && scope.season.note}
+            </p>
           </div>
 
           {/* Base parameters */}
@@ -497,6 +1695,11 @@ function EconomicsPage() {
               step={10}
               onChange={(v) => patch({ ticketPrice: v })}
               format={(v) => inr(v)}
+              hint={
+                scopedInputs.ticketPrice !== inputs.ticketPrice
+                  ? `${inr(scopedInputs.ticketPrice)} in this market`
+                  : undefined
+              }
             />
             <Slider
               label="Attendance (solo night)"
@@ -506,6 +1709,11 @@ function EconomicsPage() {
               step={10}
               onChange={(v) => patch({ attendance: v })}
               format={(v) => `${v}`}
+              hint={
+                scopedInputs.attendance !== inputs.attendance
+                  ? `${scopedInputs.attendance} in this market`
+                  : undefined
+              }
             />
             <Slider
               label="Fixtures / Band / Season"
@@ -515,6 +1723,7 @@ function EconomicsPage() {
               step={1}
               onChange={(v) => patch({ showsPerBand: v })}
               format={(v) => `${v}`}
+              hint={`Slicer sets ${scopedInputs.showsPerBand} for ${scope.fixture.label.toLowerCase()}`}
             />
             <Slider
               label="Franchises"
@@ -524,13 +1733,14 @@ function EconomicsPage() {
               step={1}
               onChange={(v) => patch({ numFranchises: v })}
               format={(v) => `${v}`}
+              hint={`Slicer sets ${scopedInputs.numFranchises}`}
             />
             <NumberField
               label="Winning Bid / Franchise"
               value={inputs.winningBid}
               step={10000}
               onChange={(v) => patch({ winningBid: v })}
-              hint={`${m.totalBands} bands in the season`}
+              hint={`${m.totalBands} bands in scope${scope.bidMult !== 1 ? ` \u00b7 ${inr(scopedInputs.winningBid)} at ${scope.season.label}` : ""}`}
             />
           </div>
 
@@ -835,13 +2045,15 @@ function EconomicsPage() {
         </div>
       </section>
 
+      <EventEconomics key={`ev-${sliceKey}`} scope={scope} />
+
       {/* ================= FRANCHISE RETURN ================= */}
-      <section className="border-y border-border bg-surface/20">
+      <section id="house" className="border-y border-border bg-surface/20 scroll-mt-24">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 py-14">
           <SectionHeading
             eyebrow="Franchise Investment"
             title="What a production house puts in, and gets back in one season"
-            sub={`One franchise across a ${SEASON_STRUCTURE.monthsPerSeason}-month season. Capital at risk is the winning bid; the event budget is carried by the title sponsor, so it is not franchise money. Every return line is tagged by how certain it is.`}
+            sub={`One franchise across a ${SEASON_STRUCTURE.seasonWeeks}-week season. Capital at risk is the winning bid; the event budget is carried by the title sponsor, so it is not franchise money. Every return line is tagged by how certain it is.`}
           />
 
           {/* Gate-backed vs variable — the reframe */}
@@ -1005,8 +2217,16 @@ function EconomicsPage() {
         </div>
       </section>
 
+      <PortfolioROI
+        key={`ph-${sliceKey}`}
+        bands={scopedInputs.bandsPerFranchise}
+        bid={scopedInputs.winningBid}
+        seasonReturn={m.phSeasonTotal}
+        scope={scope}
+      />
+
       {/* ================= ARTIST EARNINGS ================= */}
-      <section className="mx-auto max-w-7xl px-4 sm:px-6 py-14">
+      <section id="artist" className="mx-auto max-w-7xl px-4 sm:px-6 py-14 scroll-mt-24">
         <SectionHeading
           eyebrow="Artist Earnings"
           title="What the musicians actually take home"
@@ -1088,6 +2308,10 @@ function EconomicsPage() {
             </Link>
           </div>
         </div>
+
+        <div className="mt-5">
+          <ArtistIndexCard />
+        </div>
       </section>
 
       {/* ================= CONTENT RIGHTS ================= */}
@@ -1156,18 +2380,18 @@ function EconomicsPage() {
           </div>
 
           <p className="mt-3 text-[11px] text-muted-foreground">
-            Each side's season share is {inr(m.contentHalfPerSeason)} — one third of the annual half,
+            Each side's season share is {inr(m.contentHalfPerSeason)} — the annual half divided
             across {SEASON_STRUCTURE.seasonsPerYear} seasons a year.
           </p>
         </div>
       </section>
 
       {/* ================= LEAGUE SEASON POSITION ================= */}
-      <section className="mx-auto max-w-7xl px-4 sm:px-6 py-14">
+      <section id="league" className="mx-auto max-w-7xl px-4 sm:px-6 py-14 scroll-mt-24">
         <SectionHeading
           eyebrow="League Season"
           title={`One season, ${m.totalFixtures} ticketed nights, whole ecosystem`}
-          sub={`Total value moving through the league across a ${SEASON_STRUCTURE.monthsPerSeason}-month season with ${inputs.numFranchises} franchises and ${m.totalBands} bands, and separately what the operator keeps after running costs.`}
+          sub={`Total value moving through the league across a ${SEASON_STRUCTURE.seasonWeeks}-week season with ${inputs.numFranchises} franchises and ${m.totalBands} bands, and separately what the operator keeps after running costs.`}
         />
 
         <div className="grid lg:grid-cols-3 gap-6">
@@ -1264,6 +2488,12 @@ function EconomicsPage() {
           </div>
         </div>
       </section>
+
+      <SponsorEconomics
+        key={`sp-${sliceKey}`}
+        scope={scope}
+        fixturesInScope={m.totalFixtures}
+      />
 
       {/* ================= PLATFORM UPSIDE ================= */}
       <section className="border-y border-border bg-surface/20">

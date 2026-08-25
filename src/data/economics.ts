@@ -18,16 +18,30 @@
  * via `soloSharePct` and `coHeadlineUplift`.
  */
 
-/** Indian-format rupee string, e.g. 805950 -> "₹8,05,950". */
+import { SEASON_WEEKS } from "./league-format";
+
+/**
+ * Indian-format rupee string, e.g. 805950 -> "₹8,05,950".
+ *
+ * The sign goes OUTSIDE the symbol. "−₹17,598" is a negative amount of
+ * money; "₹-17,598" is a typo, and this model produces negative numbers
+ * often enough (a loss-making fixture) for that to matter.
+ */
 export function inr(value: number): string {
-  return "₹" + new Intl.NumberFormat("en-IN", { maximumFractionDigits: 0 }).format(Math.round(value));
+  const rounded = Math.round(value);
+  const body = new Intl.NumberFormat("en-IN", { maximumFractionDigits: 0 }).format(
+    Math.abs(rounded),
+  );
+  return (rounded < 0 ? "−₹" : "₹") + body;
 }
 
 /** Compact rupee string for headline tiles, e.g. 3215750 -> "₹32.16L". */
 export function inrCompact(value: number): string {
-  if (Math.abs(value) >= 1e7) return "₹" + (value / 1e7).toFixed(2) + "Cr";
-  if (Math.abs(value) >= 1e5) return "₹" + (value / 1e5).toFixed(2) + "L";
-  if (Math.abs(value) >= 1e3) return "₹" + (value / 1e3).toFixed(1) + "K";
+  const sign = value < 0 ? "−₹" : "₹";
+  const abs = Math.abs(value);
+  if (abs >= 1e7) return sign + (abs / 1e7).toFixed(2) + "Cr";
+  if (abs >= 1e5) return sign + (abs / 1e5).toFixed(2) + "L";
+  if (abs >= 1e3) return sign + (abs / 1e3).toFixed(1) + "K";
   return inr(value);
 }
 
@@ -56,7 +70,18 @@ export const EVENT_SPLIT = { bands: 40, productionHouse: 30, operator: 30 } as c
 /** Audio/video IP split between the artist and the franchise that financed it. */
 export const CONTENT_SPLIT = { artists: 50, productionHouse: 50 } as const;
 
-export const SEASON_STRUCTURE = { seasonsPerYear: 3, monthsPerSeason: 4 } as const;
+/**
+ * Season length is NOT an independent number here — it is derived from the
+ * published fixture calendar on the League page. A 23-week season cannot also
+ * be a 4-month season run three times a year, and the two pages drifting apart
+ * on that point is exactly the kind of error this model exists to prevent.
+ */
+const WEEKS_PER_MONTH = 52 / 12;
+export const SEASON_STRUCTURE = {
+  seasonWeeks: SEASON_WEEKS,
+  seasonsPerYear: Math.max(1, Math.floor(52 / SEASON_WEEKS)),
+  monthsPerSeason: SEASON_WEEKS / WEEKS_PER_MONTH,
+};
 
 /** Operator's half of the league-level broadcast and sponsorship pools. */
 const OPERATOR_RIGHTS_SHARE_PCT = 50;
@@ -195,25 +220,25 @@ export const PRESETS: Preset[] = [
     id: "conservative",
     label: "Conservative",
     blurb: "Independent-band pricing into a smaller room — the level a new format actually opens at.",
-    patch: { ticketPrice: 249, attendance: 200, showsPerBand: 10, numFranchises: 4, bandsPerFranchise: 1, winningBid: 520000 },
+    patch: { soloSharePct: 40, ticketPrice: 249, attendance: 200, showsPerBand: 10, numFranchises: 4, bandsPerFranchise: 1, winningBid: 520000 },
   },
   {
     id: "base",
     label: "Base Case",
     blurb: "The league's operating plan: a mid-scale ticketed room across a full fixture calendar.",
-    patch: { ticketPrice: 399, attendance: 300, showsPerBand: 12, numFranchises: 4, bandsPerFranchise: 1, winningBid: 520000 },
+    patch: { soloSharePct: 38, ticketPrice: 399, attendance: 300, showsPerBand: 12, numFranchises: 4, bandsPerFranchise: 1, winningBid: 520000 },
   },
   {
     id: "bull",
     label: "Bull Case",
     blurb: "Format has traction — bigger rooms, higher yield, a wider franchise field.",
-    patch: { ticketPrice: 599, attendance: 500, showsPerBand: 14, numFranchises: 6, bandsPerFranchise: 1, winningBid: 750000 },
+    patch: { soloSharePct: 36, ticketPrice: 599, attendance: 500, showsPerBand: 14, numFranchises: 6, bandsPerFranchise: 1, winningBid: 750000 },
   },
   {
     id: "regional",
     label: "Stage 2 · AP/TS",
-    blurb: "The 2-month regional league: 5 production houses, 4 bands each, 8 fixtures per band.",
-    patch: { ticketPrice: 299, attendance: 250, showsPerBand: 8, numFranchises: 5, bandsPerFranchise: 4, winningBid: 900000 },
+    blurb: "The full regional league: 5 production houses, 4 bands each, 11 fixtures per band — 8 solo nights plus 3 house cross nights.",
+    patch: { ticketPrice: 299, attendance: 250, showsPerBand: 11, soloSharePct: 73, numFranchises: 5, bandsPerFranchise: 4, winningBid: 900000 },
   },
 ];
 

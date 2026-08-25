@@ -18,6 +18,11 @@ import {
   Network,
   ChevronRight,
   Ticket,
+  GraduationCap,
+
+  Repeat,
+  CheckCircle2,
+  Flag,
 } from "lucide-react";
 import {
   SCORING_METRICS,
@@ -28,6 +33,18 @@ import {
   TIE_BREAKERS,
   QUALIFICATION,
   STAGE_2_MATRIX,
+  STAGE_2_STRUCTURE,
+  STAGE_2_FINALS,
+  STAGE_2_SEASON_FIXTURES,
+  KNOCKOUT_ROUTE,
+  SEASON_PHASES,
+  SEASON_WEEKS,
+  COMPETITIVE_WEEKS,
+  RELEASE_CYCLE,
+  RELEASE_CYCLE_DAYS,
+  RELEASE_ELIGIBILITY,
+  releaseCadenceDays,
+  releasesPerSeason,
   ZONES,
   ZONE_HUBS,
   standingsForZone,
@@ -98,13 +115,6 @@ const ZONE_ACCENT: Record<string, { border: string; text: string; chip: string }
   cyan: { border: "border-cyan-500/30", text: "text-cyan-300", chip: "bg-cyan-500/10 border-cyan-500/30" },
 };
 
-const TIMELINE_STEPS = [
-  { phase: "Phase 1", title: "Registration", dates: "Month 1", desc: "Band roster opens and qualification lists are finalized." },
-  { phase: "Phase 2", title: "Production & Partnership", dates: "Month 2", desc: "Franchises select bands and produce original tracks." },
-  { phase: "Phase 3", title: "League Season", dates: "Month 3-4", desc: "8-week tournament of live matches and weekly points updates." },
-  { phase: "Phase 4", title: "Grand Finale", dates: "Month 4 End", desc: "The top 25% bands clash in a single-venue national broadcast." },
-  { phase: "Phase 5", title: "Champion", dates: "Post-Season", desc: "Prize pool payout and tour contract activation." },
-];
 
 const ADVANTAGES = [
   { title: "Gain Production Support", desc: "Partner with established production franchises to record your tracks in professional studios.", icon: Briefcase },
@@ -168,17 +178,25 @@ function LeaguePage() {
           <div className="bpl-card p-8 md:p-12 space-y-6 border-primary/20 bg-primary/3 text-left">
             <h3 className="text-2xl font-display font-extrabold text-white">What is the League?</h3>
             <p className="text-xs text-muted-foreground leading-relaxed">
-              Every season runs for approximately <strong>four months</strong>. Rather than performing one-off gigs, bands enter a structured league where production house franchises back their journey.
+              A season runs about <strong>{SEASON_WEEKS} weeks</strong> — roughly six months, of which{" "}
+              {COMPETITIVE_WEEKS} are competitive and the first three are onboarding and
+              pre-production. Rather than chasing one-off gigs, a band enters a fixed calendar with a
+              production house financing the work behind it.
             </p>
             <p className="text-xs text-muted-foreground leading-relaxed">
-              Based on the number of franchises and registered bands count, franchises invest directly in original music production. Bands perform live across cafe stages, colleges, and festivals, while earning points to scale the standings.
+              {STAGE_2_MATRIX.houses} production houses each sign {STAGE_2_MATRIX.bandsPerHouse} bands.
+              Every band plays {STAGE_2_MATRIX.showsPerBand} fixtures — {STAGE_2_STRUCTURE.ticketedSoloPerBand}{" "}
+              ticketed nights, {STAGE_2_STRUCTURE.campusSoloPerBand} campus nights and{" "}
+              {STAGE_2_STRUCTURE.intraHousePerBand} house cross nights — while releasing original music
+              on a rolling cycle. Points come from the performance, the room, the fanbase and the
+              catalogue, all four at once.
             </p>
             <div className="grid gap-4 sm:grid-cols-4 pt-4">
               {[
-                { v: "4 Months", l: "Season Length" },
-                { v: "Live Gigs", l: "Tour Matches" },
-                { v: "Originals", l: "Music & Video IP" },
-                { v: "Top 25%", l: "Finale Qualifier" },
+                { v: `${SEASON_WEEKS} Weeks`, l: "Season Length" },
+                { v: `${STAGE_2_SEASON_FIXTURES} Nights`, l: "Live Fixtures" },
+                { v: `${STAGE_2_MATRIX.totalBands} Bands`, l: "Across 5 Houses" },
+                { v: `Top ${STAGE_2_FINALS.finalists}`, l: "Finals Qualifiers" },
               ].map((stat) => (
                 <div key={stat.l} className="border border-border/50 rounded-lg p-4 bg-surface/30">
                   <p className="text-base font-bold text-primary-glow">{stat.v}</p>
@@ -487,11 +505,11 @@ function LeaguePage() {
             </h2>
             <h3 className="text-3xl font-display font-bold text-white">The Match Matrix</h3>
             <p className="text-xs text-muted-foreground leading-relaxed">
-              {STAGE_2_MATRIX.houses} production houses own {STAGE_2_MATRIX.bandsPerHouse} bands each
-              — {STAGE_2_MATRIX.totalBands} bands playing {STAGE_2_MATRIX.showsPerBand} fixtures apiece
-              across a two-month run. Those band appearances resolve into{" "}
-              {STAGE_2_MATRIX.totalFixtures} actual ticketed nights, because a rivalry fixture is one
-              shared stage rather than two separate shows.
+              {STAGE_2_MATRIX.houses} production houses sign {STAGE_2_MATRIX.bandsPerHouse} bands each
+              — {STAGE_2_MATRIX.totalBands} bands playing {STAGE_2_MATRIX.showsPerBand} fixtures apiece.
+              That resolves into {STAGE_2_MATRIX.totalFixtures} actual live nights in the league phase,
+              because a cross night is one shared stage rather than two separate shows. Inside a house,
+              every one of the {STAGE_2_MATRIX.crossPairsPerHouse} possible pairings meets exactly once.
             </p>
           </div>
 
@@ -536,12 +554,13 @@ function LeaguePage() {
             ))}
           </div>
 
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
             {[
               { v: STAGE_2_MATRIX.totalBands, l: "Bands Competing" },
               { v: STAGE_2_MATRIX.showsPerBand, l: "Fixtures Per Band" },
-              { v: STAGE_2_MATRIX.totalFixtures, l: "Live Shows Staged" },
-              { v: `${STAGE_2_MATRIX.showsPerBand * MAX_POINTS_PER_FIXTURE}`, l: "Max Season Points" },
+              { v: STAGE_2_MATRIX.totalFixtures, l: "League-Phase Nights" },
+              { v: STAGE_2_SEASON_FIXTURES, l: "Nights Incl. Finals" },
+              { v: `${STAGE_2_MATRIX.showsPerBand * MAX_POINTS_PER_FIXTURE}`, l: "Max League Points" },
             ].map((s) => (
               <div key={s.l} className="border border-border/50 rounded-lg p-5 bg-surface/30 text-center">
                 <p className="text-2xl font-display font-extrabold text-primary-glow tabular-nums">
@@ -552,18 +571,113 @@ function LeaguePage() {
             ))}
           </div>
 
-          <div className="mt-6 bpl-card p-5 border-amber-500/20 bg-amber-500/5 flex gap-3 text-left">
-            <Swords size={16} className="text-amber-400 shrink-0 mt-0.5" />
+          <div className="mt-6 grid gap-4 md:grid-cols-2">
+            <div className="bpl-card p-5 border-amber-500/20 bg-amber-500/5 flex gap-3 text-left">
+              <Swords size={16} className="text-amber-400 shrink-0 mt-0.5" />
+              <p className="text-[11px] text-muted-foreground leading-relaxed">
+                <span className="font-semibold text-amber-200">Why cross nights matter:</span>{" "}
+                sharing a stage means sharing the gate, so each act takes a half share of that night.
+                What it buys is the room — two fanbases turn up instead of one, which is the fastest
+                way to put a band's original music in front of people who have never heard it. The{" "}
+                <Link to="/economics" className="text-amber-300 font-semibold hover:underline">
+                  economics page
+                </Link>{" "}
+                models both sides of that trade.
+              </p>
+            </div>
+            <div className="bpl-card p-5 border-cyan-500/20 bg-cyan-500/5 flex gap-3 text-left">
+              <GraduationCap size={16} className="text-cyan-400 shrink-0 mt-0.5" />
+              <p className="text-[11px] text-muted-foreground leading-relaxed">
+                <span className="font-semibold text-cyan-200">
+                  Why campus nights are counted separately:
+                </span>{" "}
+                the {STAGE_2_MATRIX.categories[1].fixtures} college fixtures are not there to make
+                money. They are priced for reach, run through the student chapter network, and
+                measured on votes, follows and turnout. A band that cannot fill a campus room will
+                not fill a paying one either — which is exactly what makes them worth scoring.
+              </p>
+            </div>
+          </div>
+        </section>
+
+        {/* SECTION 3C-2: ROAD TO THE FINAL */}
+        <section className="py-20 px-4 max-w-7xl mx-auto relative z-10 border-t border-border/45 bg-slate-950/10">
+          <div className="text-center max-w-2xl mx-auto mb-12 space-y-3">
+            <h2 className="text-xs uppercase tracking-widest text-primary-glow font-bold">
+              Qualification & Knockout
+            </h2>
+            <h3 className="text-3xl font-display font-bold text-white">Road to the Final</h3>
+            <p className="text-xs text-muted-foreground leading-relaxed">
+              The top quartile of {STAGE_2_MATRIX.totalBands} bands is {STAGE_2_FINALS.finalists}{" "}
+              — seeded as one qualifier per production house, so no franchise is mathematically out
+              of it before the cross phase ends. Those {STAGE_2_FINALS.finalists} then play a full
+              round robin: {STAGE_2_FINALS.rivalryFixtures} nights,{" "}
+              {STAGE_2_FINALS.rivalryPerFinalist} each.
+            </p>
+          </div>
+
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 mb-8">
+            {[
+              { v: STAGE_2_FINALS.finalists, l: "Finalists", s: "One per house" },
+              { v: STAGE_2_FINALS.rivalryFixtures, l: "Rivalry Nights", s: `${STAGE_2_FINALS.rivalryPerFinalist} per finalist` },
+              { v: STAGE_2_FINALS.eliminatorFixtures, l: "Eliminator", s: "Rank 2 v Rank 3" },
+              { v: STAGE_2_FINALS.grandFinalFixtures, l: "Grand Final", s: "One champion" },
+            ].map((stat) => (
+              <div
+                key={stat.l}
+                className="border border-border/50 rounded-lg p-5 bg-surface/30 text-center"
+              >
+                <p className="text-3xl font-display font-extrabold text-primary-glow tabular-nums">
+                  {stat.v}
+                </p>
+                <p className="text-[10px] text-white uppercase font-bold mt-1">{stat.l}</p>
+                <p className="text-[10px] text-muted-foreground mt-0.5">{stat.s}</p>
+              </div>
+            ))}
+          </div>
+
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+            {KNOCKOUT_ROUTE.map((step, idx) => (
+              <motion.div
+                key={step.stage}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.35, delay: idx * 0.08 }}
+                className={`bpl-card p-6 text-left space-y-3 ${
+                  idx === KNOCKOUT_ROUTE.length - 1
+                    ? "border-amber-500/30 bg-amber-500/5"
+                    : "border-border/40"
+                }`}
+              >
+                <div className="flex items-center gap-2">
+                  {idx === KNOCKOUT_ROUTE.length - 1 ? (
+                    <Trophy size={14} className="text-amber-400" />
+                  ) : (
+                    <Flag size={14} className="text-primary-glow" />
+                  )}
+                  <h4 className="font-bold text-xs uppercase tracking-wider text-white">
+                    {step.stage}
+                  </h4>
+                </div>
+                <p className="text-[10px] font-mono font-bold text-primary-glow uppercase tracking-wider">
+                  {step.seeds}
+                </p>
+                <p className="text-[11px] text-muted-foreground leading-relaxed">{step.detail}</p>
+              </motion.div>
+            ))}
+          </div>
+
+          <div className="mt-6 bpl-card p-5 border-primary/20 bg-primary/5 flex gap-3 text-left">
+            <Trophy size={16} className="text-primary-glow shrink-0 mt-0.5" />
             <p className="text-[11px] text-muted-foreground leading-relaxed">
-              <span className="font-semibold text-amber-200">Why rivalry nights matter:</span>{" "}
-              competing against another band means sharing one stage and one gate, so each act takes
-              a half share of that night. What it buys is the room — two fanbases turn up instead of
-              one, which is the fastest way to put a band's original music in front of people who
-              have never heard it. The{" "}
-              <Link to="/economics" className="text-amber-300 font-semibold hover:underline">
-                economics page
-              </Link>{" "}
-              models both sides of that trade.
+              <span className="font-semibold text-white">Two trophies, one season.</span> The
+              knockout decides the champion band. Running alongside it, the{" "}
+              <span className="text-primary-glow font-semibold">House Cup</span> goes to the
+              production house whose {STAGE_2_MATRIX.bandsPerHouse} bands accumulate the most points
+              between them. That is deliberate — it stops a franchise pouring everything into one act
+              and writing off the other three, because the second trophy can only be won with the
+              whole roster.
             </p>
           </div>
         </section>
@@ -744,33 +858,157 @@ function LeaguePage() {
           </div>
         </section>
 
-        {/* SECTION 5: SEASON TIMELINE */}
+        {/* SECTION 5: SEASON CALENDAR */}
         <section className="py-20 px-4 max-w-7xl mx-auto relative z-10 border-t border-border/45">
-          <div className="text-center max-w-xl mx-auto mb-16 space-y-3">
+          <div className="text-center max-w-2xl mx-auto mb-12 space-y-3">
             <h2 className="text-xs uppercase tracking-widest text-primary-glow font-bold">The Schedule</h2>
-            <h3 className="text-3xl font-display font-bold text-white">Season Timeline</h3>
+            <h3 className="text-3xl font-display font-bold text-white">Season Calendar</h3>
+            <p className="text-xs text-muted-foreground leading-relaxed">
+              {SEASON_WEEKS} weeks end to end. {COMPETITIVE_WEEKS} of them are competitive; the first
+              three are onboarding and pre-production, because a band that has not rehearsed or
+              written anything yet has nothing to compete with.
+            </p>
+          </div>
+
+          {/* Proportional phase bar */}
+          <div className="mb-8 hidden sm:flex h-3 w-full rounded-full overflow-hidden border border-border/50">
+            {SEASON_PHASES.map((phase, idx) => (
+              <div
+                key={phase.phase}
+                title={`${phase.title} — ${phase.weeks}`}
+                style={{ width: `${(phase.weekCount / SEASON_WEEKS) * 100}%` }}
+                className={
+                  ["bg-slate-600", "bg-primary", "bg-cyan-500", "bg-purple-500", "bg-amber-500"][
+                    idx % 5
+                  ]
+                }
+              />
+            ))}
           </div>
 
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5 text-left">
-            {TIMELINE_STEPS.map((step, idx) => (
+            {SEASON_PHASES.map((phase, idx) => (
               <motion.div
-                key={step.title}
+                key={phase.phase}
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
-                transition={{ duration: 0.35, delay: idx * 0.1 }}
+                transition={{ duration: 0.35, delay: idx * 0.08 }}
                 className="bpl-card p-6 border-border/40 hover:border-primary/20 transition-all duration-300 relative"
               >
                 <div className="absolute top-4 right-4 text-[9px] font-bold text-primary-glow uppercase tracking-widest">
-                  {step.dates}
+                  {phase.weekCount}w
                 </div>
                 <div className="space-y-3 pt-2">
-                  <span className="text-[10px] font-bold text-muted-foreground uppercase">{step.phase}</span>
-                  <h4 className="font-bold text-sm text-white">{step.title}</h4>
-                  <p className="text-[11px] text-muted-foreground leading-relaxed">{step.desc}</p>
+                  <span className="text-[10px] font-bold text-muted-foreground uppercase">
+                    {phase.phase} · {phase.weeks}
+                  </span>
+                  <h4 className="font-bold text-sm text-white">{phase.title}</h4>
+                  <p className="text-[11px] text-muted-foreground leading-relaxed">{phase.detail}</p>
                 </div>
               </motion.div>
             ))}
+          </div>
+        </section>
+
+        {/* SECTION 5B: ORIGINAL MUSIC RELEASE CYCLE */}
+        <section className="py-20 px-4 max-w-7xl mx-auto relative z-10 border-t border-border/45 bg-slate-950/20">
+          <div className="text-center max-w-2xl mx-auto mb-12 space-y-3">
+            <h2 className="text-xs uppercase tracking-widest text-primary-glow font-bold">
+              Original IP
+            </h2>
+            <h3 className="text-3xl font-display font-bold text-white">
+              The {RELEASE_CYCLE_DAYS}-Day Release Cycle
+            </h3>
+            <p className="text-xs text-muted-foreground leading-relaxed">
+              No band is asked to ship a song every month — that produces filler, not catalogue. Each
+              band runs a {RELEASE_CYCLE_DAYS}-day cycle and the {STAGE_2_MATRIX.totalBands} bands
+              stagger their start dates. Individually that is{" "}
+              {releasesPerSeason(COMPETITIVE_WEEKS)} originals a season. Collectively the league
+              publishes something new roughly every{" "}
+              {releaseCadenceDays(STAGE_2_MATRIX.totalBands).toFixed(1)} days.
+            </p>
+          </div>
+
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5 mb-8">
+            {RELEASE_CYCLE.map((stage, idx) => (
+              <motion.div
+                key={stage.title}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.35, delay: idx * 0.08 }}
+                className="bpl-card p-5 border-border/40 text-left space-y-2"
+              >
+                <div className="flex items-center gap-2">
+                  <div className="h-6 w-6 rounded bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center text-cyan-400 text-[10px] font-bold shrink-0">
+                    {idx + 1}
+                  </div>
+                  <span className="text-[9px] uppercase tracking-wider font-bold text-muted-foreground">
+                    {stage.weeks}
+                  </span>
+                </div>
+                <h4 className="font-bold text-xs text-white">{stage.title}</h4>
+                <p className="text-[11px] text-muted-foreground leading-relaxed">{stage.detail}</p>
+              </motion.div>
+            ))}
+          </div>
+
+          <div className="grid gap-5 lg:grid-cols-2">
+            <div className="bpl-card p-6 text-left space-y-4 border-cyan-500/20">
+              <h4 className="text-xs font-bold uppercase tracking-wider text-white flex items-center gap-2">
+                <CheckCircle2 size={14} className="text-cyan-400" /> What Counts as an Original
+              </h4>
+              <p className="text-[11px] text-muted-foreground leading-relaxed">
+                The Original IP points are worth{" "}
+                {SCORING_METRICS.find((metric) => metric.pillar === "output")?.maxPoints} a fixture,
+                which is enough to be worth gaming. So eligibility is defined tightly rather than
+                left to a judgment call on matchday.
+              </p>
+              <div className="space-y-2">
+                {RELEASE_ELIGIBILITY.map((rule) => (
+                  <div key={rule} className="flex gap-2.5 items-start">
+                    <CheckCircle2 size={12} className="text-cyan-400 shrink-0 mt-0.5" />
+                    <p className="text-[11px] text-muted-foreground leading-snug">{rule}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="bpl-card p-6 text-left space-y-4 border-primary/20">
+              <h4 className="text-xs font-bold uppercase tracking-wider text-white flex items-center gap-2">
+                <Repeat size={14} className="text-primary-glow" /> Why Stagger the Releases
+              </h4>
+              <p className="text-[11px] text-muted-foreground leading-relaxed">
+                Twenty songs dropped in the same week compete with each other and vanish. Spread
+                across the season, each release gets its own campaign window, its own fixture to
+                launch into, and its own share of the audience's attention.
+              </p>
+              <div className="grid grid-cols-3 gap-3 pt-1">
+                {[
+                  { v: `${RELEASE_CYCLE_DAYS}d`, l: "Per band cycle" },
+                  {
+                    v: `~${releaseCadenceDays(STAGE_2_MATRIX.totalBands).toFixed(1)}d`,
+                    l: "League cadence",
+                  },
+                  { v: `${releasesPerSeason(COMPETITIVE_WEEKS)}`, l: "Originals / band / season" },
+                ].map((k) => (
+                  <div key={k.l} className="border border-border/50 rounded-lg p-3 bg-surface/30">
+                    <p className="text-lg font-display font-extrabold text-primary-glow tabular-nums">
+                      {k.v}
+                    </p>
+                    <p className="text-[9px] text-muted-foreground uppercase font-semibold leading-tight mt-0.5">
+                      {k.l}
+                    </p>
+                  </div>
+                ))}
+              </div>
+              <p className="text-[11px] text-muted-foreground leading-relaxed border-t border-border/30 pt-3">
+                The fixture calendar and the release calendar are deliberately locked together: a
+                song lands, the campaign runs, and the band walks on stage in front of a room that
+                has already heard it.
+              </p>
+            </div>
           </div>
         </section>
 

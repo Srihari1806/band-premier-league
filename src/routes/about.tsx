@@ -23,8 +23,19 @@ import {
   HelpCircle,
   Handshake,
   Percent,
-  CheckCircle2
+  CheckCircle2,
+  Youtube,
+  Radio,
+  Lock,
+  Globe,
+  Wallet,
+  Briefcase,
+  RefreshCw,
+  Landmark,
+  Trophy,
 } from "lucide-react";
+import { SPONSOR_INVENTORY, SPONSOR_TIER_META, sponsorInventoryValue } from "@/data/event-model";
+import { inr, inrCompact } from "@/data/economics";
 
 const CAMPUS_STAGES = [
   {
@@ -53,6 +64,110 @@ const CAMPUS_FOOTPRINT = [
   { city: "Hyderabad", campuses: "5–10 campuses", ambassadors: "5–10 ambassadors" },
   { city: "Visakhapatnam", campuses: "3–5 campuses", ambassadors: "3–5 ambassadors" },
   { city: "Vijayawada", campuses: "2–4 campuses", ambassadors: "2–4 ambassadors" },
+];
+
+/**
+ * Rights sit in two separate buckets and conflating them is the single most
+ * expensive mistake this kind of league can make. The songs belong to the
+ * people who made and financed them; the league footage belongs to the league.
+ */
+const RIGHTS_SPLIT = [
+  {
+    title: "Audio & Video IP",
+    owner: "Artist 50% · Production House 50%",
+    icon: Music,
+    accent: "border-blue-400/25 bg-blue-400/5",
+    text: "text-blue-400",
+    detail:
+      "Original songs, masters and music videos belong to the artist and the house that financed them. The house can release through its own channels or license onward to a label or distributor.",
+    examples: ["Original singles & masters", "Music videos", "Streaming royalties", "Sync placements"],
+  },
+  {
+    title: "League Footage",
+    owner: "Kalakshetra (central)",
+    icon: Tv,
+    accent: "border-primary/25 bg-primary/5",
+    text: "text-primary-glow",
+    detail:
+      "Concert and fixture footage is a central media right. A production house does not separately sell its band's match footage — the season is packaged and sold once, as one property.",
+    examples: ["Fixture recordings", "Season highlight package", "Rivalry & finals films", "OTT / broadcast deal"],
+  },
+];
+
+const CHANNEL_TIERS = [
+  {
+    tier: "League",
+    name: "Kalakshetra Channel",
+    icon: Trophy,
+    accent: "text-primary-glow border-primary/25 bg-primary/5",
+    owns: "Competition content",
+    content: ["Fixture films & highlights", "Standings and matchday coverage", "Rivalry, eliminator, final", "Behind the scenes"],
+  },
+  {
+    tier: "Franchise",
+    name: "Production House Channel",
+    icon: Building2,
+    accent: "text-blue-400 border-blue-400/25 bg-blue-400/5",
+    owns: "Artist catalogue it financed",
+    content: ["Music videos & originals", "Studio and making-of content", "Artist interviews", "Roster promotion"],
+  },
+  {
+    tier: "Artist",
+    name: "The Band's Own Channel",
+    icon: Music,
+    accent: "text-amber-400 border-amber-400/25 bg-amber-400/5",
+    owns: "The long-term relationship",
+    content: ["Originals & acoustic versions", "Shorts, vlogs, live sessions", "Collaborations", "Direct fan community"],
+  },
+];
+
+const PREMIERE_WINDOW = [
+  { mark: "T–7", title: "Campaign Opens", detail: "Teasers, artwork reveal and the fixture tie-in announcement go live." },
+  { mark: "T–1", title: "Exclusive First Window", detail: "A 24-hour exclusive premiere with one platform partner — a first-window licence, never a permanent assignment." },
+  { mark: "T–0", title: "Global Release", detail: "The track goes wide across every platform, timed to land into a scheduled live fixture." },
+];
+
+/** What the operator's 30% of net gate actually funds. */
+const OPERATOR_SPEND = [
+  { label: "Event managers & on-ground crew", icon: Users },
+  { label: "Venue acquisition & security coordination", icon: MapPin },
+  { label: "Ticketing and league platform technology", icon: Layers },
+  { label: "Fan voting & verification systems", icon: ShieldCheck },
+  { label: "Season marketing & campus activation", icon: Megaphone },
+  { label: "Prize pool & league administration", icon: Trophy },
+];
+
+/** Why a franchise signs four bands rather than betting everything on one. */
+const PORTFOLIO_LOGIC = [
+  { outcome: "Breakout", desc: "Catalogue travels past the league — sync, brand deals and booking value that outlive the season.", tone: "border-emerald-500/30 bg-emerald-500/5", label: "text-emerald-400" },
+  { outcome: "Solid", desc: "Reliable gate, steady streaming, a fanbase worth touring into a second season.", tone: "border-cyan-500/25 bg-cyan-500/5", label: "text-cyan-400" },
+  { outcome: "Developing", desc: "Recovers most of its cost and holds option value into the next cycle.", tone: "border-amber-500/25 bg-amber-500/5", label: "text-amber-400" },
+  { outcome: "Writes Down", desc: "Does not find an audience. One position is written off — not the portfolio.", tone: "border-rose-500/25 bg-rose-500/5", label: "text-rose-400" },
+];
+
+const FLYWHEEL = [
+  "Production house invests",
+  "Artist develops & records",
+  "Original + music video ships",
+  "Live fixture sells tickets",
+  "Fans vote, clips travel",
+  "Points & standings move",
+  "Streaming and following grow",
+  "Bigger room next fixture",
+  "Sponsor value rises",
+  "More capital in",
+];
+
+/**
+ * Chapter sizing as the league expands. AP/TS is the deep pilot; every
+ * subsequent state opens at half the roster until it proves out.
+ */
+const EXPANSION_MARKETS = [
+  { market: "AP / Telangana", houses: 5, bands: 4, languages: "Telugu", status: "Pilot — live" },
+  { market: "Karnataka", houses: 5, bands: 2, languages: "Kannada", status: "Year 1, Stage 3" },
+  { market: "Tamil Nadu", houses: 5, bands: 2, languages: "Tamil", status: "Year 1, Stage 3" },
+  { market: "Kerala", houses: 5, bands: 2, languages: "Malayalam", status: "Year 1, Stage 3" },
+  { market: "North / East / West", houses: 5, bands: 2, languages: "Hindi, Bengali, Punjabi, Assamese, Marathi", status: "Year 2" },
 ];
 
 export const Route = createFileRoute("/about")({
@@ -144,8 +259,12 @@ const PARTICIPANTS = [
 
 function AboutPage() {
   const [activeExplainTab, setActiveExplainTab] = useState<
-    "comparison" | "matrix" | "venues" | "cashflows" | "pipeline"
+    "comparison" | "matrix" | "rights" | "venues" | "sponsors" | "pipeline"
   >("comparison");
+  const finalistsPerMarket = 5;
+  const totalRegionalFinalists = EXPANSION_MARKETS.length * finalistsPerMarket;
+  const nationalBands = EXPANSION_MARKETS.reduce((sum, m) => sum + m.houses * m.bands, 0);
+  const rateCardValue = sponsorInventoryValue();
   return (
     <PageShell>
       <div className="bg-background text-white min-h-screen relative overflow-hidden">
@@ -460,17 +579,19 @@ function AboutPage() {
           <div className="max-w-4xl mx-auto space-y-6">
             <div className="flex flex-wrap border border-border rounded-lg overflow-hidden bg-secondary/20 backdrop-blur-sm">
               {[
-                { id: "comparison", label: "IPL vs BPL Model", icon: Layers },
-                { id: "matrix", label: "Who Can Hire Whom", icon: Handshake },
-                { id: "venues", label: "Venue Options (A, B, C)", icon: Building2 },
-                { id: "pipeline", label: "Ecosystem Flow Map", icon: TrendingUp },
+                { id: "comparison", label: "League Model", icon: Layers },
+                { id: "matrix", label: "Who Hires Whom", icon: Handshake },
+                { id: "rights", label: "Rights & Media", icon: Lock },
+                { id: "venues", label: "Venue Models", icon: Building2 },
+                { id: "sponsors", label: "Sponsor Inventory", icon: Megaphone },
+                { id: "pipeline", label: "Flow Map", icon: TrendingUp },
               ].map((tab) => {
                 const Icon = tab.icon;
                 return (
                   <button
                     key={tab.id}
                     onClick={() => setActiveExplainTab(tab.id as any)}
-                    className={`flex-1 py-3 px-4 text-xs font-bold transition-all flex items-center justify-center gap-2 border-r border-border last:border-0 ${
+                    className={`flex-1 min-w-[9rem] py-3 px-3 text-[11px] font-bold transition-all flex items-center justify-center gap-1.5 border-r border-border last:border-0 ${
                       activeExplainTab === tab.id
                         ? "bg-primary text-white"
                         : "text-muted-foreground hover:text-white hover:bg-secondary/40"
@@ -661,6 +782,211 @@ function AboutPage() {
               </div>
             )}
 
+            {/* TAB CONTENT: RIGHTS & MEDIA */}
+            {activeExplainTab === "rights" && (
+              <div className="bpl-card p-6 md:p-8 space-y-8 text-left animate-fadeIn border border-border bg-slate-950/40 backdrop-blur">
+                <div className="space-y-1">
+                  <h3 className="text-lg font-display font-bold text-white">
+                    Two Rights Buckets, Never Mixed
+                  </h3>
+                  <p className="text-xs text-muted-foreground">
+                    The songs belong to the people who made and financed them. The league footage
+                    belongs to the league. Conflating the two is the most expensive mistake a music
+                    league can make.
+                  </p>
+                </div>
+
+                <div className="grid gap-5 md:grid-cols-2">
+                  {RIGHTS_SPLIT.map((r) => {
+                    const Icon = r.icon;
+                    return (
+                      <div key={r.title} className={`p-5 border rounded-lg space-y-3 ${r.accent}`}>
+                        <div className="flex items-center gap-2">
+                          <Icon size={16} className={r.text} />
+                          <h4 className="text-sm font-bold text-white">{r.title}</h4>
+                        </div>
+                        <p className={`text-[10px] font-mono font-bold uppercase tracking-wider ${r.text}`}>
+                          {r.owner}
+                        </p>
+                        <p className="text-xs text-muted-foreground leading-relaxed">{r.detail}</p>
+                        <div className="flex flex-wrap gap-1.5 pt-1">
+                          {r.examples.map((e) => (
+                            <span
+                              key={e}
+                              className="text-[9px] px-2 py-0.5 rounded-full border border-border/60 bg-secondary/30 text-muted-foreground"
+                            >
+                              {e}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                <div className="border border-amber-500/20 bg-amber-500/5 rounded-lg p-4 flex gap-3">
+                  <ShieldCheck size={15} className="text-amber-400 shrink-0 mt-0.5" />
+                  <p className="text-[11px] text-muted-foreground leading-relaxed">
+                    <span className="font-semibold text-amber-200">The practical rule:</span> a
+                    production house is free to sell its band's song anywhere in the world. It is not
+                    free to sell that band's Kalakshetra match footage — that sits in the central
+                    season package, which is what makes the package worth buying at all.
+                  </p>
+                </div>
+
+                {/* Channel tiers */}
+                <div className="space-y-3 border-t border-border/40 pt-6">
+                  <div className="space-y-1">
+                    <h4 className="text-sm font-bold text-white flex items-center gap-2">
+                      <Youtube size={15} className="text-primary-glow" /> Three Channels, Three Jobs
+                    </h4>
+                    <p className="text-xs text-muted-foreground">
+                      The league deliberately does not own every audience relationship. An artist who
+                      leaves after two seasons should leave with a community that is genuinely theirs.
+                    </p>
+                  </div>
+                  <div className="grid gap-4 md:grid-cols-3">
+                    {CHANNEL_TIERS.map((c) => {
+                      const Icon = c.icon;
+                      return (
+                        <div key={c.tier} className={`p-4 border rounded-lg space-y-2.5 ${c.accent}`}>
+                          <div className="flex items-center justify-between gap-2">
+                            <span className="text-[9px] uppercase tracking-wider font-bold text-muted-foreground">
+                              {c.tier}
+                            </span>
+                            <Icon size={14} />
+                          </div>
+                          <h5 className="text-xs font-bold text-white">{c.name}</h5>
+                          <p className="text-[10px] font-semibold uppercase tracking-wide opacity-80">
+                            {c.owns}
+                          </p>
+                          <ul className="space-y-1 pt-1">
+                            {c.content.map((line) => (
+                              <li
+                                key={line}
+                                className="text-[10px] text-muted-foreground leading-snug flex gap-1.5"
+                              >
+                                <span className="opacity-50">·</span>
+                                {line}
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Premiere window */}
+                <div className="space-y-3 border-t border-border/40 pt-6">
+                  <div className="space-y-1">
+                    <h4 className="text-sm font-bold text-white flex items-center gap-2">
+                      <Radio size={15} className="text-primary-glow" /> The Release Window
+                    </h4>
+                    <p className="text-xs text-muted-foreground">
+                      Every original follows the same three-beat launch, so a release is an event
+                      rather than an upload.
+                    </p>
+                  </div>
+                  <div className="grid gap-3 md:grid-cols-3">
+                    {PREMIERE_WINDOW.map((w) => (
+                      <div
+                        key={w.mark}
+                        className="p-4 border border-border/60 bg-secondary/10 rounded-lg space-y-2"
+                      >
+                        <p className="text-lg font-display font-extrabold text-primary-glow font-mono">
+                          {w.mark}
+                        </p>
+                        <h5 className="text-xs font-bold text-white">{w.title}</h5>
+                        <p className="text-[10px] text-muted-foreground leading-relaxed">{w.detail}</p>
+                      </div>
+                    ))}
+                  </div>
+                  <p className="text-[10px] text-muted-foreground leading-relaxed italic">
+                    An exclusive window is only promised once a platform agreement actually exists —
+                    it is a licence for a day, not ownership in perpetuity.
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {/* TAB CONTENT: SPONSOR INVENTORY */}
+            {activeExplainTab === "sponsors" && (
+              <div className="bpl-card p-6 md:p-8 space-y-6 text-left animate-fadeIn border border-border bg-slate-950/40 backdrop-blur">
+                <div className="space-y-1">
+                  <h3 className="text-lg font-display font-bold text-white">
+                    Sponsorship as Finite Inventory
+                  </h3>
+                  <p className="text-xs text-muted-foreground">
+                    Sponsorship is not one line on a deck — it is a rate card with a countable number
+                    of slots. Listing it this way is what lets us see how much of a season is still
+                    unsold.
+                  </p>
+                </div>
+
+                <div className="overflow-x-auto">
+                  <table className="w-full text-xs text-left border-collapse">
+                    <thead>
+                      <tr className="border-b border-border bg-secondary/30">
+                        <th className="py-2.5 px-4 font-bold text-primary-glow uppercase tracking-wider">Role</th>
+                        <th className="py-2.5 px-4 font-bold text-muted-foreground uppercase tracking-wider">Scope</th>
+                        <th className="py-2.5 px-4 font-bold text-primary-glow uppercase tracking-wider text-center">Slots</th>
+                        <th className="py-2.5 px-4 font-bold text-primary-glow uppercase tracking-wider text-right">Indicative Rate</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-border/40">
+                      {SPONSOR_INVENTORY.map((slot) => (
+                        <tr key={slot.role} className="hover:bg-secondary/10">
+                          <td className="py-3 px-4 align-top">
+                            <p className="font-bold text-white">{slot.role}</p>
+                            <span
+                              className={`inline-block mt-1 text-[9px] px-2 py-0.5 rounded-full border ${SPONSOR_TIER_META[slot.tier].accent}`}
+                            >
+                              {SPONSOR_TIER_META[slot.tier].label}
+                            </span>
+                          </td>
+                          <td className="py-3 px-4 text-muted-foreground leading-relaxed align-top">
+                            {slot.scope}
+                          </td>
+                          <td className="py-3 px-4 text-center font-bold text-white tabular-nums align-top">
+                            {slot.slots}
+                          </td>
+                          <td className="py-3 px-4 text-right font-bold text-primary-glow tabular-nums align-top">
+                            {inr(slot.rate)}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                    <tfoot>
+                      <tr className="border-t border-border bg-primary/5">
+                        <td className="py-3 px-4 font-bold text-white" colSpan={2}>
+                          Full rate card, one season
+                        </td>
+                        <td className="py-3 px-4 text-center font-bold text-white tabular-nums">
+                          {SPONSOR_INVENTORY.reduce((sum, i) => sum + i.slots, 0)}
+                        </td>
+                        <td className="py-3 px-4 text-right font-extrabold text-primary-glow tabular-nums">
+                          {inrCompact(rateCardValue)}
+                        </td>
+                      </tr>
+                    </tfoot>
+                  </table>
+                </div>
+
+                <p className="text-[11px] text-muted-foreground leading-relaxed border-t border-border/30 pt-4">
+                  Rates are indicative planning figures for a Season I regional league, not signed
+                  deals. The point of the table is the <strong className="text-white">structure</strong>{" "}
+                  — a title partner and forty fixture partners are different products sold to
+                  different budget holders, and a league that only sells the first one leaves most of
+                  its inventory on the shelf. Sponsor-side returns are modelled on the{" "}
+                  <Link to="/economics" className="text-primary-glow font-semibold hover:underline">
+                    economics page
+                  </Link>
+                  .
+                </p>
+              </div>
+            )}
+
             {/* TAB CONTENT: VENUE OPTIONS */}
             {activeExplainTab === "venues" && (
               <div className="bpl-card p-6 md:p-8 space-y-6 text-left animate-fadeIn border border-border bg-slate-950/40 backdrop-blur">
@@ -810,6 +1136,126 @@ function AboutPage() {
           </div>
         </section>
 
+        {/* SECTION 5B: WHY A PRODUCTION HOUSE INVESTS */}
+        <section className="py-20 px-4 max-w-7xl mx-auto relative z-10 border-t border-border/45">
+          <div className="text-center max-w-2xl mx-auto mb-14 space-y-3">
+            <h2 className="text-xs uppercase tracking-widest text-primary-glow font-bold">
+              The Franchise Case
+            </h2>
+            <h3 className="text-3xl font-display font-bold text-white">
+              Why sign four bands instead of one?
+            </h3>
+            <p className="text-xs text-muted-foreground leading-relaxed">
+              A production house is not buying a shot at a trophy. It is taking four positions in a
+              catalogue and holding them for a season. Entertainment returns are skewed — most of the
+              value in any roster comes from one or two acts, and nobody can reliably pick which two
+              in advance. Four positions is what makes that survivable.
+            </p>
+          </div>
+
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 mb-8">
+            {PORTFOLIO_LOGIC.map((o, idx) => (
+              <motion.div
+                key={o.outcome}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.35, delay: idx * 0.08 }}
+                className={`p-5 border rounded-lg space-y-2 text-left ${o.tone}`}
+              >
+                <div className="flex items-center justify-between gap-2">
+                  <h4 className={`text-xs font-bold uppercase tracking-wider ${o.label}`}>
+                    {o.outcome}
+                  </h4>
+                  <span className="text-[9px] uppercase tracking-wider font-bold text-muted-foreground">
+                    1 of 4
+                  </span>
+                </div>
+                <p className="text-[11px] text-muted-foreground leading-relaxed">{o.desc}</p>
+              </motion.div>
+            ))}
+          </div>
+
+          <div className="grid gap-5 lg:grid-cols-2">
+            <div className="bpl-card p-6 text-left space-y-3 border-blue-400/20">
+              <h4 className="text-xs font-bold uppercase tracking-wider text-white flex items-center gap-2">
+                <Briefcase size={14} className="text-blue-400" /> What the House Puts In
+              </h4>
+              <p className="text-[11px] text-muted-foreground leading-relaxed">
+                Recording, song production, music videos, artist branding, photography, marketing,
+                influencer seeding, distribution and day-to-day management — per band, per season.
+                The house chooses how much of that to do in-house and how much to contract out.
+              </p>
+              <p className="text-[11px] text-muted-foreground leading-relaxed">
+                In return it holds 50% of the audio and video IP it financed, plus 30% of net gate on
+                every night its bands play.
+              </p>
+              <Link
+                to="/economics"
+                className="inline-flex items-center gap-1.5 text-[11px] font-bold text-blue-300 hover:underline pt-1"
+              >
+                See the full investment and ROI model <ArrowRight size={12} />
+              </Link>
+            </div>
+
+            <div className="bpl-card p-6 text-left space-y-3 border-primary/20">
+              <h4 className="text-xs font-bold uppercase tracking-wider text-white flex items-center gap-2">
+                <Trophy size={14} className="text-primary-glow" /> Two Ways to Win
+              </h4>
+              <p className="text-[11px] text-muted-foreground leading-relaxed">
+                One trophy goes to the champion band. The other — the{" "}
+                <span className="text-primary-glow font-semibold">House Cup</span> — goes to the
+                production house whose four bands score the most points between them.
+              </p>
+              <p className="text-[11px] text-muted-foreground leading-relaxed">
+                That second trophy exists specifically to stop a franchise pouring everything into
+                its strongest act and abandoning the other three. It can only be won with the whole
+                roster, which is the same behaviour the portfolio logic already rewards.
+              </p>
+            </div>
+          </div>
+        </section>
+
+        {/* SECTION 5C: THE FLYWHEEL */}
+        <section className="py-20 px-4 max-w-6xl mx-auto relative z-10 border-t border-border/45 bg-slate-950/20">
+          <div className="text-center max-w-2xl mx-auto mb-12 space-y-3">
+            <h2 className="text-xs uppercase tracking-widest text-primary-glow font-bold">
+              The Compounding Loop
+            </h2>
+            <h3 className="text-3xl font-display font-bold text-white">Why a season is worth more than a show</h3>
+            <p className="text-xs text-muted-foreground leading-relaxed">
+              A one-off gig ends when the room empties. A season loops — and every pass around the
+              loop starts from a higher base than the last one.
+            </p>
+          </div>
+
+          <div className="flex flex-wrap justify-center items-center gap-2">
+            {FLYWHEEL.map((step, idx) => (
+              <motion.div
+                key={step}
+                initial={{ opacity: 0, scale: 0.9 }}
+                whileInView={{ opacity: 1, scale: 1 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.3, delay: idx * 0.05 }}
+                className="flex items-center gap-2"
+              >
+                <span className="px-3 py-2 rounded-md border border-border/60 bg-secondary/20 text-[11px] font-semibold text-white">
+                  {step}
+                </span>
+                {idx < FLYWHEEL.length - 1 && (
+                  <ArrowRight size={12} className="text-primary-glow shrink-0" />
+                )}
+              </motion.div>
+            ))}
+            <div className="flex items-center gap-2">
+              <RefreshCw size={12} className="text-primary-glow" />
+              <span className="px-3 py-2 rounded-md border border-primary/30 bg-primary/10 text-[11px] font-bold text-primary-glow">
+                Next season, larger
+              </span>
+            </div>
+          </div>
+        </section>
+
         {/* SECTION 6: BUSINESS MODEL */}
         <section className="py-20 px-4 max-w-6xl mx-auto relative z-10 border-t border-border/45 bg-slate-950/20">
           <div className="text-center mb-16 space-y-3">
@@ -925,14 +1371,153 @@ function AboutPage() {
             </div>
           </div>
 
-          {/* League Revenue Box */}
-          <div className="mt-8 bpl-card p-6 border-primary/20 bg-primary/3 text-left">
-            <h4 className="text-sm font-bold text-white flex items-center gap-1.5">
-              <TrendingUp size={16} className="text-primary-glow" />
-              League Revenue & Reinvestment
-            </h4>
-            <p className="mt-2 text-xs text-muted-foreground leading-relaxed">
-              League-level revenues from <strong>Broadcast Rights, Digital Streaming, Advertising, and Sponsors</strong> are collected directly by the Kalakshetra Operator. We reinvest 100% of league-level revenues into prize pools, league on-ground operations, developer platform growth, and marketing future seasons to expand the audience.
+          {/* What the operator's share actually funds */}
+          <div className="mt-8 grid gap-6 lg:grid-cols-2">
+            <div className="bpl-card p-6 border-primary/20 bg-primary/3 text-left space-y-4">
+              <div>
+                <h4 className="text-sm font-bold text-white flex items-center gap-1.5">
+                  <Wallet size={16} className="text-primary-glow" />
+                  What the Operator's 30% Pays For
+                </h4>
+                <p className="mt-2 text-xs text-muted-foreground leading-relaxed">
+                  It is not margin. The operator share is the cost base that makes a fixture happen
+                  at all, and every band on the calendar is carried by it.
+                </p>
+              </div>
+              <div className="grid gap-2.5 sm:grid-cols-2">
+                {OPERATOR_SPEND.map((item) => {
+                  const Icon = item.icon;
+                  return (
+                    <div key={item.label} className="flex gap-2.5 items-start">
+                      <Icon size={13} className="text-primary-glow shrink-0 mt-0.5" />
+                      <p className="text-[11px] text-muted-foreground leading-snug">{item.label}</p>
+                    </div>
+                  );
+                })}
+              </div>
+              <p className="text-[10px] text-muted-foreground leading-relaxed border-t border-border/30 pt-3">
+                The per-night version of this — every venue, sound, lighting and crew line against
+                the gate it has to cover — is modelled on the{" "}
+                <Link to="/economics" className="text-primary-glow font-semibold hover:underline">
+                  economics page
+                </Link>
+                .
+              </p>
+            </div>
+
+            <div className="bpl-card p-6 border-border text-left space-y-4">
+              <div>
+                <h4 className="text-sm font-bold text-white flex items-center gap-1.5">
+                  <Landmark size={16} className="text-amber-400" />
+                  League-Level Revenue & Reinvestment
+                </h4>
+                <p className="mt-2 text-xs text-muted-foreground leading-relaxed">
+                  Broadcast rights, digital distribution, central advertising and title sponsorship
+                  are collected centrally rather than fixture by fixture — a season sold once, as one
+                  property.
+                </p>
+              </div>
+              <div className="space-y-2.5">
+                {[
+                  { k: "Prize pool", v: "Ring-fenced, paid to the champion lineup" },
+                  { k: "League operations", v: "Crew, production and the fixture calendar" },
+                  { k: "Platform & data", v: "Ticketing, voting and the standings engine" },
+                  { k: "Next-market expansion", v: "Opening the following zone chapter" },
+                ].map((row) => (
+                  <div
+                    key={row.k}
+                    className="flex justify-between gap-3 border-b border-border/30 pb-2 last:border-0"
+                  >
+                    <span className="text-[11px] font-bold text-white shrink-0">{row.k}</span>
+                    <span className="text-[11px] text-muted-foreground text-right">{row.v}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* SECTION 6B: NATIONAL EXPANSION */}
+        <section className="py-20 px-4 max-w-7xl mx-auto relative z-10 border-t border-border/45">
+          <div className="text-center max-w-2xl mx-auto mb-12 space-y-3">
+            <h2 className="text-xs uppercase tracking-widest text-primary-glow font-bold">
+              Scaling the Playbook
+            </h2>
+            <h3 className="text-3xl font-display font-bold text-white">
+              One market proved, then replicated
+            </h3>
+            <p className="text-xs text-muted-foreground leading-relaxed">
+              AP/TS runs the deep roster because it is where the format is being proven. Every
+              market after it opens at half that size and earns its way up — the same structure, the
+              same scoring, a different language.
+            </p>
+          </div>
+
+          <div className="overflow-x-auto">
+            <table className="w-full text-xs text-left border-collapse">
+              <thead>
+                <tr className="border-b border-border bg-secondary/30">
+                  <th className="py-2.5 px-4 font-bold text-primary-glow uppercase tracking-wider">Market</th>
+                  <th className="py-2.5 px-4 font-bold text-muted-foreground uppercase tracking-wider text-center">Houses</th>
+                  <th className="py-2.5 px-4 font-bold text-muted-foreground uppercase tracking-wider text-center">Bands / House</th>
+                  <th className="py-2.5 px-4 font-bold text-primary-glow uppercase tracking-wider text-center">Bands</th>
+                  <th className="py-2.5 px-4 font-bold text-muted-foreground uppercase tracking-wider">Languages</th>
+                  <th className="py-2.5 px-4 font-bold text-muted-foreground uppercase tracking-wider">Status</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border/40">
+                {EXPANSION_MARKETS.map((mkt) => (
+                  <tr key={mkt.market} className="hover:bg-secondary/10">
+                    <td className="py-3 px-4 font-bold text-white">{mkt.market}</td>
+                    <td className="py-3 px-4 text-center text-muted-foreground tabular-nums">{mkt.houses}</td>
+                    <td className="py-3 px-4 text-center text-muted-foreground tabular-nums">{mkt.bands}</td>
+                    <td className="py-3 px-4 text-center font-bold text-primary-glow tabular-nums">
+                      {mkt.houses * mkt.bands}
+                    </td>
+                    <td className="py-3 px-4 text-muted-foreground">{mkt.languages}</td>
+                    <td className="py-3 px-4 text-muted-foreground">{mkt.status}</td>
+                  </tr>
+                ))}
+              </tbody>
+              <tfoot>
+                <tr className="border-t border-border bg-primary/5">
+                  <td className="py-3 px-4 font-bold text-white" colSpan={3}>
+                    National footprint at full build
+                  </td>
+                  <td className="py-3 px-4 text-center font-extrabold text-primary-glow tabular-nums">
+                    {nationalBands}
+                  </td>
+                  <td className="py-3 px-4 text-muted-foreground" colSpan={2}>
+                    Nine languages, one competition structure
+                  </td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+
+          <div className="mt-6 grid gap-4 sm:grid-cols-3">
+            {[
+              { v: totalRegionalFinalists, l: "Regional finalists", s: `${finalistsPerMarket} from each market` },
+              { v: "→ 10", l: "National qualifiers", s: "Cross-market playoff round" },
+              { v: "→ 5", l: "National finalists", s: "Same round robin, one national stage" },
+            ].map((k) => (
+              <div key={k.l} className="border border-border/50 rounded-lg p-5 bg-surface/30 text-center">
+                <p className="text-2xl font-display font-extrabold text-primary-glow tabular-nums">
+                  {k.v}
+                </p>
+                <p className="text-[10px] text-white uppercase font-bold mt-1">{k.l}</p>
+                <p className="text-[10px] text-muted-foreground mt-0.5">{k.s}</p>
+              </div>
+            ))}
+          </div>
+
+          <div className="mt-6 bpl-card p-5 border-emerald-500/20 bg-emerald-500/5 flex gap-3 text-left">
+            <Globe size={16} className="text-emerald-400 shrink-0 mt-0.5" />
+            <p className="text-[11px] text-muted-foreground leading-relaxed">
+              <span className="font-semibold text-emerald-200">Regional music, national discovery.</span>{" "}
+              Nothing about the format asks a Malayalam band to sing in Hindi to be taken seriously.
+              Each chapter runs in its own language and its own scene; the national stage is where
+              those scenes meet, not where they get flattened into one.
             </p>
           </div>
         </section>

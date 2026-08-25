@@ -116,22 +116,28 @@ export const QUALIFICATION: QualificationStep[] = [
 export interface MatrixStructure {
   houses: number;
   bandsPerHouse: number;
-  soloPerBand: number;
+  /** Ticketed standalone nights per band — the commercial circuit. */
+  ticketedSoloPerBand: number;
+  /** Campus nights per band — run for reach and voting, not gate. */
+  campusSoloPerBand: number;
+  /** Cross nights against a stablemate from the same house. */
   intraHousePerBand: number;
-  interHousePerBand: number;
 }
 
-/** Stage 2 — the 2-month AP/TS regional league. */
+/** Stage 2 — the AP/TS regional league. */
 export const STAGE_2_STRUCTURE: MatrixStructure = {
   houses: 5,
   bandsPerHouse: 4,
-  soloPerBand: 3,
-  intraHousePerBand: 2,
-  interHousePerBand: 3,
+  ticketedSoloPerBand: 5,
+  campusSoloPerBand: 3,
+  intraHousePerBand: 3,
 };
+
+export type FixtureKind = "commercial" | "campus" | "cross";
 
 export interface MatrixCategory {
   category: string;
+  kind: FixtureKind;
   showsPerBand: number;
   fixtures: number;
   /** Bands sharing one ticketed night in this category. */
@@ -143,48 +149,61 @@ export interface MatchMatrix {
   houses: number;
   bandsPerHouse: number;
   totalBands: number;
+  /** Solo nights a band plays — commercial plus campus. */
+  individualShowsPerBand: number;
   showsPerBand: number;
   categories: MatrixCategory[];
+  /** Distinct pairings inside one house: bandsPerHouse choose 2. */
+  crossPairsPerHouse: number;
   totalFixtures: number;
+}
+
+/** n choose 2 — the number of distinct pairings in a pool of n. */
+export function pairingsOf(n: number): number {
+  return Math.max(0, (n * (n - 1)) / 2);
 }
 
 export function computeMatchMatrix(s: MatrixStructure): MatchMatrix {
   const totalBands = s.houses * s.bandsPerHouse;
   const categories: MatrixCategory[] = [
     {
-      category: "Solo Showcase",
-      showsPerBand: s.soloPerBand,
+      category: "Commercial Showcase",
+      kind: "commercial",
+      showsPerBand: s.ticketedSoloPerBand,
       // One band, one night — no sharing.
-      fixtures: totalBands * s.soloPerBand,
+      fixtures: totalBands * s.ticketedSoloPerBand,
       actsPerFixture: 1,
       purpose:
-        "Standalone concert nights at partner venues. The band carries the room alone, builds its own core fanbase and tests original material.",
+        "Full-price ticketed nights at partner venues. The band carries the room alone — this is where gate revenue, gate points and a paying fanbase are actually built.",
     },
     {
-      category: "Intra-House Derby",
+      category: "Campus Circuit",
+      kind: "campus",
+      showsPerBand: s.campusSoloPerBand,
+      fixtures: totalBands * s.campusSoloPerBand,
+      actsPerFixture: 1,
+      purpose:
+        "College nights run through the student chapter network. Priced for reach rather than margin — they exist to turn students into voters, followers and future ticket buyers.",
+    },
+    {
+      category: "House Cross Night",
+      kind: "cross",
       showsPerBand: s.intraHousePerBand,
-      // Two bands from the same house share the night.
+      // Two bands from the same house share one night.
       fixtures: Math.round((totalBands * s.intraHousePerBand) / 2),
       actsPerFixture: 2,
       purpose:
-        "Bands signed to the same production house face each other to settle the top house seed. The house keeps the full franchise share either way.",
-    },
-    {
-      category: "Inter-House Rivalry",
-      showsPerBand: s.interHousePerBand,
-      // Two bands from rival houses share the night.
-      fixtures: Math.round((totalBands * s.interHousePerBand) / 2),
-      actsPerFixture: 2,
-      purpose:
-        "Direct match-ups against rival house bands across regional hub venues. Two fanbases in one room — the biggest draw on the calendar.",
+        "Every pair of bands inside a house meets once — mashups, collaborations and head-to-head sets. The house keeps its full franchise share either way, so it is a cross-audience play rather than a cannibalisation risk.",
     },
   ];
   return {
     houses: s.houses,
     bandsPerHouse: s.bandsPerHouse,
     totalBands,
-    showsPerBand: s.soloPerBand + s.intraHousePerBand + s.interHousePerBand,
+    individualShowsPerBand: s.ticketedSoloPerBand + s.campusSoloPerBand,
+    showsPerBand: s.ticketedSoloPerBand + s.campusSoloPerBand + s.intraHousePerBand,
     categories,
+    crossPairsPerHouse: pairingsOf(s.bandsPerHouse),
     totalFixtures: categories.reduce((sum, c) => sum + c.fixtures, 0),
   };
 }
@@ -192,10 +211,239 @@ export function computeMatchMatrix(s: MatrixStructure): MatchMatrix {
 export const STAGE_2_MATRIX = computeMatchMatrix(STAGE_2_STRUCTURE);
 
 /* ------------------------------------------------------------------ *
+ * Finals — from the league phase to one champion
+ *
+ * The qualifying rule is the top quartile of the table, which in a 20-band
+ * season comes to 5 bands. The league seeds that as one qualifier per
+ * production house, so every franchise still has something to play for in
+ * the closing weeks.
+ * ------------------------------------------------------------------ */
+
+export interface FinalsStructure {
+  finalists: number;
+  /** Round robin among finalists: finalists choose 2. */
+  rivalryFixtures: number;
+  rivalryPerFinalist: number;
+  eliminatorFixtures: number;
+  grandFinalFixtures: number;
+  totalFinalsFixtures: number;
+}
+
+export function computeFinals(finalists: number): FinalsStructure {
+  const rivalryFixtures = pairingsOf(finalists);
+  return {
+    finalists,
+    rivalryFixtures,
+    rivalryPerFinalist: Math.max(0, finalists - 1),
+    eliminatorFixtures: 1,
+    grandFinalFixtures: 1,
+    totalFinalsFixtures: rivalryFixtures + 2,
+  };
+}
+
+/** Finalists = the top quartile of the league table, one seat per house. */
+export const STAGE_2_FINALS = computeFinals(qualifyingCount(STAGE_2_MATRIX.totalBands));
+
+/** Every live night in a full season, league phase through the grand final. */
+export const STAGE_2_SEASON_FIXTURES =
+  STAGE_2_MATRIX.totalFixtures + STAGE_2_FINALS.totalFinalsFixtures;
+
+export interface KnockoutStep {
+  stage: string;
+  seeds: string;
+  detail: string;
+}
+
+export const KNOCKOUT_ROUTE: KnockoutStep[] = [
+  {
+    stage: "Rivalry Round",
+    seeds: `All ${STAGE_2_FINALS.finalists} finalists`,
+    detail: `Every finalist meets every other finalist once — ${STAGE_2_FINALS.rivalryFixtures} nights, ${STAGE_2_FINALS.rivalryPerFinalist} apiece. Points carry the same weight as the league phase, so the table reorders on merit rather than reputation.`,
+  },
+  {
+    stage: "Direct Entry",
+    seeds: "Rank 1",
+    detail:
+      "The band topping the rivalry table goes straight to the grand final and sits out the eliminator. Finishing first is worth a week of rest and a night off the road.",
+  },
+  {
+    stage: "Eliminator",
+    seeds: "Rank 2 v Rank 3",
+    detail:
+      "One shared night, winner takes the second grand-final slot. The loser finishes third for the season.",
+  },
+  {
+    stage: "Grand Final",
+    seeds: "Rank 1 v Eliminator winner",
+    detail:
+      "A single-venue, broadcast-packaged final. Ranks 4 and 5 are eliminated on standings — no play-off, the table decides.",
+  },
+];
+
+/* ------------------------------------------------------------------ *
+ * Season calendar
+ * ------------------------------------------------------------------ */
+
+export interface SeasonPhase {
+  phase: string;
+  title: string;
+  weeks: string;
+  weekCount: number;
+  detail: string;
+}
+
+export const SEASON_PHASES: SeasonPhase[] = [
+  {
+    phase: "Phase 0",
+    title: "Onboarding & Pre-Production",
+    weeks: "Weeks 1–3",
+    weekCount: 3,
+    detail:
+      "Franchise draft, band contracts, rehearsal blocks and the first writing sessions. No fixtures and no points — the season is being loaded, not played.",
+  },
+  {
+    phase: "Phase 1",
+    title: "Individual Circuit",
+    weeks: "Weeks 4–15",
+    weekCount: 12,
+    detail: `The bulk of the calendar. Each band plays its ${STAGE_2_MATRIX.individualShowsPerBand} solo nights — ${STAGE_2_STRUCTURE.ticketedSoloPerBand} ticketed, ${STAGE_2_STRUCTURE.campusSoloPerBand} campus — across the regional hubs while originals drop on a rolling schedule.`,
+  },
+  {
+    phase: "Phase 2",
+    title: "House Cross Phase",
+    weeks: "Weeks 16–19",
+    weekCount: 4,
+    detail: `Every pairing inside every house — ${STAGE_2_MATRIX.crossPairsPerHouse} nights per house, ${STAGE_2_MATRIX.categories[2].fixtures} in total. Collaborations and mashups, with the House Cup decided on cumulative points.`,
+  },
+  {
+    phase: "Phase 3",
+    title: "Finalist Rivalry",
+    weeks: "Weeks 20–22",
+    weekCount: 3,
+    detail: `The ${STAGE_2_FINALS.finalists} qualifiers play a full round robin — ${STAGE_2_FINALS.rivalryFixtures} nights that set the knockout seeding.`,
+  },
+  {
+    phase: "Phase 4",
+    title: "Eliminator & Grand Final",
+    weeks: "Week 23",
+    weekCount: 1,
+    detail:
+      "Two nights, one champion. Packaged as the season's broadcast centrepiece rather than as just another fixture.",
+  },
+];
+
+export const SEASON_WEEKS = SEASON_PHASES.reduce((s, p) => s + p.weekCount, 0);
+/** Competitive weeks only — everything after onboarding. */
+export const COMPETITIVE_WEEKS = SEASON_WEEKS - SEASON_PHASES[0].weekCount;
+
+/* ------------------------------------------------------------------ *
+ * Original music release cycle
+ *
+ * A band cannot write, record, shoot and market a single every month. The
+ * league runs a 60-day cycle per band and staggers the start dates, so the
+ * ecosystem publishes continuously while no individual band is overloaded.
+ * ------------------------------------------------------------------ */
+
+export interface ReleaseStage {
+  weeks: string;
+  title: string;
+  detail: string;
+}
+
+export const RELEASE_CYCLE_DAYS = 60;
+
+export const RELEASE_CYCLE: ReleaseStage[] = [
+  {
+    weeks: "Weeks 1–2",
+    title: "Write & Arrange",
+    detail: "Composition, lyric passes and arrangement locked with the house's producer.",
+  },
+  {
+    weeks: "Weeks 3–4",
+    title: "Record, Mix & Master",
+    detail: "Studio time financed by the production house; masters delivered ready for distribution.",
+  },
+  {
+    weeks: "Week 5",
+    title: "Music Video",
+    detail: "Shoot and edit — the asset that carries the release on YouTube and social.",
+  },
+  {
+    weeks: "Week 6",
+    title: "Artwork & Distribution",
+    detail: "Cover art, credits, metadata and delivery to the distributor ahead of the release date.",
+  },
+  {
+    weeks: "Weeks 7–8",
+    title: "Promotion & Fixture Tie-In",
+    detail: "The campaign runs into a scheduled fixture, so the live room doubles as the launch event.",
+  },
+];
+
+/**
+ * Eligibility for the Original IP points. A release has to be a real
+ * commercial release, not an upload timed to game the table.
+ */
+export const RELEASE_ELIGIBILITY: string[] = [
+  "Original composition — no covers, no re-uploads of prior catalogue",
+  "Full credits filed for writers, performers and producers",
+  "Commercial release through a recognised distributor",
+  "Official audio or music video published, not a rehearsal clip",
+  "Live on platforms at least 7 days before the fixture matchday",
+];
+
+/** Days between releases across the league when bands stagger their cycles. */
+export function releaseCadenceDays(totalBands: number, cycleDays = RELEASE_CYCLE_DAYS): number {
+  return cycleDays / Math.max(1, totalBands);
+}
+
+/** Originals one band can realistically ship inside a season of this length. */
+export function releasesPerSeason(seasonWeeks: number, cycleDays = RELEASE_CYCLE_DAYS): number {
+  return Math.floor((seasonWeeks * 7) / cycleDays);
+}
+
+/* ------------------------------------------------------------------ *
  * Zone architecture — the three-tier pyramid
  * ------------------------------------------------------------------ */
 
 export type ZoneTier = "national" | "zone" | "state";
+
+/**
+ * A hub city carries its own market weights, because "the economics of a
+ * fixture" is not one number nationally — a Bengaluru room prices, fills and
+ * costs differently from a Vijayawada one.
+ *
+ * The four indices are relative to a notional baseline of 1.0 (roughly a
+ * mid-market Tier-2 room). `fixtureShare` is that city's slice of its zone's
+ * fixture calendar and sums to 1 across the zone, which is what lets the
+ * economics slicer scope a season down to a single market without
+ * double-counting nights.
+ */
+export interface HubCity {
+  city: string;
+  state: string;
+  note: string;
+  /** This city's share of the zone's fixture calendar. Sums to 1 per zone. */
+  fixtureShare: number;
+  /** Ticket price the market bears. */
+  priceIdx: number;
+  /** Typical room size. */
+  capacityIdx: number;
+  /** Cost of staging a night here. */
+  costIdx: number;
+  /** How far content from this market travels digitally. */
+  reachIdx: number;
+}
+
+/** Share-weighted average of one index across a zone's cities. */
+export function zoneIndex(
+  cities: HubCity[],
+  key: "priceIdx" | "capacityIdx" | "costIdx" | "reachIdx",
+): number {
+  const total = cities.reduce((sum, c) => sum + c.fixtureShare, 0);
+  if (total === 0) return 1;
+  return cities.reduce((sum, c) => sum + c[key] * c.fixtureShare, 0) / total;
+}
 
 export interface Zone {
   /** URL slug — /league/<slug> for the tier-2 hubs. */
@@ -208,7 +456,7 @@ export interface Zone {
   status: string;
   headline: string;
   languages: string[];
-  hubCities: { city: string; state: string; note: string }[];
+  hubCities: HubCity[];
   strategy: string;
   campusChapters: number;
   accent: string;
@@ -223,7 +471,18 @@ export const ZONES: Zone[] = [
     status: "Year 2+",
     headline: "The top two bands from every zone meet on one stage.",
     languages: ["Pan-India"],
-    hubCities: [{ city: "Rotating host", state: "National", note: "Single-venue broadcast finale" }],
+    hubCities: [
+      {
+        city: "Rotating host",
+        state: "National",
+        note: "Single-venue broadcast finale",
+        fixtureShare: 1,
+        priceIdx: 1.6,
+        capacityIdx: 2.2,
+        costIdx: 1.9,
+        reachIdx: 2.2,
+      },
+    ],
     strategy:
       "One national final, broadcast as a property in its own right. Zone champions arrive with a season of catalogue and a proven live draw behind them.",
     campusChapters: 0,
@@ -239,12 +498,12 @@ export const ZONES: Zone[] = [
     headline: "State winners from across the South meet in cross-state fixtures.",
     languages: ["Telugu", "Tamil", "Kannada", "Malayalam"],
     hubCities: [
-      { city: "Chennai", state: "Tamil Nadu", note: "Deep live circuit and college-band culture" },
-      { city: "Coimbatore", state: "Tamil Nadu", note: "Strong regional touring stop" },
-      { city: "Bengaluru", state: "Karnataka", note: "India's densest indie and pub-gig market" },
-      { city: "Mysuru", state: "Karnataka", note: "Campus-heavy secondary hub" },
-      { city: "Kochi", state: "Kerala", note: "Established festival and fusion audience" },
-      { city: "Trivandrum", state: "Kerala", note: "Emerging original-music scene" },
+      { city: "Bengaluru", state: "Karnataka", note: "India's densest indie and pub-gig market", fixtureShare: 0.28, priceIdx: 1.35, capacityIdx: 1.35, costIdx: 1.3, reachIdx: 1.45 },
+      { city: "Chennai", state: "Tamil Nadu", note: "Deep live circuit and college-band culture", fixtureShare: 0.24, priceIdx: 1.2, capacityIdx: 1.3, costIdx: 1.2, reachIdx: 1.25 },
+      { city: "Kochi", state: "Kerala", note: "Established festival and fusion audience", fixtureShare: 0.16, priceIdx: 1.05, capacityIdx: 1.0, costIdx: 1.02, reachIdx: 1.0 },
+      { city: "Coimbatore", state: "Tamil Nadu", note: "Strong regional touring stop", fixtureShare: 0.12, priceIdx: 0.88, capacityIdx: 0.85, costIdx: 0.9, reachIdx: 0.8 },
+      { city: "Mysuru", state: "Karnataka", note: "Campus-heavy secondary hub", fixtureShare: 0.1, priceIdx: 0.85, capacityIdx: 0.8, costIdx: 0.85, reachIdx: 0.72 },
+      { city: "Trivandrum", state: "Kerala", note: "Emerging original-music scene", fixtureShare: 0.1, priceIdx: 0.9, capacityIdx: 0.85, costIdx: 0.9, reachIdx: 0.82 },
     ],
     strategy:
       "Capitalise on the live music, pub and indie culture already running in Bengaluru and Chennai. Cross-state fixtures — a Hyderabad franchise against a Bengaluru franchise — turn a state league into a regional rivalry with two fanbases per night.",
@@ -265,12 +524,17 @@ export const ZONES: Zone[] = [
         city: "Delhi NCR",
         state: "Delhi · Haryana · UP",
         note: "National brand and sponsorship centre, with venue density in Gurgaon and the campus belt and production base in Noida",
+        fixtureShare: 0.26,
+        priceIdx: 1.4,
+        capacityIdx: 1.4,
+        costIdx: 1.35,
+        reachIdx: 1.55,
       },
-      { city: "Mumbai", state: "Maharashtra", note: "Label, sync and OTT decision-makers" },
-      { city: "Pune", state: "Maharashtra", note: "Large student audience, active gig scene" },
-      { city: "Kolkata", state: "West Bengal", note: "Long-standing band culture" },
-      { city: "Guwahati", state: "Assam", note: "North-East rock and metal heartland" },
-      { city: "Chandigarh", state: "Punjab", note: "Punjabi-language crossover audience" },
+      { city: "Mumbai", state: "Maharashtra", note: "Label, sync and OTT decision-makers", fixtureShare: 0.24, priceIdx: 1.5, capacityIdx: 1.35, costIdx: 1.45, reachIdx: 1.6 },
+      { city: "Pune", state: "Maharashtra", note: "Large student audience, active gig scene", fixtureShare: 0.16, priceIdx: 1.1, capacityIdx: 1.1, costIdx: 1.1, reachIdx: 1.1 },
+      { city: "Kolkata", state: "West Bengal", note: "Long-standing band culture", fixtureShare: 0.14, priceIdx: 0.95, capacityIdx: 1.05, costIdx: 0.98, reachIdx: 1.0 },
+      { city: "Guwahati", state: "Assam", note: "North-East rock and metal heartland", fixtureShare: 0.1, priceIdx: 0.85, capacityIdx: 0.9, costIdx: 0.92, reachIdx: 0.85 },
+      { city: "Chandigarh", state: "Punjab", note: "Punjabi-language crossover audience", fixtureShare: 0.1, priceIdx: 1.0, capacityIdx: 0.95, costIdx: 1.0, reachIdx: 0.95 },
     ],
     strategy:
       "Target high-CPM digital markets. The Hindi belt brings larger streaming numbers per release, national brand sponsorship budgets and the OTT buyers who matter for broadcast — which is why it comes after the format is proven, not before.",
@@ -287,9 +551,10 @@ export const ZONES: Zone[] = [
     headline: "The proof-of-concept market where the format is being built.",
     languages: ["Telugu"],
     hubCities: [
-      { city: "Hyderabad", state: "Telangana", note: "Primary hub — venues, studios and production base" },
-      { city: "Visakhapatnam", state: "Andhra Pradesh", note: "Coastal hub with a strong college circuit" },
-      { city: "Vijayawada", state: "Andhra Pradesh", note: "Central AP fixture stop" },
+      { city: "Hyderabad", state: "Telangana", note: "Primary hub — venues, studios and production base", fixtureShare: 0.4, priceIdx: 1.15, capacityIdx: 1.3, costIdx: 1.15, reachIdx: 1.3 },
+      { city: "Visakhapatnam", state: "Andhra Pradesh", note: "Coastal hub with a strong college circuit", fixtureShare: 0.25, priceIdx: 0.92, capacityIdx: 0.9, costIdx: 0.92, reachIdx: 0.88 },
+      { city: "Vijayawada", state: "Andhra Pradesh", note: "Central AP fixture stop", fixtureShare: 0.2, priceIdx: 0.82, capacityIdx: 0.8, costIdx: 0.85, reachIdx: 0.75 },
+      { city: "Tirupati", state: "Andhra Pradesh", note: "South Andhra hub — temple-town footfall and a young campus base", fixtureShare: 0.15, priceIdx: 0.75, capacityIdx: 0.72, costIdx: 0.8, reachIdx: 0.65 },
     ],
     strategy:
       "Prove the unit economics and the fixture format in one language market before spending a rupee on a second. Telugu indie, classical-pop fusion and rock sit alongside a campus network that can be relied on for turnout show after show.",
