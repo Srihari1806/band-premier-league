@@ -16,6 +16,7 @@ import { Route as PartnersRouteImport } from './routes/partners'
 import { Route as OnboardingRouteImport } from './routes/onboarding'
 import { Route as MediaRouteImport } from './routes/media'
 import { Route as LoginRouteImport } from './routes/login'
+import { Route as HandbookRouteImport } from './routes/handbook'
 import { Route as EventsRouteImport } from './routes/events'
 import { Route as EconomicsRouteImport } from './routes/economics'
 import { Route as DashboardRouteImport } from './routes/dashboard'
@@ -72,6 +73,11 @@ const MediaRoute = MediaRouteImport.update({
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
   path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const HandbookRoute = HandbookRouteImport.update({
+  id: '/handbook',
+  path: '/handbook',
   getParentRoute: () => rootRouteImport,
 } as any)
 const EventsRoute = EventsRouteImport.update({
@@ -195,6 +201,7 @@ export interface FileRoutesByFullPath {
   '/dashboard': typeof DashboardRoute
   '/economics': typeof EconomicsRoute
   '/events': typeof EventsRoute
+  '/handbook': typeof HandbookRoute
   '/login': typeof LoginRoute
   '/media': typeof MediaRoute
   '/onboarding': typeof OnboardingRoute
@@ -226,6 +233,7 @@ export interface FileRoutesByTo {
   '/dashboard': typeof DashboardRoute
   '/economics': typeof EconomicsRoute
   '/events': typeof EventsRoute
+  '/handbook': typeof HandbookRoute
   '/login': typeof LoginRoute
   '/media': typeof MediaRoute
   '/onboarding': typeof OnboardingRoute
@@ -258,6 +266,7 @@ export interface FileRoutesById {
   '/dashboard': typeof DashboardRoute
   '/economics': typeof EconomicsRoute
   '/events': typeof EventsRoute
+  '/handbook': typeof HandbookRoute
   '/login': typeof LoginRoute
   '/media': typeof MediaRoute
   '/onboarding': typeof OnboardingRoute
@@ -291,6 +300,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/economics'
     | '/events'
+    | '/handbook'
     | '/login'
     | '/media'
     | '/onboarding'
@@ -322,6 +332,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/economics'
     | '/events'
+    | '/handbook'
     | '/login'
     | '/media'
     | '/onboarding'
@@ -353,6 +364,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/economics'
     | '/events'
+    | '/handbook'
     | '/login'
     | '/media'
     | '/onboarding'
@@ -385,6 +397,7 @@ export interface RootRouteChildren {
   DashboardRoute: typeof DashboardRoute
   EconomicsRoute: typeof EconomicsRoute
   EventsRoute: typeof EventsRoute
+  HandbookRoute: typeof HandbookRoute
   LoginRoute: typeof LoginRoute
   MediaRoute: typeof MediaRoute
   OnboardingRoute: typeof OnboardingRoute
@@ -455,6 +468,13 @@ declare module '@tanstack/react-router' {
       path: '/login'
       fullPath: '/login'
       preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/handbook': {
+      id: '/handbook'
+      path: '/handbook'
+      fullPath: '/handbook'
+      preLoaderRoute: typeof HandbookRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/events': {
@@ -634,6 +654,7 @@ const rootRouteChildren: RootRouteChildren = {
   DashboardRoute: DashboardRoute,
   EconomicsRoute: EconomicsRoute,
   EventsRoute: EventsRoute,
+  HandbookRoute: HandbookRoute,
   LoginRoute: LoginRoute,
   MediaRoute: MediaRoute,
   OnboardingRoute: OnboardingRoute,
