@@ -684,10 +684,25 @@ function EventEconomics({ scope }: { scope: Scope }) {
             <h3 className="text-sm font-bold text-white flex items-center gap-2">
               <SlidersHorizontal size={14} className="text-amber-400" /> Cost to Stage
             </h3>
-            <div className="space-y-1.5 text-xs max-h-[19rem] overflow-y-auto pr-1">
-              {e.costLines.map((l) => (
-                <Row key={l.label} label={l.label} value={inr(l.amount)} muted={l.amount === 0} />
-              ))}
+            <p className="text-[10px] text-muted-foreground leading-relaxed">
+              Every line is editable. Typing here changes the underlying rate in the registry, so it
+              moves every other event that uses it — not just this one.
+            </p>
+            <div className="space-y-2 text-xs max-h-[19rem] overflow-y-auto pr-1">
+              {e.costLines.map((l) =>
+                l.id ? (
+                  <CostLine
+                    key={l.id}
+                    label={l.label}
+                    rate={l.rawRate ?? 0}
+                    amount={l.amount}
+                    multiplier={e.tier.multiplier}
+                    onChange={(v) => setOverrides((prev) => ({ ...prev, [l.id as string]: v }))}
+                  />
+                ) : (
+                  <Row key={l.label} label={l.label} value={inr(l.amount)} muted={l.amount === 0} />
+                ),
+              )}
             </div>
             <div className="border-t border-border/60 pt-2">
               <Row label="Total cost" value={inr(e.costTotal)} bold />
@@ -738,6 +753,17 @@ function EventEconomics({ scope }: { scope: Scope }) {
               Note what this figure is not: it is the operator's contribution, after the bands and
               their houses have already been paid in full. A night can be loss-making here and still
               have paid every musician who played it.
+            </p>
+            <p className="text-[10px] text-muted-foreground leading-relaxed">
+              <span className="font-semibold text-white">Who carries the staging cost:</span> the
+              operator, out of its {EVENT_SPLIT.operator}% — not the production house. A house is
+              liable for what it signed up to (acquisition, guarantees, creative, marketing, mentor),
+              and never for an unlimited event loss because its band happened to be on that night.
+              That envelope is modelled separately under{" "}
+              <a href="#auction" className="text-primary-glow font-semibold hover:underline">
+                the artist draft
+              </a>
+              .
             </p>
           </div>
 
@@ -1002,6 +1028,49 @@ function EventEconomics({ scope }: { scope: Scope }) {
         )}
       </section>
     </>
+  );
+}
+
+/**
+ * An editable cost line. Edits the underlying RATE, not the tier-multiplied
+ * amount, because the rate is the thing that lives in the registry and moves
+ * every other event using it. Where a tier multiplier applies, both figures
+ * are shown so it is obvious which one is being typed into.
+ */
+function CostLine({
+  label,
+  rate,
+  amount,
+  multiplier,
+  onChange,
+}: {
+  label: string;
+  rate: number;
+  amount: number;
+  multiplier: number;
+  onChange: (v: number) => void;
+}) {
+  return (
+    <div className="flex items-center justify-between gap-2">
+      <span className="text-muted-foreground leading-snug min-w-0 flex-1">{label}</span>
+      <div className="flex items-center gap-1.5 shrink-0">
+        {multiplier !== 1 && (
+          <span className="text-[10px] text-muted-foreground tabular-nums">
+            ×{multiplier} = {inr(amount)}
+          </span>
+        )}
+        <span className="text-[11px] text-muted-foreground">₹</span>
+        <input
+          type="number"
+          value={rate}
+          min={0}
+          step={500}
+          aria-label={`${label} cost`}
+          onChange={(e) => onChange(Math.max(0, Number(e.target.value) || 0))}
+          className="w-24 rounded border border-border bg-background/70 px-2 py-1 text-right text-xs font-semibold text-white tabular-nums focus:border-primary/60 focus:outline-none"
+        />
+      </div>
+    </div>
   );
 }
 
@@ -1535,11 +1604,26 @@ function TwoModules() {
 
 function AuctionPurse() {
   const [bids, setBids] = useState<number[]>(DEFAULT_BIDS);
+  /** Caps are planning regulations, so they are editable like everything else. */
+  const [capOverrides, setCapOverrides] = useState<Record<string, number>>({});
+  const capOf = (id: string) =>
+    capOverrides[id] ?? SPEND_CAPS.find((c) => c.id === id)?.amount ?? 0;
+
   const purse = useMemo(() => evaluatePurse(bids), [bids]);
-  const commitment = useMemo(
-    () => houseCommitment(purse.spent, purse.guarantees),
-    [purse.spent, purse.guarantees],
-  );
+  const commitment = useMemo(() => {
+    const creative = capOf("creative") * AUCTION.bandsRequired;
+    const marketing = capOf("marketing");
+    const mentor = capOf("mentor");
+    return {
+      acquisition: purse.spent,
+      guarantees: purse.guarantees,
+      creative,
+      marketing,
+      mentor,
+      total: purse.spent + purse.guarantees + creative + marketing + mentor,
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [purse.spent, purse.guarantees, capOverrides]);
 
   const setBid = (i: number, v: number) =>
     setBids((prev) => prev.map((b, idx) => (idx === i ? Math.max(0, v) : b)));
@@ -1660,16 +1744,44 @@ function AuctionPurse() {
             <h3 className="text-sm font-bold text-white flex items-center gap-2">
               <Wallet size={14} className="text-cyan-400" /> Regulated Envelope
             </h3>
+            <p className="text-[10px] text-muted-foreground leading-relaxed">
+              This is the production house&apos;s money — everything it commits across a season. The
+              caps are editable, because they are planning regulations rather than facts.
+            </p>
             <div className="space-y-2 text-xs">
-              <Row label="Acquisition (this roster)" value={inr(commitment.acquisition)} muted />
-              <Row label="Artist guarantees" value={inr(commitment.guarantees)} muted />
               <Row
-                label={`Creative allocation (${AUCTION.bandsRequired} × ${inr(commitment.creative / AUCTION.bandsRequired)})`}
-                value={inr(commitment.creative)}
+                label="Acquisition (this roster)"
+                value={inr(commitment.acquisition)}
+                note="Set by the sealed bids"
                 muted
               />
-              <Row label="Marketing cap" value={inr(commitment.marketing)} muted />
-              <Row label="Mentor cap" value={inr(commitment.mentor)} muted />
+              <Row
+                label="Artist guarantees"
+                value={inr(commitment.guarantees)}
+                note="Derived from the bid brackets"
+                muted
+              />
+              <CostLine
+                label={`Creative allocation (per band × ${AUCTION.bandsRequired})`}
+                rate={capOf("creative")}
+                amount={commitment.creative}
+                multiplier={AUCTION.bandsRequired}
+                onChange={(v) => setCapOverrides((prev) => ({ ...prev, creative: v }))}
+              />
+              <CostLine
+                label="Marketing cap"
+                rate={capOf("marketing")}
+                amount={commitment.marketing}
+                multiplier={1}
+                onChange={(v) => setCapOverrides((prev) => ({ ...prev, marketing: v }))}
+              />
+              <CostLine
+                label="Mentor cap"
+                rate={capOf("mentor")}
+                amount={commitment.mentor}
+                multiplier={1}
+                onChange={(v) => setCapOverrides((prev) => ({ ...prev, mentor: v }))}
+              />
               <div className="border-t border-border/60 pt-2">
                 <Row
                   label="Maximum regulated commitment"
@@ -1681,7 +1793,12 @@ function AuctionPurse() {
             </div>
             <p className="text-[10px] text-muted-foreground leading-relaxed border-t border-border/40 pt-3">
               A ceiling, not a bill. Only the acquisition purse and the artist guarantees are
-              committed spend — the rest are caps a house may spend up to, and many will not.
+              committed spend — the rest are caps a house may spend up to, and many will not.{" "}
+              <span className="text-white font-semibold">
+                Event staging cost is deliberately absent:
+              </span>{" "}
+              the operator carries that out of its {EVENT_SPLIT.operator}% of net gate, so a house is
+              never exposed to an unlimited event loss.
             </p>
           </div>
 
@@ -2289,7 +2406,7 @@ function EconomicsPage() {
                   value={inputs.youtubeViewsAnnual}
                   step={100000}
                   onChange={(v) => patch({ youtubeViewsAnnual: v })}
-                  hint={`= ${inr((inputs.youtubeViewsAnnual / 1000) * inputs.youtubeRpm)} at current RPM`}
+                  hint={`= ${inr((scopedInputs.youtubeViewsAnnual / 1000) * inputs.youtubeRpm)} at current RPM`}
                 />
                 <NumberField
                   label="YouTube RPM"
@@ -2390,7 +2507,7 @@ function EconomicsPage() {
             </p>
             <p className="text-xs text-muted-foreground leading-relaxed">
               What it buys is the room. Two fanbases in one venue takes the draw from{" "}
-              {inputs.attendance} to {m.sharedShow.attendance} — an extra{" "}
+              {scopedInputs.attendance} to {m.sharedShow.attendance} — an extra{" "}
               <span className="font-semibold text-white">
                 {numCompact(m.sharedNightExtraFootfall)} people
               </span>{" "}
@@ -2440,7 +2557,9 @@ function EconomicsPage() {
             <div className="space-y-2 text-xs">
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Fixtures per band</span>
-                <span className="font-bold text-white tabular-nums">{inputs.showsPerBand}</span>
+                <span className="font-bold text-white tabular-nums">
+                  {scopedInputs.showsPerBand}
+                </span>
               </div>
               <div className="flex justify-between">
                 <span className="text-emerald-300">Solo showcases</span>
@@ -2498,7 +2617,7 @@ function EconomicsPage() {
             <p className="text-[10px] text-muted-foreground leading-relaxed flex gap-1.5 pt-3 border-t border-border/60">
               <Info size={12} className="shrink-0 mt-0.5" />
               <span>
-                Cadence is an output, not a dial: {m.totalBands} bands × {inputs.showsPerBand}{" "}
+                Cadence is an output, not a dial: {m.totalBands} bands × {scopedInputs.showsPerBand}{" "}
                 appearances resolve to {m.totalFixtures} ticketed nights, because shared stages are
                 counted once. Gate only — catalogue, licensing, broadcast, sponsorship and
                 memberships sit outside this pool.
@@ -2563,7 +2682,7 @@ function EconomicsPage() {
                 {m.phSeasonMultiple.toFixed(2)}×
               </p>
               <p className="text-[11px] text-muted-foreground">
-                {inr(inputs.winningBid)} in, {inr(m.phSeasonTotal)} back
+                {inr(scopedInputs.winningBid)} in, {inr(m.phSeasonTotal)} back
               </p>
             </div>
           </div>
@@ -2577,13 +2696,13 @@ function EconomicsPage() {
               <div className="flex justify-between items-baseline">
                 <span className="text-sm text-white font-semibold">Winning Bid</span>
                 <span className="text-2xl font-display font-extrabold text-rose-300 tabular-nums">
-                  {inr(inputs.winningBid)}
+                  {inr(scopedInputs.winningBid)}
                 </span>
               </div>
               <p className="text-[11px] text-muted-foreground leading-relaxed">
                 Funds music and video production for the{" "}
-                {inputs.bandsPerFranchise > 1
-                  ? `${inputs.bandsPerFranchise} bands the house signs`
+                {scopedInputs.bandsPerFranchise > 1
+                  ? `${scopedInputs.bandsPerFranchise} bands the house signs`
                   : "band the house signs"}
                 , plus its own overhead. It is the only figure the franchise carries.
               </p>

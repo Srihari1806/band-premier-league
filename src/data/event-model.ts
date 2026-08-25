@@ -264,6 +264,10 @@ export interface EventLine {
   label: string;
   amount: number;
   detail?: string;
+  /** Assumption id behind a cost line, so the UI can edit it in place. */
+  id?: string;
+  /** The rate before the fixture-tier multiplier is applied. */
+  rawRate?: number;
 }
 
 export interface EventInputs {
@@ -383,6 +387,8 @@ export function computeEventPnL(
     const raw = rateOf(id, overrides);
     const amount = Math.round(raw * tier.multiplier);
     return {
+      id,
+      rawRate: raw,
       label: a ? a.kpi : id,
       amount,
       detail:
