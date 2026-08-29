@@ -17,7 +17,6 @@
 
 import {
   STAGE_2_MATRIX,
-  STAGE_2_STRUCTURE,
   STAGE_2_FINALS,
   ZONES,
   zoneIndex,
@@ -106,6 +105,9 @@ export interface FixtureDim {
 
 const CAT = STAGE_2_MATRIX.categories;
 
+/** Solo fixtures every band plays, identical in every zone. */
+const INDIVIDUAL_PER_BAND = STAGE_2_MATRIX.individualShowsPerBand;
+
 export const FIXTURE_DIMS: FixtureDim[] = [
   {
     id: "all",
@@ -187,21 +189,39 @@ export interface HouseDim {
   label: string;
 }
 
-export const HOUSES: HouseDim[] = [
-  { id: "all", label: "All houses" },
-  ...Array.from({ length: STAGE_2_STRUCTURE.houses }, (_, i) => ({
-    id: `house-${i + 1}`,
-    label: `House ${ROMAN[i] ?? i + 1}`,
-  })),
-];
+export function housesFor(zone: Zone): HouseDim[] {
+  return [
+    { id: "all", label: "All houses" },
+    ...Array.from({ length: zone.houses }, (_, i) => ({
+      id: `house-${i + 1}`,
+      label: `House ${ROMAN[i] ?? i + 1}`,
+    })),
+  ];
+}
 
-export const BAND_SLOTS: HouseDim[] = [
-  { id: "all", label: "All bands" },
-  ...Array.from({ length: STAGE_2_STRUCTURE.bandsPerHouse }, (_, i) => ({
-    id: `band-${i + 1}`,
-    label: `Band ${i + 1}`,
-  })),
-];
+export const HOUSES: HouseDim[] = housesFor(
+  ZONES.reduce((a, b) => (b.houses > a.houses ? b : a)),
+);
+
+/**
+ * Band slots depend on the zone in view: AP/TS houses sign four bands, every
+ * other regional league signs two. Offering four slots in Karnataka would let
+ * the slicer scope to a band that does not exist.
+ */
+export function bandSlotsFor(zone: Zone): HouseDim[] {
+  return [
+    { id: "all", label: "All bands" },
+    ...Array.from({ length: zone.bandsPerHouse }, (_, i) => ({
+      id: `band-${i + 1}`,
+      label: `Band ${i + 1}`,
+    })),
+  ];
+}
+
+/** Widest possible slot list, for callers that need every option up front. */
+export const BAND_SLOTS: HouseDim[] = bandSlotsFor(
+  ZONES.reduce((a, b) => (b.bandsPerHouse > a.bandsPerHouse ? b : a)),
+);
 
 /* ------------------------------------------------------------------ *
  * Selection and resolved scope
@@ -251,6 +271,14 @@ export interface Scope {
   showsPerBand: number;
   /** Share of the zone calendar the selected city carries. 1 when "all". */
   cityShare: number;
+  /** Solo share of this zone's fixture mix, after the cross count is resolved. */
+  soloSharePct: number;
+  /** Cross nights a band plays here — bandsPerHouse minus one. */
+  crossPerBand: number;
+
+  /* Option lists valid for the selected zone */
+  houseOptions: HouseDim[];
+  bandOptions: HouseDim[];
 
   /* Presentation */
   label: string;
@@ -276,8 +304,10 @@ export function resolveScope(sel: DimensionSelection): Scope {
   const zone = zoneOf(sel.zoneSlug);
   const city = sel.city === "all" ? null : (zone.hubCities.find((c) => c.city === sel.city) ?? null);
   const fixture = FIXTURE_DIMS.find((f) => f.id === sel.fixtureId) ?? FIXTURE_DIMS[0];
-  const house = HOUSES.find((h) => h.id === sel.houseId) ?? HOUSES[0];
-  const band = BAND_SLOTS.find((b) => b.id === sel.bandId) ?? BAND_SLOTS[0];
+  const zoneHouses = housesFor(zone);
+  const house = zoneHouses.find((h) => h.id === sel.houseId) ?? zoneHouses[0];
+  const zoneBandSlots = bandSlotsFor(zone);
+  const band = zoneBandSlots.find((b) => b.id === sel.bandId) ?? zoneBandSlots[0];
 
   // A city uses its own indices; the whole zone uses the share-weighted average
   // of its cities, so "All cities" is never an invented number.
@@ -287,8 +317,10 @@ export function resolveScope(sel: DimensionSelection): Scope {
   const reachIdx = city ? city.reachIdx : zoneIndex(zone.hubCities, "reachIdx");
   const cityShare = city ? city.fixtureShare : 1;
 
-  let houses = house.id === "all" ? STAGE_2_STRUCTURE.houses : 1;
-  let bandsPerHouse = band.id === "all" ? STAGE_2_STRUCTURE.bandsPerHouse : 1;
+  // The roster comes from the SELECTED zone. Reading it from AP/TS meant every
+  // zone reported a 20-band league, which is only true of AP/TS.
+  let houses = house.id === "all" ? zone.houses : 1;
+  let bandsPerHouse = band.id === "all" ? zone.bandsPerHouse : 1;
   let totalBands = houses * bandsPerHouse;
 
   /*
@@ -304,8 +336,24 @@ export function resolveScope(sel: DimensionSelection): Scope {
     totalBands = houses;
   }
 
+  /*
+   * Cross nights are pairings inside a house, so a two-band house gives each
+   * band ONE cross night and a four-band house gives three. Reading the count
+   * off AP/TS meant every zone was credited with three, which inflated both
+   * the fixture list and the points available outside AP/TS.
+   */
+  const crossPerBand = Math.max(0, zone.bandsPerHouse - 1);
+  let zoneShowsPerBand = fixture.showsPerBand;
+  let zoneSoloSharePct = fixture.soloSharePct;
+  if (fixture.id === "all") {
+    zoneShowsPerBand = INDIVIDUAL_PER_BAND + crossPerBand;
+    zoneSoloSharePct = Math.round((INDIVIDUAL_PER_BAND / zoneShowsPerBand) * 100);
+  } else if (fixture.id === "cross") {
+    zoneShowsPerBand = crossPerBand;
+  }
+
   // Scoping to one city scopes the number of nights played there, not the roster.
-  const showsPerBand = Math.max(1, Math.round(fixture.showsPerBand * cityShare));
+  const showsPerBand = Math.max(1, Math.round(zoneShowsPerBand * cityShare));
 
   const breadcrumb = [
     season.label,
@@ -343,9 +391,13 @@ export function resolveScope(sel: DimensionSelection): Scope {
     houses,
     bandsPerHouse,
     totalBands,
+    houseOptions: zoneHouses,
+    bandOptions: zoneBandSlots,
     showsPerBand,
     cityShare,
 
+    soloSharePct: zoneSoloSharePct,
+    crossPerBand,
     label: `${zone.shortName} · ${city ? city.city : "all cities"} · ${fixture.label.toLowerCase()}`,
     breadcrumb,
     isDefault,
@@ -366,7 +418,7 @@ export function applyScope(base: EconomicsInputs, scope: Scope): EconomicsInputs
     ticketPrice: Math.round(base.ticketPrice * scope.priceMult),
     attendance: Math.max(10, Math.round(base.attendance * scope.attendanceMult)),
     showsPerBand: scope.showsPerBand,
-    soloSharePct: scope.fixture.soloSharePct,
+    soloSharePct: scope.soloSharePct,
     numFranchises: scope.houses,
     bandsPerFranchise: scope.bandsPerHouse,
     winningBid: Math.round(base.winningBid * scope.bidMult),

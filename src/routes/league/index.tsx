@@ -43,6 +43,8 @@ import {
   COMPETITIVE_WEEKS,
   ANNUAL_CYCLE_WEEKS,
   COMPETITION_WEEKENDS,
+  NATIONAL_TOTAL_BANDS,
+  NATIONAL_TOTAL_HOUSES,
   RELEASE_CYCLE,
   RELEASE_CYCLE_DAYS,
   RELEASE_ELIGIBILITY,
@@ -188,7 +190,9 @@ function LeaguePage() {
               production house financing the work behind it.
             </p>
             <p className="text-xs text-muted-foreground leading-relaxed">
-              {STAGE_2_MATRIX.houses} production houses each sign {STAGE_2_MATRIX.bandsPerHouse} bands.
+              Nationally the league fields {NATIONAL_TOTAL_BANDS} bands across{" "}
+              {NATIONAL_TOTAL_HOUSES} production houses and {ZONE_HUBS.length} regional leagues. In
+              AP/TS specifically, {STAGE_2_MATRIX.houses} houses each sign {STAGE_2_MATRIX.bandsPerHouse} bands.
               Every band plays {STAGE_2_MATRIX.showsPerBand} fixtures — {STAGE_2_STRUCTURE.ticketedSoloPerBand}{" "}
               ticketed nights, {STAGE_2_STRUCTURE.campusSoloPerBand} campus nights and{" "}
               {STAGE_2_STRUCTURE.intraHousePerBand} house cross nights — while releasing original music
@@ -709,20 +713,23 @@ function LeaguePage() {
             <h2 className="text-xs uppercase tracking-widest text-primary-glow font-bold">
               Expansion Architecture
             </h2>
-            <h3 className="text-3xl font-display font-bold text-white">A Three-Tier Pyramid</h3>
+            <h3 className="text-3xl font-display font-bold text-white">
+              Five Leagues, One Championship
+            </h3>
             <p className="text-xs text-muted-foreground leading-relaxed">
-              State chapters feed zone leagues, zone leagues feed a national championship. Each tier
-              is a complete league in its own right, so the format earns its way up rather than
-              launching nationally on day one.
+              {ZONE_HUBS.length} regional leagues play the same weekends simultaneously and each
+              sends its qualifiers up to a single national championship. Every regional league is a
+              complete competition in its own right, so the format earns its way up market by market
+              rather than launching nationally on day one.
             </p>
           </div>
 
           {/* Pyramid */}
           <div className="space-y-4 mb-10">
-            {(["national", "zone", "state"] as const).map((tier) => {
+            {(["national", "state"] as const).map((tier) => {
               const tierZones = ZONES.filter((z) => z.tier === tier);
               const tierLabel =
-                tier === "national" ? "Tier 1 · National" : tier === "zone" ? "Tier 2 · Zonal" : "Tier 3 · State";
+                tier === "national" ? "Tier 1 · National Championship" : "Tier 2 · Regional Leagues";
               return (
                 <div key={tier} className="space-y-2">
                   <p className="text-[10px] uppercase tracking-widest font-bold text-muted-foreground text-center">

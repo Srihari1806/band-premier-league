@@ -38,6 +38,9 @@ import {
   STAGE_2_STRUCTURE,
   STAGE_2_FINALS,
   STAGE_2_SEASON_FIXTURES,
+  NATIONAL_TOTAL_BANDS,
+  NATIONAL_TOTAL_HOUSES,
+  ZONE_HUBS,
   KNOCKOUT_ROUTE,
   SEASON_PHASES,
   SEASON_WEEKS,
@@ -266,16 +269,16 @@ function HandbookPage() {
             <H
               id="format"
               eyebrow="Competition"
-              title={`${STAGE_2_MATRIX.totalBands} bands, ${STAGE_2_MATRIX.showsPerBand} fixtures each, ${STAGE_2_SEASON_FIXTURES} nights`}
-              sub={`${STAGE_2_MATRIX.houses} production houses sign ${STAGE_2_MATRIX.bandsPerHouse} bands apiece. Band appearances resolve into fewer actual nights, because a cross night is one shared stage rather than two shows.`}
+              title={`${NATIONAL_TOTAL_BANDS} bands, ${ZONE_HUBS.length} regional leagues`}
+              sub={`${NATIONAL_TOTAL_HOUSES} production houses nationally. AP/TS is the deepest zone at ${STAGE_2_MATRIX.houses} houses × ${STAGE_2_MATRIX.bandsPerHouse} bands = ${STAGE_2_MATRIX.totalBands}, playing ${STAGE_2_MATRIX.showsPerBand} fixtures each across ${STAGE_2_SEASON_FIXTURES} nights; every other zone signs two bands per house. Band appearances resolve into fewer actual nights, because a cross night is one shared stage rather than two shows.`}
               icon={<Trophy size={13} />}
             />
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 mb-5">
               {[
-                { v: STAGE_2_MATRIX.totalBands, l: "Bands" },
-                { v: STAGE_2_MATRIX.showsPerBand, l: "Fixtures / band" },
-                { v: STAGE_2_MATRIX.totalFixtures, l: "League-phase nights" },
-                { v: STAGE_2_SEASON_FIXTURES, l: "Nights incl. finals" },
+                { v: NATIONAL_TOTAL_BANDS, l: "Bands · national" },
+                { v: NATIONAL_TOTAL_HOUSES, l: "Houses · national" },
+                { v: STAGE_2_MATRIX.showsPerBand, l: "Fixtures / band · AP-TS" },
+                { v: STAGE_2_SEASON_FIXTURES, l: "Nights incl. finals · AP-TS" },
               ].map((s) => (
                 <div key={s.l} className="border border-border/50 rounded-lg p-4 bg-surface/30 text-center">
                   <p className="text-2xl font-display font-extrabold text-primary-glow tabular-nums">

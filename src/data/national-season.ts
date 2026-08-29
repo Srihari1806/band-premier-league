@@ -18,64 +18,30 @@
  * satisfy.
  */
 
+import {
+  ZONE_HUBS,
+  NATIONAL_TOTAL_HOUSES,
+  NATIONAL_TOTAL_BANDS,
+  type Zone,
+} from "./league-format";
+
 /* ------------------------------------------------------------------ *
  * The five regional leagues
  * ------------------------------------------------------------------ */
 
-export interface NationalZone {
-  id: string;
-  name: string;
-  houses: number;
-  bandsPerHouse: number;
-  languages: string;
-  note: string;
-}
+/**
+ * A regional league. This is now an alias of the zone definition in
+ * `league-format.ts` rather than a second list — the site was publishing two
+ * different zone taxonomies and two different band counts before they were
+ * merged.
+ */
+export type NationalZone = Zone;
 
-export const NATIONAL_ZONES: NationalZone[] = [
-  {
-    id: "ap-ts",
-    name: "AP / Telangana",
-    houses: 5,
-    bandsPerHouse: 4,
-    languages: "Telugu",
-    note: "The deep roster. This is where the format was proven, so it carries twice the bands of any other zone.",
-  },
-  {
-    id: "karnataka",
-    name: "Karnataka",
-    houses: 5,
-    bandsPerHouse: 2,
-    languages: "Kannada",
-    note: "India's densest indie and pub-gig market — the shortest path to a functioning live circuit.",
-  },
-  {
-    id: "kerala",
-    name: "Kerala",
-    houses: 5,
-    bandsPerHouse: 2,
-    languages: "Malayalam",
-    note: "Established festival and fusion audience already used to paying for live music.",
-  },
-  {
-    id: "tamil-nadu",
-    name: "Tamil Nadu",
-    houses: 5,
-    bandsPerHouse: 2,
-    languages: "Tamil",
-    note: "Deep live circuit and a college-band culture that feeds the campus leg directly.",
-  },
-  {
-    id: "north",
-    name: "North India",
-    houses: 5,
-    bandsPerHouse: 2,
-    languages: "Hindi, Punjabi, Bengali, Assamese, Marathi",
-    note: "Highest-CPM digital market and the sponsorship centre, entered once the format has a record.",
-  },
-];
+/** The five regional leagues, straight from the shared zone table. */
+export const NATIONAL_ZONES: NationalZone[] = ZONE_HUBS;
 
-export const TOTAL_HOUSES = NATIONAL_ZONES.reduce((s, z) => s + z.houses, 0);
-export const TOTAL_BANDS = NATIONAL_ZONES.reduce((s, z) => s + z.houses * z.bandsPerHouse, 0);
+export const TOTAL_HOUSES = NATIONAL_TOTAL_HOUSES;
+export const TOTAL_BANDS = NATIONAL_TOTAL_BANDS;
 
 /** Individual (solo) fixtures every band plays, in every zone. */
 export const INDIVIDUAL_FIXTURES_PER_BAND = 8;

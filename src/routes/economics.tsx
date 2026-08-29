@@ -93,8 +93,6 @@ import {
   SEASONS,
   SLICEABLE_ZONES,
   FIXTURE_DIMS,
-  HOUSES,
-  BAND_SLOTS,
   DEFAULT_SELECTION,
   resolveScope,
   applyScope,
@@ -2191,13 +2189,13 @@ function EconomicsPage() {
               <DimSelect
                 label="House"
                 value={dims.houseId}
-                options={HOUSES}
+                options={scope.houseOptions}
                 onChange={(v) => setDim({ houseId: v })}
               />
               <DimSelect
                 label="Band"
                 value={dims.bandId}
-                options={BAND_SLOTS}
+                options={scope.bandOptions}
                 onChange={(v) => setDim({ bandId: v })}
               />
               <DimSelect

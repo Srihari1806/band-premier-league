@@ -35,6 +35,7 @@ import {
   Trophy,
 } from "lucide-react";
 import { SPONSOR_INVENTORY, SPONSOR_TIER_META, sponsorInventoryValue } from "@/data/event-model";
+import { ZONE_HUBS, NATIONAL_TOTAL_HOUSES, NATIONAL_TOTAL_BANDS } from "@/data/league-format";
 import { inr, inrCompact } from "@/data/economics";
 
 const CAMPUS_STAGES = [
@@ -162,13 +163,15 @@ const FLYWHEEL = [
  * Chapter sizing as the league expands. AP/TS is the deep pilot; every
  * subsequent state opens at half the roster until it proves out.
  */
-const EXPANSION_MARKETS = [
-  { market: "AP / Telangana", houses: 5, bands: 4, languages: "Telugu", status: "Pilot — live" },
-  { market: "Karnataka", houses: 5, bands: 2, languages: "Kannada", status: "Year 1, Stage 3" },
-  { market: "Tamil Nadu", houses: 5, bands: 2, languages: "Tamil", status: "Year 1, Stage 3" },
-  { market: "Kerala", houses: 5, bands: 2, languages: "Malayalam", status: "Year 1, Stage 3" },
-  { market: "North / East / West", houses: 5, bands: 2, languages: "Hindi, Bengali, Punjabi, Assamese, Marathi", status: "Year 2" },
-];
+/** Derived from the shared zone table so it can never disagree with it. */
+const EXPANSION_MARKETS = ZONE_HUBS.map((z) => ({
+  market: z.name.replace(/ League$/, ""),
+  houses: z.houses,
+  bands: z.bandsPerHouse,
+  languages: z.languages.join(", "),
+  status: z.status,
+}));
+
 
 export const Route = createFileRoute("/about")({
   head: () => ({
@@ -263,7 +266,8 @@ function AboutPage() {
   >("comparison");
   const finalistsPerMarket = 5;
   const totalRegionalFinalists = EXPANSION_MARKETS.length * finalistsPerMarket;
-  const nationalBands = EXPANSION_MARKETS.reduce((sum, m) => sum + m.houses * m.bands, 0);
+  const nationalBands = NATIONAL_TOTAL_BANDS;
+  const nationalHouses = NATIONAL_TOTAL_HOUSES;
   const rateCardValue = sponsorInventoryValue();
   return (
     <PageShell>
@@ -1481,9 +1485,13 @@ function AboutPage() {
               </tbody>
               <tfoot>
                 <tr className="border-t border-border bg-primary/5">
-                  <td className="py-3 px-4 font-bold text-white" colSpan={3}>
+                  <td className="py-3 px-4 font-bold text-white">
                     National footprint at full build
                   </td>
+                  <td className="py-3 px-4 text-center font-bold text-white tabular-nums">
+                    {nationalHouses}
+                  </td>
+                  <td className="py-3 px-4 text-center text-muted-foreground">—</td>
                   <td className="py-3 px-4 text-center font-extrabold text-primary-glow tabular-nums">
                     {nationalBands}
                   </td>

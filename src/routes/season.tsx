@@ -75,8 +75,8 @@ function Card({ children, className = "" }: { children: React.ReactNode; classNa
 }
 
 function SeasonPage() {
-  const [zoneId, setZoneId] = useState(NATIONAL_ZONES[0].id);
-  const cap = ZONE_CAPACITY.find((c) => c.zone.id === zoneId) ?? ZONE_CAPACITY[0];
+  const [zoneId, setZoneId] = useState(NATIONAL_ZONES[0].slug);
+  const cap = ZONE_CAPACITY.find((c) => c.zone.slug === zoneId) ?? ZONE_CAPACITY[0];
   const bandsInZone = cap.bands;
 
   // Illustrative stagger for the selected zone — proof the constraints hold,
@@ -202,8 +202,8 @@ function SeasonPage() {
                 </thead>
                 <tbody className="divide-y divide-border/40">
                   {ZONE_CAPACITY.map((c) => (
-                    <tr key={c.zone.id} className="hover:bg-secondary/10">
-                      <td className="py-2.5 px-3 font-bold text-white">{c.zone.name}</td>
+                    <tr key={c.zone.slug} className="hover:bg-secondary/10">
+                      <td className="py-2.5 px-3 font-bold text-white">{c.zone.shortName}</td>
                       <td className="py-2.5 px-3 text-center text-muted-foreground tabular-nums">{c.zone.houses}</td>
                       <td className="py-2.5 px-3 text-center text-white font-semibold tabular-nums">{c.bands}</td>
                       <td className="py-2.5 px-3 text-center font-bold text-primary-glow tabular-nums">{c.fixturesNeeded}</td>
@@ -318,22 +318,22 @@ function SeasonPage() {
             <div className="flex flex-wrap gap-2">
               {NATIONAL_ZONES.map((z) => (
                 <button
-                  key={z.id}
+                  key={z.slug}
                   type="button"
-                  onClick={() => setZoneId(z.id)}
+                  onClick={() => setZoneId(z.slug)}
                   className={`px-3 py-1.5 rounded-full border text-[11px] font-bold transition cursor-pointer ${
-                    zoneId === z.id
+                    zoneId === z.slug
                       ? "border-primary/60 bg-primary/15 text-primary-glow"
                       : "border-border bg-secondary/40 text-muted-foreground hover:text-white hover:border-primary/40"
                   }`}
                 >
-                  {z.name}
+                  {z.shortName}
                 </button>
               ))}
             </div>
 
             <p className="text-[11px] text-muted-foreground">
-              {cap.zone.note} — {cap.bands} bands, {cap.fixturesNeeded} fixtures,{" "}
+              {cap.zone.headline} — {cap.bands} bands, {cap.fixturesNeeded} fixtures,{" "}
               {cap.fixturesPerWeekend} staged each weekend.
             </p>
 
@@ -460,8 +460,8 @@ function SeasonPage() {
                 </thead>
                 <tbody className="divide-y divide-border/40">
                   {RELEASE_CADENCE.map((c) => (
-                    <tr key={c.zone.id} className="hover:bg-secondary/10">
-                      <td className="py-2.5 px-3 font-bold text-white">{c.zone.name}</td>
+                    <tr key={c.zone.slug} className="hover:bg-secondary/10">
+                      <td className="py-2.5 px-3 font-bold text-white">{c.zone.shortName}</td>
                       <td className="py-2.5 px-3 text-center text-muted-foreground tabular-nums">{c.bands}</td>
                       <td className="py-2.5 px-3 text-center text-muted-foreground tabular-nums">{c.bandCycleDays}d</td>
                       <td
@@ -532,7 +532,7 @@ function SeasonPage() {
             <div className="bpl-card p-5 border border-border bg-surface/40 space-y-3">
               <div className="flex flex-wrap items-baseline justify-between gap-2">
                 <h3 className="text-sm font-bold text-white">
-                  One full rotation — {cap.zone.name}
+                  One full rotation — {cap.zone.shortName}
                 </h3>
                 <span className="text-[11px] text-muted-foreground">
                   {BAND_RELEASE_CYCLE_DAYS} days, {cap.bands} releases, no house twice in a row

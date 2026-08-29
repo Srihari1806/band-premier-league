@@ -124,10 +124,25 @@ export interface MatrixStructure {
   intraHousePerBand: number;
 }
 
-/** Stage 2 — the AP/TS regional league. */
+/**
+ * Roster shape per regional league — the single source of truth for how many
+ * houses and bands each zone fields. Everything downstream (the match matrix,
+ * the national capacity engine, the economics slicer, the expansion table on
+ * the About page) reads these numbers instead of restating them, which is what
+ * stopped the site publishing two different band counts.
+ */
+export const ZONE_ROSTERS: Record<string, { houses: number; bandsPerHouse: number }> = {
+  "ap-ts": { houses: 5, bandsPerHouse: 4 },
+  karnataka: { houses: 5, bandsPerHouse: 2 },
+  "tamil-nadu": { houses: 5, bandsPerHouse: 2 },
+  kerala: { houses: 5, bandsPerHouse: 2 },
+  north: { houses: 5, bandsPerHouse: 2 },
+};
+
+/** AP/TS — the pilot zone, and the deepest roster in the league. */
 export const STAGE_2_STRUCTURE: MatrixStructure = {
-  houses: 5,
-  bandsPerHouse: 4,
+  houses: ZONE_ROSTERS["ap-ts"].houses,
+  bandsPerHouse: ZONE_ROSTERS["ap-ts"].bandsPerHouse,
   ticketedSoloPerBand: 5,
   campusSoloPerBand: 3,
   intraHousePerBand: 3,
@@ -465,6 +480,10 @@ export interface Zone {
   name: string;
   shortName: string;
   tier: ZoneTier;
+  /** Production houses in this regional league. */
+  houses: number;
+  /** Bands each house signs here. AP/TS runs four; every other zone runs two. */
+  bandsPerHouse: number;
   /** Slug of the zone this feeds into, if any. */
   feedsInto?: string;
   status: string;
@@ -482,8 +501,10 @@ export const ZONES: Zone[] = [
     name: "Kalakshetra National Championship",
     shortName: "National",
     tier: "national",
-    status: "Year 2+",
-    headline: "The top two bands from every zone meet on one stage.",
+    houses: 0,
+    bandsPerHouse: 0,
+    status: "Aug – Oct",
+    headline: "The qualifiers from all five regional leagues meet.",
     languages: ["Pan-India"],
     hubCities: [
       {
@@ -498,41 +519,103 @@ export const ZONES: Zone[] = [
       },
     ],
     strategy:
-      "One national final, broadcast as a property in its own right. Zone champions arrive with a season of catalogue and a proven live draw behind them.",
+      "One national championship, broadcast as a property in its own right. Zone qualifiers arrive with a full season of catalogue and a proven live draw behind them.",
     campusChapters: 0,
     accent: "amber",
   },
   {
-    slug: "south-zone",
-    name: "South Zone League",
-    shortName: "South Zone",
-    tier: "zone",
+    slug: "ap-ts",
+    name: "AP / Telangana League",
+    shortName: "AP / TS",
+    tier: "state",
     feedsInto: "national",
-    status: "Year 1, Stage 3",
-    headline: "State winners from across the South meet in cross-state fixtures.",
-    languages: ["Telugu", "Tamil", "Kannada", "Malayalam"],
+    houses: ZONE_ROSTERS["ap-ts"].houses,
+    bandsPerHouse: ZONE_ROSTERS["ap-ts"].bandsPerHouse,
+    status: "Pilot — live now",
+    headline: "The proof-of-concept market, and the only zone with a four-band roster.",
+    languages: ["Telugu"],
     hubCities: [
-      { city: "Bengaluru", state: "Karnataka", note: "India's densest indie and pub-gig market", fixtureShare: 0.28, priceIdx: 1.35, capacityIdx: 1.35, costIdx: 1.3, reachIdx: 1.45 },
-      { city: "Chennai", state: "Tamil Nadu", note: "Deep live circuit and college-band culture", fixtureShare: 0.24, priceIdx: 1.2, capacityIdx: 1.3, costIdx: 1.2, reachIdx: 1.25 },
-      { city: "Kochi", state: "Kerala", note: "Established festival and fusion audience", fixtureShare: 0.16, priceIdx: 1.05, capacityIdx: 1.0, costIdx: 1.02, reachIdx: 1.0 },
-      { city: "Coimbatore", state: "Tamil Nadu", note: "Strong regional touring stop", fixtureShare: 0.12, priceIdx: 0.88, capacityIdx: 0.85, costIdx: 0.9, reachIdx: 0.8 },
-      { city: "Mysuru", state: "Karnataka", note: "Campus-heavy secondary hub", fixtureShare: 0.1, priceIdx: 0.85, capacityIdx: 0.8, costIdx: 0.85, reachIdx: 0.72 },
-      { city: "Trivandrum", state: "Kerala", note: "Emerging original-music scene", fixtureShare: 0.1, priceIdx: 0.9, capacityIdx: 0.85, costIdx: 0.9, reachIdx: 0.82 },
+      { city: "Hyderabad", state: "Telangana", note: "Primary hub — venues, studios and production base", fixtureShare: 0.4, priceIdx: 1.15, capacityIdx: 1.3, costIdx: 1.15, reachIdx: 1.3 },
+      { city: "Visakhapatnam", state: "Andhra Pradesh", note: "Coastal hub with a strong college circuit", fixtureShare: 0.25, priceIdx: 0.92, capacityIdx: 0.9, costIdx: 0.92, reachIdx: 0.88 },
+      { city: "Vijayawada", state: "Andhra Pradesh", note: "Central AP fixture stop", fixtureShare: 0.2, priceIdx: 0.82, capacityIdx: 0.8, costIdx: 0.85, reachIdx: 0.75 },
+      { city: "Tirupati", state: "Andhra Pradesh", note: "South Andhra hub — temple-town footfall and a young campus base", fixtureShare: 0.15, priceIdx: 0.75, capacityIdx: 0.72, costIdx: 0.8, reachIdx: 0.65 },
     ],
     strategy:
-      "Capitalise on the live music, pub and indie culture already running in Bengaluru and Chennai. Cross-state fixtures — a Hyderabad franchise against a Bengaluru franchise — turn a state league into a regional rivalry with two fanbases per night.",
-    campusChapters: 40,
+      "Prove the unit economics and the fixture format in one language market before spending a rupee on a second. It carries twice the roster of any other zone because it is where the format was built.",
+    campusChapters: 15,
+    accent: "cyan",
+  },
+  {
+    slug: "karnataka",
+    name: "Karnataka League",
+    shortName: "Karnataka",
+    tier: "state",
+    feedsInto: "national",
+    houses: ZONE_ROSTERS.karnataka.houses,
+    bandsPerHouse: ZONE_ROSTERS.karnataka.bandsPerHouse,
+    status: "Year 1",
+    headline: "India's densest indie and pub-gig market.",
+    languages: ["Kannada"],
+    hubCities: [
+      { city: "Bengaluru", state: "Karnataka", note: "The country's deepest live circuit — a functioning scene to plug into rather than build", fixtureShare: 0.72, priceIdx: 1.35, capacityIdx: 1.35, costIdx: 1.3, reachIdx: 1.45 },
+      { city: "Mysuru", state: "Karnataka", note: "Campus-heavy secondary hub", fixtureShare: 0.28, priceIdx: 0.85, capacityIdx: 0.8, costIdx: 0.85, reachIdx: 0.72 },
+    ],
+    strategy:
+      "The shortest path to a working live circuit anywhere in the country. Bengaluru already has the venues, the audience and the habit of paying for a ticket.",
+    campusChapters: 12,
     accent: "emerald",
   },
   {
-    slug: "north-belt",
-    name: "North Belt League",
-    shortName: "North Belt",
-    tier: "zone",
+    slug: "tamil-nadu",
+    name: "Tamil Nadu League",
+    shortName: "Tamil Nadu",
+    tier: "state",
     feedsInto: "national",
+    houses: ZONE_ROSTERS["tamil-nadu"].houses,
+    bandsPerHouse: ZONE_ROSTERS["tamil-nadu"].bandsPerHouse,
+    status: "Year 1",
+    headline: "Deep live circuit and a college-band culture that feeds the campus leg directly.",
+    languages: ["Tamil"],
+    hubCities: [
+      { city: "Chennai", state: "Tamil Nadu", note: "Deep live circuit and college-band culture", fixtureShare: 0.67, priceIdx: 1.2, capacityIdx: 1.3, costIdx: 1.2, reachIdx: 1.25 },
+      { city: "Coimbatore", state: "Tamil Nadu", note: "Strong regional touring stop", fixtureShare: 0.33, priceIdx: 0.88, capacityIdx: 0.85, costIdx: 0.9, reachIdx: 0.8 },
+    ],
+    strategy:
+      "The campus circuit here is already organised around inter-college competition, which is the behaviour the league depends on rather than one it has to teach.",
+    campusChapters: 14,
+    accent: "purple",
+  },
+  {
+    slug: "kerala",
+    name: "Kerala League",
+    shortName: "Kerala",
+    tier: "state",
+    feedsInto: "national",
+    houses: ZONE_ROSTERS.kerala.houses,
+    bandsPerHouse: ZONE_ROSTERS.kerala.bandsPerHouse,
+    status: "Year 1",
+    headline: "Established festival and fusion audience.",
+    languages: ["Malayalam"],
+    hubCities: [
+      { city: "Kochi", state: "Kerala", note: "Established festival and fusion audience", fixtureShare: 0.62, priceIdx: 1.05, capacityIdx: 1.0, costIdx: 1.02, reachIdx: 1.0 },
+      { city: "Trivandrum", state: "Kerala", note: "Emerging original-music scene", fixtureShare: 0.38, priceIdx: 0.9, capacityIdx: 0.85, costIdx: 0.9, reachIdx: 0.82 },
+    ],
+    strategy:
+      "A market already used to paying for live music at festivals. The league is offering a season rather than a weekend, which is the part that is new here.",
+    campusChapters: 10,
+    accent: "emerald",
+  },
+  {
+    slug: "north",
+    name: "North India League",
+    shortName: "North India",
+    tier: "state",
+    feedsInto: "national",
+    houses: ZONE_ROSTERS.north.houses,
+    bandsPerHouse: ZONE_ROSTERS.north.bandsPerHouse,
     status: "Year 2",
-    headline: "The Hindi belt, entered once the format has a track record.",
-    languages: ["Hindi", "Bhojpuri", "Punjabi", "Bengali"],
+    headline: "Highest-CPM digital market and the sponsorship centre.",
+    languages: ["Hindi", "Punjabi", "Bengali", "Assamese", "Marathi"],
     hubCities: [
       {
         city: "Delhi NCR",
@@ -551,39 +634,30 @@ export const ZONES: Zone[] = [
       { city: "Chandigarh", state: "Punjab", note: "Punjabi-language crossover audience", fixtureShare: 0.1, priceIdx: 1.0, capacityIdx: 0.95, costIdx: 1.0, reachIdx: 0.95 },
     ],
     strategy:
-      "Target high-CPM digital markets. The Hindi belt brings larger streaming numbers per release, national brand sponsorship budgets and the OTT buyers who matter for broadcast — which is why it comes after the format is proven, not before.",
-    campusChapters: 55,
+      "Larger streaming numbers per release, national sponsorship budgets and the OTT buyers who matter for broadcast — which is why it comes after the format is proven, not before.",
+    campusChapters: 25,
     accent: "purple",
-  },
-  {
-    slug: "ap-ts",
-    name: "AP / TS State League",
-    shortName: "AP / TS",
-    tier: "state",
-    feedsInto: "south-zone",
-    status: "Pilot — live now",
-    headline: "The proof-of-concept market where the format is being built.",
-    languages: ["Telugu"],
-    hubCities: [
-      { city: "Hyderabad", state: "Telangana", note: "Primary hub — venues, studios and production base", fixtureShare: 0.4, priceIdx: 1.15, capacityIdx: 1.3, costIdx: 1.15, reachIdx: 1.3 },
-      { city: "Visakhapatnam", state: "Andhra Pradesh", note: "Coastal hub with a strong college circuit", fixtureShare: 0.25, priceIdx: 0.92, capacityIdx: 0.9, costIdx: 0.92, reachIdx: 0.88 },
-      { city: "Vijayawada", state: "Andhra Pradesh", note: "Central AP fixture stop", fixtureShare: 0.2, priceIdx: 0.82, capacityIdx: 0.8, costIdx: 0.85, reachIdx: 0.75 },
-      { city: "Tirupati", state: "Andhra Pradesh", note: "South Andhra hub — temple-town footfall and a young campus base", fixtureShare: 0.15, priceIdx: 0.75, capacityIdx: 0.72, costIdx: 0.8, reachIdx: 0.65 },
-    ],
-    strategy:
-      "Prove the unit economics and the fixture format in one language market before spending a rupee on a second. Telugu indie, classical-pop fusion and rock sit alongside a campus network that can be relied on for turnout show after show.",
-    campusChapters: 15,
-    accent: "cyan",
   },
 ];
 
 /**
- * Zones that have their own hub page, live pilot first — the AP/TS chapter is
- * the one actually running, so it leads the selector rather than trailing it.
+ * The five regional leagues, each with its own hub page. The national tier is
+ * a championship rather than a league, so it has no hub of its own.
+ *
+ * This replaced an older three-tier pyramid (AP/TS feeding a South Zone
+ * feeding a national final). That taxonomy contradicted the national plan the
+ * moment both were on the site: South Zone has been split into its three real
+ * markets, and North Belt is now North India.
  */
-export const ZONE_HUBS = ZONES.filter((z) => z.tier !== "national").sort(
-  (a, b) => (a.tier === "state" ? 0 : 1) - (b.tier === "state" ? 0 : 1),
-);
+export const ZONE_HUBS = ZONES.filter((z) => z.tier === "state");
+
+/** Bands fielded by one regional league. */
+export function zoneBands(z: Zone): number {
+  return z.houses * z.bandsPerHouse;
+}
+
+export const NATIONAL_TOTAL_HOUSES = ZONE_HUBS.reduce((sum, z) => sum + z.houses, 0);
+export const NATIONAL_TOTAL_BANDS = ZONE_HUBS.reduce((sum, z) => sum + zoneBands(z), 0);
 
 export function getZone(slug: string): Zone | undefined {
   return ZONES.find((z) => z.slug === slug);
@@ -613,27 +687,42 @@ export function totalPoints(r: StandingRow): number {
   return r.juryPoints + r.gatePoints + r.fanPoints + r.releasePoints + r.victoryBonus;
 }
 
-export const SAMPLE_STANDINGS: StandingRow[] = [
-  { position: 1, band: "Band A", house: "House I", zone: "ap-ts", played: 8, juryPoints: 68, gatePoints: 71, fanPoints: 34, releasePoints: 30, victoryBonus: 12 },
-  { position: 2, band: "Band B", house: "House III", zone: "ap-ts", played: 8, juryPoints: 71, gatePoints: 62, fanPoints: 31, releasePoints: 25, victoryBonus: 9 },
-  { position: 3, band: "Band C", house: "House II", zone: "ap-ts", played: 8, juryPoints: 63, gatePoints: 64, fanPoints: 36, releasePoints: 25, victoryBonus: 6 },
-  { position: 4, band: "Band D", house: "House I", zone: "ap-ts", played: 8, juryPoints: 66, gatePoints: 57, fanPoints: 28, releasePoints: 30, victoryBonus: 6 },
-  { position: 5, band: "Band E", house: "House IV", zone: "ap-ts", played: 8, juryPoints: 59, gatePoints: 58, fanPoints: 30, releasePoints: 20, victoryBonus: 3 },
-  { position: 6, band: "Band F", house: "House V", zone: "ap-ts", played: 8, juryPoints: 61, gatePoints: 49, fanPoints: 26, releasePoints: 20, victoryBonus: 3 },
-  { position: 7, band: "Band G", house: "House III", zone: "ap-ts", played: 8, juryPoints: 54, gatePoints: 52, fanPoints: 24, releasePoints: 15, victoryBonus: 0 },
-  { position: 8, band: "Band H", house: "House II", zone: "ap-ts", played: 8, juryPoints: 52, gatePoints: 44, fanPoints: 22, releasePoints: 15, victoryBonus: 0 },
+const BAND_LETTERS = "ABCDEFGHJKLMNPQRSTUVWXYZ";
+const HOUSE_NUMERALS = ["I", "II", "III", "IV", "V"];
 
-  { position: 1, band: "Band J", house: "House VI", zone: "south-zone", played: 6, juryPoints: 52, gatePoints: 55, fanPoints: 27, releasePoints: 25, victoryBonus: 9 },
-  { position: 2, band: "Band K", house: "House VII", zone: "south-zone", played: 6, juryPoints: 55, gatePoints: 48, fanPoints: 25, releasePoints: 20, victoryBonus: 6 },
-  { position: 3, band: "Band L", house: "House VIII", zone: "south-zone", played: 6, juryPoints: 49, gatePoints: 50, fanPoints: 28, releasePoints: 15, victoryBonus: 6 },
-  { position: 4, band: "Band M", house: "House VI", zone: "south-zone", played: 6, juryPoints: 47, gatePoints: 46, fanPoints: 21, releasePoints: 20, victoryBonus: 3 },
-  { position: 5, band: "Band N", house: "House IX", zone: "south-zone", played: 6, juryPoints: 44, gatePoints: 41, fanPoints: 19, releasePoints: 15, victoryBonus: 0 },
+/**
+ * Synthetic standings, generated per zone rather than hand-written.
+ *
+ * Generating them means the table always matches the roster the zone actually
+ * fields — an earlier hardcoded list still referenced zones that no longer
+ * exist, so two of the three tabs rendered empty. Points decay with position so
+ * the table reads plausibly; none of it is a record of anything.
+ */
+function buildSampleStandings(): StandingRow[] {
+  const rows: StandingRow[] = [];
+  ZONE_HUBS.forEach((zone, zoneIdx) => {
+    const bands = Math.min(zoneBands(zone), 8);
+    const played = zone.slug === "ap-ts" ? 8 : 6;
+    for (let i = 0; i < bands; i += 1) {
+      const decay = 1 - i * 0.075;
+      rows.push({
+        position: i + 1,
+        band: `Band ${BAND_LETTERS[(zoneIdx * 8 + i) % BAND_LETTERS.length]}`,
+        house: `House ${HOUSE_NUMERALS[i % zone.houses]}`,
+        zone: zone.slug,
+        played,
+        juryPoints: Math.round(played * 8.6 * decay),
+        gatePoints: Math.round(played * 8.4 * decay),
+        fanPoints: Math.round(played * 4.2 * decay),
+        releasePoints: Math.max(0, (Math.ceil((bands - i) / 2) % 4) * 5 + 10),
+        victoryBonus: Math.max(0, (bands - i - 3)) * 3,
+      });
+    }
+  });
+  return rows;
+}
 
-  { position: 1, band: "Band P", house: "House X", zone: "north-belt", played: 4, juryPoints: 35, gatePoints: 37, fanPoints: 18, releasePoints: 15, victoryBonus: 6 },
-  { position: 2, band: "Band Q", house: "House XI", zone: "north-belt", played: 4, juryPoints: 36, gatePoints: 32, fanPoints: 17, releasePoints: 15, victoryBonus: 3 },
-  { position: 3, band: "Band R", house: "House XII", zone: "north-belt", played: 4, juryPoints: 32, gatePoints: 34, fanPoints: 16, releasePoints: 10, victoryBonus: 3 },
-  { position: 4, band: "Band S", house: "House X", zone: "north-belt", played: 4, juryPoints: 30, gatePoints: 29, fanPoints: 14, releasePoints: 10, victoryBonus: 0 },
-];
+export const SAMPLE_STANDINGS: StandingRow[] = buildSampleStandings();
 
 export function standingsForZone(zoneSlug: string): StandingRow[] {
   return SAMPLE_STANDINGS.filter((r) => r.zone === zoneSlug).sort(
