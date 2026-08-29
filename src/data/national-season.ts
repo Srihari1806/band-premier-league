@@ -238,43 +238,71 @@ export function minGapDays(weekendIndices: number[]): number {
  * Release calendar
  * ------------------------------------------------------------------ */
 
+/**
+ * A band's release year.
+ *
+ * Only ONE release is league-eligible and in-season — the band's assigned week
+ * in the zone rotation. That is deliberate: pacing at one per zone per week is
+ * what gives each release a week the league can push behind.
+ *
+ * Which raises the obvious question the catalogue metric asks: how does a band
+ * have three originals live if it only ships one during the season? From the
+ * two windows either side. December pre-season is where the draft money goes
+ * into recording, and July-August is the artist season. A band arrives at its
+ * first fixture with a catalogue rather than building one mid-competition.
+ */
 export interface ReleaseWindow {
   id: string;
   label: string;
   window: string;
   eligible: boolean;
+  countsToCatalogue: boolean;
   rationale: string;
 }
 
 export const RELEASE_WINDOWS: ReleaseWindow[] = [
   {
-    id: "r1",
-    label: "Original 1",
-    window: "15–22 Jan",
-    eligible: true,
-    rationale: "Lands before the league gets serious, so a band arrives at its first fixture with something new to play.",
-  },
-  {
-    id: "r2",
-    label: "Original 2",
-    window: "12–19 Mar",
-    eligible: true,
-    rationale: "Drops into the opening of the cricket window, when the country's attention is already on live entertainment.",
-  },
-  {
-    id: "r3",
-    label: "Original 3",
-    window: "7–14 May",
-    eligible: true,
-    rationale: "Lands as the cricket window closes and attention moves on, just as the league runs into its closing weekends.",
-  },
-  {
-    id: "r4",
-    label: "Original 4",
-    window: "Jul–Aug",
+    id: "pre",
+    label: "Pre-season recording",
+    window: "December",
     eligible: false,
-    rationale: "Post-season development. Commercially valuable, but outside the league window so it earns no Original IP points.",
+    countsToCatalogue: true,
+    rationale:
+      "Straight after the draft, financed by the house. Earns no fixture points, but it is live before the season opens — so it counts toward the catalogue score from matchday one.",
   },
+  {
+    id: "season",
+    label: "The league release",
+    window: "The band's assigned week, Jan–Jun",
+    eligible: true,
+    countsToCatalogue: true,
+    rationale:
+      "One per band, on the Friday before that week's fixtures. The zone releases one a week and the houses rotate, so the band gets the league's channels behind it rather than a slot in a queue.",
+  },
+  {
+    id: "post",
+    label: "Artist season",
+    window: "July – August",
+    eligible: false,
+    countsToCatalogue: true,
+    rationale:
+      "The league has stopped; the artist has not. Commercially the most valuable window of the year, and it builds the catalogue a band carries into the next auction.",
+  },
+];
+
+/**
+ * Catalogue reconciliation — the honest version.
+ *
+ * Three originals live scores the full 5 catalogue points. Only one of them
+ * comes from the season itself, so a band needs the pre-season release plus
+ * either prior catalogue or a second December track to be at full marks on
+ * opening weekend.
+ */
+export const CATALOGUE_PATH: { at: string; live: number; note: string }[] = [
+  { at: "Signed at the draft", live: 0, note: "Whatever the band already had released stays on its record." },
+  { at: "Opening weekend", live: 2, note: "Pre-season recording plus existing catalogue." },
+  { at: "After its league release", live: 3, note: "Full catalogue marks for the rest of the season." },
+  { at: "End of artist season", live: 4, note: "Carried into the next auction as valuation." },
 ];
 
 /* ------------------------------------------------------------------ *

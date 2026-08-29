@@ -40,6 +40,7 @@ import {
   NATIONAL_CAPACITY,
   TOTAL_LEAGUE_NIGHTS,
   RELEASE_WINDOWS,
+  CATALOGUE_PATH,
   ANNUAL_CYCLE,
   ARTIST_SEASON_NOTE,
   NATIONAL_LADDER,
@@ -445,16 +446,22 @@ function SeasonPage() {
                 <Disc3 size={13} /> Release Calendar
               </p>
               <h2 className="text-2xl sm:text-3xl font-display font-bold text-white">
-                Songs between the fixtures
+                One league release, and the two windows either side
               </h2>
               <p className="text-sm text-muted-foreground max-w-3xl leading-relaxed">
-                Three league-eligible originals inside the season, roughly 55–60 days apart, each
-                timed to land into a fixture rather than into silence.
+                Only one release is league-eligible and in-season — the band&apos;s own week in the
+                zone rotation. The catalogue it scores against is built in December and rebuilt in
+                July, so a band arrives at its first fixture with a body of work rather than
+                assembling one mid-competition.
               </p>
             </div>
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+
+            <div className="grid gap-4 lg:grid-cols-3">
               {RELEASE_WINDOWS.map((r) => (
-                <Card key={r.id} className={r.eligible ? "" : "!border-slate-500/30 opacity-80"}>
+                <Card
+                  key={r.id}
+                  className={r.eligible ? "!border-cyan-500/30 !bg-cyan-500/5" : ""}
+                >
                   <div className="flex items-baseline justify-between gap-2">
                     <h4 className="text-xs font-bold text-white">{r.label}</h4>
                     <span
@@ -464,13 +471,60 @@ function SeasonPage() {
                           : "border-slate-500/40 bg-slate-500/10 text-slate-300"
                       }`}
                     >
-                      {r.eligible ? "Eligible" : "No points"}
+                      {r.eligible ? "Scores points" : "No points"}
                     </span>
                   </div>
                   <p className="text-sm font-bold text-primary-glow">{r.window}</p>
                   <p className="text-[10px] text-muted-foreground leading-relaxed">{r.rationale}</p>
+                  <p className="text-[10px] leading-relaxed border-t border-border/40 pt-2">
+                    <span
+                      className={
+                        r.countsToCatalogue ? "text-emerald-300 font-semibold" : "text-muted-foreground"
+                      }
+                    >
+                      {r.countsToCatalogue ? "Counts toward catalogue score" : "Outside the catalogue count"}
+                    </span>
+                  </p>
                 </Card>
               ))}
+            </div>
+
+            {/* How a band actually reaches full catalogue marks */}
+            <div className="bpl-card p-5 border border-border bg-surface/40 space-y-3">
+              <h3 className="text-sm font-bold text-white">
+                How a band reaches three originals live
+              </h3>
+              <p className="text-[11px] text-muted-foreground leading-relaxed">
+                Worth spelling out, because one in-season release and a catalogue metric that wants
+                three is an obvious question. The season release is the last of the three, not the
+                first.
+              </p>
+              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                {CATALOGUE_PATH.map((c, i) => (
+                  <div
+                    key={c.at}
+                    className={`rounded-lg border p-3 ${
+                      i === CATALOGUE_PATH.length - 2
+                        ? "border-emerald-500/35 bg-emerald-500/5"
+                        : "border-border/60 bg-surface/30"
+                    }`}
+                  >
+                    <p className="text-2xl font-display font-extrabold text-primary-glow tabular-nums">
+                      {c.live}
+                    </p>
+                    <p className="text-[10px] uppercase tracking-wider font-bold text-white mt-0.5">
+                      {c.at}
+                    </p>
+                    <p className="text-[10px] text-muted-foreground leading-snug mt-1">{c.note}</p>
+                  </div>
+                ))}
+              </div>
+              <p className="text-[10px] text-muted-foreground leading-relaxed border-t border-border/40 pt-3">
+                A band that ships nothing before the season opens carries a catalogue penalty into
+                its early fixtures and cannot clear it until its own release week arrives. That is
+                the intended pressure: the December window is where the draft money is supposed to
+                go.
+              </p>
             </div>
           </section>
 

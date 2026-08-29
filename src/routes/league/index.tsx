@@ -27,7 +27,7 @@ import {
   CheckCircle2,
   Flag,
 } from "lucide-react";
-import { TOTAL_LEAGUE_NIGHTS } from "@/data/national-season";
+import { TOTAL_LEAGUE_NIGHTS, RELEASE_TOTALS } from "@/data/national-season";
 import {
   CAMPUS_PLANS,
   CAMPUS_TOTALS,
@@ -69,8 +69,6 @@ import {
   RELEASE_CYCLE,
   RELEASE_CYCLE_DAYS,
   RELEASE_ELIGIBILITY,
-  releaseCadenceDays,
-  releasesPerSeason,
   ZONES,
   ZONE_HUBS,
   standingsForZone,
@@ -1259,15 +1257,15 @@ function LeaguePage() {
               Original IP
             </h2>
             <h3 className="text-3xl font-display font-bold text-white">
-              The {RELEASE_CYCLE_DAYS}-Day Release Cycle
+              The {RELEASE_CYCLE_DAYS}-Day Production Cycle
             </h3>
             <p className="text-xs text-muted-foreground leading-relaxed">
-              No band is asked to ship a song every month — that produces filler, not catalogue. Each
-              band runs a {RELEASE_CYCLE_DAYS}-day cycle and the {STAGE_2_MATRIX.totalBands} bands
-              stagger their start dates. Individually that is{" "}
-              {releasesPerSeason(COMPETITIVE_WEEKS)} originals a season. Collectively the league
-              publishes something new roughly every{" "}
-              {releaseCadenceDays(STAGE_2_MATRIX.totalBands).toFixed(1)} days.
+              Writing, recording, shooting and marketing a release takes about{" "}
+              {RELEASE_CYCLE_DAYS} days, which is why no band is asked to ship a song a month — that
+              produces filler, not catalogue. Each band gets{" "}
+              <strong>one league release inside the season</strong>, on its own week in the zone
+              rotation, with the December pre-season and the July artist season either side of it.
+              Across the country that is one release per zone per week — five a week, every week.
             </p>
           </div>
 
@@ -1321,18 +1319,15 @@ function LeaguePage() {
                 <Repeat size={14} className="text-primary-glow" /> Why Stagger the Releases
               </h4>
               <p className="text-[11px] text-muted-foreground leading-relaxed">
-                Twenty songs dropped in the same week compete with each other and vanish. Spread
-                across the season, each release gets its own campaign window, its own fixture to
-                launch into, and its own share of the audience's attention.
+                A hundred songs dropped across a season with no pacing compete with each other and
+                vanish. One per zone per week gives every release its own campaign window, its own
+                fixture to launch into, and the league's channels behind it for that week.
               </p>
               <div className="grid grid-cols-3 gap-3 pt-1">
                 {[
-                  { v: `${RELEASE_CYCLE_DAYS}d`, l: "Per band cycle" },
-                  {
-                    v: `~${releaseCadenceDays(STAGE_2_MATRIX.totalBands).toFixed(1)}d`,
-                    l: "League cadence",
-                  },
-                  { v: `${releasesPerSeason(COMPETITIVE_WEEKS)}`, l: "Originals / band / season" },
+                  { v: `${RELEASE_CYCLE_DAYS}d`, l: "Production cycle" },
+                  { v: `${RELEASE_TOTALS.perWeekNationally}/wk`, l: "League cadence" },
+                  { v: `${RELEASE_TOTALS.perBand}`, l: "Originals / band / season" },
                 ].map((k) => (
                   <div key={k.l} className="border border-border/50 rounded-lg p-3 bg-surface/30">
                     <p className="text-lg font-display font-extrabold text-primary-glow tabular-nums">

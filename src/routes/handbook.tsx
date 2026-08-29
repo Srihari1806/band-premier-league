@@ -48,8 +48,6 @@ import {
   RELEASE_CYCLE,
   RELEASE_CYCLE_DAYS,
   RELEASE_ELIGIBILITY,
-  releaseCadenceDays,
-  releasesPerSeason,
 } from "@/data/league-format";
 import { inr, inrCompact, EVENT_SPLIT, CONTENT_SPLIT } from "@/data/economics";
 import {
@@ -441,8 +439,8 @@ function HandbookPage() {
             <H
               id="music"
               eyebrow="Original IP"
-              title={`The ${RELEASE_CYCLE_DAYS}-day release cycle`}
-              sub={`Each band runs its own ${RELEASE_CYCLE_DAYS}-day cycle and the ${STAGE_2_MATRIX.totalBands} bands stagger their start dates — about ${releasesPerSeason(COMPETITIVE_WEEKS)} originals per band, and a league release roughly every ${releaseCadenceDays(STAGE_2_MATRIX.totalBands).toFixed(1)} days.`}
+              title={`The ${RELEASE_CYCLE_DAYS}-day production cycle`}
+              sub={`Producing a release takes roughly ${RELEASE_CYCLE_DAYS} days end to end. Each band ships one league-eligible original inside the season, on its own week in the zone rotation, with the December pre-season and July artist season either side. Nationally that paces at one release per zone per week.`}
               icon={<Disc3 size={13} />}
             />
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5 mb-5">
