@@ -140,51 +140,59 @@ function SeasonPage() {
                 <Layers size={13} /> Capacity Check
               </p>
               <h2 className="text-2xl sm:text-3xl font-display font-bold text-white">
-                One house event per region per weekend does not fit
+                Two house windows per region, every weekend
               </h2>
               <p className="text-sm text-muted-foreground max-w-3xl leading-relaxed">
-                Worth stating plainly, because it is the constraint the whole calendar turns on. A
-                house window stages each of that house&apos;s bands once. With five houses per zone
-                rotating one at a time, every house gets{" "}
-                {COMPETITION_WEEKENDS / NATIONAL_ZONES.length} windows across the season — and its
-                bands get {COMPETITION_WEEKENDS / NATIONAL_ZONES.length} fixtures each, against the{" "}
-                {INDIVIDUAL_FIXTURES_PER_BAND} they need.
+                A house window is a weekend where one production house is in town and stages each of
+                its bands. Running {ZONE_CAPACITY[0].windowsPerWeekend} concurrently in every zone
+                is what makes the fixture list fit the calendar — and the number is not a choice so
+                much as an answer, since it falls straight out of the roster and the rest rule.
               </p>
-            </div>
-
-            <div className="bpl-card p-5 border border-rose-500/30 bg-rose-500/5 flex gap-3">
-              <AlertTriangle size={16} className="text-rose-400 shrink-0 mt-0.5" />
-              <div className="space-y-1">
-                <p className="text-sm font-bold text-rose-200">
-                  Single-window rotation serves {NATIONAL_CAPACITY.servedBySingleWindow} of{" "}
-                  {NATIONAL_CAPACITY.fixturesNeeded} fixtures — short by{" "}
-                  {NATIONAL_CAPACITY.shortfallAtSingleWindow}, exactly half.
-                </p>
-                <p className="text-[11px] text-muted-foreground leading-relaxed">
-                  The shortfall is 50% in every zone, which is the giveaway: each band gets half the
-                  fixtures it is owed regardless of roster size.
-                </p>
-              </div>
             </div>
 
             <div className="bpl-card p-5 border border-emerald-500/30 bg-emerald-500/5 flex gap-3">
               <CheckCircle2 size={16} className="text-emerald-400 shrink-0 mt-0.5" />
               <div className="space-y-1">
                 <p className="text-sm font-bold text-emerald-200">
-                  Fix: {ZONE_CAPACITY[0].windowsPerWeekend} concurrent house windows per region per
-                  weekend — {NATIONAL_CAPACITY.windowsPerWeekend} nationally.
+                  {ZONE_CAPACITY[0].windowsPerWeekend} windows per region per weekend,{" "}
+                  {NATIONAL_CAPACITY.windowsPerWeekend} nationally — and the calendar closes exactly.
                 </p>
                 <p className="text-[11px] text-muted-foreground leading-relaxed">
-                  Each house then gets {ZONE_CAPACITY[0].houseWindowsPerHouse} windows across the
-                  season, every band gets its {INDIVIDUAL_FIXTURES_PER_BAND} fixtures, and the
-                  national calendar stages exactly{" "}
-                  {NATIONAL_CAPACITY.fixturesPerWeekend} × {COMPETITION_WEEKENDS} ={" "}
+                  Each house gets {ZONE_CAPACITY[0].houseWindowsPerHouse} windows across the season,
+                  every band gets its {INDIVIDUAL_FIXTURES_PER_BAND} solo fixtures, and the national
+                  calendar stages {NATIONAL_CAPACITY.fixturesPerWeekend} ×{" "}
+                  {COMPETITION_WEEKENDS} ={" "}
                   {NATIONAL_CAPACITY.fixturesPerWeekend * COMPETITION_WEEKENDS} — the requirement to
-                  the fixture. Rest between a band&apos;s fixtures averages{" "}
-                  {AVERAGE_REST_DAYS.toFixed(1)} days, clearing the {MIN_REST_DAYS}-day rule.
+                  the fixture, with nothing left over and nothing missing. Rest between a
+                  band&apos;s fixtures averages {AVERAGE_REST_DAYS.toFixed(1)} days, clearing the{" "}
+                  {MIN_REST_DAYS}-day rule.
                 </p>
               </div>
             </div>
+
+            {/*
+              The rejected alternative, kept as reasoning rather than as an
+              alarm. It was a genuine finding during planning, but the design
+              moved on — presenting it in red made a settled decision look like
+              a live fault in the season.
+            */}
+            <details className="bpl-card border border-border bg-surface/30 group">
+              <summary className="px-5 py-3 cursor-pointer text-[11px] font-semibold text-muted-foreground hover:text-white transition flex items-center gap-2">
+                <Info size={13} className="text-muted-foreground shrink-0" />
+                Why two windows and not one?
+              </summary>
+              <p className="px-5 pb-4 text-[11px] text-muted-foreground leading-relaxed">
+                One house at a time was the obvious first shape, and it does not fit. With{" "}
+                {ZONE_CAPACITY[0].zone.houses} houses rotating singly across{" "}
+                {COMPETITION_WEEKENDS} weekends, each house gets only{" "}
+                {COMPETITION_WEEKENDS / ZONE_CAPACITY[0].zone.houses} windows, so its bands get{" "}
+                {COMPETITION_WEEKENDS / ZONE_CAPACITY[0].zone.houses} fixtures against the{" "}
+                {INDIVIDUAL_FIXTURES_PER_BAND} they are owed — {NATIONAL_CAPACITY.servedBySingleWindow}{" "}
+                of {NATIONAL_CAPACITY.fixturesNeeded} nationally, short by exactly half in every
+                zone regardless of roster size. Doubling the concurrent windows is the whole fix;
+                the rest of the calendar follows from it.
+              </p>
+            </details>
 
             <div className="overflow-x-auto">
               <table className="w-full text-xs border-collapse min-w-[52rem]">
@@ -196,7 +204,7 @@ function SeasonPage() {
                     <th className="py-2.5 px-3 font-bold text-primary-glow uppercase tracking-wider text-[10px] text-center">Fixtures needed</th>
                     <th className="py-2.5 px-3 font-bold text-muted-foreground uppercase tracking-wider text-[10px] text-center">Windows / weekend</th>
                     <th className="py-2.5 px-3 font-bold text-muted-foreground uppercase tracking-wider text-[10px] text-center">Fixtures / weekend</th>
-                    <th className="py-2.5 px-3 font-bold text-rose-300 uppercase tracking-wider text-[10px] text-center">Shortfall at 1 window</th>
+                    <th className="py-2.5 px-3 font-bold text-muted-foreground uppercase tracking-wider text-[10px] text-center">Fixtures / band</th>
                     <th className="py-2.5 px-3 font-bold text-muted-foreground uppercase tracking-wider text-[10px] text-center">Cross nights</th>
                   </tr>
                 </thead>
@@ -209,7 +217,7 @@ function SeasonPage() {
                       <td className="py-2.5 px-3 text-center font-bold text-primary-glow tabular-nums">{c.fixturesNeeded}</td>
                       <td className="py-2.5 px-3 text-center text-muted-foreground tabular-nums">{c.windowsPerWeekend}</td>
                       <td className="py-2.5 px-3 text-center text-muted-foreground tabular-nums">{c.fixturesPerWeekend}</td>
-                      <td className="py-2.5 px-3 text-center font-semibold text-rose-300 tabular-nums">−{c.shortfallAtSingleWindow}</td>
+                      <td className="py-2.5 px-3 text-center text-muted-foreground tabular-nums">{INDIVIDUAL_FIXTURES_PER_BAND + c.crossPerBand}</td>
                       <td className="py-2.5 px-3 text-center text-muted-foreground tabular-nums">{c.crossNights}</td>
                     </tr>
                   ))}
@@ -222,7 +230,7 @@ function SeasonPage() {
                     <td className="py-2.5 px-3 text-center font-extrabold text-primary-glow tabular-nums">{NATIONAL_CAPACITY.fixturesNeeded}</td>
                     <td className="py-2.5 px-3 text-center font-bold text-white tabular-nums">{NATIONAL_CAPACITY.windowsPerWeekend}</td>
                     <td className="py-2.5 px-3 text-center font-bold text-white tabular-nums">{NATIONAL_CAPACITY.fixturesPerWeekend}</td>
-                    <td className="py-2.5 px-3 text-center font-bold text-rose-300 tabular-nums">−{NATIONAL_CAPACITY.shortfallAtSingleWindow}</td>
+                    <td className="py-2.5 px-3 text-center font-bold text-white tabular-nums">{INDIVIDUAL_FIXTURES_PER_BAND + ZONE_CAPACITY[0].crossPerBand}</td>
                     <td className="py-2.5 px-3 text-center font-bold text-white tabular-nums">{NATIONAL_CAPACITY.crossNights}</td>
                   </tr>
                 </tfoot>
