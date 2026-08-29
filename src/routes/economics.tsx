@@ -2304,7 +2304,7 @@ function EconomicsPage() {
                   hint={`Versus night draws ${m.sharedShow.attendance}`}
                 />
                 <NumberField
-                  label="Bands per production house"
+                  label="Bands per house (base)"
                   value={inputs.bandsPerFranchise}
                   step={1}
                   min={1}
@@ -2589,8 +2589,86 @@ function EconomicsPage() {
           <SectionHeading
             eyebrow="Franchise Investment"
             title="What a production house puts in, and gets back in one season"
-            sub={`One franchise across a ${SEASON_STRUCTURE.seasonWeeks}-week season. Capital at risk is the winning bid; the event budget is carried by the title sponsor, so it is not franchise money. Every return line is tagged by how certain it is.`}
+            sub={`One production house in ${scope.zone.shortName}, across a ${SEASON_STRUCTURE.seasonWeeks}-week season. Capital at risk is the winning bid; the event budget is carried by the title sponsor, so it is not franchise money. Every return line is tagged by how certain it is.`}
           />
+
+          {/* The gate arithmetic, out loud. Everything below is downstream of it. */}
+          <div className="bpl-card p-4 sm:p-5 border border-border bg-surface/50 mb-5 space-y-3">
+            <div className="flex items-baseline justify-between gap-3 flex-wrap">
+              <h3 className="text-sm font-bold text-white flex items-center gap-1.5">
+                <Ticket size={14} className="text-primary-glow" /> Where the gate money comes from
+              </h3>
+              <p className="text-[10px] text-muted-foreground">
+                Every number here moves with the dimension bar above.
+              </p>
+            </div>
+            <div className="flex flex-wrap items-stretch gap-2">
+              {[
+                {
+                  k: "Bands signed",
+                  v: String(scopedInputs.bandsPerFranchise),
+                  n: `${scopedInputs.numFranchises} houses x ${scopedInputs.bandsPerFranchise} = ${m.totalBands} bands`,
+                },
+                {
+                  k: "Shows per band",
+                  v: String(scopedInputs.showsPerBand),
+                  n: `${m.soloShowsPerBand} solo + ${m.sharedShowsPerBand} versus`,
+                },
+                {
+                  k: "Nights on stage",
+                  v: m.phBandNightsSeason.toLocaleString("en-IN"),
+                  n: "for this one house",
+                },
+                {
+                  k: "Seats sold",
+                  v: m.phSeatsSeason.toLocaleString("en-IN"),
+                  n: `${scopedInputs.attendance}/solo night, half a co-headline room`,
+                },
+                {
+                  k: "Ticket price",
+                  v: inr(scopedInputs.ticketPrice),
+                  n: `${scope.zone.shortName} market`,
+                },
+              ].map((c, i) => (
+                <div key={c.k} className="flex items-stretch gap-2">
+                  {i > 0 && (
+                    <span className="self-center text-muted-foreground text-sm font-bold">x</span>
+                  )}
+                  <div className="rounded-lg border border-border/70 bg-surface/60 px-3 py-2 min-w-[7.5rem]">
+                    <p className="text-[9px] uppercase tracking-wider font-bold text-muted-foreground">
+                      {c.k}
+                    </p>
+                    <p className="text-lg font-display font-extrabold text-white tabular-nums leading-tight">
+                      {c.v}
+                    </p>
+                    <p className="text-[9px] text-muted-foreground leading-snug">{c.n}</p>
+                  </div>
+                </div>
+              ))}
+              <div className="flex items-stretch gap-2">
+                <span className="self-center text-muted-foreground text-sm font-bold">=</span>
+                <div className="rounded-lg border border-primary/40 bg-primary/10 px-3 py-2 min-w-[8.5rem]">
+                  <p className="text-[9px] uppercase tracking-wider font-bold text-primary-glow">
+                    Gross gate
+                  </p>
+                  <p className="text-lg font-display font-extrabold text-white tabular-nums leading-tight">
+                    {inrCompact(m.phGrossGateSeason)}
+                  </p>
+                  <p className="text-[9px] text-muted-foreground leading-snug">
+                    before platform fee &amp; tax
+                  </p>
+                </div>
+              </div>
+            </div>
+            <p className="text-[10px] text-muted-foreground leading-relaxed border-t border-border/40 pt-2.5">
+              After the {scopedInputs.ticketingCommissionPct}% platform fee and GST, the house takes{" "}
+              {EVENT_SPLIT.productionHouse}% of what is left — {inr(m.phSeasonReturn[0].amount)}{" "}
+              across the season. Across all {scopedInputs.numFranchises} houses that is{" "}
+              {inrCompact(m.phSeasonReturn[0].amount * scopedInputs.numFranchises)} of gate income
+              returning to production houses, out of {inrCompact(m.seasonGrossGatePool)} sold at the
+              door.
+            </p>
+          </div>
 
           {/* Gate-backed vs variable — the reframe */}
           <div className="grid sm:grid-cols-3 gap-4 mb-5">
@@ -2878,7 +2956,7 @@ function EconomicsPage() {
         <SectionHeading
           eyebrow="League Season"
           title={`One season, ${m.totalFixtures} ticketed nights, whole ecosystem`}
-          sub={`Total value moving through the league across a ${SEASON_STRUCTURE.seasonWeeks}-week season with ${inputs.numFranchises} franchises and ${m.totalBands} bands, and separately what the operator keeps after running costs.`}
+          sub={`Everything moving through ${scope.zone.shortName} over a ${SEASON_STRUCTURE.seasonWeeks}-week season — ${scopedInputs.numFranchises} production houses, ${m.totalBands} bands — and separately what the operator keeps after running costs.`}
         />
 
         <div className="grid lg:grid-cols-3 gap-6">
@@ -3314,7 +3392,7 @@ function EconomicsPage() {
             are illustrative projections for a demonstration scenario, not audited results, a track
             record, or a guarantee of future performance. The page currently shows a{" "}
             {inr(inputs.ticketPrice)} ticket into a {inputs.attendance}-capacity room,{" "}
-            {inputs.showsPerBand} fixtures per band per season and {inputs.numFranchises} franchises,
+            {scopedInputs.showsPerBand} fixtures per band per season and {scopedInputs.numFranchises} production houses,
             with catalogue, licensing and broadcast figures modelled rather than contracted — the
             sensitivity markers show which is which. A versus fixture is one shared ticketed night
             and the gate is split between the acts on it. The{" "}

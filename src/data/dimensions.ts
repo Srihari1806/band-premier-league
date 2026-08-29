@@ -237,9 +237,45 @@ export interface DimensionSelection {
   fixtureId: string;
 }
 
+/** Slug for the national roll-up — every league at once. */
+export const ALL_ZONES = "all-india";
+
+/**
+ * A synthetic zone standing for the whole country: every house, every band,
+ * and a market index averaged across all five leagues weighted by their hub
+ * cities. Without it the slicer could never show more than one zone, so the
+ * economics page could never show the national figure at all.
+ */
+export const NATIONAL_ZONE: Zone = {
+  slug: ALL_ZONES,
+  name: "All India",
+  shortName: "All India",
+  tier: "state",
+  houses: ZONES.filter((z) => z.tier === "state").reduce((s, z) => s + z.houses, 0),
+  bandsPerHouse: ZONES.find((z) => z.tier === "state")?.bandsPerHouse ?? 4,
+  status: "Season 1 · live",
+  headline: "Every regional league at once.",
+  languages: ["Pan-India"],
+  hubCities: ZONES.filter((z) => z.tier === "state").flatMap((z) =>
+    z.hubCities.map((c) => ({
+      ...c,
+      // Re-weight so shares still sum to 1 across the whole country.
+      fixtureShare: c.fixtureShare / ZONES.filter((x) => x.tier === "state").length,
+    })),
+  ),
+  strategy:
+    "The national roll-up. Every figure here is the sum of the five regional leagues rather than a separate model.",
+  campusChapters: ZONES.filter((z) => z.tier === "state").reduce(
+    (s, z) => s + z.campusChapters,
+    0,
+  ),
+  accent: "amber",
+};
+
 export const DEFAULT_SELECTION: DimensionSelection = {
   seasonId: "s1",
-  zoneSlug: "ap-ts",
+  // Opens on the national picture; drill into a league from there.
+  zoneSlug: ALL_ZONES,
   city: "all",
   houseId: "all",
   bandId: "all",
@@ -287,6 +323,7 @@ export interface Scope {
 }
 
 export function zoneOf(slug: string): Zone {
+  if (slug === ALL_ZONES) return NATIONAL_ZONE;
   return ZONES.find((z) => z.slug === slug) ?? ZONES[ZONES.length - 1];
 }
 
@@ -295,9 +332,26 @@ export function zoneOf(slug: string): Zone {
  * it is excluded. Every league is the same size, so the order is just the
  * order they were founded in.
  */
-export const SLICEABLE_ZONES = ZONES.filter((z) => z.tier !== "national").sort(
-  (a, b) => (a.tier === "state" ? 0 : 1) - (b.tier === "state" ? 0 : 1),
-);
+export const SLICEABLE_ZONES: Zone[] = [
+  NATIONAL_ZONE,
+  ...ZONES.filter((z) => z.tier === "state"),
+];
+
+/**
+ * Mean of each league's own price x capacity index. Used to keep the national
+ * roll-up equal to the five leagues added together (see resolveScope).
+ */
+function meanZoneProduct(): number {
+  const states = ZONES.filter((z) => z.tier === "state");
+  if (states.length === 0) return 1;
+  return (
+    states.reduce(
+      (sum, z) =>
+        sum + zoneIndex(z.hubCities, "priceIdx") * zoneIndex(z.hubCities, "capacityIdx"),
+      0,
+    ) / states.length
+  );
+}
 
 export function resolveScope(sel: DimensionSelection): Scope {
   const season = SEASONS.find((s) => s.id === sel.seasonId) ?? SEASONS[0];
@@ -311,8 +365,19 @@ export function resolveScope(sel: DimensionSelection): Scope {
 
   // A city uses its own indices; the whole zone uses the share-weighted average
   // of its cities, so "All cities" is never an invented number.
+  const isNational = zone.slug === ALL_ZONES && !city;
   const priceIdx = city ? city.priceIdx : zoneIndex(zone.hubCities, "priceIdx");
-  const capacityIdx = city ? city.capacityIdx : zoneIndex(zone.hubCities, "capacityIdx");
+  // Gate revenue is price x capacity, and the average of five products is not
+  // the product of two averages. Averaging both indices naively left All India
+  // reading ~1% under the sum of the five leagues, which is exactly the kind of
+  // number that does not reconcile when someone adds the leagues up by hand.
+  // So nationally the capacity index is solved for: it is whatever makes
+  // price x capacity equal the mean of the five leagues' own products.
+  const capacityIdx = city
+    ? city.capacityIdx
+    : isNational
+      ? meanZoneProduct() / Math.max(0.0001, priceIdx)
+      : zoneIndex(zone.hubCities, "capacityIdx");
   const costIdx = city ? city.costIdx : zoneIndex(zone.hubCities, "costIdx");
   const reachIdx = city ? city.reachIdx : zoneIndex(zone.hubCities, "reachIdx");
   const cityShare = city ? city.fixtureShare : 1;

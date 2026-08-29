@@ -160,12 +160,12 @@ export const DEFAULT_INPUTS: EconomicsInputs = {
   ticketPrice: 399,
   attendance: 300,
   showsPerBand: 12,
-  numFranchises: 4,
-  bandsPerFranchise: 1,
+  numFranchises: 25,
+  bandsPerFranchise: 4,
   winningBid: 1000000,
   bandMembers: 5,
 
-  soloSharePct: 38,
+  soloSharePct: 75,
   coHeadlineUplift: 1.6,
 
   ticketingCommissionPct: 10,
@@ -395,6 +395,12 @@ export interface EconomicsModel {
   phSeasonTotal: number;
   phSeasonProfit: number;
   phSeasonMultiple: number;
+  /** Seats sold across every night one production house's bands play. */
+  phSeatsSeason: number;
+  /** Those seats at the scoped ticket price, before platform fee and tax. */
+  phGrossGateSeason: number;
+  /** Nights one house's bands are on stage: shows per band x bands signed. */
+  phBandNightsSeason: number;
   phGateBackedTotal: number;
   phGateBackedMultiple: number;
   phVariableTotal: number;
@@ -523,14 +529,21 @@ export function computeEconomics(inputs: EconomicsInputs): EconomicsModel {
       sharedShowsPerBand * sharedShow.productionHousePerAct,
   );
 
+  // The gate arithmetic the page shows out loud: seats x price x every night
+  // this house's bands are on stage. A shared night is co-headlined, so the
+  // house books its half of a bigger room rather than a whole small one.
+  const phBandNightsSeason = showsPerBand * bandsPerFranchise;
+  const phSeatsSeason = Math.round(
+    (soloShowsPerBand * attendance + sharedShowsPerBand * (sharedAttendance / 2)) *
+      bandsPerFranchise,
+  );
+  const phGrossGateSeason = Math.round(phSeatsSeason * ticketPrice);
+
   const phSeasonReturn: ReturnStream[] = [
     {
       label: "Event Revenue Share",
       amount: phGatePerBandSeason * bandsPerFranchise,
-      detail:
-        bandsPerFranchise > 1
-          ? `${EVENT_SPLIT.productionHouse}% of net gate across ${bandsPerFranchise} signed bands`
-          : `${EVENT_SPLIT.productionHouse}% of net gate across ${showsPerBand} fixtures`,
+      detail: `${EVENT_SPLIT.productionHouse}% of net gate — ${bandsPerFranchise} ${bandsPerFranchise === 1 ? "band" : "bands"} x ${showsPerBand} shows = ${phBandNightsSeason} nights, ${phSeatsSeason.toLocaleString("en-IN")} seats at ${inr(ticketPrice)}`,
       certainty: "gate",
     },
     {
@@ -718,6 +731,9 @@ export function computeEconomics(inputs: EconomicsInputs): EconomicsModel {
     phSeasonTotal,
     phSeasonProfit: phSeasonTotal - winningBid,
     phSeasonMultiple: phSeasonTotal / Math.max(1, winningBid),
+    phSeatsSeason,
+    phGrossGateSeason,
+    phBandNightsSeason,
     phGateBackedTotal,
     phGateBackedMultiple: phGateBackedTotal / Math.max(1, winningBid),
     phVariableTotal,
