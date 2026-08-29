@@ -11,6 +11,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { PageShell } from "@/components/layout/PageShell";
 import { useState, useMemo } from "react";
 import {
+  Disc3,
   CalendarDays,
   Filter,
   CheckCircle2,
@@ -29,7 +30,9 @@ import {
   TOTAL_HOUSES,
   COMPETITION_WEEKENDS,
   IPL_WINDOW,
-  SLOTS,
+  RELEASE_SCHEDULE,
+  RELEASE_TOTALS,
+  CAMPUS_VENUE_LABEL,
   type EventKind,
   type ScheduledEvent,
 } from "@/data/national-season";
@@ -342,6 +345,20 @@ function CalendarPage() {
     [zone, house, band, kind, month],
   );
 
+  /** Releases keyed by the day they land on, shown beside that day's fixtures. */
+  const releasesByDay = useMemo(() => {
+    const map = new Map<string, typeof RELEASE_SCHEDULE>();
+    RELEASE_SCHEDULE.forEach((r) => {
+      if (zone !== "all" && r.zoneSlug !== zone) return;
+      if (house !== "all" && r.houseNumber !== Number(house)) return;
+      if (band !== "all" && r.band !== Number(band)) return;
+      if (month !== "all" && !r.dateLabel.includes(month)) return;
+      if (!map.has(r.dateLabel)) map.set(r.dateLabel, []);
+      map.get(r.dateLabel)!.push(r);
+    });
+    return map;
+  }, [zone, house, band, month]);
+
   // Group by weekend, then by calendar day inside it.
   const grouped = useMemo(() => {
     const byWeekend = new Map<number, Map<string, ScheduledEvent[]>>();
@@ -392,12 +409,13 @@ function CalendarPage() {
               structure rather than typed out.
             </p>
 
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 pt-2 text-left">
+            <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 pt-2 text-left">
               {[
                 { v: SCHEDULE_TOTALS.events, l: "Events", h: `${COMPETITION_WEEKENDS} weekends` },
                 { v: SCHEDULE_TOTALS.commercial, l: "Commercial", h: "5 per band" },
                 { v: SCHEDULE_TOTALS.campus, l: "Campus", h: "3 per band" },
                 { v: SCHEDULE_TOTALS.cross, l: "Cross nights", h: "Shared stages" },
+                { v: RELEASE_TOTALS.releases, l: "Song releases", h: `${RELEASE_TOTALS.perBand} per band` },
               ].map((s) => (
                 <div key={s.l} className="bpl-card p-4 border border-border/80 bg-surface/60">
                   <p className="text-2xl font-display font-extrabold text-emerald-300 tabular-nums">
@@ -562,6 +580,9 @@ function CalendarPage() {
               <span className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
                 <Radio size={10} className="text-amber-400" /> Cricket-window weekend
               </span>
+              <span className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
+                <Disc3 size={10} className="text-fuchsia-400" /> Song release
+              </span>
             </div>
           </div>
 
@@ -601,15 +622,20 @@ function CalendarPage() {
                     <div className="divide-y divide-border/40">
                       {[...days.entries()].map(([dayLabel, dayEvents]) => (
                         <div key={dayLabel} className="px-4 py-3">
-                          <p className="text-[11px] font-bold text-white mb-2">{dayLabel}</p>
+                          <div className="flex flex-wrap items-center gap-2 mb-2">
+                            <p className="text-[11px] font-bold text-white">{dayLabel}</p>
+                            {(releasesByDay.get(dayLabel)?.length ?? 0) > 0 && (
+                              <span className="inline-flex items-center gap-1 text-[9px] uppercase tracking-wider font-bold px-1.5 py-0.5 rounded border border-fuchsia-500/40 bg-fuchsia-500/10 text-fuchsia-300">
+                                <Disc3 size={9} />
+                                {releasesByDay.get(dayLabel)!.length} release
+                                {releasesByDay.get(dayLabel)!.length === 1 ? "" : "s"}
+                              </span>
+                            )}
+                          </div>
                           <div className="grid gap-1.5 sm:grid-cols-2 lg:grid-cols-3">
                             {dayEvents
                               .slice()
-                              .sort(
-                                (a, b) =>
-                                  SLOTS.findIndex((s) => s.label === a.slot) -
-                                  SLOTS.findIndex((s) => s.label === b.slot),
-                              )
+                              .sort((a, b) => (a.slot.includes("matinee") ? 0 : 1) - (b.slot.includes("matinee") ? 0 : 1))
                               .map((e) => (
                                 <div
                                   key={e.id}
@@ -640,6 +666,27 @@ function CalendarPage() {
                                 </div>
                               ))}
                           </div>
+
+                          {(releasesByDay.get(dayLabel)?.length ?? 0) > 0 && (
+                            <div className="mt-2 rounded-md border border-fuchsia-500/25 bg-fuchsia-500/5 px-2.5 py-2">
+                              <p className="text-[9px] uppercase tracking-wider font-bold text-fuchsia-300 mb-1">
+                                Music out today
+                              </p>
+                              <div className="flex flex-wrap gap-x-3 gap-y-1">
+                                {releasesByDay.get(dayLabel)!.map((r) => (
+                                  <span
+                                    key={r.id}
+                                    className="text-[10px] text-muted-foreground whitespace-nowrap"
+                                  >
+                                    <span className="text-white font-semibold">
+                                      {r.zoneName} · H{r.houseNumber} · B{r.band}
+                                    </span>{" "}
+                                    — {r.label}
+                                  </span>
+                                ))}
+                              </div>
+                            </div>
+                          )}
                         </div>
                       ))}
                     </div>
@@ -666,9 +713,11 @@ function CalendarPage() {
               </p>
               <p className="text-[11px] text-muted-foreground leading-relaxed">
                 <span className="font-semibold text-white">What it is not.</span> A booked calendar.
-                Cities rotate in proportion to each hub&apos;s share of its zone, but real dates have
-                to survive venue availability, travel, college terms, regional holidays and
-                broadcast clashes. {IPL_WINDOW.caveat} Treat this as the shape the booking team is
+                Commercial nights are spread evenly across a zone&apos;s hub cities, with the
+                surplus rotating between bands so nobody is permanently handed the smaller market.
+                Campus nights show as {CAMPUS_VENUE_LABEL} because the campus is chosen per band and
+                locked later. Real dates still have to survive venue availability, travel, college
+                terms, regional holidays and broadcast clashes. {IPL_WINDOW.caveat} Treat this as the shape the booking team is
                 solving against — the{" "}
                 <Link to="/season" className="text-primary-glow font-semibold hover:underline">
                   season page

@@ -17,6 +17,8 @@ import {
   Swords,
   Network,
   ChevronRight,
+  ShieldCheck,
+  Info,
   CalendarDays,
   Ticket,
   GraduationCap,
@@ -27,8 +29,24 @@ import {
 } from "lucide-react";
 import { TOTAL_LEAGUE_NIGHTS } from "@/data/national-season";
 import {
-  FAN_VOTE_SCALE,
-  ORIGINAL_IP_SCALE,
+  CAMPUS_PLANS,
+  CAMPUS_TOTALS,
+  CAMPUS_TIERS,
+  CAMPUS_LOAD,
+  CAMPUS_CLASH,
+  FEST_CALENDAR,
+  FEST_INTENSITY_META,
+  CAMPUS_SELECTION_NOTE,
+  CAMPUSES_PER_ZONE,
+} from "@/data/campus-network";
+import {
+  BAYESIAN,
+  BAYESIAN_EXAMPLES,
+  CATALOGUE_SCALE,
+  DIGITAL_REACH_SCALE,
+  IP_INTEGRITY_RULES,
+  ALR_SMOOTHING,
+  ENGAGED_VIEW_THRESHOLD_PCT,
   SCORING_METRICS,
   POINTS_PER_FIXTURE,
   VICTORY_BONUS,
@@ -336,65 +354,133 @@ function LeaguePage() {
               </div>
             </div>
 
-            {/* Fan vote scale */}
+            {/* Fan voting — Bayesian */}
             <div className="bpl-card p-6 text-left space-y-4 border-purple-500/20">
               <h4 className="text-xs font-bold uppercase tracking-wider text-white flex items-center gap-2">
-                <Vote size={14} className="text-purple-400" /> How Fan Points Scale
+                <Vote size={14} className="text-purple-400" /> How Fan Points Are Weighted
               </h4>
-              <p className="text-[11px] text-muted-foreground leading-relaxed">
-                Verified votes as a share of the people actually in the room, not raw vote count. A
-                sold-out 200-cap night can out-score a half-empty 800-cap one, and buying a big room
-                you cannot fill wins nothing.
-              </p>
-              <div className="space-y-2">
-                {FAN_VOTE_SCALE.map((b) => (
-                  <div
-                    key={b.label}
-                    className="flex items-center justify-between gap-3 border border-border/40 rounded-lg px-3 py-2 bg-surface/30"
-                  >
-                    <span className="text-[11px] text-muted-foreground">{b.label}</span>
-                    <span className="text-sm font-bold text-purple-300 tabular-nums shrink-0">
-                      {b.points} pts
+              <div className="rounded-lg border border-purple-500/25 bg-purple-500/5 px-3 py-2.5 text-center">
+                <p className="font-mono text-sm text-purple-200">
+                  W = (v·R + m·C) &divide; (v + m)
+                </p>
+              </div>
+              <div className="space-y-1.5 text-[11px] text-muted-foreground">
+                <p>
+                  <span className="font-mono font-bold text-white">v</span> — verified votes. Only
+                  ticket-holders are prompted to rate.
+                </p>
+                <p>
+                  <span className="font-mono font-bold text-white">R</span> — their average rating,
+                  1 to {BAYESIAN.scaleMax}.
+                </p>
+                <p>
+                  <span className="font-mono font-bold text-white">m</span> — vote threshold before
+                  a score stabilises, currently {BAYESIAN.minVotes}.
+                </p>
+                <p>
+                  <span className="font-mono font-bold text-white">C</span> — the league mean, the
+                  baseline every band starts against: {BAYESIAN.leagueMean}.
+                </p>
+              </div>
+              <div className="space-y-1.5 border-t border-border/40 pt-3">
+                {BAYESIAN_EXAMPLES.map((e) => (
+                  <div key={e.note} className="flex items-baseline justify-between gap-2">
+                    <span className="text-[10px] text-muted-foreground leading-snug">
+                      <span className="font-mono text-white">
+                        {e.votes}&times;{e.rawAverage.toFixed(1)}
+                      </span>{" "}
+                      — {e.note}
+                    </span>
+                    <span className="text-xs font-bold text-purple-300 tabular-nums shrink-0">
+                      {e.weighted.toFixed(2)} → {e.points}
                     </span>
                   </div>
                 ))}
               </div>
               <p className="text-[10px] text-muted-foreground leading-relaxed border-t border-border/30 pt-3">
-                One verified account, one vote, inside the 24-hour match window. The floor is 1 — a
-                band that played always scores something here.
+                A raw average would let three friends rating 10/10 outrank a 9.1 from four hundred
+                people. Weighting pulls a score toward the league mean until it has earned the right
+                to be extreme.
               </p>
             </div>
 
-            {/* Original IP scale */}
+            {/* Original IP — catalogue + reach */}
             <div className="bpl-card p-6 text-left space-y-4 border-cyan-500/20">
               <h4 className="text-xs font-bold uppercase tracking-wider text-white flex items-center gap-2">
-                <Disc3 size={14} className="text-cyan-400" /> How Original IP Points Scale
+                <Disc3 size={14} className="text-cyan-400" /> How Original IP Splits
               </h4>
               <p className="text-[11px] text-muted-foreground leading-relaxed">
-                Counted on how many league-eligible originals are live going into the fixture — a
-                catalogue, not a single upload timed for matchday.
+                Five points for shipping music, five for anyone actually listening. Follower counts
+                are never used — they are the easiest number online to buy, and they let a band coast
+                on a dead legacy audience.
               </p>
-              <div className="space-y-2">
-                {ORIGINAL_IP_SCALE.map((b) => (
+
+              <div className="space-y-1.5">
+                <p className="text-[10px] uppercase tracking-wider font-bold text-cyan-300">
+                  Catalogue released · 5 pts
+                </p>
+                {CATALOGUE_SCALE.map((b) => (
                   <div
                     key={b.label}
-                    className="flex items-center justify-between gap-3 border border-border/40 rounded-lg px-3 py-2 bg-surface/30"
+                    className="flex items-center justify-between gap-3 border border-border/40 rounded-lg px-3 py-1.5 bg-surface/30"
                   >
                     <span className="text-[11px] text-muted-foreground">{b.label}</span>
                     <span
-                      className={`text-sm font-bold tabular-nums shrink-0 ${
+                      className={`text-xs font-bold tabular-nums shrink-0 ${
                         b.points === 0 ? "text-rose-300" : "text-cyan-300"
                       }`}
                     >
-                      {b.points} pts
+                      {b.points}
                     </span>
                   </div>
                 ))}
               </div>
+
+              <div className="space-y-1.5">
+                <p className="text-[10px] uppercase tracking-wider font-bold text-cyan-300">
+                  Verified digital reach · 5 pts
+                </p>
+                <div className="rounded-lg border border-cyan-500/25 bg-cyan-500/5 px-3 py-2 text-center">
+                  <p className="font-mono text-[11px] text-cyan-200 leading-relaxed">
+                    ALR = (active streamers + engaged viewers) &divide; (followers + {ALR_SMOOTHING})
+                  </p>
+                </div>
+                {DIGITAL_REACH_SCALE.map((b) => (
+                  <div
+                    key={b.label}
+                    className="flex items-start justify-between gap-3 border border-border/40 rounded-lg px-3 py-1.5 bg-surface/30"
+                  >
+                    <div className="min-w-0">
+                      <p className="text-[11px] text-muted-foreground leading-snug">{b.label}</p>
+                      <p className="text-[10px] text-muted-foreground/70 leading-snug">{b.growth}</p>
+                    </div>
+                    <span className="text-xs font-bold text-cyan-300 tabular-nums shrink-0">
+                      {b.points}
+                    </span>
+                  </div>
+                ))}
+              </div>
+
               <p className="text-[10px] text-muted-foreground leading-relaxed border-t border-border/30 pt-3">
-                The only metric that can be a true nil. Release nothing and this line scores zero,
-                however well the night went.
+                Engaged viewers means over {ENGAGED_VIEW_THRESHOLD_PCT}% average watch time, which
+                automated clicks do not reach. The smoothing constant stops a five-follower account
+                posting a perfect ratio off five streams.
               </p>
+            </div>
+          </div>
+
+          {/* Integrity rules */}
+          <div className="bpl-card p-5 border-amber-500/20 bg-amber-500/5 mb-5">
+            <h4 className="text-xs font-bold uppercase tracking-wider text-white flex items-center gap-2 mb-3">
+              <ShieldCheck size={14} className="text-amber-400" /> Keeping the Table Honest
+            </h4>
+            <div className="grid gap-3 sm:grid-cols-3">
+              {IP_INTEGRITY_RULES.map((r) => (
+                <div key={r.rule} className="space-y-1">
+                  <p className="text-[11px] font-bold text-amber-200">{r.rule}</p>
+                  <p className="text-[10px] text-muted-foreground leading-relaxed">{r.detail}</p>
+                </div>
+              ))}
             </div>
           </div>
 
@@ -637,10 +723,10 @@ function LeaguePage() {
 
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
             {[
-              { v: STAGE_2_MATRIX.totalBands, l: "Bands Competing" },
+              { v: NATIONAL_TOTAL_BANDS, l: "Bands Competing" },
               { v: STAGE_2_MATRIX.showsPerBand, l: "Fixtures Per Band" },
-              { v: STAGE_2_MATRIX.totalFixtures, l: "League-Phase Nights" },
-              { v: STAGE_2_SEASON_FIXTURES, l: "Nights Incl. Finals" },
+              { v: TOTAL_LEAGUE_NIGHTS, l: "League-Phase Nights" },
+              { v: NATIONAL_TOTAL_HOUSES, l: "Production Houses" },
               { v: `${STAGE_2_MATRIX.showsPerBand * MAX_POINTS_PER_FIXTURE}`, l: "Max League Points" },
             ].map((s) => (
               <div key={s.l} className="border border-border/50 rounded-lg p-5 bg-surface/30 text-center">
@@ -955,6 +1041,155 @@ function LeaguePage() {
                   All inflow capital from league broadcasting and sponsors is reinvested directly back into the prize pool and scaling league operations.
                 </p>
               </div>
+            </div>
+          </div>
+        </section>
+
+        {/* SECTION 4B: CAMPUS NETWORK */}
+        <section className="py-20 px-4 max-w-7xl mx-auto relative z-10 border-t border-border/45">
+          <div className="text-center max-w-2xl mx-auto mb-12 space-y-3">
+            <h2 className="text-xs uppercase tracking-widest text-primary-glow font-bold">
+              Campus Network
+            </h2>
+            <h3 className="text-3xl font-display font-bold text-white">
+              {CAMPUSES_PER_ZONE} campuses per zone, {CAMPUS_TOTALS.campuses} nationally
+            </h3>
+            <p className="text-xs text-muted-foreground leading-relaxed">
+              The campus leg stages {CAMPUS_TOTALS.nights} nights a season. Spread across{" "}
+              {CAMPUS_TOTALS.campuses} campuses that is roughly{" "}
+              {(CAMPUS_TOTALS.nights / CAMPUS_TOTALS.campuses).toFixed(2)} nights each — enough
+              contact to build a relationship, not so much that a college is carrying the league.
+            </p>
+          </div>
+
+          {/* Fest calendar vs the fixture calendar */}
+          <div className="bpl-card p-6 mb-6 border-emerald-500/20 bg-emerald-500/5">
+            <h4 className="text-xs font-bold uppercase tracking-wider text-white flex items-center gap-2 mb-3">
+              <CalendarDays size={14} className="text-emerald-400" /> Scheduled Around Fest Season
+            </h4>
+            <div className="grid grid-cols-3 sm:grid-cols-6 gap-2 mb-4">
+              {CAMPUS_LOAD.map((m) => {
+                const meta = FEST_INTENSITY_META[m.intensity];
+                const fest = FEST_CALENDAR.find((f) => f.month === m.month);
+                return (
+                  <div
+                    key={m.month}
+                    title={fest?.note}
+                    className={`rounded-lg border p-2.5 text-center ${meta.accent}`}
+                  >
+                    <p className="text-[10px] uppercase tracking-wider font-bold">{m.month}</p>
+                    <p className="text-lg font-display font-extrabold text-white tabular-nums">
+                      {m.nights}
+                    </p>
+                    <p className="text-[9px] uppercase tracking-wider font-bold opacity-80">
+                      {meta.label}
+                    </p>
+                  </div>
+                );
+              })}
+            </div>
+            <p className="text-[11px] text-muted-foreground leading-relaxed">
+              <span className="font-semibold text-emerald-200">
+                All {CAMPUS_CLASH.inSeason} campus nights sit inside fest season.
+              </span>{" "}
+              Alternating commercial and campus evenly would have put half of them in April and May
+              — exams and summer vacation, when a campus has no audience to play to. The campus leg
+              is front-loaded into January to March instead, and the ticketed circuit takes the back
+              half of the season, where it does not care what the academic calendar is doing.
+            </p>
+          </div>
+
+          {/* Slots per zone */}
+          <div className="overflow-x-auto mb-6">
+            <table className="w-full text-xs border-collapse min-w-[44rem]">
+              <thead>
+                <tr className="border-b border-border bg-secondary/30 text-left">
+                  <th className="py-2.5 px-3 font-bold text-primary-glow uppercase tracking-wider text-[10px]">Zone</th>
+                  <th className="py-2.5 px-3 font-bold text-muted-foreground uppercase tracking-wider text-[10px] text-center">Campuses</th>
+                  <th className="py-2.5 px-3 font-bold text-muted-foreground uppercase tracking-wider text-[10px] text-center">Nights</th>
+                  <th className="py-2.5 px-3 font-bold text-muted-foreground uppercase tracking-wider text-[10px]">Distribution</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border/40">
+                {CAMPUS_PLANS.map((plan) => (
+                  <tr key={plan.zone.slug} className="hover:bg-secondary/10 align-top">
+                    <td className="py-2.5 px-3 font-bold text-white whitespace-nowrap">
+                      {plan.zone.shortName}
+                    </td>
+                    <td className="py-2.5 px-3 text-center font-bold text-primary-glow tabular-nums">
+                      {plan.totalSlots}
+                    </td>
+                    <td className="py-2.5 px-3 text-center text-muted-foreground tabular-nums">
+                      {plan.nightsNeeded}
+                    </td>
+                    <td className="py-2.5 px-3">
+                      <div className="flex flex-wrap gap-1.5">
+                        {plan.allocations.map((a) => (
+                          <span
+                            key={a.location}
+                            title={a.note}
+                            className={`text-[10px] px-2 py-0.5 rounded-full border ${
+                              a.kind === "hub"
+                                ? "border-border/60 bg-secondary/30 text-muted-foreground"
+                                : "border-cyan-500/30 bg-cyan-500/10 text-cyan-300"
+                            }`}
+                          >
+                            {a.location} {a.slots}
+                          </span>
+                        ))}
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Tiers + selection */}
+          <div className="grid gap-5 lg:grid-cols-3 mb-6">
+            {CAMPUS_TIERS.map((tier) => (
+              <div key={tier.id} className="bpl-card p-5 text-left space-y-3 border-border/40">
+                <div className="flex items-baseline justify-between gap-2">
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-white">
+                    {tier.label}
+                  </h4>
+                  <span className="text-lg font-display font-extrabold text-primary-glow tabular-nums shrink-0">
+                    {Math.round(CAMPUSES_PER_ZONE * tier.share)}
+                  </span>
+                </div>
+                <p className="text-[10px] text-muted-foreground">
+                  {tier.footfall} · {tier.nightsEach}
+                </p>
+                <div className="space-y-1.5 border-t border-border/30 pt-2.5">
+                  {tier.criteria.map((c) => (
+                    <p
+                      key={c}
+                      className="text-[10px] text-muted-foreground leading-snug flex gap-1.5"
+                    >
+                      <span className="opacity-50">·</span>
+                      {c}
+                    </p>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="bpl-card p-5 border-amber-500/20 bg-amber-500/5 flex gap-3 text-left">
+            <Info size={16} className="text-amber-400 shrink-0 mt-0.5" />
+            <div className="space-y-2">
+              <p className="text-[11px] text-muted-foreground leading-relaxed">
+                <span className="font-semibold text-amber-200">Selected on engagement, not prestige.</span>{" "}
+                {CAMPUS_SELECTION_NOTE}
+              </p>
+              <p className="text-[11px] text-muted-foreground leading-relaxed">
+                <span className="font-semibold text-white">Named campuses are not published here.</span>{" "}
+                A college listed on this page would read as a signed partner, and none are — every
+                campus is a target until a booking is agreed. Fest dates are shown as month-level
+                windows for the same reason: exact 2027 dates for three hundred campuses do not
+                exist yet, and a booking team planning against invented ones would be worse off than
+                one planning against an honest range.
+              </p>
             </div>
           </div>
         </section>
