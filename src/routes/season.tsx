@@ -229,18 +229,23 @@ function SeasonPage() {
               </table>
             </div>
 
-            <div className="bpl-card p-4 border border-amber-500/25 bg-amber-500/5 flex gap-3">
-              <Info size={14} className="text-amber-400 shrink-0 mt-0.5" />
+            <div className="bpl-card p-4 border border-emerald-500/25 bg-emerald-500/5 flex gap-3">
+              <CheckCircle2 size={14} className="text-emerald-400 shrink-0 mt-0.5" />
               <p className="text-[11px] text-muted-foreground leading-relaxed">
-                <span className="font-semibold text-amber-200">An asymmetry to decide on.</span> Cross
-                nights come from pairings inside a house. AP/TS houses hold four bands, so every band
-                gets {ZONE_CAPACITY[0].crossPerBand} cross nights; every other zone holds two bands
-                per house, so their bands get {ZONE_CAPACITY[1].crossPerBand}. An AP/TS band
-                therefore plays {INDIVIDUAL_FIXTURES_PER_BAND + ZONE_CAPACITY[0].crossPerBand}{" "}
-                fixtures against {INDIVIDUAL_FIXTURES_PER_BAND + ZONE_CAPACITY[1].crossPerBand}{" "}
-                elsewhere — which matters, because points accumulate per fixture. Either normalise
-                the table to points-per-fixture, or run cross nights between houses in the
-                two-band zones.
+                <span className="font-semibold text-emerald-200">
+                  Every league is the same size, and that matters.
+                </span>{" "}
+                Cross nights come from pairings inside a house, so roster size used to decide how
+                many a band got — four-band houses gave three, two-band houses gave one, and bands
+                in different zones arrived at the national stage having played different numbers of
+                fixtures. Since points accumulate per fixture, that made the national table
+                incomparable without adjustment. Equalising every zone to{" "}
+                {ZONE_CAPACITY[0].zone.houses} houses × {ZONE_CAPACITY[0].zone.bandsPerHouse} bands
+                removes it: every band anywhere plays{" "}
+                {INDIVIDUAL_FIXTURES_PER_BAND + ZONE_CAPACITY[0].crossPerBand} fixtures —{" "}
+                {INDIVIDUAL_FIXTURES_PER_BAND} solo and {ZONE_CAPACITY[0].crossPerBand} cross — for
+                the same {ZONE_CAPACITY[0].crossNights} cross nights per zone. No normalisation, no
+                asterisk.
               </p>
             </div>
           </section>

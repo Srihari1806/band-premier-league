@@ -1453,9 +1453,10 @@ function AboutPage() {
               One market proved, then replicated
             </h3>
             <p className="text-xs text-muted-foreground leading-relaxed">
-              All five regional leagues open together in Season 1. AP/TS carries twice the roster
-              because it is where the format was built; every other market opens at half that size —
-              the same structure, the same scoring, a different language.
+              All five regional leagues open together in Season 1, at the same size: five
+              production houses signing four bands each, twenty bands per market. The same
+              structure, the same fixture count and the same scoring everywhere — the only thing
+              that changes is the language.
             </p>
           </div>
 

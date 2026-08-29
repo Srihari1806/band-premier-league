@@ -531,7 +531,7 @@ export interface Zone {
   tier: ZoneTier;
   /** Production houses in this regional league. */
   houses: number;
-  /** Bands each house signs here. AP/TS runs four; every other zone runs two. */
+  /** Bands each house signs here. Four, in every zone — the leagues are equal. */
   bandsPerHouse: number;
   /** Slug of the zone this feeds into, if any. */
   feedsInto?: string;
@@ -590,7 +590,7 @@ export const ZONES: Zone[] = [
       { city: "Tirupati", state: "Andhra Pradesh", note: "South Andhra hub — temple-town footfall and a young campus base", fixtureShare: 0.15, priceIdx: 0.75, capacityIdx: 0.72, costIdx: 0.8, reachIdx: 0.65 },
     ],
     strategy:
-      "Where the format was designed, and the reason it carries twice the roster of any other zone. Season 1 opens here alongside the other four leagues rather than ahead of them.",
+      "Where the format was designed. Season 1 opens here alongside the other four leagues rather than ahead of them, and at the same roster size.",
     campusChapters: 15,
     accent: "cyan",
   },
