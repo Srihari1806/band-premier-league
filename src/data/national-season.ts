@@ -1,8 +1,8 @@
 /**
  * The national season architecture.
  *
- * `league-format.ts` describes the AP/TS pilot in isolation. This describes the
- * full national build: five regional leagues running simultaneously, and the
+ * `league-format.ts` holds the zone table and the AP/TS fixture mix. This is the
+ * national build: five regional leagues running simultaneously from Season 1, and the
  * annual cycle that carries an artist through the eight months when the league
  * is not playing.
  *
@@ -471,3 +471,203 @@ export function buildReleaseRotation(
   }
   return slots;
 }
+
+/* ------------------------------------------------------------------ *
+ * The full 2027 fixture schedule
+ *
+ * Every event in the regular season, dated and slotted. Generated from the
+ * structure rather than typed out, so it can never disagree with the capacity
+ * engine above — the totals it produces are checked against it.
+ *
+ * How a house weekend actually works: the house is in town for three days, so
+ * it stages each of its bands once and, on the weekends where a pairing is
+ * due, one shared cross night in the Saturday headline slot. A band can play
+ * twice in a weekend — its own night and a cross night — which is what makes
+ * eight individual fixtures and three cross nights fit into eight windows.
+ * ------------------------------------------------------------------ */
+
+export type EventKind = "commercial" | "campus" | "cross";
+
+export interface ScheduleSlot {
+  label: string;
+  /** Days from the weekend's Saturday. */
+  offset: number;
+}
+
+/** Five slots across Friday to Sunday — the shape of a house weekend. */
+export const SLOTS: ScheduleSlot[] = [
+  { label: "Fri night", offset: -1 },
+  { label: "Sat matinee", offset: 0 },
+  { label: "Sat night", offset: 0 },
+  { label: "Sun matinee", offset: 1 },
+  { label: "Sun night", offset: 1 },
+];
+
+/** The marquee slot, reserved for a cross night when one is due. */
+const HEADLINE_SLOT = 2;
+
+export interface ScheduledEvent {
+  id: string;
+  weekendIndex: number;
+  competitionNumber: number;
+  date: Date;
+  dateLabel: string;
+  weekday: string;
+  slot: string;
+  zoneSlug: string;
+  zoneName: string;
+  houseNumber: number;
+  /** Band numbers within the house. Two of them on a cross night. */
+  bands: number[];
+  kind: EventKind;
+  city: string;
+  iplOverlap: boolean;
+}
+
+const DAY_FMT = new Intl.DateTimeFormat("en-GB", {
+  weekday: "short",
+  day: "numeric",
+  month: "short",
+  timeZone: "UTC",
+});
+const WEEKDAY_FMT = new Intl.DateTimeFormat("en-GB", { weekday: "short", timeZone: "UTC" });
+
+/** Distinct pairings inside a house, in a stable order. */
+export function housePairings(bands: number): number[][] {
+  const out: number[][] = [];
+  for (let a = 1; a <= bands; a += 1) {
+    for (let b = a + 1; b <= bands; b += 1) out.push([a, b]);
+  }
+  return out;
+}
+
+/** Cities repeated in proportion to their share of the zone calendar. */
+function cityBag(zone: NationalZone): string[] {
+  const bag: string[] = [];
+  zone.hubCities.forEach((c) => {
+    const n = Math.max(1, Math.round(c.fixtureShare * 20));
+    for (let i = 0; i < n; i += 1) bag.push(c.city);
+  });
+  return bag.length > 0 ? bag : ["TBC"];
+}
+
+/**
+ * Which weekends each house is active. Two houses run concurrently per zone
+ * per weekend, interleaved so a house never plays two weekends back to back
+ * more often than the rotation requires.
+ */
+export function houseWindows(zone: NationalZone): Record<number, number[]> {
+  const windows: Record<number, number[]> = {};
+  for (let h = 1; h <= zone.houses; h += 1) windows[h] = [];
+  const competition = SEASON_CALENDAR.filter((w) => !w.isRecovery);
+  competition.forEach((w, i) => {
+    const a = ((2 * i) % zone.houses) + 1;
+    const b = ((2 * i + 1) % zone.houses) + 1;
+    windows[a].push(w.index);
+    windows[b].push(w.index);
+  });
+  return windows;
+}
+
+export function buildFullSchedule(): ScheduledEvent[] {
+  const events: ScheduledEvent[] = [];
+  const byIndex = new Map(SEASON_CALENDAR.map((w) => [w.index, w]));
+
+  NATIONAL_ZONES.forEach((zone) => {
+    const bag = cityBag(zone);
+    const pairings = housePairings(zone.bandsPerHouse);
+    const windows = houseWindows(zone);
+
+    Object.entries(windows).forEach(([houseKey, weekendIndices]) => {
+      const houseNumber = Number(houseKey);
+      weekendIndices.forEach((weekendIndex, j) => {
+        const weekend = byIndex.get(weekendIndex);
+        if (!weekend || weekend.number === null) return;
+
+        // A cross night is due on this window if a pairing is still unplayed.
+        const pairing = j < pairings.length ? pairings[j] : null;
+
+        // Individual nights first, then the cross night takes the headline slot.
+        const slotOrder = SLOTS.map((_, i) => i).filter(
+          (i) => !(pairing && i === HEADLINE_SLOT),
+        );
+
+        for (let band = 1; band <= zone.bandsPerHouse; band += 1) {
+          const slotIndex = slotOrder[(band - 1) % slotOrder.length];
+          const slot = SLOTS[slotIndex];
+          const date = addDays(weekend.date, slot.offset);
+          events.push({
+            id: `${zone.slug}-h${houseNumber}-w${weekend.number}-b${band}`,
+            weekendIndex,
+            competitionNumber: weekend.number,
+            date,
+            dateLabel: DAY_FMT.format(date),
+            weekday: WEEKDAY_FMT.format(date),
+            slot: slot.label,
+            zoneSlug: zone.slug,
+            zoneName: zone.shortName,
+            houseNumber,
+            bands: [band],
+            // Five commercial nights then three campus nights, per band.
+            kind: j < 5 ? "commercial" : "campus",
+            city: bag[(weekendIndex * 3 + houseNumber + band) % bag.length],
+            iplOverlap: weekend.iplOverlap,
+          });
+        }
+
+        if (pairing) {
+          const slot = SLOTS[HEADLINE_SLOT];
+          const date = addDays(weekend.date, slot.offset);
+          events.push({
+            id: `${zone.slug}-h${houseNumber}-w${weekend.number}-cross`,
+            weekendIndex,
+            competitionNumber: weekend.number,
+            date,
+            dateLabel: DAY_FMT.format(date),
+            weekday: WEEKDAY_FMT.format(date),
+            slot: slot.label,
+            zoneSlug: zone.slug,
+            zoneName: zone.shortName,
+            houseNumber,
+            bands: pairing,
+            kind: "cross",
+            city: bag[(weekendIndex + houseNumber) % bag.length],
+            iplOverlap: weekend.iplOverlap,
+          });
+        }
+      });
+    });
+  });
+
+  return events.sort((a, b) => a.date.getTime() - b.date.getTime());
+}
+
+export const FULL_SCHEDULE = buildFullSchedule();
+
+export interface ScheduleTotals {
+  events: number;
+  commercial: number;
+  campus: number;
+  cross: number;
+  individual: number;
+  /** Does the generated schedule match what the capacity engine requires? */
+  reconciles: boolean;
+}
+
+export function scheduleTotals(events = FULL_SCHEDULE): ScheduleTotals {
+  const commercial = events.filter((e) => e.kind === "commercial").length;
+  const campus = events.filter((e) => e.kind === "campus").length;
+  const cross = events.filter((e) => e.kind === "cross").length;
+  return {
+    events: events.length,
+    commercial,
+    campus,
+    cross,
+    individual: commercial + campus,
+    reconciles:
+      commercial + campus === NATIONAL_CAPACITY.fixturesNeeded &&
+      cross === NATIONAL_CAPACITY.crossNights,
+  };
+}
+
+export const SCHEDULE_TOTALS = scheduleTotals();

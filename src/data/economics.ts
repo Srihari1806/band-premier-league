@@ -114,7 +114,7 @@ export interface EconomicsInputs {
   /** Fixtures a single band plays inside one season. */
   showsPerBand: number;
   numFranchises: number;
-  /** Bands signed per production house. 1 in the pilot, 4 in the regional league. */
+  /** Bands signed per production house. 4 in AP/TS, 2 in every other zone. */
   bandsPerFranchise: number;
   winningBid: number;
   bandMembers: number;

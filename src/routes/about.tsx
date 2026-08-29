@@ -160,7 +160,7 @@ const FLYWHEEL = [
 ];
 
 /**
- * Chapter sizing as the league expands. AP/TS is the deep pilot; every
+ * Chapter sizing. All five leagues open together in Season 1; AP/TS carries
  * subsequent state opens at half the roster until it proves out.
  */
 /** Derived from the shared zone table so it can never disagree with it. */
@@ -245,11 +245,13 @@ const TIMELINE_STEPS = [
   { title: "Audience", desc: "Fans stream the music, attend the matches, and vote for winners." },
 ];
 
-const PILOT_CITIES = [
-  { name: "Hyderabad", status: "Launching Season I", desc: "Pilot cohort of 4 bands, 6 venues, and 24 live tournament shows." },
-  { name: "Visakhapatnam", status: "Coming Soon", desc: "Expansion cohort scheduled for Season II qualifiers." },
-  { name: "Vijayawada", status: "Coming Soon", desc: "Regional campus tournaments and cafe fixtures." },
-];
+/** Season 1 opens in all five zones at once, so this lists the lead hub of each. */
+const LAUNCH_CITIES = ZONE_HUBS.map((z) => ({
+  name: z.hubCities[0].city,
+  status: `${z.shortName} · Season 1`,
+  desc: z.hubCities[0].note,
+}));
+
 
 const PARTICIPANTS = [
   { name: "Artists", desc: "Singers, songwriters, and instrumentalists.", link: "/onboarding", type: "artist" },
@@ -427,11 +429,11 @@ function AboutPage() {
         <section className="py-20 px-4 max-w-7xl mx-auto relative z-10 border-t border-border/45 bg-slate-950/20">
           <div className="text-center max-w-xl mx-auto mb-16 space-y-3">
             <h2 className="text-xs uppercase tracking-widest text-primary-glow font-bold">Launch Roadmap</h2>
-            <h3 className="text-3xl font-display font-bold text-white">Pilot Cities & Roadmap</h3>
+            <h3 className="text-3xl font-display font-bold text-white">Season 1 Launch Markets</h3>
           </div>
 
           <div className="grid gap-6 md:grid-cols-3">
-            {PILOT_CITIES.map((c, idx) => (
+            {LAUNCH_CITIES.map((c, idx) => (
               <motion.div
                 key={c.name}
                 initial={{ opacity: 0, y: 20 }}
@@ -1451,9 +1453,9 @@ function AboutPage() {
               One market proved, then replicated
             </h3>
             <p className="text-xs text-muted-foreground leading-relaxed">
-              AP/TS runs the deep roster because it is where the format is being proven. Every
-              market after it opens at half that size and earns its way up — the same structure, the
-              same scoring, a different language.
+              All five regional leagues open together in Season 1. AP/TS carries twice the roster
+              because it is where the format was built; every other market opens at half that size —
+              the same structure, the same scoring, a different language.
             </p>
           </div>
 

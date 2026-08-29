@@ -22,6 +22,7 @@ import { Route as EventsRouteImport } from './routes/events'
 import { Route as EconomicsRouteImport } from './routes/economics'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as CommunityRouteImport } from './routes/community'
+import { Route as CalendarRouteImport } from './routes/calendar'
 import { Route as BandsRouteImport } from './routes/bands'
 import { Route as BandCultureRouteImport } from './routes/band-culture'
 import { Route as AnalyticsRouteImport } from './routes/analytics'
@@ -104,6 +105,11 @@ const DashboardRoute = DashboardRouteImport.update({
 const CommunityRoute = CommunityRouteImport.update({
   id: '/community',
   path: '/community',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CalendarRoute = CalendarRouteImport.update({
+  id: '/calendar',
+  path: '/calendar',
   getParentRoute: () => rootRouteImport,
 } as any)
 const BandsRoute = BandsRouteImport.update({
@@ -203,6 +209,7 @@ export interface FileRoutesByFullPath {
   '/analytics': typeof AnalyticsRoute
   '/band-culture': typeof BandCultureRoute
   '/bands': typeof BandsRouteWithChildren
+  '/calendar': typeof CalendarRoute
   '/community': typeof CommunityRoute
   '/dashboard': typeof DashboardRoute
   '/economics': typeof EconomicsRoute
@@ -236,6 +243,7 @@ export interface FileRoutesByTo {
   '/analytics': typeof AnalyticsRoute
   '/band-culture': typeof BandCultureRoute
   '/bands': typeof BandsRouteWithChildren
+  '/calendar': typeof CalendarRoute
   '/community': typeof CommunityRoute
   '/dashboard': typeof DashboardRoute
   '/economics': typeof EconomicsRoute
@@ -270,6 +278,7 @@ export interface FileRoutesById {
   '/analytics': typeof AnalyticsRoute
   '/band-culture': typeof BandCultureRoute
   '/bands': typeof BandsRouteWithChildren
+  '/calendar': typeof CalendarRoute
   '/community': typeof CommunityRoute
   '/dashboard': typeof DashboardRoute
   '/economics': typeof EconomicsRoute
@@ -305,6 +314,7 @@ export interface FileRouteTypes {
     | '/analytics'
     | '/band-culture'
     | '/bands'
+    | '/calendar'
     | '/community'
     | '/dashboard'
     | '/economics'
@@ -338,6 +348,7 @@ export interface FileRouteTypes {
     | '/analytics'
     | '/band-culture'
     | '/bands'
+    | '/calendar'
     | '/community'
     | '/dashboard'
     | '/economics'
@@ -371,6 +382,7 @@ export interface FileRouteTypes {
     | '/analytics'
     | '/band-culture'
     | '/bands'
+    | '/calendar'
     | '/community'
     | '/dashboard'
     | '/economics'
@@ -405,6 +417,7 @@ export interface RootRouteChildren {
   AnalyticsRoute: typeof AnalyticsRoute
   BandCultureRoute: typeof BandCultureRoute
   BandsRoute: typeof BandsRouteWithChildren
+  CalendarRoute: typeof CalendarRoute
   CommunityRoute: typeof CommunityRoute
   DashboardRoute: typeof DashboardRoute
   EconomicsRoute: typeof EconomicsRoute
@@ -523,6 +536,13 @@ declare module '@tanstack/react-router' {
       path: '/community'
       fullPath: '/community'
       preLoaderRoute: typeof CommunityRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/calendar': {
+      id: '/calendar'
+      path: '/calendar'
+      fullPath: '/calendar'
+      preLoaderRoute: typeof CalendarRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/bands': {
@@ -670,6 +690,7 @@ const rootRouteChildren: RootRouteChildren = {
   AnalyticsRoute: AnalyticsRoute,
   BandCultureRoute: BandCultureRoute,
   BandsRoute: BandsRouteWithChildren,
+  CalendarRoute: CalendarRoute,
   CommunityRoute: CommunityRoute,
   DashboardRoute: DashboardRoute,
   EconomicsRoute: EconomicsRoute,

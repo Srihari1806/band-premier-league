@@ -52,7 +52,7 @@ export const SEASONS: SeasonDim[] = [
   {
     id: "s1",
     label: "Season 1",
-    note: "The pilot. Unproven format, the market exactly as it is today.",
+    note: "Launch year. Unproven format, the market exactly as it is today.",
     priceGrowth: 1,
     attendanceGrowth: 1,
     reachGrowth: 1,
@@ -292,8 +292,7 @@ export function zoneOf(slug: string): Zone {
 
 /**
  * Zones a user can slice by. The national tier is one night, not a league, so
- * it is excluded; the live pilot leads because it is the market that actually
- * has a calendar to slice.
+ * it is excluded; AP/TS leads because it carries the deepest roster.
  */
 export const SLICEABLE_ZONES = ZONES.filter((z) => z.tier !== "national").sort(
   (a, b) => (a.tier === "state" ? 0 : 1) - (b.tier === "state" ? 0 : 1),

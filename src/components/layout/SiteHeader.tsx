@@ -12,6 +12,7 @@ const NAV = [
   { to: "/band-culture", label: "Band Culture" },
   { to: "/economics", label: "Economics" },
   { to: "/season", label: "Season" },
+  { to: "/calendar", label: "Calendar" },
   { to: "/handbook", label: "Handbook" },
   { to: "/events", label: "Events" },
   { to: "/venues", label: "Venues" },
@@ -63,13 +64,15 @@ export function SiteHeader() {
         </Link>
 
         {/* Center: Standard Navigation Links (Accessible to everyone) */}
-        <nav className="hidden lg:flex items-center gap-1">
+        <nav className="hidden xl:flex items-center gap-0">
           {NAV.map((n) => (
             <Link
               key={n.to}
               to={n.to}
-              className="px-3 py-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
-              activeProps={{ className: "px-3 py-2 text-sm text-foreground font-semibold" }}
+              className="px-2 py-2 text-[13px] whitespace-nowrap text-muted-foreground hover:text-foreground transition-colors"
+              activeProps={{
+                className: "px-2 py-2 text-[13px] whitespace-nowrap text-foreground font-semibold",
+              }}
               activeOptions={{ exact: n.to === "/" }}
             >
               {n.label}
@@ -78,7 +81,7 @@ export function SiteHeader() {
         </nav>
 
         {/* Right: Actions / CTAs */}
-        <div className="hidden lg:flex items-center gap-3">
+        <div className="hidden xl:flex items-center gap-3">
           {isAdmin && (
             <Link
               to="/admin/applications"
@@ -125,7 +128,7 @@ export function SiteHeader() {
 
         {/* Mobile menu toggle */}
         <button
-          className="lg:hidden text-foreground"
+          className="xl:hidden text-foreground"
           onClick={() => setOpen((o) => !o)}
           aria-label="Toggle menu"
         >
@@ -135,7 +138,7 @@ export function SiteHeader() {
 
       {/* Mobile Drawer */}
       {open && (
-        <div className="lg:hidden border-t border-border bg-background/95 backdrop-blur-xl animate-fadeIn">
+        <div className="xl:hidden border-t border-border bg-background/95 backdrop-blur-xl animate-fadeIn">
           <div className="px-4 py-4 flex flex-col gap-4">
             {/* Nav links */}
             <div className="flex flex-col gap-2.5">

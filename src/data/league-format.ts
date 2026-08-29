@@ -139,7 +139,7 @@ export const ZONE_ROSTERS: Record<string, { houses: number; bandsPerHouse: numbe
   north: { houses: 5, bandsPerHouse: 2 },
 };
 
-/** AP/TS — the pilot zone, and the deepest roster in the league. */
+/** AP/TS — the deepest roster in the league. Every zone opens in Season 1. */
 export const STAGE_2_STRUCTURE: MatrixStructure = {
   houses: ZONE_ROSTERS["ap-ts"].houses,
   bandsPerHouse: ZONE_ROSTERS["ap-ts"].bandsPerHouse,
@@ -503,7 +503,7 @@ export const ZONES: Zone[] = [
     tier: "national",
     houses: 0,
     bandsPerHouse: 0,
-    status: "Aug – Oct",
+    status: "Season 1 · Aug–Oct",
     headline: "The qualifiers from all five regional leagues meet.",
     languages: ["Pan-India"],
     hubCities: [
@@ -531,8 +531,8 @@ export const ZONES: Zone[] = [
     feedsInto: "national",
     houses: ZONE_ROSTERS["ap-ts"].houses,
     bandsPerHouse: ZONE_ROSTERS["ap-ts"].bandsPerHouse,
-    status: "Pilot — live now",
-    headline: "The proof-of-concept market, and the only zone with a four-band roster.",
+    status: "Season 1 · live",
+    headline: "The deepest roster in the league — the only zone signing four bands per house.",
     languages: ["Telugu"],
     hubCities: [
       { city: "Hyderabad", state: "Telangana", note: "Primary hub — venues, studios and production base", fixtureShare: 0.4, priceIdx: 1.15, capacityIdx: 1.3, costIdx: 1.15, reachIdx: 1.3 },
@@ -541,7 +541,7 @@ export const ZONES: Zone[] = [
       { city: "Tirupati", state: "Andhra Pradesh", note: "South Andhra hub — temple-town footfall and a young campus base", fixtureShare: 0.15, priceIdx: 0.75, capacityIdx: 0.72, costIdx: 0.8, reachIdx: 0.65 },
     ],
     strategy:
-      "Prove the unit economics and the fixture format in one language market before spending a rupee on a second. It carries twice the roster of any other zone because it is where the format was built.",
+      "Where the format was designed, and the reason it carries twice the roster of any other zone. Season 1 opens here alongside the other four leagues rather than ahead of them.",
     campusChapters: 15,
     accent: "cyan",
   },
@@ -553,7 +553,7 @@ export const ZONES: Zone[] = [
     feedsInto: "national",
     houses: ZONE_ROSTERS.karnataka.houses,
     bandsPerHouse: ZONE_ROSTERS.karnataka.bandsPerHouse,
-    status: "Year 1",
+    status: "Season 1 · live",
     headline: "India's densest indie and pub-gig market.",
     languages: ["Kannada"],
     hubCities: [
@@ -573,7 +573,7 @@ export const ZONES: Zone[] = [
     feedsInto: "national",
     houses: ZONE_ROSTERS["tamil-nadu"].houses,
     bandsPerHouse: ZONE_ROSTERS["tamil-nadu"].bandsPerHouse,
-    status: "Year 1",
+    status: "Season 1 · live",
     headline: "Deep live circuit and a college-band culture that feeds the campus leg directly.",
     languages: ["Tamil"],
     hubCities: [
@@ -593,7 +593,7 @@ export const ZONES: Zone[] = [
     feedsInto: "national",
     houses: ZONE_ROSTERS.kerala.houses,
     bandsPerHouse: ZONE_ROSTERS.kerala.bandsPerHouse,
-    status: "Year 1",
+    status: "Season 1 · live",
     headline: "Established festival and fusion audience.",
     languages: ["Malayalam"],
     hubCities: [
@@ -613,7 +613,7 @@ export const ZONES: Zone[] = [
     feedsInto: "national",
     houses: ZONE_ROSTERS.north.houses,
     bandsPerHouse: ZONE_ROSTERS.north.bandsPerHouse,
-    status: "Year 2",
+    status: "Season 1 · live",
     headline: "Highest-CPM digital market and the sponsorship centre.",
     languages: ["Hindi", "Punjabi", "Bengali", "Assamese", "Marathi"],
     hubCities: [
@@ -634,7 +634,7 @@ export const ZONES: Zone[] = [
       { city: "Chandigarh", state: "Punjab", note: "Punjabi-language crossover audience", fixtureShare: 0.1, priceIdx: 1.0, capacityIdx: 0.95, costIdx: 1.0, reachIdx: 0.95 },
     ],
     strategy:
-      "Larger streaming numbers per release, national sponsorship budgets and the OTT buyers who matter for broadcast — which is why it comes after the format is proven, not before.",
+      "Larger streaming numbers per release, national sponsorship budgets and the OTT buyers who matter for broadcast. The widest language spread of any zone.",
     campusChapters: 25,
     accent: "purple",
   },

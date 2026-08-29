@@ -25,6 +25,7 @@ import {
   CheckCircle2,
   Flag,
 } from "lucide-react";
+import { TOTAL_LEAGUE_NIGHTS } from "@/data/national-season";
 import {
   SCORING_METRICS,
   POINTS_PER_FIXTURE,
@@ -75,7 +76,7 @@ const JOURNEY_STEPS = [
   { id: "register", label: "Register Profile", desc: "Artists and bands register to signal eligibility." },
   { id: "partnership", label: "Franchise Partnership", desc: "Production houses bid and partner with registered bands." },
   { id: "music", label: "Original Music", desc: "Franchises invest in original music production." },
-  { id: "live", label: "Live Performances", desc: "Compete across cafes, colleges, and pilot stages." },
+  { id: "live", label: "Live Performances", desc: "Compete across cafés, campuses and partner venues in your zone." },
   { id: "points", label: "Points Table", desc: "Accumulate scores from gigs, streams, and votes." },
   { id: "top25", label: "Top 25% Qualification", desc: "The top quartile advances to the grand finale." },
   { id: "finals", label: "League Finals", desc: "The ultimate clash for the national championship." },
@@ -509,15 +510,22 @@ function LeaguePage() {
         <section className="py-20 px-4 max-w-7xl mx-auto relative z-10 border-t border-border/45">
           <div className="text-center max-w-2xl mx-auto mb-12 space-y-3">
             <h2 className="text-xs uppercase tracking-widest text-primary-glow font-bold">
-              Stage 2 · AP/TS Regional League
+              Season 1 · Fixture Structure
             </h2>
             <h3 className="text-3xl font-display font-bold text-white">The Match Matrix</h3>
             <p className="text-xs text-muted-foreground leading-relaxed">
-              {STAGE_2_MATRIX.houses} production houses sign {STAGE_2_MATRIX.bandsPerHouse} bands each
-              — {STAGE_2_MATRIX.totalBands} bands playing {STAGE_2_MATRIX.showsPerBand} fixtures apiece.
-              That resolves into {STAGE_2_MATRIX.totalFixtures} actual live nights in the league phase,
-              because a cross night is one shared stage rather than two separate shows. Inside a house,
-              every one of the {STAGE_2_MATRIX.crossPairsPerHouse} possible pairings meets exactly once.
+              Shown for AP/TS, the deepest zone: {STAGE_2_MATRIX.houses} houses sign{" "}
+              {STAGE_2_MATRIX.bandsPerHouse} bands each — {STAGE_2_MATRIX.totalBands} bands playing{" "}
+              {STAGE_2_MATRIX.showsPerBand} fixtures apiece, resolving into{" "}
+              {STAGE_2_MATRIX.totalFixtures} live nights because a cross night is one shared stage
+              rather than two shows. Every one of the {STAGE_2_MATRIX.crossPairsPerHouse} pairings
+              inside a house meets exactly once. The other four zones sign two bands per house, so
+              their bands play one cross night rather than three. Nationally that is{" "}
+              {NATIONAL_TOTAL_BANDS} bands and {TOTAL_LEAGUE_NIGHTS} league nights — the{" "}
+              <Link to="/calendar" className="text-primary-glow font-semibold hover:underline">
+                full 2027 calendar
+              </Link>{" "}
+              has every one of them dated.
             </p>
           </div>
 
