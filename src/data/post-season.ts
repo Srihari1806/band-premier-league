@@ -11,6 +11,7 @@
 
 import {
   ZONE_HUBS,
+  NATIONAL_TOTAL_BANDS,
   type Zone,
 } from "./league-format";
 
@@ -377,7 +378,7 @@ export const POST_SEASON_TOTALS = postSeasonTotals();
 
 /** Bands still involved at each step, for the ladder display. */
 export const LADDER = [
-  { stage: "Regular season", bands: 60, note: "Five regional leagues, Jan–Jun" },
+  { stage: "Regular season", bands: NATIONAL_TOTAL_BANDS, note: "Five regional leagues, Jan–Jun" },
   { stage: "Regional finals", bands: ZONE_HUBS.length * QUALIFIERS_PER_ZONE, note: "Top 5 per zone, July" },
   { stage: "Group stage", bands: ZONE_HUBS.length * QUALIFIERS_PER_ZONE, note: "5 groups of 5, Aug–Sep" },
   { stage: "Quarter-finals", bands: 10, note: "Top 2 per group, October" },

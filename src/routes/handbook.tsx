@@ -270,7 +270,7 @@ function HandbookPage() {
               id="format"
               eyebrow="Competition"
               title={`${NATIONAL_TOTAL_BANDS} bands, ${ZONE_HUBS.length} regional leagues`}
-              sub={`${NATIONAL_TOTAL_HOUSES} production houses nationally. AP/TS is the deepest zone at ${STAGE_2_MATRIX.houses} houses × ${STAGE_2_MATRIX.bandsPerHouse} bands = ${STAGE_2_MATRIX.totalBands}, playing ${STAGE_2_MATRIX.showsPerBand} fixtures each across ${STAGE_2_SEASON_FIXTURES} nights; every other zone signs two bands per house. Band appearances resolve into fewer actual nights, because a cross night is one shared stage rather than two shows.`}
+              sub={`${NATIONAL_TOTAL_HOUSES} production houses nationally, and every league is the same shape: ${STAGE_2_MATRIX.houses} houses × ${STAGE_2_MATRIX.bandsPerHouse} bands = ${STAGE_2_MATRIX.totalBands} per zone. Every band anywhere plays the same ${STAGE_2_MATRIX.showsPerBand} fixtures, resolving into ${STAGE_2_MATRIX.totalFixtures} nights per zone — a cross night is one shared stage rather than two shows. Equal rosters mean the national table needs no adjustment.`}
               icon={<Trophy size={13} />}
             />
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 mb-5">

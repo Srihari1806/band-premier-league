@@ -11,7 +11,7 @@
  * checks the calendar against the fixture requirement rather than asserting
  * that it works. It is what surfaced the shortfall documented below.
  *
- * Deliberately NOT in this file: 480 invented weekend dates. The structure is
+ * Deliberately NOT in this file: hand-keyed weekend dates. The structure is
  * fixed; the actual fixture matrix has to come from a scheduler that knows
  * about venue availability, travel, college calendars, regional holidays and
  * broadcast clashes. What is modelled here is the shape that scheduler has to

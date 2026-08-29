@@ -292,7 +292,8 @@ export function zoneOf(slug: string): Zone {
 
 /**
  * Zones a user can slice by. The national tier is one night, not a league, so
- * it is excluded; AP/TS leads because it carries the deepest roster.
+ * it is excluded. Every league is the same size, so the order is just the
+ * order they were founded in.
  */
 export const SLICEABLE_ZONES = ZONES.filter((z) => z.tier !== "national").sort(
   (a, b) => (a.tier === "state" ? 0 : 1) - (b.tier === "state" ? 0 : 1),

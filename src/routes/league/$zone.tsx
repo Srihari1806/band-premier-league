@@ -289,7 +289,6 @@ function ZonePage() {
                       <th className="px-3 py-3 text-[10px] uppercase tracking-wider font-bold text-muted-foreground">Band</th>
                       <th className="px-3 py-3 text-[10px] uppercase tracking-wider font-bold text-muted-foreground">House</th>
                       <th className="px-3 py-3 text-[10px] uppercase tracking-wider font-bold text-muted-foreground text-right">MP</th>
-                      <th className="px-3 py-3 text-[10px] uppercase tracking-wider font-bold text-amber-400 text-right">Jury</th>
                       <th className="px-3 py-3 text-[10px] uppercase tracking-wider font-bold text-emerald-400 text-right">Gate</th>
                       <th className="px-3 py-3 text-[10px] uppercase tracking-wider font-bold text-purple-400 text-right">Votes</th>
                       <th className="px-3 py-3 text-[10px] uppercase tracking-wider font-bold text-cyan-400 text-right">IP</th>
@@ -316,7 +315,6 @@ function ZonePage() {
                         <td className="px-3 py-2.5 font-bold text-white text-xs whitespace-nowrap">{row.band}</td>
                         <td className="px-3 py-2.5 text-[11px] text-muted-foreground whitespace-nowrap">{row.house}</td>
                         <td className="px-3 py-2.5 text-right text-[11px] text-muted-foreground tabular-nums">{row.played}</td>
-                        <td className="px-3 py-2.5 text-right text-[11px] text-amber-300 tabular-nums">{row.juryPoints}</td>
                         <td className="px-3 py-2.5 text-right text-[11px] text-emerald-300 tabular-nums">{row.gatePoints}</td>
                         <td className="px-3 py-2.5 text-right text-[11px] text-purple-300 tabular-nums">{row.fanPoints}</td>
                         <td className="px-3 py-2.5 text-right text-[11px] text-cyan-300 tabular-nums">{row.releasePoints}</td>

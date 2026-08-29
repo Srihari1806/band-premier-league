@@ -27,6 +27,8 @@ import {
 } from "lucide-react";
 import { TOTAL_LEAGUE_NIGHTS } from "@/data/national-season";
 import {
+  FAN_VOTE_SCALE,
+  ORIGINAL_IP_SCALE,
   SCORING_METRICS,
   POINTS_PER_FIXTURE,
   VICTORY_BONUS,
@@ -193,15 +195,14 @@ function LeaguePage() {
             </p>
             <p className="text-xs text-muted-foreground leading-relaxed">
               {NATIONAL_TOTAL_HOUSES} production houses field {NATIONAL_TOTAL_BANDS} bands between
-              them. Every band anywhere in the country plays the same{" "}
-              {STAGE_2_MATRIX.individualShowsPerBand} solo fixtures —{" "}
-              {STAGE_2_STRUCTURE.ticketedSoloPerBand} ticketed nights and{" "}
-              {STAGE_2_STRUCTURE.campusSoloPerBand} campus nights — plus a cross night against each
-              stablemate in its own house. AP/TS houses sign{" "}
-              {STAGE_2_MATRIX.bandsPerHouse} bands so their acts get{" "}
-              {STAGE_2_STRUCTURE.intraHousePerBand}; the other four zones sign two, so theirs get
-              one. Points come from the performance, the room, the fanbase and the catalogue, all
-              four at once.
+              them — {STAGE_2_MATRIX.houses} houses and {STAGE_2_MATRIX.totalBands} bands in every
+              zone, with no zone larger than another. Every band plays the same{" "}
+              {STAGE_2_MATRIX.showsPerBand} fixtures:{" "}
+              {STAGE_2_STRUCTURE.ticketedSoloPerBand} ticketed nights,{" "}
+              {STAGE_2_STRUCTURE.campusSoloPerBand} campus nights and{" "}
+              {STAGE_2_STRUCTURE.intraHousePerBand} cross nights against its own stablemates. Points
+              come from three things only, and the public decides all three: the room you fill, the
+              votes you convert and the music you have released.
             </p>
             <div className="grid gap-4 sm:grid-cols-4 pt-4">
               {[
@@ -261,10 +262,10 @@ function LeaguePage() {
               {MAX_POINTS_PER_FIXTURE} Points On The Table, Every Fixture
             </h3>
             <p className="text-xs text-muted-foreground leading-relaxed">
-              Standings are decided by a public formula that balances three things a band has to get
-              right at once: the performance itself, the room it can fill, and the audience it brings
-              with it. {POINTS_PER_FIXTURE} points are scored on the night, with a{" "}
-              {VICTORY_BONUS}-point victory bonus for the highest scorer of the fixture.
+              Three metrics, ten points each — <strong>{POINTS_PER_FIXTURE} points every show</strong>,
+              plus a {VICTORY_BONUS}-point victory bonus for the night's top scorer, so{" "}
+              {MAX_POINTS_PER_FIXTURE} is the most any fixture can be worth. There is no jury. Every
+              point comes from something the public does: turn up, vote, or listen to the record.
             </p>
           </div>
 
@@ -310,7 +311,7 @@ function LeaguePage() {
             })}
           </div>
 
-          <div className="grid gap-5 lg:grid-cols-3">
+          <div className="grid gap-5 lg:grid-cols-3 mb-5">
             {/* Gate scale */}
             <div className="bpl-card p-6 text-left space-y-4 border-emerald-500/20">
               <h4 className="text-xs font-bold uppercase tracking-wider text-white flex items-center gap-2">
@@ -335,6 +336,69 @@ function LeaguePage() {
               </div>
             </div>
 
+            {/* Fan vote scale */}
+            <div className="bpl-card p-6 text-left space-y-4 border-purple-500/20">
+              <h4 className="text-xs font-bold uppercase tracking-wider text-white flex items-center gap-2">
+                <Vote size={14} className="text-purple-400" /> How Fan Points Scale
+              </h4>
+              <p className="text-[11px] text-muted-foreground leading-relaxed">
+                Verified votes as a share of the people actually in the room, not raw vote count. A
+                sold-out 200-cap night can out-score a half-empty 800-cap one, and buying a big room
+                you cannot fill wins nothing.
+              </p>
+              <div className="space-y-2">
+                {FAN_VOTE_SCALE.map((b) => (
+                  <div
+                    key={b.label}
+                    className="flex items-center justify-between gap-3 border border-border/40 rounded-lg px-3 py-2 bg-surface/30"
+                  >
+                    <span className="text-[11px] text-muted-foreground">{b.label}</span>
+                    <span className="text-sm font-bold text-purple-300 tabular-nums shrink-0">
+                      {b.points} pts
+                    </span>
+                  </div>
+                ))}
+              </div>
+              <p className="text-[10px] text-muted-foreground leading-relaxed border-t border-border/30 pt-3">
+                One verified account, one vote, inside the 24-hour match window. The floor is 1 — a
+                band that played always scores something here.
+              </p>
+            </div>
+
+            {/* Original IP scale */}
+            <div className="bpl-card p-6 text-left space-y-4 border-cyan-500/20">
+              <h4 className="text-xs font-bold uppercase tracking-wider text-white flex items-center gap-2">
+                <Disc3 size={14} className="text-cyan-400" /> How Original IP Points Scale
+              </h4>
+              <p className="text-[11px] text-muted-foreground leading-relaxed">
+                Counted on how many league-eligible originals are live going into the fixture — a
+                catalogue, not a single upload timed for matchday.
+              </p>
+              <div className="space-y-2">
+                {ORIGINAL_IP_SCALE.map((b) => (
+                  <div
+                    key={b.label}
+                    className="flex items-center justify-between gap-3 border border-border/40 rounded-lg px-3 py-2 bg-surface/30"
+                  >
+                    <span className="text-[11px] text-muted-foreground">{b.label}</span>
+                    <span
+                      className={`text-sm font-bold tabular-nums shrink-0 ${
+                        b.points === 0 ? "text-rose-300" : "text-cyan-300"
+                      }`}
+                    >
+                      {b.points} pts
+                    </span>
+                  </div>
+                ))}
+              </div>
+              <p className="text-[10px] text-muted-foreground leading-relaxed border-t border-border/30 pt-3">
+                The only metric that can be a true nil. Release nothing and this line scores zero,
+                however well the night went.
+              </p>
+            </div>
+          </div>
+
+          <div className="grid gap-5 lg:grid-cols-2">
             {/* Tie-breakers */}
             <div className="bpl-card p-6 text-left space-y-4 border-amber-500/20">
               <h4 className="text-xs font-bold uppercase tracking-wider text-white flex items-center gap-2">
@@ -423,7 +487,6 @@ function LeaguePage() {
                     <th className="px-3 py-3 text-[10px] uppercase tracking-wider font-bold text-muted-foreground">Band</th>
                     <th className="px-3 py-3 text-[10px] uppercase tracking-wider font-bold text-muted-foreground">House</th>
                     <th className="px-3 py-3 text-[10px] uppercase tracking-wider font-bold text-muted-foreground text-right">MP</th>
-                    <th className="px-3 py-3 text-[10px] uppercase tracking-wider font-bold text-amber-400 text-right">Jury</th>
                     <th className="px-3 py-3 text-[10px] uppercase tracking-wider font-bold text-emerald-400 text-right">Gate</th>
                     <th className="px-3 py-3 text-[10px] uppercase tracking-wider font-bold text-purple-400 text-right">Votes</th>
                     <th className="px-3 py-3 text-[10px] uppercase tracking-wider font-bold text-cyan-400 text-right">IP</th>
@@ -460,9 +523,6 @@ function LeaguePage() {
                         </td>
                         <td className="px-3 py-2.5 text-right text-[11px] text-muted-foreground tabular-nums">
                           {row.played}
-                        </td>
-                        <td className="px-3 py-2.5 text-right text-[11px] text-amber-300 tabular-nums">
-                          {row.juryPoints}
                         </td>
                         <td className="px-3 py-2.5 text-right text-[11px] text-emerald-300 tabular-nums">
                           {row.gatePoints}
@@ -513,18 +573,20 @@ function LeaguePage() {
         <section className="py-20 px-4 max-w-7xl mx-auto relative z-10 border-t border-border/45">
           <div className="text-center max-w-2xl mx-auto mb-12 space-y-3">
             <h2 className="text-xs uppercase tracking-widest text-primary-glow font-bold">
-              Season 1 · Fixture Structure
+              Season 1 · Fixture Structure — Every Zone
             </h2>
             <h3 className="text-3xl font-display font-bold text-white">The Match Matrix</h3>
             <p className="text-xs text-muted-foreground leading-relaxed">
-              Shown for AP/TS, the deepest zone: {STAGE_2_MATRIX.houses} houses sign{" "}
-              {STAGE_2_MATRIX.bandsPerHouse} bands each — {STAGE_2_MATRIX.totalBands} bands playing{" "}
-              {STAGE_2_MATRIX.showsPerBand} fixtures apiece, resolving into{" "}
-              {STAGE_2_MATRIX.totalFixtures} live nights because a cross night is one shared stage
-              rather than two shows. Every one of the {STAGE_2_MATRIX.crossPairsPerHouse} pairings
-              inside a house meets exactly once. The other four zones sign two bands per house, so
-              their bands play one cross night rather than three. Nationally that is{" "}
-              {NATIONAL_TOTAL_BANDS} bands and {TOTAL_LEAGUE_NIGHTS} league nights — the{" "}
+              Identical in all {ZONE_HUBS.length} leagues. Each zone runs{" "}
+              {STAGE_2_MATRIX.houses} houses signing {STAGE_2_MATRIX.bandsPerHouse} bands —{" "}
+              {STAGE_2_MATRIX.totalBands} bands per zone, {NATIONAL_TOTAL_BANDS} nationally — and
+              every band anywhere plays the same {STAGE_2_MATRIX.showsPerBand} fixtures. Inside a
+              house all {STAGE_2_MATRIX.crossPairsPerHouse} pairings meet exactly once. Because a
+              cross night is one shared stage rather than two shows, a zone's{" "}
+              {STAGE_2_MATRIX.totalBands * STAGE_2_MATRIX.showsPerBand} band appearances resolve
+              into {STAGE_2_MATRIX.totalFixtures} live nights, and{" "}
+              {TOTAL_LEAGUE_NIGHTS} across the country. Equal rosters mean the national table
+              compares like with like without adjustment — the{" "}
               <Link to="/calendar" className="text-primary-glow font-semibold hover:underline">
                 full 2027 calendar
               </Link>{" "}

@@ -25,29 +25,33 @@ export interface ScoringMetric {
   pillar: "performance" | "commercial" | "engagement" | "output";
 }
 
+/**
+ * Three metrics, ten points each, thirty on the night.
+ *
+ * The jury line was removed deliberately: this is a public-driven league, so
+ * every point now comes from something the audience does — turn up, vote, or
+ * stream the record. Nothing is decided by a panel.
+ */
 export const SCORING_METRICS: ScoringMetric[] = [
-  {
-    metric: "Live Performance (Jury)",
-    maxPoints: 10,
-    basis: "Scored on originality, stage presence, vocal and instrumental tightness, and arrangement.",
-    pillar: "performance",
-  },
   {
     metric: "Ticket Sales / Gate Turnout",
     maxPoints: 10,
-    basis: "Scaled on the share of venue capacity actually filled, validated against ticket settlement.",
+    basis:
+      "Scaled on the share of venue capacity actually filled, from scanned entries rather than tickets sold.",
     pillar: "commercial",
   },
   {
     metric: "Fan Voting (App + Web)",
-    maxPoints: 5,
-    basis: "Verified accounts only, one vote per user, inside the 24-hour match window.",
+    maxPoints: 10,
+    basis:
+      "Verified accounts only, one vote per user, inside the 24-hour match window. Scored on how much of the room converts into voters, so a small sold-out venue is not penalised.",
     pillar: "engagement",
   },
   {
-    metric: "Original IP Release Drop",
-    maxPoints: 5,
-    basis: "Bonus for releasing an original single or video before the fixture matchday.",
+    metric: "Original IP Released",
+    maxPoints: 10,
+    basis:
+      "How much league-eligible original music the band has live going into the fixture. Rewards shipping a catalogue, not a single upload before matchday.",
     pillar: "output",
   },
 ];
@@ -76,6 +80,48 @@ export const GATE_POINT_SCALE: GateBand[] = [
 /** Gate points for a given fill rate, using the published scale. */
 export function gatePointsFor(fillPct: number): number {
   const band = GATE_POINT_SCALE.find((b) => fillPct >= b.minPct);
+  return band ? band.points : 0;
+}
+
+/**
+ * Fan points, 1-10. Measured as verified votes over admissions rather than raw
+ * vote count, so a sold-out 200-cap room can beat a half-empty 800-cap one.
+ * The floor is 1: a band that played always scores something here.
+ */
+export const FAN_VOTE_SCALE: GateBand[] = [
+  { label: "90%+ of the room voted", minPct: 90, points: 10 },
+  { label: "75% \u2013 89%", minPct: 75, points: 8 },
+  { label: "60% \u2013 74%", minPct: 60, points: 6 },
+  { label: "45% \u2013 59%", minPct: 45, points: 4 },
+  { label: "30% \u2013 44%", minPct: 30, points: 2 },
+  { label: "Below 30%", minPct: 0, points: 1 },
+];
+
+export function fanPointsFor(votePct: number): number {
+  const band = FAN_VOTE_SCALE.find((b) => votePct >= b.minPct);
+  return band ? band.points : 1;
+}
+
+/**
+ * Original IP points, 0-10, by how many league-eligible originals are live at
+ * the time of the fixture. A band with nothing released scores zero here \u2014 it
+ * is the one metric that can be a true nil.
+ */
+export interface ReleaseBand {
+  releases: number;
+  label: string;
+  points: number;
+}
+
+export const ORIGINAL_IP_SCALE: ReleaseBand[] = [
+  { releases: 3, label: "3 or more originals live", points: 10 },
+  { releases: 2, label: "2 originals live", points: 7 },
+  { releases: 1, label: "1 original live", points: 4 },
+  { releases: 0, label: "Nothing released yet", points: 0 },
+];
+
+export function originalIpPointsFor(releasesLive: number): number {
+  const band = ORIGINAL_IP_SCALE.find((b) => releasesLive >= b.releases);
   return band ? band.points : 0;
 }
 
@@ -132,14 +178,17 @@ export interface MatrixStructure {
  * stopped the site publishing two different band counts.
  */
 export const ZONE_ROSTERS: Record<string, { houses: number; bandsPerHouse: number }> = {
+  // Every league is the same shape: 5 houses x 4 bands = 20 bands per zone,
+  // 100 nationally. Equal rosters mean equal fixtures and equal cross nights,
+  // so the national table compares like with like without adjustment.
   "ap-ts": { houses: 5, bandsPerHouse: 4 },
-  karnataka: { houses: 5, bandsPerHouse: 2 },
-  "tamil-nadu": { houses: 5, bandsPerHouse: 2 },
-  kerala: { houses: 5, bandsPerHouse: 2 },
-  north: { houses: 5, bandsPerHouse: 2 },
+  karnataka: { houses: 5, bandsPerHouse: 4 },
+  "tamil-nadu": { houses: 5, bandsPerHouse: 4 },
+  kerala: { houses: 5, bandsPerHouse: 4 },
+  north: { houses: 5, bandsPerHouse: 4 },
 };
 
-/** AP/TS — the deepest roster in the league. Every zone opens in Season 1. */
+/** The fixture mix, identical in every zone. */
 export const STAGE_2_STRUCTURE: MatrixStructure = {
   houses: ZONE_ROSTERS["ap-ts"].houses,
   bandsPerHouse: ZONE_ROSTERS["ap-ts"].bandsPerHouse,
@@ -532,7 +581,7 @@ export const ZONES: Zone[] = [
     houses: ZONE_ROSTERS["ap-ts"].houses,
     bandsPerHouse: ZONE_ROSTERS["ap-ts"].bandsPerHouse,
     status: "Season 1 · live",
-    headline: "The deepest roster in the league — the only zone signing four bands per house.",
+    headline: "Where the format was designed, and the first league to fill a roster.",
     languages: ["Telugu"],
     hubCities: [
       { city: "Hyderabad", state: "Telangana", note: "Primary hub — venues, studios and production base", fixtureShare: 0.4, priceIdx: 1.15, capacityIdx: 1.3, costIdx: 1.15, reachIdx: 1.3 },
@@ -676,7 +725,6 @@ export interface StandingRow {
   house: string;
   zone: string;
   played: number;
-  juryPoints: number;
   gatePoints: number;
   fanPoints: number;
   releasePoints: number;
@@ -684,7 +732,7 @@ export interface StandingRow {
 }
 
 export function totalPoints(r: StandingRow): number {
-  return r.juryPoints + r.gatePoints + r.fanPoints + r.releasePoints + r.victoryBonus;
+  return r.gatePoints + r.fanPoints + r.releasePoints + r.victoryBonus;
 }
 
 const BAND_LETTERS = "ABCDEFGHJKLMNPQRSTUVWXYZ";
@@ -711,10 +759,9 @@ function buildSampleStandings(): StandingRow[] {
         house: `House ${HOUSE_NUMERALS[i % zone.houses]}`,
         zone: zone.slug,
         played,
-        juryPoints: Math.round(played * 8.6 * decay),
         gatePoints: Math.round(played * 8.4 * decay),
-        fanPoints: Math.round(played * 4.2 * decay),
-        releasePoints: Math.max(0, (Math.ceil((bands - i) / 2) % 4) * 5 + 10),
+        fanPoints: Math.round(played * 8.1 * decay),
+        releasePoints: Math.round(played * 7.4 * decay),
         victoryBonus: Math.max(0, (bands - i - 3)) * 3,
       });
     }
