@@ -184,28 +184,31 @@ function LeaguePage() {
           <div className="bpl-card p-8 md:p-12 space-y-6 border-primary/20 bg-primary/3 text-left">
             <h3 className="text-2xl font-display font-extrabold text-white">What is the League?</h3>
             <p className="text-xs text-muted-foreground leading-relaxed">
-              The regular season runs <strong>{COMPETITION_WEEKENDS} competition weekends</strong>,
-              23 January to 12 June. AP/TS is one of five regional leagues playing those same
-              weekends simultaneously, so no two zones compete for the same audience on the same
+              Season 1 opens across all of India at once. <strong>{ZONE_HUBS.length} regional
+              leagues</strong> — AP/TS, Karnataka, Tamil Nadu, Kerala and North India — play the same{" "}
+              <strong>{COMPETITION_WEEKENDS} competition weekends</strong> from 23 January to 12
+              June, simultaneously, so no two zones ever compete for the same audience on the same
               night. Rather than chasing one-off gigs, a band enters a fixed calendar with a
               production house financing the work behind it.
             </p>
             <p className="text-xs text-muted-foreground leading-relaxed">
-              Nationally the league fields {NATIONAL_TOTAL_BANDS} bands across{" "}
-              {NATIONAL_TOTAL_HOUSES} production houses and {ZONE_HUBS.length} regional leagues. In
-              AP/TS specifically, {STAGE_2_MATRIX.houses} houses each sign {STAGE_2_MATRIX.bandsPerHouse} bands.
-              Every band plays {STAGE_2_MATRIX.showsPerBand} fixtures — {STAGE_2_STRUCTURE.ticketedSoloPerBand}{" "}
-              ticketed nights, {STAGE_2_STRUCTURE.campusSoloPerBand} campus nights and{" "}
-              {STAGE_2_STRUCTURE.intraHousePerBand} house cross nights — while releasing original music
-              on a rolling cycle. Points come from the performance, the room, the fanbase and the
-              catalogue, all four at once.
+              {NATIONAL_TOTAL_HOUSES} production houses field {NATIONAL_TOTAL_BANDS} bands between
+              them. Every band anywhere in the country plays the same{" "}
+              {STAGE_2_MATRIX.individualShowsPerBand} solo fixtures —{" "}
+              {STAGE_2_STRUCTURE.ticketedSoloPerBand} ticketed nights and{" "}
+              {STAGE_2_STRUCTURE.campusSoloPerBand} campus nights — plus a cross night against each
+              stablemate in its own house. AP/TS houses sign{" "}
+              {STAGE_2_MATRIX.bandsPerHouse} bands so their acts get{" "}
+              {STAGE_2_STRUCTURE.intraHousePerBand}; the other four zones sign two, so theirs get
+              one. Points come from the performance, the room, the fanbase and the catalogue, all
+              four at once.
             </p>
             <div className="grid gap-4 sm:grid-cols-4 pt-4">
               {[
-                { v: `${COMPETITION_WEEKENDS} Weekends`, l: "Regular Season" },
-                { v: `${STAGE_2_SEASON_FIXTURES} Nights`, l: "Live Fixtures" },
-                { v: `${STAGE_2_MATRIX.totalBands} Bands`, l: "Across 5 Houses" },
-                { v: `Top ${STAGE_2_FINALS.finalists}`, l: "Finals Qualifiers" },
+                { v: `${ZONE_HUBS.length} Leagues`, l: "Running In Parallel" },
+                { v: `${NATIONAL_TOTAL_BANDS} Bands`, l: `${NATIONAL_TOTAL_HOUSES} Production Houses` },
+                { v: `${TOTAL_LEAGUE_NIGHTS} Nights`, l: `${COMPETITION_WEEKENDS} Weekends, Jan–Jun` },
+                { v: `Top ${STAGE_2_FINALS.finalists}`, l: "Qualify Per Zone" },
               ].map((stat) => (
                 <div key={stat.l} className="border border-border/50 rounded-lg p-4 bg-surface/30">
                   <p className="text-base font-bold text-primary-glow">{stat.v}</p>

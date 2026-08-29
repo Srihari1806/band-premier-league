@@ -33,6 +33,14 @@ import {
   type EventKind,
   type ScheduledEvent,
 } from "@/data/national-season";
+import {
+  POST_SEASON,
+  POST_SEASON_TOTALS,
+  POST_STAGES,
+  CLOSING_BLOCKS,
+  LADDER,
+  QUALIFIERS_PER_ZONE,
+} from "@/data/post-season";
 
 export const Route = createFileRoute("/calendar")({
   head: () => ({
@@ -100,7 +108,215 @@ function Select({
   );
 }
 
+/**
+ * July to December. Nobody is named — every side is a slot, so the bracket
+ * describes how a band arrives at a night without inventing who won it.
+ */
+function ChampionshipView({
+  stage,
+  setStage,
+}: {
+  stage: string;
+  setStage: (v: string) => void;
+}) {
+  const filtered = useMemo(
+    () => (stage === "all" ? POST_SEASON : POST_SEASON.filter((e) => e.stage === stage)),
+    [stage],
+  );
+
+  const grouped = useMemo(() => {
+    const byWeekend = new Map<string, typeof POST_SEASON>();
+    filtered.forEach((e) => {
+      if (!byWeekend.has(e.weekendLabel)) byWeekend.set(e.weekendLabel, []);
+      byWeekend.get(e.weekendLabel)!.push(e);
+    });
+    return [...byWeekend.entries()];
+  }, [filtered]);
+
+  return (
+    <div className="space-y-6">
+      <div className="bpl-card p-4 border border-primary/25 bg-primary/5 flex gap-3">
+        <Info size={15} className="text-primary-glow shrink-0 mt-0.5" />
+        <p className="text-[11px] text-muted-foreground leading-relaxed">
+          <span className="font-semibold text-white">Nobody is named here, on purpose.</span> Every
+          side is a slot — <span className="text-white">AP/TS #3</span>,{" "}
+          <span className="text-white">Group B winner</span>,{" "}
+          <span className="text-white">QF2 winner</span>,{" "}
+          <span className="text-white">Rank 2</span>. The bracket says how a band arrives at a night,
+          never who it is. Putting invented names against dated fixtures would publish a fabricated
+          result for real acts.
+        </p>
+      </div>
+
+      {/* Ladder */}
+      <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-6">
+        {LADDER.map((l, i) => (
+          <div
+            key={l.stage}
+            className={`rounded-lg border p-3 ${
+              i === LADDER.length - 1
+                ? "border-rose-500/40 bg-rose-500/5"
+                : "border-border/60 bg-surface/40"
+            }`}
+          >
+            <p className="text-2xl font-display font-extrabold text-primary-glow tabular-nums">
+              {l.bands}
+            </p>
+            <p className="text-[10px] font-bold text-white uppercase tracking-wider mt-0.5">
+              {l.stage}
+            </p>
+            <p className="text-[10px] text-muted-foreground leading-snug mt-1">{l.note}</p>
+          </div>
+        ))}
+      </div>
+
+      {/* Stage filter */}
+      <div className="rounded-xl border border-border bg-surface/30 p-3 space-y-2">
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="text-[10px] uppercase tracking-wider font-bold text-primary-glow flex items-center gap-1.5">
+            <Filter size={12} /> Stage
+          </span>
+          <span className="text-[11px] text-muted-foreground">
+            {filtered.length} of {POST_SEASON_TOTALS.events} nights
+          </span>
+        </div>
+        <div className="flex flex-wrap gap-1.5">
+          {[
+            { id: "all", name: "All stages" },
+            ...POST_STAGES.map((st) => ({ id: st.id as string, name: st.name })),
+          ].map((st) => (
+            <button
+              key={st.id}
+              type="button"
+              onClick={() => setStage(st.id)}
+              className={`px-2.5 py-1 rounded-full border text-[11px] font-bold transition cursor-pointer ${
+                stage === st.id
+                  ? "border-primary/60 bg-primary/15 text-primary-glow"
+                  : "border-border bg-secondary/40 text-muted-foreground hover:text-white"
+              }`}
+            >
+              {st.name}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Stage explainers */}
+      {stage === "all" && (
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          {POST_STAGES.map((st) => (
+            <div key={st.id} className="rounded-lg border border-border/60 bg-surface/40 p-3">
+              <div className="flex items-center gap-2">
+                <span
+                  className={`text-[9px] uppercase tracking-wider font-bold px-2 py-0.5 rounded-full border ${st.accent}`}
+                >
+                  {st.window}
+                </span>
+              </div>
+              <p className="text-xs font-bold text-white mt-1.5">{st.name}</p>
+              <p className="text-[10px] text-muted-foreground leading-relaxed mt-1">{st.detail}</p>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Fixtures */}
+      <div className="space-y-3">
+        {grouped.map(([weekendLabel, evts]) => (
+          <div key={weekendLabel} className="bpl-card border border-border bg-surface/30 overflow-hidden">
+            <div className="flex flex-wrap items-center gap-2 px-4 py-2.5 border-b border-border/60 bg-secondary/20">
+              <span className="text-xs font-bold text-white">Weekend of {weekendLabel}</span>
+              <div className="flex-1" />
+              <span className="text-[10px] text-muted-foreground tabular-nums">
+                {evts.length} {evts.length === 1 ? "night" : "nights"}
+              </span>
+            </div>
+            <div className="grid gap-1.5 sm:grid-cols-2 lg:grid-cols-3 p-3">
+              {evts.map((e) => {
+                const meta = POST_STAGES.find((st) => st.id === e.stage)!;
+                return (
+                  <div
+                    key={e.id}
+                    className="rounded-md border border-border/50 bg-surface/40 px-2.5 py-2 space-y-1"
+                  >
+                    <div className="flex items-start justify-between gap-2">
+                      <p className="text-[11px] font-semibold text-white leading-snug">
+                        {e.sideA} <span className="text-muted-foreground">v</span> {e.sideB}
+                      </p>
+                      <span
+                        className={`text-[8px] uppercase tracking-wider font-bold px-1.5 py-0.5 rounded border shrink-0 ${meta.accent}`}
+                      >
+                        {meta.name}
+                      </span>
+                    </div>
+                    <p className="text-[10px] text-muted-foreground flex flex-wrap items-center gap-x-1.5">
+                      <span>{e.dateLabel}</span>
+                      <span className="opacity-40">·</span>
+                      <span className="inline-flex items-center gap-0.5">
+                        <MapPin size={8} />
+                        {e.city}
+                      </span>
+                    </p>
+                    <p className="text-[10px] text-muted-foreground/80 leading-snug">{e.context}</p>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Nov + Dec */}
+      <div className="grid gap-4 lg:grid-cols-2">
+        {CLOSING_BLOCKS.map((b) => (
+          <div key={b.title} className="bpl-card p-5 border border-border bg-surface/40 space-y-3">
+            <div>
+              <span className="text-[10px] uppercase tracking-wider font-bold text-muted-foreground">
+                {b.window}
+              </span>
+              <h3 className="text-sm font-bold text-white">{b.title}</h3>
+            </div>
+            <p className="text-[11px] text-muted-foreground leading-relaxed">{b.detail}</p>
+            <ul className="space-y-1">
+              {b.items.map((it) => (
+                <li key={it} className="text-[10px] text-muted-foreground leading-snug flex gap-1.5">
+                  <span className="opacity-50">·</span>
+                  {it}
+                </li>
+              ))}
+            </ul>
+          </div>
+        ))}
+      </div>
+
+      <div
+        className={`bpl-card p-4 border flex gap-3 ${
+          POST_SEASON_TOTALS.reconciles
+            ? "border-emerald-500/30 bg-emerald-500/5"
+            : "border-rose-500/30 bg-rose-500/5"
+        }`}
+      >
+        {POST_SEASON_TOTALS.reconciles ? (
+          <CheckCircle2 size={15} className="text-emerald-400 shrink-0 mt-0.5" />
+        ) : (
+          <AlertTriangle size={15} className="text-rose-400 shrink-0 mt-0.5" />
+        )}
+        <p className="text-[11px] text-muted-foreground leading-relaxed">
+          <span className="font-semibold text-emerald-200">Bracket checks out.</span>{" "}
+          {POST_SEASON_TOTALS.regionalFinals} regional-final nights (five zones, every one of the{" "}
+          {QUALIFIERS_PER_ZONE} qualifiers meeting the other four),{" "}
+          {POST_SEASON_TOTALS.groupStage} group nights and {POST_SEASON_TOTALS.knockout} knockout
+          nights — {POST_SEASON_TOTALS.events} in all, July to October. November and December carry
+          no fixtures by design.
+        </p>
+      </div>
+    </div>
+  );
+}
+
 function CalendarPage() {
+  const [half, setHalf] = useState<"regular" | "championship">("regular");
+  const [stage, setStage] = useState<string>("all");
   const [zone, setZone] = useState("all");
   const [house, setHouse] = useState("all");
   const [band, setBand] = useState("all");
@@ -232,6 +448,34 @@ function CalendarPage() {
             </p>
           </div>
 
+          {/* Half-year toggle */}
+          <div className="flex flex-wrap gap-2">
+            {(
+              [
+                { id: "regular", label: "Regular Season · Jan–Jun", n: SCHEDULE_TOTALS.events },
+                { id: "championship", label: "Championship · Jul–Dec", n: POST_SEASON_TOTALS.events },
+              ] as const
+            ).map((h) => (
+              <button
+                key={h.id}
+                type="button"
+                onClick={() => setHalf(h.id)}
+                className={`px-4 py-2 rounded-lg border text-xs font-bold transition cursor-pointer ${
+                  half === h.id
+                    ? "border-primary/60 bg-primary/15 text-primary-glow"
+                    : "border-border bg-secondary/40 text-muted-foreground hover:text-white hover:border-primary/40"
+                }`}
+              >
+                {h.label}
+                <span className="ml-2 opacity-70 tabular-nums">{h.n}</span>
+              </button>
+            ))}
+          </div>
+
+          {half === "championship" ? (
+            <ChampionshipView stage={stage} setStage={setStage} />
+          ) : (
+            <>
           {/* Filters */}
           <div className="rounded-xl border border-primary/25 bg-primary/5 p-3 space-y-3">
             <div className="flex flex-wrap items-center gap-2">
@@ -405,7 +649,11 @@ function CalendarPage() {
             </div>
           )}
 
-          {/* Footnote */}
+            </>
+          )}
+
+          {/* Footnote — describes the regular-season list only */}
+          {half === "regular" && (
           <div className="bpl-card p-5 border border-border bg-surface/30 flex gap-3">
             <Info size={15} className="text-primary-glow shrink-0 mt-0.5" />
             <div className="space-y-2">
@@ -429,6 +677,7 @@ function CalendarPage() {
               </p>
             </div>
           </div>
+          )}
         </div>
       </div>
     </PageShell>
