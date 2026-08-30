@@ -887,11 +887,14 @@ function LeaguePage() {
 
           <div className="text-center max-w-3xl mx-auto mb-8 space-y-3">
             <h3 className="text-2xl sm:text-3xl font-display font-bold text-white">
-              Three more kinds of night, none of them scored
+              Four more kinds of night, none of them scored
             </h3>
             <p className="text-sm text-muted-foreground leading-relaxed">
-              Real inventory and real income, deliberately kept off the table. Each is unequal in
-              some way that would corrupt a ranking — so it earns money instead of points.
+              The season opens on New Year&apos;s Eve with a launch night in every zone — every band
+              on one stage with the press in the room, before a single point exists. That and the
+              three below are real inventory and real reach, deliberately kept off the table: each
+              is unequal in some way that would corrupt a ranking, so it earns money or coverage
+              instead of points.
             </p>
           </div>
 
@@ -947,10 +950,11 @@ function LeaguePage() {
                 Off-ladder nights
               </p>
               <p className="text-[10px] text-muted-foreground leading-snug mt-1">
+{OFF_LADDER_TOTALS.launches} launch nights on 31 December,{" "}
                 {OFF_LADDER_TOTALS.houseNights} house nights,{" "}
                 {OFF_LADDER_TOTALS.festivalStages} festival stage-days carrying{" "}
                 {OFF_LADDER_TOTALS.festivalAppearances} slots, and{" "}
-                {OFF_LADDER_TOTALS.corporate} corporate shows — all dated, two of each per band.
+                {OFF_LADDER_TOTALS.corporate} corporate shows — all dated.
               </p>
             </div>
             <div className="bpl-card p-4 border border-emerald-500/25 bg-emerald-500/5">

@@ -92,6 +92,11 @@ const KIND_META: Record<EventKind, { label: string; chip: string; dot: string }>
     label: "Corporate",
     chip: "border-slate-500/40 bg-slate-500/10 text-slate-300",
     dot: "bg-slate-400",
+  },
+  launch: {
+    label: "League launch",
+    chip: "border-amber-500/50 bg-amber-500/15 text-amber-200",
+    dot: "bg-amber-400",
   }
 };
 
@@ -389,6 +394,20 @@ function CalendarPage() {
       if (!map.has(o.dateLabel)) map.set(o.dateLabel, []);
       map.get(o.dateLabel)!.push(o);
     });
+    // Rows sharing a bill are one night — a launch is five house rows, a
+    // festival stage-day ten band rows. Show the night, not the rows.
+    for (const [day, list] of map) {
+      const seen = new Set<string>();
+      map.set(
+        day,
+        list.filter((o) => {
+          if (!o.billId) return true;
+          if (seen.has(o.billId)) return false;
+          seen.add(o.billId);
+          return true;
+        }),
+      );
+    }
     return map;
   }, [zone, house, month]);
 

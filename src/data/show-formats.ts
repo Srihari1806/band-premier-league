@@ -61,7 +61,7 @@ export function venueOf(id: VenueClass): VenueProfile {
 }
 
 /** Off-ladder nights are not fixtures, so they need their own kinds. */
-export type ShowKind = FixtureKind | "house" | "festival" | "corporate";
+export type ShowKind = FixtureKind | "house" | "festival" | "corporate" | "launch";
 
 export interface ShowFormat {
   id: string;
@@ -288,6 +288,23 @@ export function buildOffLadderFormats(
   bands: number,
 ): OffLadderFormat[] {
   return [
+    {
+      id: "league-launch",
+      name: "League Launch",
+      kind: "launch",
+      venue: "auditorium",
+      scored: false,
+      perBand: 1,
+      actsOnStage: 20,
+      capacityIdx: 4,
+      priceIdx: 0,
+      nationalNights: zones,
+      purpose:
+        "New Year's Eve, one night per zone, every band in that league on the same stage with the press in the room. It is the only night of the season where the whole roster is introduced at once, and the only one whose job is to make the league exist in public before a single point is scored.",
+      ticketing: "Invitation and press. No public gate — the return is coverage, not takings.",
+      whyUnscored:
+        "Nothing is being judged. Twenty bands sharing an introduction cannot be ranked against each other, and scoring the season's launch would mean the table started before the competition did.",
+    },
     {
       id: "house-night",
       name: "House Night",

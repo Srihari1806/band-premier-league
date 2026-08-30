@@ -42,6 +42,7 @@ const OFF_LADDER_LOOKUP: Record<string, string> = {
   "house-night": "House Night",
   "festival-stage": "Festival Stage",
   "corporate-show": "Corporate Show",
+  "league-launch": "League Launch",
 };
 
 /* ------------------------------------------------------------------ *
@@ -555,7 +556,14 @@ export function buildReleaseRotation(
  *      band and locked later, so the schedule says so instead of inventing one.
  * ------------------------------------------------------------------ */
 
-export type EventKind = "commercial" | "campus" | "cross" | "house" | "festival" | "corporate";
+export type EventKind =
+  | "commercial"
+  | "campus"
+  | "cross"
+  | "house"
+  | "festival"
+  | "corporate"
+  | "launch";
 
 export interface ScheduledEvent {
   id: string;
@@ -610,7 +618,18 @@ export const WINDOWS_PER_HOUSE = TOTAL_CALENDAR_WEEKENDS;
  * the house sells its roster once before the table matters and once after.
  */
 export const CROSS_WEEKS = [5, 12, 19];
-export const HOUSE_NIGHT_WEEKS = [0, 21];
+/** Moved off week 0 — that Thursday belongs to the launch. */
+export const HOUSE_NIGHT_WEEKS = [3, 20];
+
+/**
+ * The league launch: Thu 31 Dec 2026, the Thursday of week 1.
+ *
+ * One per zone, every band in that league on the same stage with the press in
+ * the room. It sits OUTSIDE the 24-show season rather than consuming a slot —
+ * a band launches on the Thursday and plays its first fixture that weekend,
+ * which is what a launch is for.
+ */
+export const LAUNCH_WEEK = 0;
 /** Zone-wide festival days — every band in the zone plays one of these weeks. */
 export const FESTIVAL_WEEKS = [9, 16];
 
@@ -828,7 +847,9 @@ export function buildFullSchedule(): ScheduledEvent[] {
               ? "house"
               : formatId === "festival-stage"
                 ? "festival"
-                : "corporate";
+                : formatId === "league-launch"
+                  ? "launch"
+                  : "corporate";
           events.push({
             id: `${zone.slug}-h${houseNumber}-w${w + 1}-${idSuffix}`,
             weekendIndex: w,
@@ -846,11 +867,34 @@ export function buildFullSchedule(): ScheduledEvent[] {
             scored: !!fmt,
             formatId,
             formatName: fmt ? fmt.name : off ?? formatId,
-            venue: fmt ? fmt.venue : formatId === "corporate-show" ? "private" : formatId === "festival-stage" ? "festival-ground" : "arena",
+            venue: fmt
+              ? fmt.venue
+              : formatId === "corporate-show"
+                ? "private"
+                : formatId === "festival-stage"
+                  ? "festival-ground"
+                  : formatId === "league-launch"
+                    ? "auditorium"
+                    : "arena",
             city,
             iplOverlap: weekend.iplOverlap,
           });
         };
+
+        // ---- league launch: Thu 31 Dec, whole zone on one bill, press in.
+        // Emitted per house but sharing a zone-wide bill id, so it reads as one
+        // night on the calendar and one appearance in every band's season.
+        if (w === LAUNCH_WEEK) {
+          const all = Array.from({ length: zone.bandsPerHouse }, (_, i) => i + 1);
+          push(
+            THU,
+            all,
+            "league-launch",
+            zone.hubCities[0].city,
+            "launch",
+            `${zone.slug}-launch`,
+          );
+        }
 
         // ---- house night: the whole roster, one bill, Thursday
         if (plans[1][w] === "house-night") {
@@ -1142,11 +1186,13 @@ export function buildOffLadderSchedule(events = FULL_SCHEDULE): OffLadderEvent[]
       city: e.city,
       billId: e.billId,
       billing:
-        e.formatId === "house-night"
-          ? `All ${e.bands.length} bands · House ${e.houseNumber}`
-          : e.formatId === "festival-stage"
-            ? `H${e.houseNumber} · B${e.bands.join(", B")} on a ${FESTIVAL_ACTS_PER_STAGE}-act bill`
-            : `H${e.houseNumber} · B${e.bands.join(", B")} · private booking`,
+        e.formatId === "league-launch"
+          ? "Every band in the zone · press & partners"
+          : e.formatId === "house-night"
+            ? `All ${e.bands.length} bands · House ${e.houseNumber}`
+            : e.formatId === "festival-stage"
+              ? `H${e.houseNumber} · B${e.bands.join(", B")} on a ${FESTIVAL_ACTS_PER_STAGE}-act bill`
+              : `H${e.houseNumber} · B${e.bands.join(", B")} · private booking`,
       scored: false,
     }));
 }
@@ -1172,6 +1218,10 @@ export const CORPORATE_PLAN = {
 };
 
 export const OFF_LADDER_TOTALS = {
+  /** Launch nights — one per zone, all on 31 Dec. */
+  launches: new Set(
+    OFF_LADDER_SCHEDULE.filter((e) => e.formatId === "league-launch").map((e) => e.billId),
+  ).size,
   houseNights: OFF_LADDER_SCHEDULE.filter((e) => e.formatId === "house-night").length,
   /** Stage-DAYS, not appearances — ten acts share one bill. */
   festivalStages: new Set(
