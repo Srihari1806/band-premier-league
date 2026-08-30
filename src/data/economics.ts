@@ -398,11 +398,17 @@ export interface EconomicsModel {
   phSeasonMultiple: number;
   /** What the venue ladder does to solo-night revenue vs a flat-priced season. */
   venueMixIdx: number;
+  /** Head count on a co-headlined night — a bigger room, split two ways. */
+  sharedAttendance: number;
   /** Seats sold across every night one production house's bands play. */
   phSeatsSeason: number;
   /** Those seats at the scoped ticket price, before platform fee and tax. */
   phGrossGateSeason: number;
-  /** Nights one house's bands are on stage: shows per band x bands signed. */
+  /**
+   * Band-appearances one house sells across the season: shows per band x bands
+   * signed. NOT distinct nights — two of its bands share a versus stage, so the
+   * house stages fewer nights than it sells appearances.
+   */
   phBandNightsSeason: number;
   phGateBackedTotal: number;
   phGateBackedMultiple: number;
@@ -563,7 +569,7 @@ export function computeEconomics(inputs: EconomicsInputs): EconomicsModel {
     {
       label: "Event Revenue Share",
       amount: phGatePerBandSeason * bandsPerFranchise,
-      detail: `${EVENT_SPLIT.productionHouse}% of net gate — ${bandsPerFranchise} ${bandsPerFranchise === 1 ? "band" : "bands"} x ${showsPerBand} shows = ${phBandNightsSeason} nights, ${phSeatsSeason.toLocaleString("en-IN")} seats at ${inr(ticketPrice)}`,
+      detail: `${EVENT_SPLIT.productionHouse}% of net gate — ${bandsPerFranchise} ${bandsPerFranchise === 1 ? "band" : "bands"} × ${showsPerBand} shows = ${phBandNightsSeason} appearances, ${phSeatsSeason.toLocaleString("en-IN")} seats at ${inr(ticketPrice)}`,
       certainty: "gate",
     },
     {
@@ -752,6 +758,7 @@ export function computeEconomics(inputs: EconomicsInputs): EconomicsModel {
     phSeasonProfit: phSeasonTotal - winningBid,
     phSeasonMultiple: phSeasonTotal / Math.max(1, winningBid),
     venueMixIdx,
+    sharedAttendance,
     phSeatsSeason,
     phGrossGateSeason,
     phBandNightsSeason,

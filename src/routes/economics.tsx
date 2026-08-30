@@ -2599,15 +2599,16 @@ function EconomicsPage() {
                 <Ticket size={14} className="text-primary-glow" /> Where the gate money comes from
               </h3>
               <p className="text-[10px] text-muted-foreground">
-                Every number here moves with the dimension bar above.
+                Everything in scope — {m.totalBands} {m.totalBands === 1 ? "band" : "bands"} in{" "}
+                {scope.zone.shortName}. Every cell moves with the dimension bar.
               </p>
             </div>
             <div className="flex flex-wrap items-stretch gap-2">
               {[
                 {
-                  k: "Bands signed",
-                  v: String(scopedInputs.bandsPerFranchise),
-                  n: `${scopedInputs.numFranchises} houses x ${scopedInputs.bandsPerFranchise} = ${m.totalBands} bands`,
+                  k: "Bands in scope",
+                  v: m.totalBands.toLocaleString("en-IN"),
+                  n: `${scopedInputs.numFranchises} ${scopedInputs.numFranchises === 1 ? "house" : "houses"} × ${scopedInputs.bandsPerFranchise} signed each`,
                 },
                 {
                   k: "Shows per band",
@@ -2615,14 +2616,17 @@ function EconomicsPage() {
                   n: `${m.soloShowsPerBand} solo + ${m.sharedShowsPerBand} versus`,
                 },
                 {
-                  k: "Nights on stage",
-                  v: m.phBandNightsSeason.toLocaleString("en-IN"),
-                  n: "for this one house",
+                  k: "Ticketed nights",
+                  v: m.totalFixtures.toLocaleString("en-IN"),
+                  n:
+                    m.sharedShowsPerBand > 0
+                      ? "a versus night is one shared stage"
+                      : "one band a night, no shared stages",
                 },
                 {
                   k: "Seats sold",
-                  v: m.phSeatsSeason.toLocaleString("en-IN"),
-                  n: `${scopedInputs.attendance}/solo night, half a co-headline room`,
+                  v: numCompact(m.totalAdmissions),
+                  n: `${scopedInputs.attendance} a solo night, ${m.sharedAttendance} co-headlined`,
                 },
                 {
                   k: "Ticket price",
@@ -2636,8 +2640,11 @@ function EconomicsPage() {
                 },
               ].map((c, i) => (
                 <div key={c.k} className="flex items-stretch gap-2">
-                  {i > 0 && (
-                    <span className="self-center text-muted-foreground text-sm font-bold">x</span>
+                  {i > 0 && i !== 3 && (
+                    <span className="self-center text-muted-foreground text-sm font-bold">×</span>
+                  )}
+                  {i === 3 && (
+                    <span className="self-center text-muted-foreground text-sm font-bold">→</span>
                   )}
                   <div className="rounded-lg border border-border/70 bg-surface/60 px-3 py-2 min-w-[7.5rem]">
                     <p className="text-[9px] uppercase tracking-wider font-bold text-muted-foreground">
@@ -2657,7 +2664,7 @@ function EconomicsPage() {
                     Gross gate
                   </p>
                   <p className="text-lg font-display font-extrabold text-white tabular-nums leading-tight">
-                    {inrCompact(m.phGrossGateSeason)}
+                    {inrCompact(m.seasonGrossGatePool)}
                   </p>
                   <p className="text-[9px] text-muted-foreground leading-snug">
                     before platform fee &amp; tax
@@ -2665,14 +2672,41 @@ function EconomicsPage() {
                 </div>
               </div>
             </div>
-            <p className="text-[10px] text-muted-foreground leading-relaxed border-t border-border/40 pt-2.5">
-              After the {scopedInputs.ticketingCommissionPct}% platform fee and GST, the house takes{" "}
-              {EVENT_SPLIT.productionHouse}% of what is left — {inr(m.phSeasonReturn[0].amount)}{" "}
-              across the season. Across all {scopedInputs.numFranchises} houses that is{" "}
-              {inrCompact(m.phSeasonReturn[0].amount * scopedInputs.numFranchises)} of gate income
-              returning to production houses, out of {inrCompact(m.seasonGrossGatePool)} sold at the
-              door.
-            </p>
+
+            {/* Down from the whole scope to the one house the section is about. */}
+            <div className="border-t border-border/40 pt-3 space-y-2">
+              <p className="text-[10px] uppercase tracking-wider font-bold text-muted-foreground">
+                And down to one production house
+              </p>
+              <div className="flex flex-wrap items-center gap-x-2 gap-y-2 text-[11px]">
+                <span className="rounded border border-border/60 bg-surface/50 px-2 py-1 text-white tabular-nums">
+                  {inrCompact(m.seasonGrossGatePool)}{" "}
+                  <span className="text-muted-foreground">gross</span>
+                </span>
+                <span className="text-muted-foreground">− {scopedInputs.ticketingCommissionPct}% platform &amp; GST →</span>
+                <span className="rounded border border-border/60 bg-surface/50 px-2 py-1 text-white tabular-nums">
+                  {inrCompact(m.seasonNetGatePool)}{" "}
+                  <span className="text-muted-foreground">net</span>
+                </span>
+                <span className="text-muted-foreground">× {EVENT_SPLIT.productionHouse}% →</span>
+                <span className="rounded border border-cyan-500/40 bg-cyan-500/10 px-2 py-1 text-white tabular-nums">
+                  {inrCompact(m.seasonNetGatePool * (EVENT_SPLIT.productionHouse / 100))}{" "}
+                  <span className="text-muted-foreground">to all houses</span>
+                </span>
+                <span className="text-muted-foreground">÷ {scopedInputs.numFranchises} →</span>
+                <span className="rounded border border-emerald-500/40 bg-emerald-500/10 px-2 py-1 text-white font-bold tabular-nums">
+                  {inr(m.phSeasonReturn[0].amount)}{" "}
+                  <span className="text-muted-foreground font-normal">each</span>
+                </span>
+              </div>
+              <p className="text-[10px] text-muted-foreground leading-relaxed">
+                That last figure is one house&apos;s {scopedInputs.bandsPerFranchise}{" "}
+                {scopedInputs.bandsPerFranchise === 1 ? "band" : "bands"} playing{" "}
+                {scopedInputs.showsPerBand} shows each — {m.phBandNightsSeason} appearances, on
+                slightly fewer distinct nights because two of its bands share every versus stage. It
+                is the Event Revenue Share the return table below opens with.
+              </p>
+            </div>
           </div>
 
           {/* Gate-backed vs variable — the reframe */}
