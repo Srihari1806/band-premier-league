@@ -97,13 +97,27 @@ export interface FestMonth {
   note: string;
 }
 
+/**
+ * The college year, not the school year.
+ *
+ * An earlier version of this treated May and June as dead on the assumption of
+ * a long school-style summer holiday. Colleges do not work that way: most
+ * professional campuses run shorter breaks, many run summer terms, and June is
+ * intake and orientation season — one of the better moments of the year to put
+ * a band in front of a room full of people who have just arrived.
+ *
+ * Fest season is still the peak and nothing here pretends otherwise. What
+ * changed is that the shoulder months are viable rather than closed, which is
+ * what lets the campus leg run the full season instead of being crushed into
+ * a quarter of it.
+ */
 export const FEST_CALENDAR: FestMonth[] = [
   { month: "Jan", intensity: "high", note: "Spring fest season opens; committees are booking headliners." },
   { month: "Feb", intensity: "peak", note: "The densest fest month in the Indian college year." },
   { month: "Mar", intensity: "high", note: "Fests continue until end-semester exams start to bite." },
-  { month: "Apr", intensity: "low", note: "Exam season. Campuses are open but audiences are not available." },
-  { month: "May", intensity: "closed", note: "Summer vacation. A campus night here has no crowd to play to." },
-  { month: "Jun", intensity: "low", note: "New term settling in; societies are re-forming." },
+  { month: "Apr", intensity: "moderate", note: "Early April still carries fests; the back half runs into exams. Bookable, with the date chosen around the campus's own calendar." },
+  { month: "May", intensity: "moderate", note: "Exams then a short break. Campuses that run summer terms stay live, and those are the ones to book here." },
+  { month: "Jun", intensity: "high", note: "New intake and orientation. A fresh audience that has just arrived and is looking for something to join." },
 ];
 
 export const FEST_INTENSITY_META: Record<

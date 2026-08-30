@@ -1290,12 +1290,21 @@ function LeaguePage() {
             </div>
             <p className="text-[11px] text-muted-foreground leading-relaxed">
               <span className="font-semibold text-emerald-200">
-                All {CAMPUS_CLASH.inSeason} campus nights sit inside fest season.
+                The campus leg runs the whole season, not one quarter of it.
               </span>{" "}
-              Alternating commercial and campus evenly would have put half of them in April and May
-              — exams and summer vacation, when a campus has no audience to play to. The campus leg
-              is front-loaded into January to March instead, and the ticketed circuit takes the back
-              half of the season, where it does not care what the academic calendar is doing.
+              An earlier version crushed all {CAMPUS_CLASH.total} nights into January to March on
+              the assumption of a school-style summer holiday. Colleges do not work that way — most
+              run shorter breaks, many run summer terms, and June is intake and orientation, which
+              is one of the better moments of the year to put a band in front of a room.
+            </p>
+            <p className="text-[11px] text-muted-foreground leading-relaxed">
+              Fest season still gets the biggest night: every{" "}
+              <span className="font-semibold text-white">Fest Main Stage</span> lands between
+              January and March, when committees are actually booking headliners. The lighter
+              formats carry the back half — battle rounds through the exam shoulder, and open quad
+              sessions in May and June where the audience is a new intake looking for something to
+              join. Which specific campus takes which date is still a booking decision made against
+              that college&apos;s own calendar.
             </p>
           </div>
 

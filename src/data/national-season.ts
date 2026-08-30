@@ -633,8 +633,19 @@ export const LAUNCH_WEEK = 0;
 /** Zone-wide festival days — every band in the zone plays one of these weeks. */
 export const FESTIVAL_WEEKS = [9, 16];
 
-/** Campus nights stay inside Jan–Mar fest season: weeks 0–13. */
-export const CAMPUS_WINDOW_END = 13;
+/**
+ * Campus nights now run the whole season rather than being crushed into the
+ * Jan–Mar fest window.
+ *
+ * The old constraint assumed a school-style summer holiday. Colleges do not
+ * work that way — most run shorter breaks, many run summer terms, and June is
+ * intake and orientation. Spreading the four nights evenly also means a campus
+ * relationship is live across the year instead of for one quarter of it.
+ *
+ * Fest season is still where the biggest campus nights should land, which is
+ * why Fest Main Stage is the format placed earliest.
+ */
+export const CAMPUS_SPREAD_ACROSS_SEASON = true;
 
 interface DaySlot {
   /** Days from the week's Saturday. */
@@ -734,10 +745,33 @@ function bandSeasonPlan(zone: NationalZone, houseNumber: number, band: number): 
     if (w < weeks.length) weeks[w] = "festival-stage";
   });
 
-  // Campus nights take the earliest free weeks so they land in fest season.
+  /*
+   * Campus nights spread evenly across the free weeks, offset per band so a
+   * house is not sending all four of its bands to campuses in the same
+   * fortnight. Fest Main Stage comes first in the list, so the biggest campus
+   * night still lands earliest — inside fest season — while the smaller ones
+   * carry the relationship through the back half of the year.
+   */
   const campusIds = CAMPUS_FORMATS.flatMap((f) => Array.from({ length: f.perBand }, () => f.id));
-  for (let w = 0; w < weeks.length && campusIds.length > 0; w += 1) {
-    if (weeks[w] === null && w <= CAMPUS_WINDOW_END) weeks[w] = campusIds.shift() as string;
+  const freeWeeks: number[] = [];
+  for (let w = 0; w < weeks.length; w += 1) if (weeks[w] === null) freeWeeks.push(w);
+  if (campusIds.length > 0 && freeWeeks.length >= campusIds.length) {
+    const stride = freeWeeks.length / campusIds.length;
+    const offset = (band - 1) % Math.max(1, Math.floor(stride));
+    campusIds.forEach((id, i) => {
+      const idx = Math.min(freeWeeks.length - 1, Math.floor(i * stride) + offset);
+      const w = freeWeeks[idx];
+      if (weeks[w] === null) weeks[w] = id;
+    });
+    // Anything displaced by the offset colliding takes the next free week.
+    campusIds.forEach((id) => {
+      const placed = weeks.filter((x) => x === id).length;
+      const wanted = campusIds.filter((x) => x === id).length;
+      for (let k = placed; k < wanted; k += 1) {
+        const w = weeks.findIndex((x) => x === null);
+        if (w >= 0) weeks[w] = id;
+      }
+    });
   }
 
   // Launch night: the first free week on or after the band's own release week.
