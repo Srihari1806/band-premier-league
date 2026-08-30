@@ -26,7 +26,6 @@ import {
   SCHEDULE_TOTALS,
   SEASON_CALENDAR,
   NATIONAL_ZONES,
-  OFF_LADDER_SCHEDULE,
   WINDOWS_PER_HOUSE,
   TOTAL_BANDS,
   TOTAL_HOUSES,
@@ -385,37 +384,6 @@ function CalendarPage() {
 
   // House nights and festival stages sit alongside the fixtures — they are on
   // the same calendar, they just do not carry points.
-  const offLadderByDay = useMemo(() => {
-    const map = new Map<string, typeof OFF_LADDER_SCHEDULE>();
-    OFF_LADDER_SCHEDULE.forEach((o) => {
-      if (zone !== "all" && o.zoneSlug !== zone) return;
-      if (house !== "all" && o.houseNumber !== null && o.houseNumber !== Number(house)) return;
-      if (month !== "all" && !o.dateLabel.includes(month)) return;
-      if (!map.has(o.dateLabel)) map.set(o.dateLabel, []);
-      map.get(o.dateLabel)!.push(o);
-    });
-    // Rows sharing a bill are one night — a launch is five house rows, a
-    // festival stage-day ten band rows. Show the night, not the rows.
-    for (const [day, list] of map) {
-      const seen = new Set<string>();
-      map.set(
-        day,
-        list.filter((o) => {
-          if (!o.billId) return true;
-          if (seen.has(o.billId)) return false;
-          seen.add(o.billId);
-          return true;
-        }),
-      );
-    }
-    return map;
-  }, [zone, house, month]);
-
-  // A day row seeded by an off-ladder night has no fixture to read a date from,
-  // so fall back to the off-ladder event's own date for ordering.
-  const dayOrder = (label: string) =>
-    OFF_LADDER_SCHEDULE.find((o) => o.dateLabel === label)?.date.getTime() ?? 0;
-
   // Group by weekend, then by calendar day inside it.
   const grouped = useMemo(() => {
     const byWeekend = new Map<number, Map<string, ScheduledEvent[]>>();
@@ -426,20 +394,6 @@ function CalendarPage() {
       days.get(e.dateLabel)!.push(e);
     });
 
-    // House nights sit on a Thursday and festival stages on the recovery
-    // weekend, so neither has a fixture to hang off. Seed their days empty or
-    // they never get a row to render into.
-    if (kind === "all") {
-      OFF_LADDER_SCHEDULE.forEach((o) => {
-        if (zone !== "all" && o.zoneSlug !== zone) return;
-        if (house !== "all" && o.houseNumber !== null && o.houseNumber !== Number(house)) return;
-        if (month !== "all" && !o.dateLabel.includes(month)) return;
-        if (!byWeekend.has(o.weekendIndex)) byWeekend.set(o.weekendIndex, new Map());
-        const days = byWeekend.get(o.weekendIndex)!;
-        if (!days.has(o.dateLabel)) days.set(o.dateLabel, []);
-      });
-    }
-
     return [...byWeekend.entries()]
       .map(
         ([wi, days]) =>
@@ -447,15 +401,13 @@ function CalendarPage() {
             wi,
             new Map(
               [...days.entries()].sort(
-                (a, b) =>
-                  (a[1][0]?.date.getTime() ?? dayOrder(a[0])) -
-                  (b[1][0]?.date.getTime() ?? dayOrder(b[0])),
+                (a, b) => (a[1][0]?.date.getTime() ?? 0) - (b[1][0]?.date.getTime() ?? 0),
               ),
             ),
           ] as [number, Map<string, ScheduledEvent[]>],
       )
       .sort((a, b) => a[0] - b[0]);
-  }, [filtered, kind, zone, house, month]);
+  }, [filtered]);
 
   const isDefault =
     zone === "all" && house === "all" && band === "all" && kind === "all" && month === "all";
@@ -716,25 +668,7 @@ function CalendarPage() {
                         <div key={dayLabel} className="px-4 py-3">
                           <div className="flex flex-wrap items-center gap-2 mb-2">
                             <p className="text-[11px] font-bold text-white">{dayLabel}</p>
-                            {(offLadderByDay.get(dayLabel)?.length ?? 0) > 0 && (
-                            <div className="mt-2 rounded-md border border-sky-500/25 bg-sky-500/5 px-2.5 py-2">
-                              <p className="text-[9px] uppercase tracking-wider font-bold text-sky-300 mb-1">
-                                Off the ladder · no points
-                              </p>
-                              <div className="space-y-1">
-                                {(offLadderByDay.get(dayLabel) ?? []).map((o) => (
-                                  <p key={o.id} className="text-[10px] text-white leading-snug">
-                                    <span className="font-semibold">{o.formatName}</span>{" "}
-                                    <span className="text-muted-foreground">
-                                      — {o.zoneName} · {o.billing} · {o.city}
-                                    </span>
-                                  </p>
-                                ))}
-                              </div>
-                            </div>
-                          )}
-
-                          {(releasesByDay.get(dayLabel)?.length ?? 0) > 0 && (
+                            {(releasesByDay.get(dayLabel)?.length ?? 0) > 0 && (
                               <span className="inline-flex items-center gap-1 text-[9px] uppercase tracking-wider font-bold px-1.5 py-0.5 rounded border border-fuchsia-500/40 bg-fuchsia-500/10 text-fuchsia-300">
                                 <Disc3 size={9} />
                                 {releasesByDay.get(dayLabel)!.length} release
@@ -745,6 +679,13 @@ function CalendarPage() {
                           <div className="grid gap-1.5 sm:grid-cols-2 lg:grid-cols-3">
                             {dayEvents
                               .slice()
+                              // A launch is five house rows on one zone bill, a
+                              // festival stage-day ten band rows on one. Show the
+                              // night, not the rows.
+                              .filter(
+                                (e, i, all) =>
+                                  !e.billId || all.findIndex((x) => x.billId === e.billId) === i,
+                              )
                               .sort((a, b) => (a.slot.includes("matinee") ? 0 : 1) - (b.slot.includes("matinee") ? 0 : 1))
                               .map((e) => (
                                 <div
@@ -757,7 +698,14 @@ function CalendarPage() {
                                   <div className="min-w-0 flex-1">
                                     <p className="text-[11px] font-semibold text-white leading-snug">
                                       {e.zoneName} · H{e.houseNumber} ·{" "}
-                                      {e.bands.map((b) => `B${b}`).join(" v ")}
+                                      {e.bands
+                                        .map((b) => `B${b}`)
+                                        .join(e.kind === "cross" ? " v " : ", ")}
+                                      {!e.scored && (
+                                        <span className="ml-1.5 text-[9px] uppercase tracking-wider font-bold text-sky-300">
+                                          no points
+                                        </span>
+                                      )}
                                     </p>
                                     <p className="text-[10px] text-muted-foreground flex flex-wrap items-center gap-x-1.5">
                                       <span className="text-primary-glow font-semibold">
