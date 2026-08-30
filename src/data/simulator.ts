@@ -119,6 +119,38 @@ export const PRIZE_POOL_DEFAULT = COST_BUCKETS.filter((b) => !b.operating).reduc
 );
 
 /**
+ * The announced prize floor: what the league commits to before it knows what
+ * it earned.
+ *
+ * Sized against the CONSERVATIVE season, not the base case, because a prize
+ * pool is a promise that cannot be withdrawn. At ₹2.72Cr of revenue against a
+ * ₹81.5L cost base, ₹75L still leaves the league solvent; ₹2Cr would put it
+ * ₹9.58L under, and a league that cannot pay its announced prize has a much
+ * bigger problem than a thin surplus.
+ */
+export const PRIZE_FLOOR = 7500000;
+
+/** Prize money above the floor is a share of profit — see PRIZE_SHARE_OF_PROFIT. */
+export const PRIZE_PROFIT_SHARE_PCT = 25;
+
+/**
+ * What the league actually pays: the greater of the announced floor or the
+ * profit share. Costs nothing extra in a good season and is honest about the
+ * source in a bad one.
+ */
+export function prizePayable(revenue: number, centralCost: number, floor = PRIZE_FLOOR): {
+  floor: number;
+  share: number;
+  payable: number;
+  drivenBy: "floor" | "share";
+} {
+  const profitBeforePrize = Math.max(0, revenue - centralCost);
+  const share = Math.round((profitBeforePrize * PRIZE_PROFIT_SHARE_PCT) / 100);
+  const payable = Math.max(floor, share);
+  return { floor, share, payable, drivenBy: share > floor ? "share" : "floor" };
+}
+
+/**
  * Base case. Small rooms, modest sponsors, realistic costs.
  *
  * These are planning assumptions, not guarantees, and they are chosen to be
@@ -189,7 +221,7 @@ export const DEFAULT_SIM: SimInputs = {
   leagueLicensing: 800000,
   membershipPrice: 299,
   membershipCount: 500,
-  prizePool: PRIZE_POOL_DEFAULT,
+  prizePool: PRIZE_FLOOR,
   centralOperatingCost: CENTRAL_COST_DEFAULT,
 };
 
@@ -272,6 +304,32 @@ export interface EventResult {
   operatorResult: number;
   verdict: Verdict;
   costLines: { label: string; amount: number }[];
+  /**
+   * Revenue per attendee — everything the night earns divided by heads in the
+   * room, not just the ticket. Promoters plan on this rather than ticket price
+   * because the ticket is only the access layer; the sponsor, the stalls, the
+   * bar and the merch are what actually pay for the room.
+   */
+  revenuePerAttendee: number;
+  /**
+   * Share of the night's cost already covered by sponsorship before a single
+   * ticket sells. Large-scale promoters target 40–50% here; below that the
+   * night is a bet on the door.
+   */
+  sponsorshipCushionPct: number;
+}
+
+/**
+ * The two numbers a promoter judges a night by, added to every event type.
+ *
+ * Ticket price tells you almost nothing on its own. Revenue per attendee and
+ * the sponsorship cushion tell you whether the night stands up.
+ */
+function promoterMetrics(totalRevenue: number, attendees: number, sponsorish: number, cost: number) {
+  return {
+    revenuePerAttendee: attendees > 0 ? Math.round(totalRevenue / attendees) : 0,
+    sponsorshipCushionPct: cost > 0 ? (sponsorish / cost) * 100 : 0,
+  };
 }
 
 function gateOf(capacity: number, price: number, occPct: number, ticketingPct: number) {
@@ -324,6 +382,7 @@ export function computeEvent(type: EventType, i: SimInputs): EventResult {
       operatorResult: operatorGatePool + ancillaryTotal - cost,
       verdict: verdictFor(totalRevenue, cost),
       costLines: [{ label: "Event operating cost", amount: cost }],
+      ...promoterMetrics(totalRevenue, g.attendees, i.eventSponsor, cost),
     };
   }
 
@@ -357,6 +416,7 @@ export function computeEvent(type: EventType, i: SimInputs): EventResult {
       operatorResult: ancillaryTotal - i.campusCost,
       verdict: verdictFor(ancillaryTotal, i.campusCost),
       costLines: [{ label: "Campus event cost", amount: i.campusCost }],
+      ...promoterMetrics(ancillaryTotal, 0, i.campusSponsor + i.campusActivation, i.campusCost),
     };
   }
 
@@ -391,6 +451,7 @@ export function computeEvent(type: EventType, i: SimInputs): EventResult {
       operatorResult: ancillaryTotal - i.festivalCost,
       verdict: verdictFor(ancillaryTotal, i.festivalCost),
       costLines: [{ label: "Festival stage cost", amount: i.festivalCost }],
+      ...promoterMetrics(ancillaryTotal, 0, i.festivalSponsor + i.festivalActivation, i.festivalCost),
     };
   }
 
@@ -436,6 +497,7 @@ export function computeEvent(type: EventType, i: SimInputs): EventResult {
     operatorResult: operatorGatePool + ancillaryTotal - cost,
     verdict: verdictFor(totalRevenue, cost),
     costLines,
+    ...promoterMetrics(totalRevenue, g.attendees, i.celebritySponsor + i.celebrityVip, cost),
   };
 }
 
@@ -773,6 +835,11 @@ export interface LeagueResult {
   membershipRevenue: number;
   centralCost: number;
   prizePool: number;
+  /** The announced commitment. */
+  prizeFloor: number;
+  /** 25% of profit before prize. */
+  prizeShare: number;
+  prizeDrivenBy: "floor" | "share";
   operatingSurplus: number;
   marginPct: number;
   verdict: Verdict;
@@ -823,7 +890,10 @@ export function computeLeague(i: SimInputs, cfg = leagueConfig()): LeagueResult 
     { label: `Membership (${i.membershipCount.toLocaleString("en-IN")} × ${i.membershipPrice})`, amount: membershipRevenue, group: "member" },
   ];
   const revenueTotal = revenue.reduce((s, r) => s + r.amount, 0);
-  const totalCost = i.centralOperatingCost + i.prizePool;
+  // The greater of the announced floor and the profit share, not whichever
+  // number happens to be in the input.
+  const prize = prizePayable(revenueTotal, i.centralOperatingCost, i.prizePool);
+  const totalCost = i.centralOperatingCost + prize.payable;
 
   return {
     config: cfg,
@@ -835,7 +905,10 @@ export function computeLeague(i: SimInputs, cfg = leagueConfig()): LeagueResult 
     revenueTotal,
     membershipRevenue,
     centralCost: i.centralOperatingCost,
-    prizePool: i.prizePool,
+    prizePool: prize.payable,
+    prizeFloor: prize.floor,
+    prizeShare: prize.share,
+    prizeDrivenBy: prize.drivenBy,
     operatingSurplus: revenueTotal - totalCost,
     marginPct: revenueTotal === 0 ? 0 : ((revenueTotal - totalCost) / revenueTotal) * 100,
     verdict: verdictFor(revenueTotal, totalCost),

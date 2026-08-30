@@ -348,6 +348,26 @@ export function Simulator() {
             />
             <div className="rounded-xl border border-border bg-surface/40 p-4 flex flex-col justify-center gap-2">
               <Verdict v={ev.verdict} />
+              <div className="flex flex-wrap gap-x-4 gap-y-0.5">
+                {ev.revenuePerAttendee > 0 && (
+                  <p className="text-[10px] text-muted-foreground">
+                    <span className="text-white font-semibold tabular-nums">
+                      {inr(ev.revenuePerAttendee)}
+                    </span>{" "}
+                    per attendee
+                  </p>
+                )}
+                <p className="text-[10px] text-muted-foreground">
+                  <span
+                    className={`font-semibold tabular-nums ${
+                      ev.sponsorshipCushionPct >= 40 ? "text-emerald-300" : "text-amber-300"
+                    }`}
+                  >
+                    {ev.sponsorshipCushionPct.toFixed(0)}%
+                  </span>{" "}
+                  of cost covered before a ticket sells
+                </p>
+              </div>
               <p className="text-[10px] text-muted-foreground leading-snug">
                 Operator keeps{" "}
                 <span className={ev.operatorResult < 0 ? "text-rose-300 font-semibold" : "text-white font-semibold"}>
@@ -667,7 +687,16 @@ export function Simulator() {
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
               <Big value={inrCompact(league.revenueTotal)} label="League revenue" hint={`${cfg.zones} zones · ${cfg.houses} houses · ${cfg.bands} bands · one city a week`} tone="text-primary-glow" />
               <Big value={inrCompact(league.centralCost)} label="Central operating cost" tone="text-rose-300" hint="The nine operating buckets" />
-              <Big value={inrCompact(league.prizePool)} label="Prize pool" tone="text-amber-300" hint="Counted once, separately" />
+              <Big
+                value={inrCompact(league.prizePool)}
+                label="Prize pool"
+                tone="text-amber-300"
+                hint={
+                  league.prizeDrivenBy === "share"
+                    ? `${inrCompact(league.prizeFloor)} floor, beaten by the 25% profit share`
+                    : `The announced ${inrCompact(league.prizeFloor)} floor — the profit share would only pay ${inrCompact(league.prizeShare)}`
+                }
+              />
               <div className="rounded-xl border border-border bg-surface/40 p-4 flex flex-col justify-center gap-2">
                 <p className={`text-2xl font-display font-extrabold tabular-nums ${league.operatingSurplus < 0 ? "text-rose-300" : "text-emerald-300"}`}>
                   {league.operatingSurplus < 0 ? "−" : ""}
