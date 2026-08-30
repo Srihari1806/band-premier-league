@@ -851,10 +851,22 @@ export function buildFullSchedule(): ScheduledEvent[] {
           }
         }
       } else if (isFestival) {
+        /*
+         * Festival bills are filled band by band, not house by house.
+         *
+         * Grouping whole houses into two bills split a 20-band zone as 12 and
+         * 8, so a format declaring ten acts produced no bill that had ten. The
+         * counts reconciled — 30 bills, 300 appearances — which is exactly why
+         * it survived: nothing published was wrong, and an eight-act festival
+         * day is still a different booking from a twelve-act one.
+         */
+        let seat = 0;
         for (let h = 1; h <= zone.houses; h += 1) {
-          const all = Array.from({ length: zone.bandsPerHouse }, (_, k) => k + 1);
-          const bill = `${zone.slug}-w${w}-fest${Math.floor((h - 1) / 2.5)}`;
-          push(SAT, h, all, "festival-stage", hub.city, "fest", bill);
+          for (let b = 1; b <= zone.bandsPerHouse; b += 1) {
+            const bill = `${zone.slug}-w${w}-fest${Math.floor(seat / FESTIVAL_ACTS_PER_STAGE)}`;
+            push(SAT, h, [b], "festival-stage", hub.city, `fest-b${b}`, bill);
+            seat += 1;
+          }
         }
       }
 

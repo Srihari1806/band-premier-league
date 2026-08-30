@@ -134,15 +134,6 @@ export const OPERATOR_COSTS_TOTAL = OPERATIONS.operating;
 /** Acts sharing one versus night. Two is the format; named rather than magic. */
 export const ACTS_PER_SHARED_SHOW = 2;
 
-/**
- * Acts sharing a bill on the SELECTED format.
- *
- * The constant above is the versus-night default and was applied to every
- * shared format, so a house night — four bands on one stage — was counted as
- * two events per pair rather than one per roster. `applyScope` overrides it
- * from the format the slicer is actually on.
- */
-
 /* ------------------------------------------------------------------ *
  * Inputs — everything the page can move
  * ------------------------------------------------------------------ */
