@@ -276,12 +276,11 @@ export function minGapDays(weekendIndices: number[]): number {
 /**
  * A band's release year.
  *
- * Twelve league-eligible originals inside the season on a 15-day cycle, with
- * the two windows either side doing different jobs: December pre-season builds
- * the buffer that stops the shoot schedule colliding with competition
- * weekends, and July-August is the artist season, where releases carry no
- * points but still build the catalogue a band is valued on at the next
- * auction.
+ * Three league-eligible originals inside the season on a 60-day cycle, with
+ * the two windows either side doing different jobs: December pre-season is
+ * where the January single gets recorded, and July-August is the artist
+ * season, where releases carry no points but still build the catalogue a band
+ * is valued on at the next auction.
  */
 /* ------------------------------------------------------------------ *
  * The annual cycle
@@ -1039,33 +1038,159 @@ export const SCHEDULE_TOTALS = scheduleTotals();
  * ------------------------------------------------------------------ */
 
 /**
- * A 15-day release cycle per band: two drops a month, twelve across the season.
+ * A 60-day release cycle per band: three originals across the season.
  *
- * This replaces a one-release-per-band season. Twelve originals is what makes
- * the Original IP metric mean anything — a catalogue score against a single
- * track is really a score for having turned up — and it gives the league a
- * continuous stream to programme against rather than one drop to defend.
+ * The cadence is per BAND; the stagger is per HOUSE. Each band drops once every
+ * two months, but the four bands in a house are offset by 15 days each, so the
+ * house itself has something out roughly every fortnight without any single
+ * band being asked for more than three finished pieces:
  *
- * Inside a house the four bands are offset by four days, so nobody in the same
- * stable is competing with a stablemate for the same release day:
+ *   Band 1  →  1 Jan · 1 Mar · 1 May          Band 3  →  1 Feb · 1 Apr · 1 Jun
+ *   Band 2  →  16 Jan · 16 Mar · 16 May       Band 4  →  16 Feb · 16 Apr · 16 Jun
  *
- *   Band 1  →  1st and 16th
- *   Band 2  →  5th and 20th
- *   Band 3  →  9th and 24th
- *   Band 4  →  13th and 28th
+ * Read down the house rather than across a band and the sequence is continuous:
+ * 1 Jan, 16 Jan, 1 Feb, 16 Feb, 1 Mar … twelve drops, one every 15 or 16 days.
  *
- * That yields 48 releases per house and 1,200 nationally across Jan–Jun.
+ * That is the whole design. Continuous house activity is a scheduling problem,
+ * not a production one, and solving it by asking each band for twelve tracks
+ * put ₹10,400 behind each of them. Three is a budget a band can actually make
+ * something with.
  */
-export { RELEASE_CYCLE_DAYS };
-export const RELEASES_PER_MONTH_PER_BAND = 2;
+export const RELEASES_PER_BAND = 3;
+/** Days between one band's drops. */
+export const BAND_CYCLE_DAYS = 60;
+/** Days between consecutive drops from the same house. */
+export const HOUSE_STAGGER_DAYS = 15;
 export const RELEASE_MONTHS = 6;
-export const RELEASES_PER_BAND = RELEASES_PER_MONTH_PER_BAND * RELEASE_MONTHS;
-/** Days between one band's slot and the next band's in the same house. */
-export const BAND_RELEASE_OFFSET_DAYS = 4;
-/** The two anchor days each month, before the per-band offset. */
+/** Bands 1 and 3 drop on the 1st, bands 2 and 4 on the 16th. */
 export const RELEASE_ANCHOR_DAYS = [1, 16];
-/** Calendar year the release season runs in. */
 export const RELEASE_YEAR = 2027;
+
+export interface ReleaseEvent {
+  id: string;
+  date: Date;
+  dateLabel: string;
+  /** Season week the drop lands in, 1-indexed. -1 if outside the calendar. */
+  week: number;
+  zoneSlug: string;
+  zoneName: string;
+  houseNumber: number;
+  band: number;
+  /** Track number for that band, 1..3. */
+  number: number;
+  label: string;
+}
+
+/**
+ * The three dates a band drops on.
+ *
+ * Odd-numbered bands take the 1st, even the 16th; the first pair runs the odd
+ * months and the second pair the even ones. Four bands, four fortnightly slots,
+ * no two ever colliding.
+ */
+export function releaseDatesFor(band: number): Date[] {
+  const day = RELEASE_ANCHOR_DAYS[(band - 1) % 2 === 0 ? 0 : 1];
+  const startMonth = band <= 2 ? 0 : 1;
+  return Array.from(
+    { length: RELEASES_PER_BAND },
+    (_, k) => new Date(Date.UTC(RELEASE_YEAR, startMonth + k * 2, day)),
+  );
+}
+
+/**
+ * Which season week a date falls in. Releases run on fixed calendar days
+ * rather than weekends, so this is a lookup rather than an index.
+ */
+function weekOf(date: Date): number {
+  let best = -1;
+  SEASON_CALENDAR.forEach((w) => {
+    // A weekend "owns" the days from its Thursday to its Sunday.
+    const from = addDays(w.date, -2).getTime();
+    const to = addDays(w.date, 1).getTime();
+    if (date.getTime() >= from && date.getTime() <= to) best = w.index + 1;
+  });
+  if (best > 0) return best;
+  let nearest = -1;
+  SEASON_CALENDAR.forEach((w) => {
+    if (addDays(w.date, -2).getTime() <= date.getTime()) nearest = w.index + 1;
+  });
+  return nearest;
+}
+
+export function buildReleaseSchedule(): ReleaseEvent[] {
+  const out: ReleaseEvent[] = [];
+
+  NATIONAL_ZONES.forEach((zone) => {
+    for (let houseNumber = 1; houseNumber <= zone.houses; houseNumber += 1) {
+      for (let band = 1; band <= zone.bandsPerHouse; band += 1) {
+        releaseDatesFor(band).forEach((date, i) => {
+          out.push({
+            id: `${zone.slug}-h${houseNumber}-b${band}-t${i + 1}`,
+            date,
+            dateLabel: DAY_FMT.format(date),
+            week: weekOf(date),
+            zoneSlug: zone.slug,
+            zoneName: zone.shortName,
+            houseNumber,
+            band,
+            number: i + 1,
+            label: `Original ${i + 1}`,
+          });
+        });
+      }
+    }
+  });
+
+  return out.sort((a, b) => a.date.getTime() - b.date.getTime());
+}
+
+export const RELEASE_SCHEDULE = buildReleaseSchedule();
+
+export const RELEASE_TOTALS = {
+  releases: RELEASE_SCHEDULE.length,
+  perBand: RELEASES_PER_BAND,
+  perHouse: RELEASES_PER_BAND * 4,
+  cycleDays: BAND_CYCLE_DAYS,
+  staggerDays: HOUSE_STAGGER_DAYS,
+  perMonthNationally: Math.round((TOTAL_BANDS * RELEASES_PER_BAND) / RELEASE_MONTHS),
+  expected: TOTAL_BANDS * RELEASES_PER_BAND,
+  reconciles: RELEASE_SCHEDULE.length === TOTAL_BANDS * RELEASES_PER_BAND,
+  /** No two bands in the same house ever share a release day. */
+  noStablemateClash: (() => {
+    const seen = new Map<string, number>();
+    RELEASE_SCHEDULE.forEach((r) => {
+      const key = `${r.zoneSlug}-h${r.houseNumber}-${r.date.toISOString().slice(0, 10)}`;
+      seen.set(key, (seen.get(key) ?? 0) + 1);
+    });
+    return [...seen.values()].every((n) => n === 1);
+  })(),
+  /** Longest gap between consecutive drops from one house, in days. */
+  longestHouseGap: (() => {
+    const days = [...new Set(releaseDatesFor(1).concat(
+      releaseDatesFor(2), releaseDatesFor(3), releaseDatesFor(4),
+    ).map((d) => d.getTime()))].sort((a, b) => a - b);
+    let max = 0;
+    for (let i = 1; i < days.length; i += 1) {
+      max = Math.max(max, Math.round((days[i] - days[i - 1]) / 86400000));
+    }
+    return max;
+  })(),
+};
+
+/**
+ * The production reality behind three tracks a band.
+ *
+ * Three finished pieces in six months is a schedule a band can hold alongside
+ * playing 24 shows. The December window still matters — arriving with the first
+ * track already recorded is what keeps the January drop from being written
+ * during the opening fortnight of the competition.
+ */
+export const RELEASE_PIPELINE = {
+  preSeasonBuffer: 1,
+  bufferWindow: "December pre-season",
+  perHouseSeason: RELEASES_PER_BAND * 4,
+  note: "Arrive with the first track recorded. A band writing its January single during the opening weekends is a band doing two jobs badly.",
+};
 
 export interface ReleaseWindow {
   id: string;
@@ -1091,15 +1216,15 @@ export const RELEASE_WINDOWS: ReleaseWindow[] = [
     window: "December",
     eligible: false,
     countsToCatalogue: true,
-    rationale: `Three to four tracks recorded before a fixture is played. Without this buffer the ${RELEASES_PER_BAND}-track cycle collides with the weekends the band also has to perform on, and the release calendar is what slips.`,
+    rationale: "The January single, recorded before a fixture is played. A band writing its first drop during the opening weekends is doing two jobs badly.",
   },
   {
     id: "in-season",
-    label: "The 15-day cycle",
+    label: "The 60-day cycle",
     window: "Jan – Jun",
     eligible: true,
     countsToCatalogue: true,
-    rationale: `Two drops a month, ${RELEASES_PER_BAND} across the season, on the band's own fixed days. These are the only releases that score, and they are scored on whether the band kept to the cadence rather than on how many exist.`,
+    rationale: `One original every ${BAND_CYCLE_DAYS} days — ${RELEASES_PER_BAND} across the season, on the band's own fixed dates. These are the only releases that score.`,
   },
   {
     id: "artist-season",
@@ -1113,124 +1238,11 @@ export const RELEASE_WINDOWS: ReleaseWindow[] = [
 
 export const CATALOGUE_PATH: { at: string; live: number; note: string }[] = [
   { at: "Signed at the draft", live: 0, note: "Whatever the band already had released stays on its record." },
-  { at: "Opening weekend", live: 4, note: "The December buffer — three or four tracks recorded before a single fixture is played." },
-  { at: "End of March", live: 10, note: "Six in-season drops on top of the buffer, at two a month." },
-  { at: "End of the season", live: 16, note: "Twelve league releases plus the pre-season buffer." },
-  { at: "End of artist season", live: 20, note: "July-August releases carry no points but do carry into the next auction." },
+  { at: "Opening weekend", live: 1, note: "The December buffer — the January single recorded before a fixture is played." },
+  { at: "End of March", live: 2, note: "Two of the three in-season originals live." },
+  { at: "End of the season", live: 3, note: "All three league releases live — full catalogue marks." },
+  { at: "End of artist season", live: 5, note: "July-August releases carry no points but do carry into the next auction." },
 ];
-
-export interface ReleaseEvent {
-  id: string;
-  date: Date;
-  dateLabel: string;
-  /** Season week the drop lands in, 1-indexed. -1 if outside the fixture calendar. */
-  week: number;
-  zoneSlug: string;
-  zoneName: string;
-  houseNumber: number;
-  band: number;
-  /** Track number for that band, 1..12. */
-  number: number;
-  label: string;
-}
-
-/** The two days of the month a given band drops on. */
-export function releaseDaysFor(band: number): number[] {
-  const offset = (band - 1) * BAND_RELEASE_OFFSET_DAYS;
-  return RELEASE_ANCHOR_DAYS.map((d) => d + offset);
-}
-
-/**
- * Which season week a date falls in. Releases run on fixed calendar days
- * rather than weekends, so this is a lookup rather than an index.
- */
-function weekOf(date: Date): number {
-  let best = -1;
-  SEASON_CALENDAR.forEach((w) => {
-    // A weekend "owns" the days from its Thursday to its Sunday.
-    const from = addDays(w.date, -2).getTime();
-    const to = addDays(w.date, 1).getTime();
-    if (date.getTime() >= from && date.getTime() <= to) best = w.index + 1;
-  });
-  if (best > 0) return best;
-  // Otherwise attribute it to the nearest weekend that has already started.
-  let nearest = -1;
-  SEASON_CALENDAR.forEach((w) => {
-    if (addDays(w.date, -2).getTime() <= date.getTime()) nearest = w.index + 1;
-  });
-  return nearest;
-}
-
-export function buildReleaseSchedule(): ReleaseEvent[] {
-  const out: ReleaseEvent[] = [];
-
-  NATIONAL_ZONES.forEach((zone) => {
-    for (let houseNumber = 1; houseNumber <= zone.houses; houseNumber += 1) {
-      for (let band = 1; band <= zone.bandsPerHouse; band += 1) {
-        const days = releaseDaysFor(band);
-        let track = 0;
-        for (let m = 0; m < RELEASE_MONTHS; m += 1) {
-          days.forEach((day) => {
-            track += 1;
-            const date = new Date(Date.UTC(RELEASE_YEAR, m, day));
-            out.push({
-              id: `${zone.slug}-h${houseNumber}-b${band}-t${track}`,
-              date,
-              dateLabel: DAY_FMT.format(date),
-              week: weekOf(date),
-              zoneSlug: zone.slug,
-              zoneName: zone.shortName,
-              houseNumber,
-              band,
-              number: track,
-              label: `Track ${track}`,
-            });
-          });
-        }
-      }
-    }
-  });
-
-  return out.sort((a, b) => a.date.getTime() - b.date.getTime());
-}
-
-export const RELEASE_SCHEDULE = buildReleaseSchedule();
-
-export const RELEASE_TOTALS = {
-  releases: RELEASE_SCHEDULE.length,
-  perBand: RELEASES_PER_BAND,
-  perHouse: RELEASES_PER_BAND * 4,
-  perMonthPerBand: RELEASES_PER_MONTH_PER_BAND,
-  cycleDays: RELEASE_CYCLE_DAYS,
-  perMonthNationally: TOTAL_BANDS * RELEASES_PER_MONTH_PER_BAND,
-  expected: TOTAL_BANDS * RELEASES_PER_BAND,
-  reconciles: RELEASE_SCHEDULE.length === TOTAL_BANDS * RELEASES_PER_BAND,
-  /** No two bands in the same house share a release day. */
-  noStablemateClash: (() => {
-    const seen = new Map<string, number>();
-    RELEASE_SCHEDULE.forEach((r) => {
-      const key = `${r.zoneSlug}-h${r.houseNumber}-${r.date.toISOString().slice(0, 10)}`;
-      seen.set(key, (seen.get(key) ?? 0) + 1);
-    });
-    return [...seen.values()].every((n) => n === 1);
-  })(),
-};
-
-/**
- * The production reality behind 12 tracks a band.
- *
- * 48 finished pieces per house inside six months is a rolling pipeline, not a
- * series of one-off shoots. The December pre-season window exists precisely so
- * a band arrives with tracks already in the can — without that buffer the
- * shoot schedule collides with the competition weekends the band also has to
- * play, and the release calendar is the thing that slips.
- */
-export const RELEASE_PIPELINE = {
-  preSeasonBuffer: 4,
-  bufferWindow: "December pre-season",
-  perHouseSeason: RELEASES_PER_BAND * 4,
-  note: "Pre-produce three to four tracks in December. A band writing and shooting inside a competition week is a band that will miss one of the two.",
-};
 
 /** Releases falling on a given calendar day, for the schedule view. */
 export function releasesOn(dateLabel: string): ReleaseEvent[] {

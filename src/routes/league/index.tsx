@@ -1476,7 +1476,7 @@ function LeaguePage() {
               produces filler, not catalogue. Each band gets{" "}
               <strong>one league release inside the season</strong>, on its own week in the zone
               rotation, with the December pre-season and the July artist season either side of it.
-              Across the country that is {RELEASE_TOTALS.perMonthNationally} releases a month — two from every band, every month of the season.
+              Across the country that is {RELEASE_TOTALS.perMonthNationally} releases a month, and inside any one house something out every fortnight.
             </p>
           </div>
 
@@ -1531,7 +1531,7 @@ function LeaguePage() {
               </h4>
               <p className="text-[11px] text-muted-foreground leading-relaxed">
                 A hundred songs dropped across a season with no pacing compete with each other and
-                vanish. A fixed 15-day cycle gives every release its own campaign window, its own
+                vanish. A fixed 60-day cycle gives every release its own campaign window, its own
                 fixture to launch into, and the league's channels behind it for that week.
               </p>
               <div className="grid grid-cols-3 gap-3 pt-1">

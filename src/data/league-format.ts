@@ -174,18 +174,16 @@ export function cataloguePointsFor(releasesLive: number): number {
 }
 
 /**
- * Catalogue points on a 15-day release cycle.
+ * Catalogue points scored on delivery rather than on total.
  *
- * The absolute scale above saturates the moment bands ship twelve tracks a
- * season: every band clears "3 or more" by the first week of February and all
- * 100 of them score 5/5 for the remaining four months. Half the Original IP
- * metric stops telling the table anything.
+ * The absolute scale above answers "how many originals exist". On a fixed
+ * cycle the better question is whether the band is keeping to the cadence it
+ * committed to, which stays discriminating all season instead of saturating
+ * the moment a band clears three.
  *
- * On a fixed cycle the question worth scoring is not how many tracks exist —
- * it is whether the band is keeping to the cadence it committed to. So this
- * scores DELIVERED against DUE at that point in the season, which stays
- * discriminating in June and rewards exactly the discipline the cycle is
- * there to build.
+ * Kept alongside rather than replacing it: at three releases a season the
+ * absolute scale still works, and only reaches full marks at the final drop.
+ * If the cadence ever rises again, this is the scale that survives it.
  */
 export const CADENCE_SCALE: { minPct: number; label: string; points: number }[] = [
   { minPct: 100, label: "On schedule — every track due is live", points: 5 },
@@ -582,38 +580,39 @@ export interface ReleaseStage {
  * there) and put a "60-day production cycle" heading on a page describing a
  * fortnightly one.
  */
-export const RELEASE_CYCLE_DAYS = 15;
-
 /**
- * A fortnight, end to end. This is not a comfortable schedule — it is a
- * rolling pipeline where the next track is in pre-production while the current
- * one is being mixed, which is exactly why the December buffer exists.
+ * The per-band release cadence. THE source — national-season.ts imports it
+ * rather than declaring its own, because these drifted apart once already.
+ * The HOUSE stagger is a different number and lives with the schedule.
  */
+export const RELEASE_CYCLE_DAYS = 60;
+
+/** Eight weeks, end to end, for one finished original. */
 export const RELEASE_CYCLE: ReleaseStage[] = [
   {
-    weeks: "Days 1–3",
+    weeks: "Weeks 1–2",
     title: "Write & Arrange",
-    detail: "Composition and arrangement locked with the house's producer. On a fortnightly cycle most of this happens ahead of the slot, not inside it.",
+    detail: "Composition, lyric passes and arrangement locked with the house's producer.",
   },
   {
-    weeks: "Days 4–7",
+    weeks: "Weeks 3–4",
     title: "Record, Mix & Master",
     detail: "Studio time financed by the production house; masters delivered ready for distribution.",
   },
   {
-    weeks: "Days 8–11",
-    title: "Visual asset",
-    detail: "A full video for a flagship track, a live-session or performance cut for the rest — shot at a fixture the league is already filming.",
+    weeks: "Week 5",
+    title: "Music Video",
+    detail: "Shoot and edit — the asset that carries the release on YouTube and social.",
   },
   {
-    weeks: "Days 12–13",
+    weeks: "Week 6",
     title: "Artwork & Distribution",
-    detail: "Cover art, credits, metadata and delivery to the distributor ahead of the fixed release day.",
+    detail: "Cover art, credits, metadata and delivery to the distributor ahead of the release date.",
   },
   {
-    weeks: "Days 14–15",
+    weeks: "Weeks 7–8",
     title: "Promotion & Fixture Tie-In",
-    detail: "The campaign runs into the band's next fixture, so the live room doubles as the launch for the drop.",
+    detail: "The campaign runs into a scheduled fixture, so the live room doubles as the launch event.",
   },
 ];
 

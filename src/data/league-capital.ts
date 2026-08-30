@@ -695,10 +695,10 @@ export const OPEN_DECISIONS: OpenDecision[] = [
   {
     id: "creative-budget",
     question:
-      "Twelve tracks a band on a ₹1.25L creative allocation is ₹10,400 a track. Where does the rest come from?",
-    why: "The 15-day release cycle asks each band for 12 finished originals across the season — 1,200 nationally. A produced single with a modest video runs ₹80,000 to ₹3,00,000 in this market, so the season's real creative cost per band is somewhere between ₹9.6L and ₹36L against an allocation of ₹1.25L. This is the largest single gap anywhere in the model and it sits on the production house, not the operator.",
+      "Three originals a band on a ₹1.25L creative allocation is ₹41,700 a track. Enough for a video too?",
+    why: "The 60-day cycle asks each band for three finished originals — 300 nationally. At ₹1.25L a band that is roughly ₹41,700 a track, which covers a properly produced single but not a produced single AND a video. The gap is far smaller than it was at twelve tracks a band, but it is still a gap, and it sits on the production house rather than the operator.",
     recommendation:
-      "Do not fund twelve full productions. Tier the catalogue: two or three flagship tracks with real videos, and the rest as live-session or performance-video releases shot at fixtures the league is already filming and paying for. That keeps the cadence, keeps the Original IP metric honest, and puts the money where it changes a band's career rather than spreading it into twelve thin pieces. Raise the allocation for the flagship tier and say so explicitly rather than leaving houses to discover the arithmetic.",
+      "Fund one flagship video and let the other two be live-session or performance cuts shot at fixtures the league is already filming and paying for. That is the cheapest real video a band will ever get, the footage exists either way, and it puts the cash behind the single most likely to travel rather than spreading it thinly across three.",
     owner: "Board",
     impact: "high",
   },

@@ -387,9 +387,16 @@ function CalendarPage() {
     return map;
   }, [zone, house, band, month]);
 
-  // House nights and festival stages sit alongside the fixtures — they are on
-  // the same calendar, they just do not carry points.
-  // Group by weekend, then by calendar day inside it.
+  /**
+   * Group by weekend, then by calendar day inside it.
+   *
+   * Releases land on fixed calendar dates — the 1st and the 16th — which very
+   * often are not days the band happens to be playing. Those days still need a
+   * row, or filtering to a single band renders its fixtures and silently drops
+   * the three release tags that are the point of the view. So release dates
+   * seed an empty day, using the same zone/house/band filter the releases
+   * themselves were narrowed by.
+   */
   const grouped = useMemo(() => {
     const byWeekend = new Map<number, Map<string, ScheduledEvent[]>>();
     filtered.forEach((e) => {
@@ -399,6 +406,17 @@ function CalendarPage() {
       days.get(e.dateLabel)!.push(e);
     });
 
+    releasesByDay.forEach((rels, dayLabel) => {
+      const wi = Math.max(0, (rels[0]?.week ?? 1) - 1);
+      if (!byWeekend.has(wi)) byWeekend.set(wi, new Map());
+      const days = byWeekend.get(wi)!;
+      if (!days.has(dayLabel)) days.set(dayLabel, []);
+    });
+
+    // A day seeded by a release has no fixture to read a date from.
+    const dayDate = (label: string) =>
+      releasesByDay.get(label)?.[0]?.date.getTime() ?? 0;
+
     return [...byWeekend.entries()]
       .map(
         ([wi, days]) =>
@@ -406,13 +424,15 @@ function CalendarPage() {
             wi,
             new Map(
               [...days.entries()].sort(
-                (a, b) => (a[1][0]?.date.getTime() ?? 0) - (b[1][0]?.date.getTime() ?? 0),
+                (a, b) =>
+                  (a[1][0]?.date.getTime() ?? dayDate(a[0])) -
+                  (b[1][0]?.date.getTime() ?? dayDate(b[0])),
               ),
             ),
           ] as [number, Map<string, ScheduledEvent[]>],
       )
       .sort((a, b) => a[0] - b[0]);
-  }, [filtered]);
+  }, [filtered, releasesByDay]);
 
   const isDefault =
     zone === "all" && house === "all" && band === "all" && kind === "all" && month === "all";

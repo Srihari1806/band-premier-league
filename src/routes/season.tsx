@@ -492,12 +492,13 @@ function SeasonPage() {
             {/* How a band actually reaches full catalogue marks */}
             <div className="bpl-card p-5 border border-border bg-surface/40 space-y-3">
               <h3 className="text-sm font-bold text-white">
-                How a band reaches three originals live
+                When full catalogue marks actually arrive
               </h3>
               <p className="text-[11px] text-muted-foreground leading-relaxed">
-                Worth spelling out, because one in-season release and a catalogue metric that wants
-                three is an obvious question. The season release is the last of the three, not the
-                first.
+                The catalogue metric wants three originals live and the season delivers exactly
+                three, so a band is not at full marks until its final drop. That is deliberate: the
+                points arrive as the work does, and a band that misses a cycle carries the shortfall
+                into the fixtures that follow rather than making it up later.
               </p>
               <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
                 {CATALOGUE_PATH.map((c, i) => (
@@ -538,20 +539,21 @@ function SeasonPage() {
                 A drop every {RELEASE_TOTALS.cycleDays} days, from every band
               </h2>
               <p className="text-sm text-muted-foreground max-w-3xl leading-relaxed">
-                Two releases a month per band, {RELEASE_TOTALS.perBand} across the season,{" "}
-                {RELEASE_TOTALS.releases.toLocaleString("en-IN")} in total. Inside a house the four
-                bands are offset by four days — the 1st, 5th, 9th and 13th, then the 16th, 20th,
-                24th and 28th — so nobody is competing with a stablemate for the same release day.
-                That is what makes the Original IP metric mean something: a catalogue score against
-                a single track is really a score for having turned up.
+                One original every {RELEASE_TOTALS.cycleDays} days per band —{" "}
+                {RELEASE_TOTALS.perBand} across the season, {RELEASE_TOTALS.releases} in total. The
+                cadence is per band; the stagger is per house. Bands 1 and 3 drop on the 1st, bands
+                2 and 4 on the 16th, the first pair in odd months and the second in even — so the
+                house has something out every {RELEASE_TOTALS.staggerDays} or{" "}
+                {RELEASE_TOTALS.longestHouseGap} days while no band is asked for more than three
+                finished pieces.
               </p>
             </div>
 
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
               {[
-                { v: `${RELEASE_TOTALS.cycleDays}d`, l: "Release cycle", h: "Per band, all season" },
-                { v: RELEASE_TOTALS.perBand, l: "Per band, in season", h: "Two a month for six months" },
-                { v: RELEASE_TOTALS.perHouse, l: "Per house", h: `4 bands x ${RELEASE_TOTALS.perBand} tracks` },
+                { v: `${RELEASE_TOTALS.staggerDays}d`, l: "House cadence", h: "Something out every fortnight" },
+                { v: RELEASE_TOTALS.perBand, l: "Per band, in season", h: `One every ${RELEASE_TOTALS.cycleDays} days` },
+                { v: RELEASE_TOTALS.perHouse, l: "Per house", h: `4 bands x ${RELEASE_TOTALS.perBand} originals` },
                 { v: RELEASE_TOTALS.releases.toLocaleString("en-IN"), l: "Releases in the season", h: `${TOTAL_BANDS} bands` },
               ].map((k) => (
                 <div key={k.l} className="border border-border/50 rounded-lg p-4 bg-surface/30">
@@ -575,7 +577,7 @@ function SeasonPage() {
                 <p className="text-[11px] text-muted-foreground leading-relaxed">
                   {RELEASE_TOTALS.perMonthNationally} drops a month nationally is a lot of noise,
                   so the thing worth protecting is the one place a band is genuinely competing for
-                  attention — its own stable. The four-day offset inside a house guarantees that,
+                  attention — its own stable. The fortnightly offset inside a house guarantees that,
                   and it is asserted rather than assumed:{" "}
                   <span className="font-semibold text-white">
                     {RELEASE_TOTALS.noStablemateClash ? "verified across all" : "FAILS across"}{" "}
