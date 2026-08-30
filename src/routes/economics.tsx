@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { PageShell } from "@/components/layout/PageShell";
+import { Simulator } from "@/components/economics/Simulator";
 import { useState, useMemo, useCallback, useEffect, useRef, Fragment } from "react";
 import {
   TrendingUp,
@@ -1873,6 +1874,8 @@ function EconomicsPage() {
     [],
   );
   const sliceKey = scopeKey(scope);
+  // The detailed model starts collapsed — the simulator answers most questions.
+  const [detailOpen, setDetailOpen] = useState(false);
 
   /**
    * The control bar is pinned, which is what makes it useful — but at full
@@ -2071,6 +2074,46 @@ function EconomicsPage() {
         </div>
       </section>
 
+      {/* ================= SIMULATOR =================
+          The front door: three views over one set of assumptions, for anyone
+          who wants the answer before the workings. Everything below it is the
+          detailed model, unchanged, behind a disclosure. */}
+      <Simulator />
+
+      {/* ================= ADVANCED ================= */}
+      <section className="border-b border-border bg-surface/20">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 py-6">
+          <button
+            type="button"
+            onClick={() => setDetailOpen((o) => !o)}
+            className="w-full flex items-center justify-between gap-3 cursor-pointer text-left"
+          >
+            <div className="min-w-0">
+              <p className="text-[11px] uppercase tracking-[0.2em] text-primary-glow font-bold">
+                Advanced Economics
+              </p>
+              <p className="text-sm text-muted-foreground leading-relaxed mt-0.5">
+                The full model — dimensional slicer, gate waterfall, event cost registry, auction
+                and franchise economics, rights, sponsorship, platform upside, capital allocation
+                and the assumption registry. Nothing above replaces any of it.
+              </p>
+            </div>
+            <span
+              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-[11px] font-bold shrink-0 transition ${
+                detailOpen
+                  ? "border-primary/60 bg-primary/15 text-primary-glow"
+                  : "border-border bg-secondary/40 text-muted-foreground"
+              }`}
+            >
+              {detailOpen ? "Hide" : "Show"} detail
+              <ChevronDown size={13} className={detailOpen ? "rotate-180 transition-transform" : "transition-transform"} />
+            </span>
+          </button>
+        </div>
+      </section>
+
+      {!detailOpen ? null : (
+      <>
       {/* Sentinel: once this scrolls out of view the control bar condenses. */}
       <div ref={sentinelRef} aria-hidden="true" className="h-px w-full" />
 
@@ -3838,6 +3881,8 @@ function EconomicsPage() {
           </p>
         </div>
       </section>
+      </>
+      )}
     </PageShell>
   );
 }

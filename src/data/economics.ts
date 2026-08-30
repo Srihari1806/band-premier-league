@@ -42,11 +42,33 @@ export function inr(value: number): string {
 export function inrCompact(value: number): string {
   const sign = value < 0 ? "−₹" : "₹";
   const abs = Math.abs(value);
-  if (abs >= 1e7) return sign + (abs / 1e7).toFixed(2) + "Cr";
-  if (abs >= 1e5) return sign + (abs / 1e5).toFixed(2) + "L";
-  if (abs >= 1e3) return sign + (abs / 1e3).toFixed(1) + "K";
-  return inr(value);
+  if (abs < 1000) return inr(value);
+
+  /*
+   * Pick the unit AFTER rounding, not before.
+   *
+   * Rounding second produced "100.0K" for 99,978 and "100.00L" for 9,999,999 —
+   * both correct arithmetic and both units nobody uses. Promote whenever the
+   * rounded figure has reached the next unit.
+   */
+  const units: { div: number; suffix: string; dp: number }[] = [
+    { div: 1e3, suffix: "K", dp: 1 },
+    { div: 1e5, suffix: "L", dp: 2 },
+    { div: 1e7, suffix: "Cr", dp: 2 },
+  ];
+
+  let chosen = units[0];
+  for (const u of units) if (abs >= u.div) chosen = u;
+
+  const idx = units.indexOf(chosen);
+  const rounded = (abs / chosen.div).toFixed(chosen.dp);
+  const next = units[idx + 1];
+  if (next && Number(rounded) * chosen.div >= next.div) {
+    return sign + (abs / next.div).toFixed(next.dp) + next.suffix;
+  }
+  return sign + rounded + chosen.suffix;
 }
+
 
 /**
  * Compact plain-number string, e.g. 4400000 -> "44.0L".
