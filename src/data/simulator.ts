@@ -40,6 +40,9 @@ export interface SimInputs {
   ticketingPct: number;
 
   /* ---- season shape, per band ---- */
+  seasonWeeks: number;
+  /** The operating rule: a zone activates one city a week. */
+  citiesPerWeek: number;
   commercialShows: number;
   crossNights: number;
   houseNights: number;
@@ -131,12 +134,16 @@ export const DEFAULT_SIM: SimInputs = {
   eventCost: 14000,
   ticketingPct: 5,
 
-  commercialShows: 11,
-  crossNights: 3,
+  // 24 weeks, one city a week. Friday and Sunday are the revenue engine and
+  // Saturday is the ecosystem, which gives 48 appearances across the season.
+  seasonWeeks: 24,
+  citiesPerWeek: 1,
+  commercialShows: 24,
+  crossNights: 6,
   houseNights: 2,
-  campusShows: 4,
-  festivals: 2,
-  celebrityShows: 1,
+  campusShows: 10,
+  festivals: 3,
+  celebrityShows: 3,
   songs: 3,
 
   crossCapacityMult: 1.5,
@@ -508,9 +515,29 @@ export function breakEven(i: SimInputs): BreakEven {
  * One band, one season
  * ------------------------------------------------------------------ */
 
+/**
+ * Bands sharing one bill, by format.
+ *
+ * This table is the whole appearances-versus-events distinction: six versus
+ * appearances are three physical nights, and a celebrity milestone is one
+ * night carrying an entire zone roster. Quoting 48 shows a band when the
+ * league stages far fewer is the difference between a defensible operating
+ * plan and an unbuildable one.
+ */
+export const ACTS_ON_BILL: Record<string, number> = {
+  commercial: 1,
+  cross: 2,
+  campus: 4,
+  house: 4,
+  festival: 10,
+  celebrity: 20,
+};
+
 export interface BandResult {
-  touchpoints: { label: string; count: number }[];
+  touchpoints: { label: string; count: number; acts: number; events: number }[];
   totalTouchpoints: number;
+  /** Physical events those appearances resolve into, for one band's share. */
+  physicalEvents: number;
   songs: number;
 
   /* what the house put in */
@@ -549,14 +576,15 @@ export function computeBand(i: SimInputs): BandResult {
   const celebrity = computeEvent("celebrity", i);
 
   const touchpoints = [
-    { label: "Commercial shows", count: i.commercialShows },
-    { label: "Cross nights", count: i.crossNights },
-    { label: "House nights", count: i.houseNights },
-    { label: "Campus shows", count: i.campusShows },
-    { label: "Festivals", count: i.festivals },
-    { label: "Celebrity / mentor", count: i.celebrityShows },
-  ];
+    { label: "Commercial", count: i.commercialShows, acts: ACTS_ON_BILL.commercial },
+    { label: "Cross nights", count: i.crossNights, acts: ACTS_ON_BILL.cross },
+    { label: "Campus", count: i.campusShows, acts: ACTS_ON_BILL.campus },
+    { label: "House nights", count: i.houseNights, acts: ACTS_ON_BILL.house },
+    { label: "Festivals", count: i.festivals, acts: ACTS_ON_BILL.festival },
+    { label: "Celebrity", count: i.celebrityShows, acts: ACTS_ON_BILL.celebrity },
+  ].map((t) => ({ ...t, events: t.count / t.acts }));
   const totalTouchpoints = touchpoints.reduce((s, t) => s + t.count, 0);
+  const physicalEvents = touchpoints.reduce((s, t) => s + t.events, 0);
 
   // ---- live: the band's 40% share, divided by however many acts share the bill
   const liveCommercial = commercial.bandPool * i.commercialShows;
@@ -595,6 +623,7 @@ export function computeBand(i: SimInputs): BandResult {
   return {
     touchpoints,
     totalTouchpoints,
+    physicalEvents,
     songs: i.songs,
     investment,
     investmentTotal,
@@ -733,8 +762,12 @@ export function leagueConfig(): LeagueConfig {
 
 export interface LeagueResult {
   config: LeagueConfig;
-  nights: { label: string; count: number; perNight: number; total: number }[];
+  nights: { label: string; count: number; appearances: number; perNight: number; total: number }[];
   nightsTotal: number;
+  /** Physical events the league actually stages. */
+  physicalEvents: number;
+  /** Band appearances across those events. Always the larger number. */
+  appearances: number;
   revenue: { label: string; amount: number; group: "live" | "league" | "member" }[];
   revenueTotal: number;
   membershipRevenue: number;
@@ -758,18 +791,21 @@ export function computeLeague(i: SimInputs, cfg = leagueConfig()): LeagueResult 
 
   // Nights, not appearances — a cross night is one stage for two bands, a
   // house night one stage for the whole roster, a festival day one bill.
+  // Appearances divided by how many acts share the bill — a versus night is one
+  // stage for two bands, a celebrity milestone one stage for a whole roster.
   const nightCounts = [
-    { label: "Commercial", count: bands * i.commercialShows, ev: commercial },
-    { label: "Cross nights", count: Math.round((bands * i.crossNights) / 2), ev: cross },
-    { label: "House nights", count: houses * i.houseNights, ev: house },
-    { label: "Campus", count: bands * i.campusShows, ev: campus },
-    { label: "Festivals", count: Math.round((bands * i.festivals) / 10), ev: festival },
-    { label: "Celebrity nights", count: bands * i.celebrityShows, ev: celebrity },
-  ];
+    { label: "Commercial", app: bands * i.commercialShows, acts: ACTS_ON_BILL.commercial, ev: commercial },
+    { label: "Cross nights", app: bands * i.crossNights, acts: ACTS_ON_BILL.cross, ev: cross },
+    { label: "Campus", app: bands * i.campusShows, acts: ACTS_ON_BILL.campus, ev: campus },
+    { label: "House nights", app: houses * i.houseNights * cfg.bandsPerHouse, acts: ACTS_ON_BILL.house, ev: house },
+    { label: "Festivals", app: bands * i.festivals, acts: ACTS_ON_BILL.festival, ev: festival },
+    { label: "Celebrity nights", app: bands * i.celebrityShows, acts: ACTS_ON_BILL.celebrity, ev: celebrity },
+  ].map((n) => ({ ...n, count: Math.round(n.app / n.acts) }));
 
   const nights = nightCounts.map((n) => ({
     label: n.label,
     count: n.count,
+    appearances: n.app,
     perNight: n.ev.operatorResult,
     total: n.ev.operatorResult * n.count,
   }));
@@ -793,6 +829,8 @@ export function computeLeague(i: SimInputs, cfg = leagueConfig()): LeagueResult 
     config: cfg,
     nights,
     nightsTotal,
+    physicalEvents: nights.reduce((s, n) => s + n.count, 0),
+    appearances: nights.reduce((s, n) => s + n.appearances, 0),
     revenue,
     revenueTotal,
     membershipRevenue,

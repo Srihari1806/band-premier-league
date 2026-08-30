@@ -263,6 +263,15 @@ export function Simulator() {
               Planning figures, not guarantees. Everything below re-derives as you move them.
             </p>
           </div>
+          <div className="rounded-lg border border-primary/25 bg-primary/5 p-3">
+            <p className="text-[11px] text-white leading-relaxed">
+              <span className="font-bold">One city a week.</span> A zone activates a single city at
+              a time — Friday and Sunday are paid shows, Saturday is campus, house, festival or a
+              celebrity milestone — then the league moves on. Over {i.seasonWeeks} weeks that is a
+              tour of the zone&apos;s hubs rather than three cities running at once, which is what
+              makes it possible to run with one ops team per zone.
+            </p>
+          </div>
           <div className="grid gap-x-5 gap-y-3 sm:grid-cols-2 lg:grid-cols-4">
             <Knob label="Venue capacity" value={i.venueCapacity} min={100} max={2000} step={10} onChange={(v) => set({ venueCapacity: v })} />
             <Knob label="Ticket price" value={i.ticketPrice} min={199} max={999} step={10} money onChange={(v) => set({ ticketPrice: v })} />
@@ -466,9 +475,21 @@ export function Simulator() {
             </div>
 
             <div className="bpl-card p-4 border border-border bg-surface/40 space-y-3">
-              <h3 className="text-sm font-bold text-white">
-                {band.totalTouchpoints} live appearances and {band.songs} originals
-              </h3>
+              <div className="space-y-1">
+                <h3 className="text-sm font-bold text-white">
+                  {band.totalTouchpoints} season appearances — not{" "}
+                  {band.totalTouchpoints} shows
+                </h3>
+                <p className="text-[11px] text-muted-foreground leading-relaxed">
+                  A versus night is two bands on one stage; a celebrity milestone is a whole zone
+                  roster on one. So {band.totalTouchpoints} appearances resolve into roughly{" "}
+                  <span className="font-semibold text-white">
+                    {band.physicalEvents.toFixed(0)} physical events
+                  </span>{" "}
+                  for this band. Quoting the first number as if it were the second is the
+                  difference between a plan you can run and one you cannot.
+                </p>
+              </div>
               <div className="flex flex-wrap gap-2">
                 {band.touchpoints.map((t) => (
                   <div key={t.label} className="rounded-lg border border-border/70 bg-surface/50 px-3 py-2">
@@ -476,6 +497,11 @@ export function Simulator() {
                       {t.count}
                     </p>
                     <p className="text-[9px] text-muted-foreground mt-0.5">{t.label}</p>
+                    {t.acts > 1 && (
+                      <p className="text-[9px] text-primary-glow/80 tabular-nums">
+                        {t.acts} on the bill
+                      </p>
+                    )}
                   </div>
                 ))}
                 <div className="rounded-lg border border-fuchsia-500/30 bg-fuchsia-500/5 px-3 py-2">
@@ -639,7 +665,7 @@ export function Simulator() {
         {view === "league" && (
           <div className="space-y-4">
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-              <Big value={inrCompact(league.revenueTotal)} label="League revenue" hint={`${cfg.zones} zones · ${cfg.houses} houses · ${cfg.bands} bands`} tone="text-primary-glow" />
+              <Big value={inrCompact(league.revenueTotal)} label="League revenue" hint={`${cfg.zones} zones · ${cfg.houses} houses · ${cfg.bands} bands · one city a week`} tone="text-primary-glow" />
               <Big value={inrCompact(league.centralCost)} label="Central operating cost" tone="text-rose-300" hint="The nine operating buckets" />
               <Big value={inrCompact(league.prizePool)} label="Prize pool" tone="text-amber-300" hint="Counted once, separately" />
               <div className="rounded-xl border border-border bg-surface/40 p-4 flex flex-col justify-center gap-2">
@@ -677,7 +703,19 @@ export function Simulator() {
 
               <div className="space-y-3">
                 <div className="bpl-card p-4 border border-border bg-surface/40 space-y-2">
-                  <h4 className="text-xs font-bold text-white">Where the live money comes from</h4>
+                  <div className="space-y-1">
+                    <h4 className="text-xs font-bold text-white">Where the live money comes from</h4>
+                    <p className="text-[10px] text-muted-foreground leading-relaxed">
+                      <span className="font-semibold text-white">
+                        {league.appearances.toLocaleString("en-IN")} band appearances
+                      </span>{" "}
+                      across{" "}
+                      <span className="font-semibold text-white">
+                        {league.physicalEvents.toLocaleString("en-IN")} physical events
+                      </span>{" "}
+                      — the league stages far fewer nights than it delivers artist touchpoints.
+                    </p>
+                  </div>
                   <div className="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0">
                     <table className="w-full min-w-[26rem] text-left border-collapse">
                       <tbody>

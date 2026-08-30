@@ -797,14 +797,16 @@ function LeaguePage() {
               Show Formats
             </h2>
             <h3 className="text-3xl sm:text-4xl font-display font-bold text-white">
-              Twenty-four nights, one a week
+              Forty-eight appearances, not forty-eight shows
             </h3>
             <p className="text-sm text-muted-foreground leading-relaxed">
               A fixture count says a band plays {FORMAT_MIX.totalPerBand} nights. It does not say
-              what any of them are. Every band plays the same {FORMAT_MIX.showsPerBand} — one a
-              week for {COMPETITION_WEEKENDS} weeks — through the same rooms, so no band can be
-              handed a softer season than its rivals. {FORMAT_MIX.totalPerBand} of them carry
-              points; the other {FORMAT_MIX.offLadderPerBand} are real income and no points.
+              what any of them are. Every band plays the same {FORMAT_MIX.showsPerBand}{" "}
+              appearances across {COMPETITION_WEEKENDS} weeks, through the same rooms, so no band
+              can be handed a softer season than its rivals. A versus night is two bands on one
+              stage and a celebrity milestone is a whole zone roster on one, so the league stages
+              considerably fewer nights than it delivers touchpoints — which is the difference
+              between an operating plan and a wish.
             </p>
           </div>
 
@@ -965,9 +967,9 @@ function LeaguePage() {
                 Clashes with a fixture
               </p>
               <p className="text-[10px] text-muted-foreground leading-snug mt-1">
-                Every band plays exactly one show a week for {COMPETITION_WEEKENDS} weeks, so a
-                band being in two places at once is not prevented by a rule — it is arithmetically
-                impossible. Checked anyway.
+                A band never takes two slots on the same day, and the generator asserts it
+                across every one of the {SCHEDULE_TOTALS.appearances.toLocaleString("en-IN")}{" "}
+                appearances rather than trusting the rule that produced them.
               </p>
             </div>
           </div>

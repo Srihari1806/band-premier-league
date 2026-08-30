@@ -61,7 +61,7 @@ export function venueOf(id: VenueClass): VenueProfile {
 }
 
 /** Off-ladder nights are not fixtures, so they need their own kinds. */
-export type ShowKind = FixtureKind | "house" | "festival" | "corporate" | "launch";
+export type ShowKind = FixtureKind | "house" | "festival" | "corporate" | "launch" | "celebrity";
 
 export interface ShowFormat {
   id: string;
@@ -101,8 +101,29 @@ const RAW_CAPACITY: Record<string, number> = {
   "quad-session": 250,
 };
 
+/**
+ * Rooms a band plays across the season, weighted by how often it plays each.
+ *
+ * An unweighted mean was right when every format was played the same number of
+ * times. It stopped being right the moment the ladder went to 5 cafe nights and
+ * 4 unplugged ones — the mean has to follow the season a band actually plays,
+ * or the "seats are neutral" guarantee quietly becomes false.
+ */
 const SOLO_IDS = Object.keys(RAW_CAPACITY);
-const MEAN_RAW = SOLO_IDS.reduce((s, id) => s + RAW_CAPACITY[id], 0) / SOLO_IDS.length;
+const SOLO_WEIGHTS: Record<string, number> = {
+  "cafe-set": 5,
+  "pub-night": 5,
+  "club-headline": 5,
+  unplugged: 4,
+  "launch-night": 3,
+  "arena-night": 5,
+  "fest-main-stage": 4,
+  "campus-battle": 3,
+  "quad-session": 3,
+};
+const WEIGHT_TOTAL = SOLO_IDS.reduce((s, id) => s + (SOLO_WEIGHTS[id] ?? 1), 0);
+const MEAN_RAW =
+  SOLO_IDS.reduce((s, id) => s + RAW_CAPACITY[id] * (SOLO_WEIGHTS[id] ?? 1), 0) / WEIGHT_TOTAL;
 
 /** Room size as a multiple of the season's average room. Mean is exactly 1.0. */
 export function capacityIndexOf(id: string): number {
@@ -126,7 +147,7 @@ export const SCORED_FORMATS: ShowFormat[] = [
     kind: "commercial",
     venue: "cafe",
     scored: true,
-    perBand: 2,
+    perBand: 5,
     actsOnStage: 1,
     capacityIdx: capacityIndexOf("cafe-set"),
     priceIdx: 0.6,
@@ -140,7 +161,7 @@ export const SCORED_FORMATS: ShowFormat[] = [
     kind: "commercial",
     venue: "pub",
     scored: true,
-    perBand: 2,
+    perBand: 5,
     actsOnStage: 1,
     capacityIdx: capacityIndexOf("pub-night"),
     priceIdx: 0.9,
@@ -154,7 +175,7 @@ export const SCORED_FORMATS: ShowFormat[] = [
     kind: "commercial",
     venue: "club",
     scored: true,
-    perBand: 2,
+    perBand: 5,
     actsOnStage: 1,
     capacityIdx: capacityIndexOf("club-headline"),
     priceIdx: 1.1,
@@ -168,7 +189,7 @@ export const SCORED_FORMATS: ShowFormat[] = [
     kind: "commercial",
     venue: "listening-room",
     scored: true,
-    perBand: 2,
+    perBand: 4,
     actsOnStage: 1,
     capacityIdx: capacityIndexOf("unplugged"),
     priceIdx: 1.6,
@@ -178,11 +199,11 @@ export const SCORED_FORMATS: ShowFormat[] = [
   },
   {
     id: "launch-night",
-    name: "Launch Night",
-    kind: "commercial",
+    name: "Celebrity Night",
+    kind: "celebrity",
     venue: "auditorium",
     scored: true,
-    perBand: 1,
+    perBand: 3,
     actsOnStage: 1,
     capacityIdx: capacityIndexOf("launch-night"),
     priceIdx: 1.5,
@@ -196,7 +217,7 @@ export const SCORED_FORMATS: ShowFormat[] = [
     kind: "commercial",
     venue: "arena",
     scored: true,
-    perBand: 2,
+    perBand: 5,
     actsOnStage: 1,
     capacityIdx: capacityIndexOf("arena-night"),
     priceIdx: 1.2,
@@ -210,7 +231,7 @@ export const SCORED_FORMATS: ShowFormat[] = [
     kind: "campus",
     venue: "campus",
     scored: true,
-    perBand: 2,
+    perBand: 4,
     actsOnStage: 1,
     capacityIdx: capacityIndexOf("fest-main-stage"),
     priceIdx: 0.5,
@@ -224,7 +245,7 @@ export const SCORED_FORMATS: ShowFormat[] = [
     kind: "campus",
     venue: "campus",
     scored: true,
-    perBand: 1,
+    perBand: 3,
     actsOnStage: 1,
     capacityIdx: capacityIndexOf("campus-battle"),
     priceIdx: 0.4,
@@ -238,7 +259,7 @@ export const SCORED_FORMATS: ShowFormat[] = [
     kind: "campus",
     venue: "campus",
     scored: true,
-    perBand: 1,
+    perBand: 3,
     actsOnStage: 1,
     capacityIdx: capacityIndexOf("quad-session"),
     priceIdx: 0.3,
@@ -252,7 +273,7 @@ export const SCORED_FORMATS: ShowFormat[] = [
     kind: "cross",
     venue: "auditorium",
     scored: true,
-    perBand: 3,
+    perBand: 6,
     actsOnStage: 2,
     capacityIdx: 1,
     priceIdx: 1.25,
@@ -274,8 +295,8 @@ export interface OffLadderFormat extends ShowFormat {
 }
 
 export const HOUSE_NIGHTS_PER_BAND = 2;
-export const CORPORATE_SHOWS_PER_BAND = 2;
-export const FESTIVAL_SLOTS_PER_BAND = 2;
+export const CORPORATE_SHOWS_PER_BAND = 0;
+export const FESTIVAL_SLOTS_PER_BAND = 3;
 /** Acts sharing one festival day. A stage-day, not a single slot. */
 export const FESTIVAL_ACTS_PER_STAGE = 10;
 
@@ -396,7 +417,9 @@ export const FORMAT_MIX = (() => {
     soloPerBand: sumPerBand(solo),
     totalPerBand: sumPerBand(SCORED_FORMATS),
     /** Scored ladder plus the off-ladder nights — a band's whole season. */
+    /** Appearances in the 24-week season. The Dec launch sits outside it. */
     showsPerBand: sumPerBand(SCORED_FORMATS) + OFF_LADDER_PER_BAND,
+    celebrityPerBand: sumPerBand(SCORED_FORMATS.filter((f) => f.kind === "celebrity")),
     offLadderPerBand: OFF_LADDER_PER_BAND,
     /** Seat-weighted mean room size. Normalised to 1. */
     seatIdx,

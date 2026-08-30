@@ -333,9 +333,9 @@ export const ZONE_ROSTERS: Record<string, { houses: number; bandsPerHouse: numbe
 export const STAGE_2_STRUCTURE: MatrixStructure = {
   houses: ZONE_ROSTERS["ap-ts"].houses,
   bandsPerHouse: ZONE_ROSTERS["ap-ts"].bandsPerHouse,
-  ticketedSoloPerBand: 11,
-  campusSoloPerBand: 4,
-  intraHousePerBand: 3,
+  ticketedSoloPerBand: 24,
+  campusSoloPerBand: 10,
+  intraHousePerBand: 6,
 };
 
 export type FixtureKind = "commercial" | "campus" | "cross";
@@ -525,7 +525,7 @@ export const SEASON_PHASES: SeasonPhase[] = [
     title: "Regular Season",
     weeks: "31 Dec – 12 Jun",
     weekCount: 24,
-    detail: `${COMPETITION_WEEKENDS} weekends, and every band plays exactly one show a week — ${STAGE_2_MATRIX.individualShowsPerBand} individual fixtures, three versus nights and six off-ladder nights. One show a week is what makes a same-day clash impossible rather than merely unlikely.`,
+    detail: `${COMPETITION_WEEKENDS} weekends, one city a week. Friday and Sunday are paid shows, Saturday is campus, house, festival or a celebrity milestone — 48 appearances a band, which the league stages as far fewer physical events.`,
   },
   {
     phase: "Phase 2",
@@ -674,6 +674,14 @@ export interface HubCity {
   capacityIdx: number;
   /** Cost of staging a night here. */
   costIdx: number;
+  /**
+   * The region this hub serves when the league is in town.
+   *
+   * Under the one-city-a-week rule a hub is not just a venue list — it is the
+   * base a whole catchment is played out of, so audiences travel in rather than
+   * the league touring past them.
+   */
+  catchment?: string;
   /** How far content from this market travels digitally. */
   reachIdx: number;
 }
@@ -749,10 +757,10 @@ export const ZONES: Zone[] = [
     headline: "Where the format was designed, and the first league to fill a roster.",
     languages: ["Telugu"],
     hubCities: [
-      { city: "Hyderabad", state: "Telangana", note: "Primary hub — venues, studios and production base", fixtureShare: 0.4, priceIdx: 1.15, capacityIdx: 1.3, costIdx: 1.15, reachIdx: 1.3 },
-      { city: "Visakhapatnam", state: "Andhra Pradesh", note: "Coastal hub with a strong college circuit", fixtureShare: 0.25, priceIdx: 0.92, capacityIdx: 0.9, costIdx: 0.92, reachIdx: 0.88 },
-      { city: "Vijayawada", state: "Andhra Pradesh", note: "Central AP fixture stop", fixtureShare: 0.2, priceIdx: 0.82, capacityIdx: 0.8, costIdx: 0.85, reachIdx: 0.75 },
-      { city: "Tirupati", state: "Andhra Pradesh", note: "South Andhra hub — temple-town footfall and a young campus base", fixtureShare: 0.15, priceIdx: 0.75, capacityIdx: 0.72, costIdx: 0.8, reachIdx: 0.65 },
+      { city: "Hyderabad", state: "Telangana", note: "Primary hub — venues, studios and production base", fixtureShare: 0.4, priceIdx: 1.15, capacityIdx: 1.3, costIdx: 1.15, catchment: "Telangana", reachIdx: 1.3 },
+      { city: "Visakhapatnam", state: "Andhra Pradesh", note: "Coastal hub with a strong college circuit", fixtureShare: 0.25, priceIdx: 0.92, capacityIdx: 0.9, costIdx: 0.92, catchment: "North Andhra belt", reachIdx: 0.88 },
+      { city: "Vijayawada", state: "Andhra Pradesh", note: "Central AP fixture stop", fixtureShare: 0.2, priceIdx: 0.82, capacityIdx: 0.8, costIdx: 0.85, catchment: "Central Andhra", reachIdx: 0.75 },
+      { city: "Tirupati", state: "Andhra Pradesh", note: "South Andhra hub — temple-town footfall and a young campus base", fixtureShare: 0.15, priceIdx: 0.75, capacityIdx: 0.72, costIdx: 0.8, catchment: "South Andhra", reachIdx: 0.65 },
     ],
     strategy:
       "Where the format was designed. Season 1 opens here alongside the other four leagues rather than ahead of them, and at the same roster size.",
