@@ -20,6 +20,7 @@
 
 import { SEASON_WEEKS, SEASONS_PER_YEAR } from "./league-format";
 import { FORMAT_MIX } from "./show-formats";
+import { costOperations, SEASON_1_SCALE } from "./league-capital";
 
 /**
  * Indian-format rupee string, e.g. 805950 -> "₹8,05,950".
@@ -89,16 +90,22 @@ export const SEASON_STRUCTURE = {
 /** Operator's half of the league-level broadcast and sponsorship pools. */
 const OPERATOR_RIGHTS_SHARE_PCT = 50;
 
-/** Central cost base for one season. Largely fixed — that is the scaling story. */
-export const OPERATOR_COSTS: { label: string; amount: number }[] = [
-  { label: "Marketing (Operator share)", amount: 250000 },
-  { label: "Operations & Logistics", amount: 200000 },
-  { label: "Platform / Tech", amount: 150000 },
-  { label: "Community Partner Fees", amount: 120000 },
-  { label: "Legal + Contracts", amount: 50000 },
-];
+/**
+ * Central cost base for one season, derived from `league-capital.ts` rather
+ * than typed here.
+ *
+ * This used to be five flat lines totalling ₹7.7L — about one mid-sized event,
+ * standing in for the cost of running a national league. It made the operator
+ * look structurally profitable by omitting the organisation that would have to
+ * exist for any of it to happen. It now scales with zones, nights, campuses
+ * and bands, so it cannot drift when the league changes shape.
+ */
+export const OPERATIONS = costOperations(SEASON_1_SCALE);
 
-export const OPERATOR_COSTS_TOTAL = OPERATOR_COSTS.reduce((s, c) => s + c.amount, 0);
+export const OPERATOR_COSTS: { label: string; amount: number }[] =
+  OPERATIONS.byCategory.map((c) => ({ label: c.category, amount: c.amount }));
+
+export const OPERATOR_COSTS_TOTAL = OPERATIONS.total;
 
 /** Acts sharing one versus night. Two is the format; named rather than magic. */
 export const ACTS_PER_SHARED_SHOW = 2;
@@ -529,6 +536,20 @@ export function computeEconomics(inputs: EconomicsInputs): EconomicsModel {
   const bandGateSeasonAllSolo = soloShow.bandPool * showsPerBand;
   const sharedNightExtraFootfall = sharedShowsPerBand * (sharedAttendance - attendance);
 
+  /*
+   * Licensing, broadcast and sync are split 50/50 with the artists, exactly
+   * like the catalogue. They are earned against masters and footage the bands
+   * performed on, so the house financing them does not make them the house's
+   * alone. `rightsPoolPerHouse` is the whole pot before either side takes its
+   * half; the artists' half is then divided across the bands on the roster.
+   */
+  const rightsPoolPerHouse =
+    inputs.licensingRights + inputs.broadcastRights + inputs.syncPlacements;
+  const houseRightsShare = CONTENT_SPLIT.productionHouse / 100;
+  const artistRightsPerBand = Math.round(
+    (rightsPoolPerHouse * (CONTENT_SPLIT.artists / 100)) / Math.max(1, bandsPerFranchise),
+  );
+
   const artistSeasonReturn: ReturnStream[] = [
     {
       label: "Live Performance Share",
@@ -544,6 +565,12 @@ export function computeEconomics(inputs: EconomicsInputs): EconomicsModel {
       amount: contentHalfPerSeason,
       detail: `${CONTENT_SPLIT.artists}% of the audio and video rights they created`,
       certainty: "modelled",
+    },
+    {
+      label: "Licensing, Broadcast & Sync Share",
+      amount: artistRightsPerBand,
+      detail: `${CONTENT_SPLIT.artists}% of the house's ${inr(rightsPoolPerHouse)} rights income, split across its ${bandsPerFranchise} ${bandsPerFranchise === 1 ? "band" : "bands"}`,
+      certainty: "contracted",
     },
   ];
   const artistSeasonTotal = artistSeasonReturn.reduce((s, r) => s + r.amount, 0);
@@ -580,20 +607,20 @@ export function computeEconomics(inputs: EconomicsInputs): EconomicsModel {
     },
     {
       label: "Third-Party Content Licensing",
-      amount: inputs.licensingRights,
-      detail: "OTT, syndication and platform deals on season footage and originals",
+      amount: Math.round(inputs.licensingRights * houseRightsShare),
+      detail: `OTT, syndication and platform deals on season footage and originals — the house's ${CONTENT_SPLIT.productionHouse}% of ${inr(inputs.licensingRights)}`,
       certainty: "contracted",
     },
     {
       label: "Broadcast Rights Share",
-      amount: inputs.broadcastRights,
-      detail: "Franchise share of league broadcast and streaming distribution fees",
+      amount: Math.round(inputs.broadcastRights * houseRightsShare),
+      detail: `Franchise share of league broadcast and streaming distribution fees — the house's ${CONTENT_SPLIT.productionHouse}% of ${inr(inputs.broadcastRights)}`,
       certainty: "contracted",
     },
     {
       label: "Sync & Brand Placements",
-      amount: inputs.syncPlacements,
-      detail: "Film, ad and brand sync against franchise-owned masters",
+      amount: Math.round(inputs.syncPlacements * houseRightsShare),
+      detail: `Film, ad and brand sync against franchise-owned masters — the house's ${CONTENT_SPLIT.productionHouse}% of ${inr(inputs.syncPlacements)}`,
       certainty: "contracted",
     },
   ];

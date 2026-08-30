@@ -215,15 +215,30 @@ export const SPEND_CAPS: SpendCap[] = [
     basis: "per house",
     rule: "Mentors are drawn from a central approved list and matched by two-sided preference. A more famous mentor never earns a band a single point.",
   },
-  {
-    id: "guarantees",
-    label: "Artist Guarantees",
-    amount: 200000,
-    basis: "per house",
-    rule: "The floor under the artists, set by acquisition bracket. This is a minimum, not a ceiling — live, catalogue and prize income all sit on top of it.",
-  },
 ];
 
+/**
+ * What a signing fee actually buys, and who it goes to.
+ *
+ * The house's bid is not a cost it books and keeps — it is money that leaves
+ * the house entirely. 70% is the artist's, paid on signing; 30% funds the
+ * league that stages the season. There is no separate artist guarantee on top:
+ * the signing share IS the floor under the artist, so a house carries one
+ * obligation for a band rather than two.
+ */
+export const SIGNING_SPLIT = { artist: 70, league: 30 } as const;
+
+export function signingSplitOf(bid: number) {
+  const artist = Math.round(bid * (SIGNING_SPLIT.artist / 100));
+  return { artist, league: bid - artist };
+}
+
+/**
+ * Operator-funded pools. Deliberately NOT published as figures on the site —
+ * they are the operator's own budget, not a production house obligation, and
+ * showing them next to the house caps read as though a house had to fund them.
+ * The prize SPLIT is still published, because that is a rule bands need.
+ */
 export const CENTRAL_POOLS: SpendCap[] = [
   {
     id: "prize",

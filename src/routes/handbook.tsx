@@ -55,7 +55,7 @@ import {
   AUCTION,
   GUARANTEE_BRACKETS,
   SPEND_CAPS,
-  CENTRAL_POOLS,
+  SIGNING_SPLIT,
   PRIZE_SPLIT,
   EVENT_BUDGET_TIERS,
   APPROVAL_RULES,
@@ -565,23 +565,33 @@ function HandbookPage() {
               </Card>
               <Card>
                 <h4 className="text-xs font-bold uppercase tracking-wider text-white">
-                  Central Pools
+                  What a Signing Fee Buys
                 </h4>
                 <div className="space-y-2.5">
-                  {CENTRAL_POOLS.map((c) => (
-                    <div key={c.id} className="border-b border-border/30 pb-2.5 last:border-0 last:pb-0">
-                      <div className="flex items-baseline justify-between gap-2">
-                        <span className="text-[11px] font-bold text-white">{c.label}</span>
-                        <span className="text-[11px] font-bold text-primary-glow tabular-nums shrink-0">
-                          {inr(c.amount)}
-                        </span>
-                      </div>
-                      <p className="text-[10px] text-muted-foreground leading-relaxed mt-1">{c.rule}</p>
-                    </div>
-                  ))}
+                  <p className="text-[11px] text-muted-foreground leading-relaxed">
+                    A house&apos;s bid is not a cost it books and keeps — the money leaves the house
+                    entirely.
+                  </p>
+                  <div className="flex items-baseline justify-between gap-2">
+                    <span className="text-[11px] font-bold text-white">To the artist</span>
+                    <span className="text-[11px] font-bold text-primary-glow tabular-nums shrink-0">
+                      {SIGNING_SPLIT.artist}%
+                    </span>
+                  </div>
+                  <div className="flex items-baseline justify-between gap-2">
+                    <span className="text-[11px] font-bold text-white">To the league</span>
+                    <span className="text-[11px] font-bold text-primary-glow tabular-nums shrink-0">
+                      {SIGNING_SPLIT.league}%
+                    </span>
+                  </div>
+                  <p className="text-[10px] text-muted-foreground leading-relaxed">
+                    There is no separate artist guarantee on top. The signing share is the floor
+                    under the artist, so a house carries one obligation per band rather than two.
+                  </p>
                 </div>
                 <p className="text-[10px] text-muted-foreground leading-relaxed border-t border-border/40 pt-2">
-                  Prize money splits {PRIZE_SPLIT.band}% band / {PRIZE_SPLIT.productionHouse}% house.
+                  Prize money splits {PRIZE_SPLIT.band}% band / {PRIZE_SPLIT.productionHouse}% house,
+                  and is funded by the operator rather than the houses.
                 </p>
               </Card>
               <Card>

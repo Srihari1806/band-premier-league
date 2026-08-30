@@ -40,6 +40,7 @@ import {
   ACTS_PER_SHARED_SHOW,
   SEASON_STRUCTURE,
   EVENT_SPLIT,
+  OPERATIONS,
   CONTENT_SPLIT,
   CERTAINTY_META,
   REVENUE_STREAMS,
@@ -81,7 +82,8 @@ import {
   AUCTION,
   DEFAULT_BIDS,
   SPEND_CAPS,
-  CENTRAL_POOLS,
+  SIGNING_SPLIT,
+  signingSplitOf,
   PRIZE_SPLIT,
   APPROVAL_RULES,
   ROSTER_NOTES,
@@ -89,6 +91,13 @@ import {
   evaluatePurse,
   houseCommitment,
 } from "@/data/regulations";
+import {
+  OPEN_DECISIONS,
+  PRIZE_SHARE_OF_PROFIT,
+  PROFIT_ALLOCATION,
+  PROFIT_ROADMAP,
+  allocateProfit,
+} from "@/data/league-capital";
 import {
   SEASONS,
   SLICEABLE_ZONES,
@@ -1460,11 +1469,11 @@ function AuctionPurse({ seasonReturn }: { seasonReturn: number }) {
     const mentor = capOf("mentor");
     return {
       acquisition: purse.spent,
-      guarantees: purse.guarantees,
+      guarantees: 0,
       creative,
       marketing,
       mentor,
-      total: purse.spent + purse.guarantees + creative + marketing + mentor,
+      total: purse.spent + creative + marketing + mentor,
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [purse.spent, purse.guarantees, capOverrides]);
@@ -1609,9 +1618,15 @@ function AuctionPurse({ seasonReturn }: { seasonReturn: number }) {
                 muted
               />
               <Row
-                label="Artist guarantees"
-                value={inr(commitment.guarantees)}
-                note="Derived from the bid brackets"
+                label={`Of which to the artists (${SIGNING_SPLIT.artist}%)`}
+                value={inr(signingSplitOf(commitment.acquisition).artist)}
+                note="Paid on signing — this is the floor under the band"
+                muted
+              />
+              <Row
+                label={`Of which to the league (${SIGNING_SPLIT.league}%)`}
+                value={inr(signingSplitOf(commitment.acquisition).league)}
+                note="Funds the season the house is buying into"
                 muted
               />
               <CostLine
@@ -1704,9 +1719,9 @@ function AuctionPurse({ seasonReturn }: { seasonReturn: number }) {
             <p className="text-[10px] text-muted-foreground leading-relaxed">
               <span className="font-semibold text-white">Not prize money.</span> These are
               illustrative lifetime returns on the capital placed behind each band — catalogue,
-              touring and brand value over the life of the songs. Prize money is separate: a{" "}
-              {inrCompact(CENTRAL_POOLS[0].amount)} central pool split {PRIZE_SPLIT.band}/
-              {PRIZE_SPLIT.productionHouse} band to house.
+              touring and brand value over the life of the songs. Prize money is separate — an
+              operator-funded pool, split {PRIZE_SPLIT.band}/{PRIZE_SPLIT.productionHouse} band to
+              house.
             </p>
           </div>
           <p className="text-[11px] text-muted-foreground leading-relaxed">
@@ -1790,19 +1805,17 @@ function AuctionPurse({ seasonReturn }: { seasonReturn: number }) {
           </div>
           <div className="border-t border-border/50 pt-3 space-y-2">
             <h4 className="text-[10px] uppercase tracking-wider font-bold text-muted-foreground">
-              Central pools — operator funded
+              What the house does not fund
             </h4>
-            {CENTRAL_POOLS.map((cap) => (
-              <div key={cap.id} className="flex items-baseline justify-between gap-2">
-                <span className="text-[11px] text-muted-foreground">{cap.label}</span>
-                <span className="text-[11px] font-bold text-white tabular-nums">
-                  {inr(cap.amount)}
-                </span>
-              </div>
-            ))}
-            <p className="text-[10px] text-muted-foreground leading-relaxed pt-1">
-              Prize money splits {PRIZE_SPLIT.band}% to the band, {PRIZE_SPLIT.productionHouse}% to
-              the house that backed it.
+            <p className="text-[10px] text-muted-foreground leading-relaxed">
+              Prize money, league marketing and guest-artist fees are the operator&apos;s budget,
+              not a house obligation. None of them appear above because none of them are a call on
+              a production house&apos;s money.
+            </p>
+            <p className="text-[10px] text-muted-foreground leading-relaxed">
+              Prize money splits{" "}
+              <span className="font-semibold text-white">{PRIZE_SPLIT.band}% to the band</span> and{" "}
+              {PRIZE_SPLIT.productionHouse}% to the house that backed it.
             </p>
           </div>
         </div>
@@ -1933,6 +1946,11 @@ function EconomicsPage() {
   /** What the engine actually sees: the slider base case, scoped. */
   const scopedInputs = useMemo(() => applyScope(inputs, scope), [inputs, scope]);
   const m = useMemo(() => computeEconomics(scopedInputs), [scopedInputs]);
+  // Season 1 policy: prize is a share of profit, so it re-derives with the page.
+  const allocation = useMemo(
+    () => allocateProfit(m.operatorNet, PROFIT_ROADMAP[0], PRIZE_SPLIT.band),
+    [m.operatorNet],
+  );
 
   const activePreset = PRESETS.find((p) =>
     Object.entries(p.patch).every(
@@ -3058,8 +3076,11 @@ function EconomicsPage() {
               </span>
             </div>
             <p className="text-[10px] text-muted-foreground leading-relaxed pt-1">
-              Fixed for the season. It does not rise with fixture count, which is the whole scaling
-              argument.
+              {inrCompact(OPERATIONS.fixed)} of this is genuinely fixed — the central team,
+              platform, brand campaign and corporate base. The other{" "}
+              {inrCompact(OPERATIONS.variable)} scales with zones, nights, campuses and bands, so
+              expansion is cheaper per unit but is never free. That works out at{" "}
+              {inr(Math.round(OPERATIONS.perNight))} of central cost behind every night staged.
             </p>
           </div>
         </div>
@@ -3070,9 +3091,20 @@ function EconomicsPage() {
               Operator Net Position — Per Season
             </p>
             <p className="text-sm text-muted-foreground max-w-xl leading-relaxed">
-              {inr(m.operatorGross)} gross less {inr(m.operatorCostsTotal)} of operating cost. The
-              cost base is mostly fixed, so adding franchises and fixtures widens the margin without
-              a matching rise in central spend — which is what makes zone-by-zone expansion work.
+              {inrCompact(m.operatorGross)} gross less {inrCompact(m.operatorCostsTotal)} of
+              operating cost.{" "}
+              {m.operatorNet < 0 ? (
+                <>
+                  A first season on a fully-staffed cost base does not pay for itself out of the
+                  gate, and pretending otherwise would just move the problem to March. Closing this
+                  is a sponsorship and broadcast job, not a ticket-price one.
+                </>
+              ) : (
+                <>
+                  Most of the cost base is fixed, so adding zones and fixtures widens the margin
+                  without a matching rise in central spend.
+                </>
+              )}
             </p>
           </div>
           <div className="text-center shrink-0">
@@ -3089,6 +3121,148 @@ function EconomicsPage() {
                 ? "Operating deficit at these inputs"
                 : `Operating surplus · ${m.operatorMarginPct.toFixed(0)}% margin`}
             </p>
+          </div>
+        </div>
+
+        {/* ---------------- CAPITAL ALLOCATION ---------------- */}
+        <div className="mt-10 space-y-6">
+          <div className="space-y-2">
+            <p className="text-[11px] uppercase tracking-[0.2em] text-primary-glow font-bold">
+              Capital Allocation
+            </p>
+            <h3 className="text-2xl sm:text-3xl font-display font-bold text-white">
+              What happens to the profit
+            </h3>
+            <p className="text-sm text-muted-foreground max-w-3xl leading-relaxed">
+              Prize money is {PRIZE_SHARE_OF_PROFIT}% of what the league actually makes, not a fixed
+              pool it owes whether or not it earned anything. A fixed pool is a liability in exactly
+              the season the league can least afford one; a share of profit grows with the thing the
+              bands helped build.
+            </p>
+          </div>
+
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            {allocation.slices.map((sl) => (
+              <div
+                key={sl.id}
+                className={`bpl-card p-4 space-y-1.5 border ${
+                  sl.id === "prize"
+                    ? "border-amber-500/35 bg-amber-500/5"
+                    : "border-border bg-surface/40"
+                }`}
+              >
+                <div className="flex items-baseline justify-between gap-2">
+                  <h4 className="text-xs font-bold text-white">{sl.label}</h4>
+                  <span className="text-[10px] uppercase tracking-wider font-bold text-muted-foreground shrink-0">
+                    {sl.pct}%
+                  </span>
+                </div>
+                <p className="text-xl font-display font-extrabold text-white tabular-nums">
+                  {m.operatorNet > 0 ? inrCompact(sl.amount) : "—"}
+                </p>
+                <p className="text-[10px] text-muted-foreground leading-relaxed">
+                  {PROFIT_ALLOCATION.find((a) => a.id === sl.id)?.purpose}
+                </p>
+              </div>
+            ))}
+          </div>
+
+          {m.operatorNet <= 0 && (
+            <div className="bpl-card p-4 border border-amber-500/30 bg-amber-500/5 space-y-1.5">
+              <p className="text-xs font-bold text-amber-300">
+                At these inputs the season makes no profit, so {PRIZE_SHARE_OF_PROFIT}% of it is
+                nothing.
+              </p>
+              <p className="text-[11px] text-muted-foreground leading-relaxed">
+                That is the rule working correctly, not a modelling error — and it is precisely why
+                seasons 1 and 2 need an announced prize floor funded from raised capital. The
+                decision is listed below rather than hidden behind a more optimistic cost base.
+              </p>
+            </div>
+          )}
+
+          {/* Roadmap */}
+          <div className="space-y-3">
+            <h4 className="text-sm font-bold text-white">Five seasons of capital policy</h4>
+            <div className="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0">
+              <table className="w-full min-w-[46rem] text-left border-collapse">
+                <thead>
+                  <tr className="border-b border-border">
+                    {["Season", "Focus", "Zones", "Bands", "Prize", "Reinvest", "Reserve", "Distribute"].map(
+                      (h) => (
+                        <th
+                          key={h}
+                          className="py-2 pr-3 text-[9px] uppercase tracking-wider font-bold text-muted-foreground"
+                        >
+                          {h}
+                        </th>
+                      ),
+                    )}
+                  </tr>
+                </thead>
+                <tbody>
+                  {PROFIT_ROADMAP.map((y) => (
+                    <tr key={y.season} className="border-b border-border/40 align-top">
+                      <td className="py-2.5 pr-3 text-xs font-bold text-white whitespace-nowrap">
+                        S{y.season} · {y.year}
+                      </td>
+                      <td className="py-2.5 pr-3 text-[11px] text-white">
+                        {y.label}
+                        <span className="block text-[10px] text-muted-foreground leading-snug mt-0.5 max-w-md">
+                          {y.milestone}
+                        </span>
+                      </td>
+                      <td className="py-2.5 pr-3 text-xs text-muted-foreground tabular-nums">{y.zones}</td>
+                      <td className="py-2.5 pr-3 text-xs text-muted-foreground tabular-nums">{y.bands}</td>
+                      <td className="py-2.5 pr-3 text-xs font-bold text-amber-300 tabular-nums">{y.prize}%</td>
+                      <td className="py-2.5 pr-3 text-xs text-white tabular-nums">{y.reinvest}%</td>
+                      <td className="py-2.5 pr-3 text-xs text-white tabular-nums">{y.reserve}%</td>
+                      <td className="py-2.5 pr-3 text-xs text-white tabular-nums">{y.distribute}%</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <p className="text-[10px] text-muted-foreground leading-relaxed">
+              The prize share never moves — that is the rule. What moves is the balance between
+              building the league and taking money out of it, and the order matters: reserve first,
+              then growth, then returns.
+            </p>
+          </div>
+
+          {/* Open decisions */}
+          <div className="space-y-3">
+            <div className="space-y-1.5">
+              <h4 className="text-sm font-bold text-white">What still has to be decided</h4>
+              <p className="text-[11px] text-muted-foreground leading-relaxed max-w-3xl">
+                Every one of these carries a recommendation. An open question with no proposed
+                answer is just a way of not deciding.
+              </p>
+            </div>
+            <div className="grid gap-3 lg:grid-cols-2">
+              {OPEN_DECISIONS.map((d) => (
+                <div
+                  key={d.id}
+                  className={`bpl-card p-4 space-y-2 border ${
+                    d.impact === "high"
+                      ? "border-rose-500/25 bg-rose-500/5"
+                      : "border-border bg-surface/40"
+                  }`}
+                >
+                  <div className="flex items-start justify-between gap-2">
+                    <h5 className="text-xs font-bold text-white leading-snug">{d.question}</h5>
+                    <span className="text-[9px] uppercase tracking-wider font-bold px-1.5 py-0.5 rounded border border-border/70 bg-surface/60 text-muted-foreground shrink-0">
+                      {d.owner}
+                    </span>
+                  </div>
+                  <p className="text-[10px] text-muted-foreground leading-relaxed">{d.why}</p>
+                  <p className="text-[10px] leading-relaxed border-t border-border/40 pt-2">
+                    <span className="font-semibold text-emerald-300">Recommendation: </span>
+                    <span className="text-muted-foreground">{d.recommendation}</span>
+                  </p>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </section>

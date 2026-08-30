@@ -31,7 +31,7 @@ export type AssumptionCategory =
   | "Production"
   | "Crew & Safety"
   | "Content"
-  | "Talent & Travel"
+  | "Travel & Logistics"
   | "Marketing"
   | "Commercial"
   | "Ticketing";
@@ -83,6 +83,12 @@ export const ASSUMPTIONS: Assumption[] = [
   { id: "crew-full", category: "Crew & Safety", kpi: "Full crew & stage management", base: 25000, unit: "event" },
   { id: "security-none", category: "Crew & Safety", kpi: "Security — standard night", base: 0, unit: "event", note: "Café and campus rooms use venue staff; no separate line." },
   { id: "security-large", category: "Crew & Safety", kpi: "Security — large event", base: 15000, unit: "event" },
+  { id: "permits", category: "Crew & Safety", kpi: "Permits, NOC & music licence", base: 15000, unit: "event", note: "Police permission, fire NOC where required, and the PPL/IPRS public performance licence. Non-negotiable on a public ticketed night and routinely forgotten in first-year budgets." },
+  { id: "permits-venue", category: "Crew & Safety", kpi: "Permits — covered by venue", base: 0, unit: "event", note: "A room that already programmes live music holds its own PPL/IPRS licence, and a college clears its own on-campus permission. Carried at zero deliberately — it is a real cost, just not the league's." },
+  { id: "insurance-event", category: "Crew & Safety", kpi: "Gear & public liability cover", base: 2500, unit: "event", note: "Per-night share of an annual policy. Cheaper annually than per event, but it has to be costed somewhere." },
+  { id: "power-genset", category: "Crew & Safety", kpi: "Generator & power backup", base: 22000, unit: "event", note: "Outdoor grounds only. A silent DG plus distribution — the single largest line an open-air night adds." },
+  { id: "medical-standby", category: "Crew & Safety", kpi: "Ambulance & medical standby", base: 7000, unit: "event", note: "Required by most municipal permissions above roughly 1,000 head." },
+  { id: "cleaning-waste", category: "Crew & Safety", kpi: "Cleaning & waste removal", base: 6000, unit: "event", note: "Post-show clear-up. Usually a condition of getting the ground or campus again next season." },
 
   /* ---- Content ---- */
   { id: "photo", category: "Content", kpi: "Photographer", base: 5000, unit: "event" },
@@ -90,10 +96,16 @@ export const ASSUMPTIONS: Assumption[] = [
   { id: "video-multicam", category: "Content", kpi: "Multi-camera recording", base: 20000, unit: "event", note: "The footage that feeds the central league media package." },
 
   /* ---- Talent & travel ---- */
-  { id: "travel-local", category: "Talent & Travel", kpi: "Local artist travel", base: 3000, unit: "event" },
-  { id: "travel-interstate", category: "Talent & Travel", kpi: "Interstate artist travel", base: 10000, unit: "event" },
-  { id: "celebrity-travel", category: "Talent & Travel", kpi: "Celebrity travel & hospitality", base: 25000, unit: "event" },
-  { id: "celebrity-fee", category: "Talent & Travel", kpi: "Celebrity performance fee", base: 100000, unit: "event", note: "Only on marquee nights, and only against a sponsor that funds it." },
+  { id: "travel-local", category: "Travel & Logistics", kpi: "Local artist travel", base: 3000, unit: "event" },
+  { id: "travel-interstate", category: "Travel & Logistics", kpi: "Interstate artist travel", base: 10000, unit: "event" },
+  { id: "celebrity-travel", category: "Travel & Logistics", kpi: "Celebrity travel & hospitality", base: 25000, unit: "event" },
+  { id: "celebrity-fee", category: "Travel & Logistics", kpi: "Celebrity performance fee", base: 100000, unit: "event", note: "Only on marquee nights, and only against a sponsor that funds it." },
+  { id: "freight-backline", category: "Travel & Logistics", kpi: "Backline & gear freight", base: 6000, unit: "event", note: "Tempo or small truck for drums, amps and cases, intra-city with a driver and two loaders." },
+  { id: "freight-production", category: "Travel & Logistics", kpi: "Stage & production freight", base: 18000, unit: "event", note: "Truck for stage decks, rigging and the larger PA. Interstate runs cost roughly double." },
+  { id: "artist-stay", category: "Travel & Logistics", kpi: "Artist accommodation", base: 9000, unit: "event", note: "Twin-sharing for a 5-piece band plus a tour manager on an away night. Zero when the band is playing its home city." },
+  { id: "crew-stay", category: "Travel & Logistics", kpi: "Crew stay & per diems", base: 5000, unit: "event", note: "Touring crew beds and food allowance. Local hires are day-rate only and do not carry this." },
+  { id: "ground-transport", category: "Travel & Logistics", kpi: "Local ground transport", base: 3500, unit: "event", note: "Airport and station runs, load-in shuttles, and the cab nobody plans for at 2am." },
+  { id: "catering", category: "Travel & Logistics", kpi: "Artist & crew catering", base: 4000, unit: "event", note: "Green room and crew meals from load-in to load-out. Contractual on most riders." },
 
   /* ---- Marketing ---- */
   { id: "marketing-local", category: "Marketing", kpi: "Marketing — local", base: 10000, unit: "event" },
@@ -121,7 +133,7 @@ export const ASSUMPTION_CATEGORIES: AssumptionCategory[] = [
   "Production",
   "Crew & Safety",
   "Content",
-  "Talent & Travel",
+  "Travel & Logistics",
   "Marketing",
   "Commercial",
   "Ticketing",
@@ -191,7 +203,7 @@ export const EVENT_PRESETS: EventPreset[] = [
     capacity: 300,
     ticketPrice: 299,
     occupancyPct: 75,
-    costIds: ["venue-cafe", "sound-basic", "light-basic", "backline-basic", "crew-coordinator", "security-none", "photo", "marketing-local"],
+    costIds: ["venue-cafe", "sound-basic", "light-basic", "backline-basic", "crew-coordinator", "security-none", "photo", "marketing-local", "ground-transport", "insurance-event", "permits-venue"],
     stalls: 2,
     stallRateId: "stall-small",
     sponsorId: null,
@@ -204,7 +216,7 @@ export const EVENT_PRESETS: EventPreset[] = [
     capacity: 600,
     ticketPrice: 149,
     occupancyPct: 85,
-    costIds: ["venue-college", "sound-standard", "light-standard", "stage-temp", "backline-basic", "crew-coordinator", "security-none", "photo", "video-reels", "marketing-local"],
+    costIds: ["venue-college", "sound-standard", "light-standard", "stage-temp", "backline-basic", "crew-coordinator", "security-none", "photo", "video-reels", "marketing-local", "freight-backline", "ground-transport", "catering", "insurance-event", "permits-venue"],
     stalls: 3,
     stallRateId: "stall-basic",
     sponsorId: "sponsor-basic",
@@ -217,7 +229,7 @@ export const EVENT_PRESETS: EventPreset[] = [
     capacity: 800,
     ticketPrice: 499,
     occupancyPct: 78,
-    costIds: ["venue-auditorium", "sound-standard", "light-standard", "stage-temp", "backline-standard", "crew-coordinator", "security-large", "photo", "video-multicam", "travel-local", "marketing-standard"],
+    costIds: ["venue-auditorium", "sound-standard", "light-standard", "stage-temp", "backline-standard", "crew-coordinator", "security-large", "photo", "video-multicam", "travel-local", "marketing-standard", "freight-backline", "artist-stay", "crew-stay", "ground-transport", "catering", "permits", "insurance-event", "cleaning-waste"],
     stalls: 4,
     stallRateId: "stall-basic",
     sponsorId: "sponsor-event",
@@ -230,7 +242,7 @@ export const EVENT_PRESETS: EventPreset[] = [
     capacity: 2000,
     ticketPrice: 799,
     occupancyPct: 80,
-    costIds: ["venue-outdoor", "sound-large", "light-large", "stage-large", "backline-premium", "crew-full", "security-large", "photo", "video-multicam", "celebrity-travel", "marketing-major"],
+    costIds: ["venue-outdoor", "sound-large", "light-large", "stage-large", "backline-premium", "crew-full", "security-large", "photo", "video-multicam", "celebrity-travel", "marketing-major", "freight-production", "travel-interstate", "artist-stay", "crew-stay", "ground-transport", "catering", "permits", "insurance-event", "power-genset", "medical-standby", "cleaning-waste"],
     stalls: 6,
     stallRateId: "stall-premium",
     sponsorId: "sponsor-event",
