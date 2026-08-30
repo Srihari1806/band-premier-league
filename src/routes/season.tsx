@@ -535,23 +535,24 @@ function SeasonPage() {
                 <RefreshCw size={13} /> Release Rotation
               </p>
               <h2 className="text-2xl sm:text-3xl font-display font-bold text-white">
-                One release a week, in every zone
+                A drop every {RELEASE_TOTALS.cycleDays} days, from every band
               </h2>
               <p className="text-sm text-muted-foreground max-w-3xl leading-relaxed">
-                {RELEASE_TOTALS.perZonePerWeek} per zone per week —{" "}
-                {RELEASE_TOTALS.perWeekNationally} nationally. A zone&apos;s{" "}
-                {ZONE_CAPACITY[0].bands} bands fit the season&apos;s{" "}
-                {TOTAL_CALENDAR_WEEKENDS} weeks exactly, with a spare, so every band gets one week
-                the league can genuinely push behind rather than a slot in a queue.
+                Two releases a month per band, {RELEASE_TOTALS.perBand} across the season,{" "}
+                {RELEASE_TOTALS.releases.toLocaleString("en-IN")} in total. Inside a house the four
+                bands are offset by four days — the 1st, 5th, 9th and 13th, then the 16th, 20th,
+                24th and 28th — so nobody is competing with a stablemate for the same release day.
+                That is what makes the Original IP metric mean something: a catalogue score against
+                a single track is really a score for having turned up.
               </p>
             </div>
 
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
               {[
-                { v: RELEASE_TOTALS.perZonePerWeek, l: "Per zone, per week", h: "The pacing rule" },
-                { v: RELEASE_TOTALS.perWeekNationally, l: "Per week nationally", h: `${ZONE_CAPACITY.length} zones in parallel` },
-                { v: RELEASE_TOTALS.perBand, l: "Per band, in season", h: "One week that is theirs" },
-                { v: RELEASE_TOTALS.releases, l: "Releases in the season", h: `${TOTAL_BANDS} bands` },
+                { v: `${RELEASE_TOTALS.cycleDays}d`, l: "Release cycle", h: "Per band, all season" },
+                { v: RELEASE_TOTALS.perBand, l: "Per band, in season", h: "Two a month for six months" },
+                { v: RELEASE_TOTALS.perHouse, l: "Per house", h: `4 bands x ${RELEASE_TOTALS.perBand} tracks` },
+                { v: RELEASE_TOTALS.releases.toLocaleString("en-IN"), l: "Releases in the season", h: `${TOTAL_BANDS} bands` },
               ].map((k) => (
                 <div key={k.l} className="border border-border/50 rounded-lg p-4 bg-surface/30">
                   <p className="text-2xl font-display font-extrabold text-primary-glow tabular-nums">
@@ -569,14 +570,19 @@ function SeasonPage() {
               <CheckCircle2 size={16} className="text-emerald-400 shrink-0 mt-0.5" />
               <div className="space-y-1.5">
                 <p className="text-sm font-bold text-emerald-200">
-                  Paced so releases stop competing with each other.
+                  No two bands in a house share a release day.
                 </p>
                 <p className="text-[11px] text-muted-foreground leading-relaxed">
-                  A 60-day band cycle across {TOTAL_BANDS} bands produced a release a day
-                  nationally, which is a queue rather than a calendar — every drop fighting the one
-                  before it for the same attention. One per zone per week gives each band a week
-                  with the league&apos;s channels behind it, and the rotation still guarantees no
-                  house releases twice running.
+                  {RELEASE_TOTALS.perMonthNationally} drops a month nationally is a lot of noise,
+                  so the thing worth protecting is the one place a band is genuinely competing for
+                  attention — its own stable. The four-day offset inside a house guarantees that,
+                  and it is asserted rather than assumed:{" "}
+                  <span className="font-semibold text-white">
+                    {RELEASE_TOTALS.noStablemateClash ? "verified across all" : "FAILS across"}{" "}
+                    {RELEASE_TOTALS.releases.toLocaleString("en-IN")} releases
+                  </span>
+                  . Across zones and houses the drops do overlap, which is what a national release
+                  calendar looks like.
                 </p>
               </div>
             </div>

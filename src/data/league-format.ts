@@ -174,6 +174,36 @@ export function cataloguePointsFor(releasesLive: number): number {
 }
 
 /**
+ * Catalogue points on a 15-day release cycle.
+ *
+ * The absolute scale above saturates the moment bands ship twelve tracks a
+ * season: every band clears "3 or more" by the first week of February and all
+ * 100 of them score 5/5 for the remaining four months. Half the Original IP
+ * metric stops telling the table anything.
+ *
+ * On a fixed cycle the question worth scoring is not how many tracks exist —
+ * it is whether the band is keeping to the cadence it committed to. So this
+ * scores DELIVERED against DUE at that point in the season, which stays
+ * discriminating in June and rewards exactly the discipline the cycle is
+ * there to build.
+ */
+export const CADENCE_SCALE: { minPct: number; label: string; points: number }[] = [
+  { minPct: 100, label: "On schedule — every track due is live", points: 5 },
+  { minPct: 85, label: "One drop behind", points: 4 },
+  { minPct: 70, label: "Two drops behind", points: 3 },
+  { minPct: 50, label: "Half the catalogue delivered", points: 2 },
+  { minPct: 25, label: "Falling off the cycle", points: 1 },
+  { minPct: 0, label: "Not shipping", points: 0 },
+];
+
+export function cadencePointsFor(delivered: number, due: number): number {
+  if (due <= 0) return CADENCE_SCALE[0].points;
+  const pct = (Math.min(delivered, due) / due) * 100;
+  const band = CADENCE_SCALE.find((b) => pct >= b.minPct);
+  return band ? band.points : 0;
+}
+
+/**
  * Active Listener Rate.
  *
  *     ALR = (monthly active streamers + engaged video viewers) / (followers + m)
@@ -546,33 +576,44 @@ export interface ReleaseStage {
   detail: string;
 }
 
-export const RELEASE_CYCLE_DAYS = 60;
+/**
+ * The release cadence. THE source — national-season.ts imports it rather than
+ * declaring its own, because these drifted apart once already (60 here, 15
+ * there) and put a "60-day production cycle" heading on a page describing a
+ * fortnightly one.
+ */
+export const RELEASE_CYCLE_DAYS = 15;
 
+/**
+ * A fortnight, end to end. This is not a comfortable schedule — it is a
+ * rolling pipeline where the next track is in pre-production while the current
+ * one is being mixed, which is exactly why the December buffer exists.
+ */
 export const RELEASE_CYCLE: ReleaseStage[] = [
   {
-    weeks: "Weeks 1–2",
+    weeks: "Days 1–3",
     title: "Write & Arrange",
-    detail: "Composition, lyric passes and arrangement locked with the house's producer.",
+    detail: "Composition and arrangement locked with the house's producer. On a fortnightly cycle most of this happens ahead of the slot, not inside it.",
   },
   {
-    weeks: "Weeks 3–4",
+    weeks: "Days 4–7",
     title: "Record, Mix & Master",
     detail: "Studio time financed by the production house; masters delivered ready for distribution.",
   },
   {
-    weeks: "Week 5",
-    title: "Music Video",
-    detail: "Shoot and edit — the asset that carries the release on YouTube and social.",
+    weeks: "Days 8–11",
+    title: "Visual asset",
+    detail: "A full video for a flagship track, a live-session or performance cut for the rest — shot at a fixture the league is already filming.",
   },
   {
-    weeks: "Week 6",
+    weeks: "Days 12–13",
     title: "Artwork & Distribution",
-    detail: "Cover art, credits, metadata and delivery to the distributor ahead of the release date.",
+    detail: "Cover art, credits, metadata and delivery to the distributor ahead of the fixed release day.",
   },
   {
-    weeks: "Weeks 7–8",
+    weeks: "Days 14–15",
     title: "Promotion & Fixture Tie-In",
-    detail: "The campaign runs into a scheduled fixture, so the live room doubles as the launch event.",
+    detail: "The campaign runs into the band's next fixture, so the live room doubles as the launch for the drop.",
   },
 ];
 

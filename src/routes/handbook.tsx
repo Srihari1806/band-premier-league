@@ -49,6 +49,7 @@ import {
   RELEASE_CYCLE_DAYS,
   RELEASE_ELIGIBILITY,
 } from "@/data/league-format";
+import { RELEASE_TOTALS } from "@/data/national-season";
 import { inr, inrCompact, EVENT_SPLIT, CONTENT_SPLIT } from "@/data/economics";
 import {
   REVENUE_MODULES,
@@ -440,7 +441,7 @@ function HandbookPage() {
               id="music"
               eyebrow="Original IP"
               title={`The ${RELEASE_CYCLE_DAYS}-day production cycle`}
-              sub={`Producing a release takes roughly ${RELEASE_CYCLE_DAYS} days end to end. Each band ships one league-eligible original inside the season, on its own week in the zone rotation, with the December pre-season and July artist season either side. Nationally that paces at one release per zone per week.`}
+              sub={`Every band ships on a ${RELEASE_CYCLE_DAYS}-day cycle — two originals a month, ${RELEASE_TOTALS.perBand} across the season, ${RELEASE_TOTALS.releases.toLocaleString("en-IN")} nationally. Inside a house the four bands are offset by four days so no two stablemates share a release day. December pre-season and the July artist season sit either side.`}
               icon={<Disc3 size={13} />}
             />
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5 mb-5">

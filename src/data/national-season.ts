@@ -19,6 +19,7 @@
  */
 
 import {
+  RELEASE_CYCLE_DAYS,
   COMPETITION_WEEKENDS,
   STAGE_2_STRUCTURE,
   ZONE_HUBS,
@@ -275,70 +276,13 @@ export function minGapDays(weekendIndices: number[]): number {
 /**
  * A band's release year.
  *
- * Only ONE release is league-eligible and in-season — the band's assigned week
- * in the zone rotation. That is deliberate: pacing at one per zone per week is
- * what gives each release a week the league can push behind.
- *
- * Which raises the obvious question the catalogue metric asks: how does a band
- * have three originals live if it only ships one during the season? From the
- * two windows either side. December pre-season is where the draft money goes
- * into recording, and July-August is the artist season. A band arrives at its
- * first fixture with a catalogue rather than building one mid-competition.
+ * Twelve league-eligible originals inside the season on a 15-day cycle, with
+ * the two windows either side doing different jobs: December pre-season builds
+ * the buffer that stops the shoot schedule colliding with competition
+ * weekends, and July-August is the artist season, where releases carry no
+ * points but still build the catalogue a band is valued on at the next
+ * auction.
  */
-export interface ReleaseWindow {
-  id: string;
-  label: string;
-  window: string;
-  eligible: boolean;
-  countsToCatalogue: boolean;
-  rationale: string;
-}
-
-export const RELEASE_WINDOWS: ReleaseWindow[] = [
-  {
-    id: "pre",
-    label: "Pre-season recording",
-    window: "December",
-    eligible: false,
-    countsToCatalogue: true,
-    rationale:
-      "Straight after the draft, financed by the house. Earns no fixture points, but it is live before the season opens — so it counts toward the catalogue score from matchday one.",
-  },
-  {
-    id: "season",
-    label: "The league release",
-    window: "The band's assigned week, Jan–Jun",
-    eligible: true,
-    countsToCatalogue: true,
-    rationale:
-      "One per band, on the Friday before that week's fixtures. The zone releases one a week and the houses rotate, so the band gets the league's channels behind it rather than a slot in a queue.",
-  },
-  {
-    id: "post",
-    label: "Artist season",
-    window: "July – August",
-    eligible: false,
-    countsToCatalogue: true,
-    rationale:
-      "The league has stopped; the artist has not. Commercially the most valuable window of the year, and it builds the catalogue a band carries into the next auction.",
-  },
-];
-
-/**
- * Catalogue reconciliation — the honest version.
- *
- * Three originals live scores the full 5 catalogue points. Only one of them
- * comes from the season itself, so a band needs the pre-season release plus
- * either prior catalogue or a second December track to be at full marks on
- * opening weekend.
- */
-export const CATALOGUE_PATH: { at: string; live: number; note: string }[] = [
-  { at: "Signed at the draft", live: 0, note: "Whatever the band already had released stays on its record." },
-  { at: "Opening weekend", live: 2, note: "Pre-season recording plus existing catalogue." },
-  { at: "After its league release", live: 3, note: "Full catalogue marks for the rest of the season." },
-  { at: "End of artist season", live: 4, note: "Carried into the next auction as valuation." },
-];
-
 /* ------------------------------------------------------------------ *
  * The annual cycle
  *
@@ -783,9 +727,17 @@ function bandSeasonPlan(zone: NationalZone, houseNumber: number, band: number): 
     });
   }
 
-  // Launch night: the first free week on or after the band's own release week.
-  const releaseWeek = releaseWeekIndexFor(zone.houses, houseNumber, band);
-  for (let w = Math.min(releaseWeek, weeks.length - 1); w < weeks.length; w += 1) {
+  /*
+   * Launch Night: the live premiere of the band's lead single.
+   *
+   * It used to chase the band's single release week. With a drop every 15 days
+   * that constraint is meaningless — every week of the season has a release
+   * behind it — so the placement is now about spacing instead: mid-season,
+   * offset by house and band so a zone is not running twenty launch nights in
+   * the same fortnight.
+   */
+  const launchTarget = 8 + ((houseNumber * 3 + band) % 8);
+  for (let w = Math.min(launchTarget, weeks.length - 1); w < weeks.length; w += 1) {
     if (weeks[w] === null) {
       weeks[w] = "launch-night";
       break;
@@ -1087,67 +1039,155 @@ export const SCHEDULE_TOTALS = scheduleTotals();
  * ------------------------------------------------------------------ */
 
 /**
- * One release per zone per week — five a week nationally.
+ * A 15-day release cycle per band: two drops a month, twelve across the season.
  *
- * A 60-day band cycle across 100 bands produced a release a day, which is not
- * a release calendar so much as a queue: every drop competing with the one
- * before it for the same attention. Pacing it at one per zone per week gives
- * each band a week the league can actually push behind, and the season's 21
- * weeks fit a zone's 20 bands exactly, with a spare.
+ * This replaces a one-release-per-band season. Twelve originals is what makes
+ * the Original IP metric mean anything — a catalogue score against a single
+ * track is really a score for having turned up — and it gives the league a
+ * continuous stream to programme against rather than one drop to defend.
  *
- * Houses rotate so no two consecutive weeks in a zone come from the same
- * stable, and every band gets precisely one in-season release.
+ * Inside a house the four bands are offset by four days, so nobody in the same
+ * stable is competing with a stablemate for the same release day:
+ *
+ *   Band 1  →  1st and 16th
+ *   Band 2  →  5th and 20th
+ *   Band 3  →  9th and 24th
+ *   Band 4  →  13th and 28th
+ *
+ * That yields 48 releases per house and 1,200 nationally across Jan–Jun.
  */
-export const RELEASES_PER_ZONE_PER_WEEK = 1;
-export const RELEASES_PER_BAND = 1;
+export { RELEASE_CYCLE_DAYS };
+export const RELEASES_PER_MONTH_PER_BAND = 2;
+export const RELEASE_MONTHS = 6;
+export const RELEASES_PER_BAND = RELEASES_PER_MONTH_PER_BAND * RELEASE_MONTHS;
+/** Days between one band's slot and the next band's in the same house. */
+export const BAND_RELEASE_OFFSET_DAYS = 4;
+/** The two anchor days each month, before the per-band offset. */
+export const RELEASE_ANCHOR_DAYS = [1, 16];
+/** Calendar year the release season runs in. */
+export const RELEASE_YEAR = 2027;
+
+export interface ReleaseWindow {
+  id: string;
+  label: string;
+  window: string;
+  eligible: boolean;
+  countsToCatalogue: boolean;
+  rationale: string;
+}
+
+/**
+ * The three windows a band releases in, and which of them score.
+ *
+ * Only the in-season cycle carries points. The other two still matter: the
+ * December buffer is what stops the shoot schedule colliding with competition
+ * weekends, and the artist season is where a band builds the catalogue it is
+ * valued on at the next auction.
+ */
+export const RELEASE_WINDOWS: ReleaseWindow[] = [
+  {
+    id: "pre-season",
+    label: "Pre-season buffer",
+    window: "December",
+    eligible: false,
+    countsToCatalogue: true,
+    rationale: `Three to four tracks recorded before a fixture is played. Without this buffer the ${RELEASES_PER_BAND}-track cycle collides with the weekends the band also has to perform on, and the release calendar is what slips.`,
+  },
+  {
+    id: "in-season",
+    label: "The 15-day cycle",
+    window: "Jan – Jun",
+    eligible: true,
+    countsToCatalogue: true,
+    rationale: `Two drops a month, ${RELEASES_PER_BAND} across the season, on the band's own fixed days. These are the only releases that score, and they are scored on whether the band kept to the cadence rather than on how many exist.`,
+  },
+  {
+    id: "artist-season",
+    label: "Artist season",
+    window: "July – August",
+    eligible: false,
+    countsToCatalogue: true,
+    rationale: "No points, because the competition is over. Still builds the catalogue a band carries into the next auction as valuation.",
+  },
+];
+
+export const CATALOGUE_PATH: { at: string; live: number; note: string }[] = [
+  { at: "Signed at the draft", live: 0, note: "Whatever the band already had released stays on its record." },
+  { at: "Opening weekend", live: 4, note: "The December buffer — three or four tracks recorded before a single fixture is played." },
+  { at: "End of March", live: 10, note: "Six in-season drops on top of the buffer, at two a month." },
+  { at: "End of the season", live: 16, note: "Twelve league releases plus the pre-season buffer." },
+  { at: "End of artist season", live: 20, note: "July-August releases carry no points but do carry into the next auction." },
+];
 
 export interface ReleaseEvent {
   id: string;
   date: Date;
   dateLabel: string;
-  /** Season week, 1-indexed. */
+  /** Season week the drop lands in, 1-indexed. -1 if outside the fixture calendar. */
   week: number;
   zoneSlug: string;
   zoneName: string;
   houseNumber: number;
   band: number;
+  /** Track number for that band, 1..12. */
   number: number;
   label: string;
 }
 
+/** The two days of the month a given band drops on. */
+export function releaseDaysFor(band: number): number[] {
+  const offset = (band - 1) * BAND_RELEASE_OFFSET_DAYS;
+  return RELEASE_ANCHOR_DAYS.map((d) => d + offset);
+}
+
 /**
- * Which week of the season a band releases in. The rotation walks houses first
- * so no two consecutive weeks in a zone come from the same stable; inverting it
- * lets the schedule place a band's Launch Night after its song is actually out.
+ * Which season week a date falls in. Releases run on fixed calendar days
+ * rather than weekends, so this is a lookup rather than an index.
  */
-export function releaseWeekIndexFor(houses: number, houseNumber: number, band: number): number {
-  return (band - 1) * houses + (houseNumber - 1);
+function weekOf(date: Date): number {
+  let best = -1;
+  SEASON_CALENDAR.forEach((w) => {
+    // A weekend "owns" the days from its Thursday to its Sunday.
+    const from = addDays(w.date, -2).getTime();
+    const to = addDays(w.date, 1).getTime();
+    if (date.getTime() >= from && date.getTime() <= to) best = w.index + 1;
+  });
+  if (best > 0) return best;
+  // Otherwise attribute it to the nearest weekend that has already started.
+  let nearest = -1;
+  SEASON_CALENDAR.forEach((w) => {
+    if (addDays(w.date, -2).getTime() <= date.getTime()) nearest = w.index + 1;
+  });
+  return nearest;
 }
 
 export function buildReleaseSchedule(): ReleaseEvent[] {
   const out: ReleaseEvent[] = [];
 
   NATIONAL_ZONES.forEach((zone) => {
-    const bandsInZone = zone.houses * zone.bandsPerHouse;
-    for (let w = 0; w < bandsInZone; w += 1) {
-      const weekend = SEASON_CALENDAR[Math.min(w, SEASON_CALENDAR.length - 1)];
-      // Friday of that week — the release lands before the weekend's fixtures.
-      const date = addDays(weekend.date, -1);
-      const houseNumber = (w % zone.houses) + 1;
-      const band = Math.floor(w / zone.houses) + 1;
-      // Invariant: releaseWeekIndexFor is the inverse of the two lines above.
-      out.push({
-        id: `${zone.slug}-rel-w${w + 1}`,
-        date,
-        dateLabel: DAY_FMT.format(date),
-        week: w + 1,
-        zoneSlug: zone.slug,
-        zoneName: zone.shortName,
-        houseNumber,
-        band,
-        number: 1,
-        label: "Original",
-      });
+    for (let houseNumber = 1; houseNumber <= zone.houses; houseNumber += 1) {
+      for (let band = 1; band <= zone.bandsPerHouse; band += 1) {
+        const days = releaseDaysFor(band);
+        let track = 0;
+        for (let m = 0; m < RELEASE_MONTHS; m += 1) {
+          days.forEach((day) => {
+            track += 1;
+            const date = new Date(Date.UTC(RELEASE_YEAR, m, day));
+            out.push({
+              id: `${zone.slug}-h${houseNumber}-b${band}-t${track}`,
+              date,
+              dateLabel: DAY_FMT.format(date),
+              week: weekOf(date),
+              zoneSlug: zone.slug,
+              zoneName: zone.shortName,
+              houseNumber,
+              band,
+              number: track,
+              label: `Track ${track}`,
+            });
+          });
+        }
+      }
     }
   });
 
@@ -1159,10 +1199,37 @@ export const RELEASE_SCHEDULE = buildReleaseSchedule();
 export const RELEASE_TOTALS = {
   releases: RELEASE_SCHEDULE.length,
   perBand: RELEASES_PER_BAND,
-  perZonePerWeek: RELEASES_PER_ZONE_PER_WEEK,
-  perWeekNationally: NATIONAL_ZONES.length * RELEASES_PER_ZONE_PER_WEEK,
+  perHouse: RELEASES_PER_BAND * 4,
+  perMonthPerBand: RELEASES_PER_MONTH_PER_BAND,
+  cycleDays: RELEASE_CYCLE_DAYS,
+  perMonthNationally: TOTAL_BANDS * RELEASES_PER_MONTH_PER_BAND,
   expected: TOTAL_BANDS * RELEASES_PER_BAND,
   reconciles: RELEASE_SCHEDULE.length === TOTAL_BANDS * RELEASES_PER_BAND,
+  /** No two bands in the same house share a release day. */
+  noStablemateClash: (() => {
+    const seen = new Map<string, number>();
+    RELEASE_SCHEDULE.forEach((r) => {
+      const key = `${r.zoneSlug}-h${r.houseNumber}-${r.date.toISOString().slice(0, 10)}`;
+      seen.set(key, (seen.get(key) ?? 0) + 1);
+    });
+    return [...seen.values()].every((n) => n === 1);
+  })(),
+};
+
+/**
+ * The production reality behind 12 tracks a band.
+ *
+ * 48 finished pieces per house inside six months is a rolling pipeline, not a
+ * series of one-off shoots. The December pre-season window exists precisely so
+ * a band arrives with tracks already in the can — without that buffer the
+ * shoot schedule collides with the competition weekends the band also has to
+ * play, and the release calendar is the thing that slips.
+ */
+export const RELEASE_PIPELINE = {
+  preSeasonBuffer: 4,
+  bufferWindow: "December pre-season",
+  perHouseSeason: RELEASES_PER_BAND * 4,
+  note: "Pre-produce three to four tracks in December. A band writing and shooting inside a competition week is a band that will miss one of the two.",
 };
 
 /** Releases falling on a given calendar day, for the schedule view. */

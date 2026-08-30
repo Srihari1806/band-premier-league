@@ -693,6 +693,16 @@ export interface OpenDecision {
 
 export const OPEN_DECISIONS: OpenDecision[] = [
   {
+    id: "creative-budget",
+    question:
+      "Twelve tracks a band on a ₹1.25L creative allocation is ₹10,400 a track. Where does the rest come from?",
+    why: "The 15-day release cycle asks each band for 12 finished originals across the season — 1,200 nationally. A produced single with a modest video runs ₹80,000 to ₹3,00,000 in this market, so the season's real creative cost per band is somewhere between ₹9.6L and ₹36L against an allocation of ₹1.25L. This is the largest single gap anywhere in the model and it sits on the production house, not the operator.",
+    recommendation:
+      "Do not fund twelve full productions. Tier the catalogue: two or three flagship tracks with real videos, and the rest as live-session or performance-video releases shot at fixtures the league is already filming and paying for. That keeps the cadence, keeps the Original IP metric honest, and puts the money where it changes a band's career rather than spreading it into twelve thin pieces. Raise the allocation for the flagship tier and say so explicitly rather than leaving houses to discover the arithmetic.",
+    owner: "Board",
+    impact: "high",
+  },
+  {
     id: "team-months",
     question: "Is the core team paid for the season or for the year?",
     why: "The bucket-1 range buys roughly three to four months of the six named roles at their stated salaries. But the artist cycle runs all twelve months — releases, development and the December auction all sit outside the season — so a team funded only for the season is not a core team.",
