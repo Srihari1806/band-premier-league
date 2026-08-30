@@ -611,7 +611,7 @@ export const PROFIT_ROADMAP: RoadmapYear[] = [
   {
     season: 1, year: 2027, label: "Prove the format", zones: 5, bands: 100,
     prize: 25, reinvest: 55, reserve: 20, distribute: 0,
-    milestone: "Five leagues run to completion, 1,050 nights staged, and a table nobody disputes. No distribution: everything goes back in or into the buffer.",
+    milestone: "Five leagues run to completion, every band playing a show a week for 24 weeks, and a table nobody disputes. No distribution: everything goes back in or into the buffer.",
   },
   {
     season: 2, year: 2028, label: "Deepen, don't widen", zones: 5, bands: 120,

@@ -55,7 +55,7 @@ export const Route = createFileRoute("/calendar")({
       {
         name: "description",
         content:
-          "The complete 2027 regular season, day by day: every fixture across all five regional leagues from 22 January to 13 June, filterable by zone, house, band and night type.",
+          "The complete regular season, day by day: every night across all five regional leagues from 31 December to 12 June, filterable by zone, house, band and night type.",
       },
     ],
   }),
@@ -78,9 +78,25 @@ const KIND_META: Record<EventKind, { label: string; chip: string; dot: string }>
     chip: "border-amber-500/40 bg-amber-500/10 text-amber-300",
     dot: "bg-amber-400",
   },
+  house: {
+    label: "House night",
+    chip: "border-sky-500/40 bg-sky-500/10 text-sky-300",
+    dot: "bg-sky-400",
+  },
+  festival: {
+    label: "Festival",
+    chip: "border-violet-500/40 bg-violet-500/10 text-violet-300",
+    dot: "bg-violet-400",
+  },
+  corporate: {
+    label: "Corporate",
+    chip: "border-slate-500/40 bg-slate-500/10 text-slate-300",
+    dot: "bg-slate-400",
+  }
 };
 
-const MONTHS = ["all", "Jan", "Feb", "Mar", "Apr", "May", "Jun"];
+/** Dec is here because the season opens on New Year's Eve, week 1's Thursday. */
+const MONTHS = ["all", "Dec", "Jan", "Feb", "Mar", "Apr", "May", "Jun"];
 
 function Select({
   label,
@@ -454,7 +470,7 @@ function CalendarPage() {
               Every night of <span className="gradient-text">2027</span>
             </h1>
             <p className="text-sm text-muted-foreground max-w-2xl mx-auto leading-relaxed">
-              The complete regular season, 22 January to 13 June — all{" "}
+              The complete regular season, 31 December to 12 June — all{" "}
               {SCHEDULE_TOTALS.events} events across {NATIONAL_ZONES.length} regional leagues,{" "}
               {TOTAL_HOUSES} production houses and {TOTAL_BANDS} bands, generated from the season
               structure rather than typed out.

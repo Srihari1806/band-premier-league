@@ -212,7 +212,7 @@ function LeaguePage() {
             <p className="text-xs text-muted-foreground leading-relaxed">
               Season 1 opens across all of India at once. <strong>{ZONE_HUBS.length} regional
               leagues</strong> — AP/TS, Karnataka, Tamil Nadu, Kerala and North India — play the same{" "}
-              <strong>{COMPETITION_WEEKENDS} competition weekends</strong> from 23 January to 12
+              <strong>{COMPETITION_WEEKENDS} weekends</strong> from 31 December to 12
               June, simultaneously, so no two zones ever compete for the same audience on the same
               night. Rather than chasing one-off gigs, a band enters a fixed calendar with a
               production house financing the work behind it.
@@ -232,7 +232,7 @@ function LeaguePage() {
               {[
                 { v: `${ZONE_HUBS.length} Leagues`, l: "Running In Parallel" },
                 { v: `${NATIONAL_TOTAL_BANDS} Bands`, l: `${NATIONAL_TOTAL_HOUSES} Production Houses` },
-                { v: `${TOTAL_LEAGUE_NIGHTS} Nights`, l: `${COMPETITION_WEEKENDS} Weekends, Jan–Jun` },
+                { v: `${TOTAL_LEAGUE_NIGHTS} Nights`, l: `${COMPETITION_WEEKENDS} Weekends, Dec–Jun` },
                 { v: `Top ${STAGE_2_FINALS.finalists}`, l: "Qualify Per Zone" },
               ].map((stat) => (
                 <div key={stat.l} className="border border-border/50 rounded-lg p-4 bg-surface/30">
@@ -797,13 +797,14 @@ function LeaguePage() {
               Show Formats
             </h2>
             <h3 className="text-3xl sm:text-4xl font-display font-bold text-white">
-              Twelve nights, twelve different rooms
+              Twenty-four nights, one a week
             </h3>
             <p className="text-sm text-muted-foreground leading-relaxed">
               A fixture count says a band plays {FORMAT_MIX.totalPerBand} nights. It does not say
-              what any of them are. Every band plays these same twelve formats — the same cafe, the
-              same listening room, the same arena — so no band can be handed a softer season than
-              its rivals.
+              what any of them are. Every band plays the same {FORMAT_MIX.showsPerBand} — one a
+              week for {COMPETITION_WEEKENDS} weeks — through the same rooms, so no band can be
+              handed a softer season than its rivals. {FORMAT_MIX.totalPerBand} of them carry
+              points; the other {FORMAT_MIX.offLadderPerBand} are real income and no points.
             </p>
           </div>
 
@@ -946,9 +947,10 @@ function LeaguePage() {
                 Off-ladder nights
               </p>
               <p className="text-[10px] text-muted-foreground leading-snug mt-1">
-                {OFF_LADDER_TOTALS.houseNights} house nights and{" "}
-                {OFF_LADDER_TOTALS.festivalStages} festival stages are dated;{" "}
-                {OFF_LADDER_TOTALS.corporate} corporate shows are booked on demand.
+                {OFF_LADDER_TOTALS.houseNights} house nights,{" "}
+                {OFF_LADDER_TOTALS.festivalStages} festival stage-days carrying{" "}
+                {OFF_LADDER_TOTALS.festivalAppearances} slots, and{" "}
+                {OFF_LADDER_TOTALS.corporate} corporate shows — all dated, two of each per band.
               </p>
             </div>
             <div className="bpl-card p-4 border border-emerald-500/25 bg-emerald-500/5">
@@ -959,8 +961,9 @@ function LeaguePage() {
                 Clashes with a fixture
               </p>
               <p className="text-[10px] text-muted-foreground leading-snug mt-1">
-                Fixtures only ever use Friday to Sunday, so house nights take the Thursday and
-                festival stages take the one recovery weekend. Nothing collides by construction.
+                Every band plays exactly one show a week for {COMPETITION_WEEKENDS} weeks, so a
+                band being in two places at once is not prevented by a rule — it is arithmetically
+                impossible. Checked anyway.
               </p>
             </div>
           </div>

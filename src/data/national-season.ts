@@ -19,6 +19,8 @@
  */
 
 import {
+  COMPETITION_WEEKENDS,
+  STAGE_2_STRUCTURE,
   ZONE_HUBS,
   NATIONAL_TOTAL_HOUSES,
   NATIONAL_TOTAL_BANDS,
@@ -27,11 +29,20 @@ import {
 import {
   buildOffLadderFormats,
   CAMPUS_FORMATS,
+  COMMERCIAL_FORMATS,
   CORPORATE_SHOWS_PER_BAND,
-  FESTIVAL_STAGES_PER_ZONE,
+  FESTIVAL_ACTS_PER_STAGE,
+  FESTIVAL_SLOTS_PER_BAND,
   formatOf,
   type VenueClass,
 } from "./show-formats";
+
+/** Poster names for the three formats that carry no points. */
+const OFF_LADDER_LOOKUP: Record<string, string> = {
+  "house-night": "House Night",
+  "festival-stage": "Festival Stage",
+  "corporate-show": "Corporate Show",
+};
 
 /* ------------------------------------------------------------------ *
  * The five regional leagues
@@ -52,7 +63,8 @@ export const TOTAL_HOUSES = NATIONAL_TOTAL_HOUSES;
 export const TOTAL_BANDS = NATIONAL_TOTAL_BANDS;
 
 /** Individual (solo) fixtures every band plays, in every zone. */
-export const INDIVIDUAL_FIXTURES_PER_BAND = 9;
+export const INDIVIDUAL_FIXTURES_PER_BAND =
+  STAGE_2_STRUCTURE.ticketedSoloPerBand + STAGE_2_STRUCTURE.campusSoloPerBand;
 /** Alias used by the schedule generator. */
 export const SOLO_FIXTURES_PER_BAND = INDIVIDUAL_FIXTURES_PER_BAND;
 
@@ -62,14 +74,27 @@ export const TOTAL_INDIVIDUAL_FIXTURES = TOTAL_BANDS * INDIVIDUAL_FIXTURES_PER_B
  * The regular-season calendar
  * ------------------------------------------------------------------ */
 
-export const SEASON_START_ISO = "2027-01-23";
-export const COMPETITION_WEEKENDS = 20;
-/** Index (0-based) of the weekend held back as a recovery / content window. */
-export const RECOVERY_WEEKEND_INDEX = 9;
-export const TOTAL_CALENDAR_WEEKENDS = COMPETITION_WEEKENDS + 1;
+/**
+ * 24 weekends, Saturday-anchored, Sat 2 Jan to Sat 12 Jun 2027.
+ *
+ * Week 0's Thursday is 31 Dec 2026, so the season genuinely opens on New
+ * Year's Eve without any special-casing — Thursday is the house-night slot,
+ * and the first one lands there.
+ *
+ * Every band plays 24 shows across these 24 weeks, which is exactly one show
+ * a week. That is not a coincidence to be tidied away later: it is what makes
+ * a same-day double-booking structurally impossible rather than merely
+ * checked for.
+ */
+export const SEASON_START_ISO = "2027-01-02";
+export const SEASON_OPENS_ISO = "2026-12-31";
+export { COMPETITION_WEEKENDS };
+/** No weekend is held back — every week carries a show for every band. */
+export const RECOVERY_WEEKEND_INDEX = -1;
+export const TOTAL_CALENDAR_WEEKENDS = COMPETITION_WEEKENDS;
 
 /** Minimum days between a band's own official fixtures. */
-export const MIN_REST_DAYS = 14;
+export const MIN_REST_DAYS = 5;
 
 export interface SeasonWeekend {
   index: number;
@@ -530,7 +555,7 @@ export function buildReleaseRotation(
  *      band and locked later, so the schedule says so instead of inventing one.
  * ------------------------------------------------------------------ */
 
-export type EventKind = "commercial" | "campus" | "cross";
+export type EventKind = "commercial" | "campus" | "cross" | "house" | "festival" | "corporate";
 
 export interface ScheduledEvent {
   id: string;
@@ -546,6 +571,14 @@ export interface ScheduledEvent {
   /** Band numbers within the house. Two of them on a cross night. */
   bands: number[];
   kind: EventKind;
+  /** False for house nights, festival stages and corporate shows. */
+  scored: boolean;
+  /**
+   * Rows sharing one bill. A festival stage-day is ten acts drawn from across
+   * the zone, so it is ten rows in a band's season but one night on the
+   * calendar. Null everywhere the row is already a whole night.
+   */
+  billId: string | null;
   /** Which named format this night is — see show-formats.ts. */
   formatId: string;
   formatName: string;
@@ -566,34 +599,44 @@ const WEEKDAY_FMT = new Intl.DateTimeFormat("en-GB", { weekday: "short", timeZon
 export const CAMPUS_VENUE_LABEL = "Campus · TBC";
 
 /** House windows a band needs — one solo fixture each. */
-export const WINDOWS_PER_HOUSE = SOLO_FIXTURES_PER_BAND;
-
-/** Windows carrying a cross night, spread across the season rather than bunched. */
-export const CROSS_WINDOWS = [2, 5, 8];
-
-/** Earliest windows are campus, so they land inside Jan-Mar fest season. */
-export const CAMPUS_WINDOWS = CAMPUS_FORMATS.length;
+export const WINDOWS_PER_HOUSE = TOTAL_CALENDAR_WEEKENDS;
 
 /**
- * One day layout for a house weekend, fixed so no band appears twice in a day.
+ * Weeks a house spends on each shared format. Every band in the house is on
+ * stage together on these, so they are house-level decisions rather than
+ * band-level ones.
  *
- * On a cross window a house stages six events across Friday to Sunday:
- * two a day, and every band's solo night falls on a different day from its
- * cross night. Verified in `auditSchedule()`.
+ * Cross weeks are spread across the season; house nights sit early and late so
+ * the house sells its roster once before the table matters and once after.
  */
+export const CROSS_WEEKS = [5, 12, 19];
+export const HOUSE_NIGHT_WEEKS = [0, 21];
+/** Zone-wide festival days — every band in the zone plays one of these weeks. */
+export const FESTIVAL_WEEKS = [9, 16];
+
+/** Campus nights stay inside Jan–Mar fest season: weeks 0–13. */
+export const CAMPUS_WINDOW_END = 13;
+
 interface DaySlot {
-  /** Days from the weekend's Saturday. */
+  /** Days from the week's Saturday. */
   offset: number;
   slot: string;
 }
 
+/**
+ * Six slots a week. A band uses exactly one of them, so a same-day clash is
+ * impossible by construction rather than by audit.
+ */
 const DAYS: DaySlot[] = [
+  { offset: -2, slot: "Thu night" },
   { offset: -1, slot: "Fri night" },
   { offset: 0, slot: "Sat matinee" },
   { offset: 0, slot: "Sat night" },
   { offset: 1, slot: "Sun matinee" },
   { offset: 1, slot: "Sun night" },
 ];
+
+const THU = 0;
 
 /** Distinct pairings inside a house, in a stable order. */
 export function housePairings(bands: number): number[][] {
@@ -605,99 +648,146 @@ export function housePairings(bands: number): number[][] {
 }
 
 /**
- * Cross rounds: each round pairs every band exactly once, so a round can be
- * staged in a single weekend without anyone playing two cross nights.
+ * Cross rounds: each round pairs every band exactly once, so a whole round
+ * fits in one week without anyone playing two versus nights.
  */
 export function crossRounds(bands: number): number[][][] {
-  if (bands < 2) return [];
+  const ids = Array.from({ length: bands }, (_, i) => i + 1);
+  if (ids.length % 2 === 1) ids.push(-1);
+  const n = ids.length;
   const rounds: number[][][] = [];
-  const fixed = 1;
-  let rotating = Array.from({ length: bands - 1 }, (_, i) => i + 2);
-  for (let r = 0; r < bands - 1; r += 1) {
-    const order = [fixed, ...rotating];
-    const round: number[][] = [];
-    for (let i = 0; i < bands / 2; i += 1) {
-      round.push([order[i], order[bands - 1 - i]]);
+  const rotate = [...ids];
+  for (let r = 0; r < n - 1; r += 1) {
+    const pairs: number[][] = [];
+    for (let i = 0; i < n / 2; i += 1) {
+      const a = rotate[i];
+      const b = rotate[n - 1 - i];
+      if (a !== -1 && b !== -1) pairs.push([a, b]);
     }
-    rounds.push(round);
-    rotating = [rotating[rotating.length - 1], ...rotating.slice(0, -1)];
+    rounds.push(pairs);
+    const fixed = rotate[0];
+    const rest = rotate.slice(1);
+    rest.unshift(rest.pop() as number);
+    rotate.splice(0, rotate.length, fixed, ...rest);
   }
   return rounds;
 }
 
 /**
- * Which weekends each house is active. Windows are spread as evenly as the
- * calendar allows rather than clustered.
+ * Every house is active every week now, so there is no window rotation left to
+ * compute. Kept because the capacity view and the calendar filters still ask
+ * which weekends a house appears on — which is all of them.
  */
 export function houseWindows(zone: NationalZone): Record<number, number[]> {
-  const competition = SEASON_CALENDAR.filter((w) => !w.isRecovery);
+  const all = SEASON_CALENDAR.map((w) => w.index);
   const windows: Record<number, number[]> = {};
-  for (let h = 1; h <= zone.houses; h += 1) windows[h] = [];
-
-  // Total window-slots to place, dealt round-robin across houses so each gets
-  // exactly WINDOWS_PER_HOUSE and no weekend is overloaded.
-  const totalSlots = zone.houses * WINDOWS_PER_HOUSE;
-  for (let i = 0; i < totalSlots; i += 1) {
-    const house = (i % zone.houses) + 1;
-    const weekend = competition[Math.floor((i * competition.length) / totalSlots)];
-    windows[house].push(weekend.index);
-  }
-  for (let h = 1; h <= zone.houses; h += 1) windows[h].sort((a, b) => a - b);
+  for (let h = 1; h <= zone.houses; h += 1) windows[h] = [...all];
   return windows;
 }
 
 /**
- * Commercial cities for one band, rotated so the surplus moves between bands.
- * Five nights rarely divide evenly into a zone's hub count, so the offset
- * shifts per band and nobody is permanently handed the smaller market.
+ * Commercial cities rotate per band so nobody is permanently handed the
+ * smaller market, and every band plays each hub the same number of times.
  */
 function commercialCities(zone: NationalZone, bandKey: number, count: number): string[] {
   const cities = zone.hubCities.map((c) => c.city);
-  return Array.from(
-    { length: count },
-    (_, i) => cities[(i + bandKey) % cities.length],
-  );
+  return Array.from({ length: count }, (_, i) => cities[(i + bandKey) % cities.length]);
 }
 
 /**
- * Which commercial format a band plays in each of its commercial windows.
+ * A band's 24 weeks, in order.
  *
- * Launch Night is the constraint: the band's original is already out (its own
- * week in the zone's release rotation), so Launch Night has to be the first
- * commercial night that FOLLOWS the release, not one picked at random. The
- * remaining five run as a ladder — the rooms get bigger as the season goes on.
+ * The shared weeks are fixed first — cross, house night, festival — because
+ * they involve other bands. Everything left is the band's own: campus nights
+ * front-loaded into fest season, the launch night placed after its release,
+ * and the commercial ladder filling the rest.
  */
-const COMMERCIAL_LADDER = [
-  "cafe-set",
-  "pub-night",
-  "club-headline",
-  "unplugged",
-  "arena-night",
-];
+function bandSeasonPlan(zone: NationalZone, houseNumber: number, band: number): string[] {
+  const weeks: (string | null)[] = Array.from({ length: TOTAL_CALENDAR_WEEKENDS }, () => null);
 
-function commercialFormatPlan(
-  zone: NationalZone,
-  houseNumber: number,
-  band: number,
-  commercialWeekendIndices: number[],
-): string[] {
-  const releaseWeek = releaseWeekIndexFor(zone.houses, houseNumber, band);
-  const releaseWeekend = SEASON_CALENDAR[Math.min(releaseWeek, SEASON_CALENDAR.length - 1)];
-
-  // First commercial window on or after the release; the last one if the song
-  // lands late in the season.
-  let launchSlot = commercialWeekendIndices.findIndex((wi) => {
-    const w = SEASON_CALENDAR.find((x) => x.index === wi);
-    return !!w && w.date.getTime() >= releaseWeekend.date.getTime();
+  CROSS_WEEKS.forEach((w) => {
+    if (w < weeks.length) weeks[w] = "versus-night";
   });
-  if (launchSlot < 0) launchSlot = commercialWeekendIndices.length - 1;
+  HOUSE_NIGHT_WEEKS.forEach((w) => {
+    if (w < weeks.length) weeks[w] = "house-night";
+  });
+  FESTIVAL_WEEKS.forEach((w) => {
+    if (w < weeks.length) weeks[w] = "festival-stage";
+  });
 
-  const plan: string[] = [];
-  let ladder = 0;
-  for (let i = 0; i < commercialWeekendIndices.length; i += 1) {
-    plan.push(i === launchSlot ? "launch-night" : COMMERCIAL_LADDER[ladder++ % COMMERCIAL_LADDER.length]);
+  // Campus nights take the earliest free weeks so they land in fest season.
+  const campusIds = CAMPUS_FORMATS.flatMap((f) => Array.from({ length: f.perBand }, () => f.id));
+  for (let w = 0; w < weeks.length && campusIds.length > 0; w += 1) {
+    if (weeks[w] === null && w <= CAMPUS_WINDOW_END) weeks[w] = campusIds.shift() as string;
   }
-  return plan;
+
+  // Launch night: the first free week on or after the band's own release week.
+  const releaseWeek = releaseWeekIndexFor(zone.houses, houseNumber, band);
+  for (let w = Math.min(releaseWeek, weeks.length - 1); w < weeks.length; w += 1) {
+    if (weeks[w] === null) {
+      weeks[w] = "launch-night";
+      break;
+    }
+  }
+  if (!weeks.includes("launch-night")) {
+    for (let w = weeks.length - 1; w >= 0; w -= 1) {
+      if (weeks[w] === null) {
+        weeks[w] = "launch-night";
+        break;
+      }
+    }
+  }
+
+  // Corporate bookings take two mid-season free weeks, offset per band so a
+  // house is not selling four private shows in the same fortnight.
+  let corporatePlaced = 0;
+  const corporateStart = 6 + ((band - 1) % 4);
+  for (let i = 0; i < weeks.length && corporatePlaced < CORPORATE_SHOWS_PER_BAND; i += 1) {
+    const w = (corporateStart + i * 5) % weeks.length;
+    if (weeks[w] === null) {
+      weeks[w] = "corporate-show";
+      corporatePlaced += 1;
+    }
+  }
+  for (let w = 0; w < weeks.length && corporatePlaced < CORPORATE_SHOWS_PER_BAND; w += 1) {
+    if (weeks[w] === null) {
+      weeks[w] = "corporate-show";
+      corporatePlaced += 1;
+    }
+  }
+
+  // Whatever is left runs the commercial ladder, rooms growing through the season.
+  const ladder = COMMERCIAL_LADDER_FORMATS.flatMap((f) =>
+    Array.from({ length: f.perBand }, () => f.id),
+  );
+  let li = 0;
+  for (let w = 0; w < weeks.length; w += 1) {
+    if (weeks[w] === null) weeks[w] = ladder[li++ % ladder.length];
+  }
+
+  return weeks as string[];
+}
+
+/** The commercial formats a band ladders through, launch night excluded. */
+const COMMERCIAL_LADDER_FORMATS = COMMERCIAL_FORMATS.filter((f) => f.id !== "launch-night");
+
+/**
+ * Which day of the week a band plays.
+ *
+ * Shared formats are pinned so everyone on the bill lands on the same night;
+ * solo nights are spread across the remaining slots by band and week so a
+ * house is not stacking four of its bands onto one Saturday.
+ */
+function daySlotFor(formatId: string, band: number, week: number): number {
+  if (formatId === "house-night") return THU;
+  if (formatId === "festival-stage") return 3; // Sat night
+  if (formatId === "versus-night") return band % 2 === 1 ? 3 : 5; // Sat / Sun night
+  if (formatId === "corporate-show") return 1; // Fri night
+
+  // The final week stops on Saturday so the season ends on 12 Jun rather than
+  // spilling into the 13th. Four bands, four non-Sunday slots — it fits exactly.
+  if (week === TOTAL_CALENDAR_WEEKENDS - 1) return (band - 1) % 4;
+  return 1 + ((band + week) % 5);
 }
 
 export function buildFullSchedule(): ScheduledEvent[] {
@@ -706,58 +796,43 @@ export function buildFullSchedule(): ScheduledEvent[] {
 
   NATIONAL_ZONES.forEach((zone) => {
     const rounds = crossRounds(zone.bandsPerHouse);
-    const windows = houseWindows(zone);
 
-    Object.entries(windows).forEach(([houseKey, weekendIndices]) => {
-      const houseNumber = Number(houseKey);
-
-      // Each band's commercial cities for the season, rotated per band.
+    for (let houseNumber = 1; houseNumber <= zone.houses; houseNumber += 1) {
+      const plans: Record<number, string[]> = {};
       const cityPlan: Record<number, string[]> = {};
       for (let b = 1; b <= zone.bandsPerHouse; b += 1) {
-        cityPlan[b] = commercialCities(zone, houseNumber + b, SOLO_FIXTURES_PER_BAND);
-      }
-
-      // The commercial windows, in order — the back half of the house's season.
-      const commercialWeekends = weekendIndices.slice(CAMPUS_WINDOWS);
-      const formatPlan: Record<number, string[]> = {};
-      for (let b = 1; b <= zone.bandsPerHouse; b += 1) {
-        formatPlan[b] = commercialFormatPlan(zone, houseNumber, b, commercialWeekends);
+        plans[b] = bandSeasonPlan(zone, houseNumber, b);
+        cityPlan[b] = commercialCities(zone, houseNumber + b, TOTAL_CALENDAR_WEEKENDS);
       }
       const commercialSeen: Record<number, number> = {};
 
-      weekendIndices.forEach((weekendIndex, j) => {
-        const weekend = byIndex.get(weekendIndex);
-        if (!weekend || weekend.number === null) return;
-
-        /*
-         * Campus nights go EARLY, commercial nights late.
-         *
-         * Alternating the two spread campus evenly across the season and put
-         * half of them in April and May — exam season and summer vacation,
-         * when a campus has no audience to play to. Indian fest season runs
-         * January to March, so the campus leg is front-loaded into it and the
-         * ticketed circuit takes the back half, where it does not care what
-         * the academic calendar is doing.
-         */
-        const kind: EventKind = j < CAMPUS_WINDOWS ? "campus" : "commercial";
-        const crossRoundIndex = CROSS_WINDOWS.indexOf(j);
-        const round = crossRoundIndex >= 0 ? rounds[crossRoundIndex % rounds.length] : null;
+      for (let w = 0; w < TOTAL_CALENDAR_WEEKENDS; w += 1) {
+        const weekend = byIndex.get(w);
+        if (!weekend) continue;
 
         const push = (
           dayIndex: number,
           bands: number[],
-          eventKind: EventKind,
+          formatId: string,
           city: string,
           idSuffix: string,
-          formatId: string,
+          billId: string | null = null,
         ) => {
           const day = DAYS[dayIndex];
           const date = addDays(weekend.date, day.offset);
           const fmt = formatOf(formatId);
+          const off = OFF_LADDER_LOOKUP[formatId];
+          const kind: EventKind = fmt
+            ? (fmt.kind as EventKind)
+            : formatId === "house-night"
+              ? "house"
+              : formatId === "festival-stage"
+                ? "festival"
+                : "corporate";
           events.push({
-            id: `${zone.slug}-h${houseNumber}-w${weekend.number}-${idSuffix}`,
-            weekendIndex,
-            competitionNumber: weekend.number as number,
+            id: `${zone.slug}-h${houseNumber}-w${w + 1}-${idSuffix}`,
+            weekendIndex: w,
+            competitionNumber: (weekend.number ?? w + 1) as number,
             date,
             dateLabel: DAY_FMT.format(date),
             weekday: WEEKDAY_FMT.format(date),
@@ -766,72 +841,67 @@ export function buildFullSchedule(): ScheduledEvent[] {
             zoneName: zone.shortName,
             houseNumber,
             bands,
-            kind: eventKind,
+            kind,
+            billId,
+            scored: !!fmt,
             formatId,
-            formatName: fmt ? fmt.name : formatId,
-            venue: fmt ? fmt.venue : "club",
+            formatName: fmt ? fmt.name : off ?? formatId,
+            venue: fmt ? fmt.venue : formatId === "corporate-show" ? "private" : formatId === "festival-stage" ? "festival-ground" : "arena",
             city,
             iplOverlap: weekend.iplOverlap,
           });
         };
 
-        /*
-         * A band's solo format for THIS window. Campus windows walk the three
-         * campus formats in order; commercial windows read the band's own plan,
-         * which is where Launch Night was already placed.
-         */
-        const soloFormat = (band: number) => {
-          if (kind === "campus") return CAMPUS_FORMATS[j % CAMPUS_FORMATS.length].id;
-          const n = commercialSeen[band] ?? 0;
-          return formatPlan[band][n % formatPlan[band].length];
-        };
-
-        const soloCity = (band: number) => {
-          if (kind === "campus") return CAMPUS_VENUE_LABEL;
-          const n = commercialSeen[band] ?? 0;
-          return cityPlan[band][n % cityPlan[band].length];
-        };
-
-        /** Call once per band per window, AFTER format and city are read. */
-        const advance = (band: number) => {
-          if (kind === "commercial") commercialSeen[band] = (commercialSeen[band] ?? 0) + 1;
-        };
-
-        /** One solo night: format, city and counter stay in lockstep. */
-        const pushSolo = (dayIndex: number, band: number) => {
-          push(dayIndex, [band], kind, soloCity(band), `b${band}`, soloFormat(band));
-          advance(band);
-        };
-
-        if (!round) {
-          // No cross night: solos spread across the three days.
-          for (let b = 1; b <= zone.bandsPerHouse; b += 1) {
-            const dayIndex = [0, 1, 3, 2, 4][(b - 1) % 5];
-            pushSolo(dayIndex, b);
-          }
-          return;
+        // ---- house night: the whole roster, one bill, Thursday
+        if (plans[1][w] === "house-night") {
+          const all = Array.from({ length: zone.bandsPerHouse }, (_, i) => i + 1);
+          // Spread by HOUSE, not by week — five house nights on one Thursday
+          // all landing in the same city would be five shows competing with
+          // each other for the same crowd.
+          const cityIdx =
+            (houseNumber - 1 + HOUSE_NIGHT_WEEKS.indexOf(w)) % zone.hubCities.length;
+          push(THU, all, "house-night", zone.hubCities[cityIdx].city, "house");
+          continue;
         }
 
-        /*
-         * Cross window. Fixed layout so every band's solo and cross land on
-         * different days:
-         *   Fri  — solo A1, solo B1
-         *   Sat  — cross (A1 v A2), solo B2
-         *   Sun  — cross (B1 v B2), solo A2
-         * where (A1,A2) and (B1,B2) are the round's two pairings.
-         */
-        const [pairA, pairB] = [round[0], round[1] ?? round[0]];
-        const [a1, a2] = pairA;
-        const [b1, b2] = pairB;
+        // ---- versus week: one full round of pairings
+        if (plans[1][w] === "versus-night") {
+          const round = rounds[CROSS_WEEKS.indexOf(w) % rounds.length];
+          round.forEach((pair, i) => {
+            push(i === 0 ? 3 : 5, pair, "versus-night", zone.hubCities[0].city, `x${i}`);
+          });
+          continue;
+        }
 
-        pushSolo(0, a1);
-        if (b1 !== a1) pushSolo(0, b1);
-        push(2, pairA, "cross", zone.hubCities[0].city, `xA`, "versus-night");
-        if (b2 !== a1 && b2 !== b1) pushSolo(1, b2);
-        push(4, pairB, "cross", zone.hubCities[0].city, `xB`, "versus-night");
-        if (a2 !== a1 && a2 !== b1 && a2 !== b2) pushSolo(3, a2);
-      });
-    });
+        // ---- everything else is per band
+        for (let b = 1; b <= zone.bandsPerHouse; b += 1) {
+          const formatId = plans[b][w];
+          if (!formatId) continue;
+          let city: string;
+          if (formatId === "festival-stage") {
+            city = zone.hubCities[FESTIVAL_WEEKS.indexOf(w) % zone.hubCities.length].city;
+          } else if (CAMPUS_FORMATS.some((f) => f.id === formatId)) {
+            city = CAMPUS_VENUE_LABEL;
+          } else if (formatId === "corporate-show") {
+            city = cityPlan[b][w % cityPlan[b].length];
+          } else {
+            const n = commercialSeen[b] ?? 0;
+            commercialSeen[b] = n + 1;
+            city = cityPlan[b][n % cityPlan[b].length];
+          }
+          // A festival stage-day is one bill of ten acts drawn from the whole
+          // zone, so every band on it shares a bill id and it counts once.
+          const bill =
+            formatId === "festival-stage"
+              ? `${zone.slug}-w${w}-stage${Math.floor(
+                  (((houseNumber - 1) * zone.bandsPerHouse + (b - 1)) % (zone.houses * zone.bandsPerHouse)) /
+                    FESTIVAL_ACTS_PER_STAGE,
+                )}`
+              : null;
+          push(daySlotFor(formatId, b, w), [b], formatId, city, `b${b}`, bill);
+        }
+      }
+    }
   });
 
   return events.sort((a, b) => a.date.getTime() - b.date.getTime());
@@ -840,7 +910,12 @@ export function buildFullSchedule(): ScheduledEvent[] {
 export const FULL_SCHEDULE = buildFullSchedule();
 
 export interface ScheduleTotals {
+  /** Distinct nights on the calendar — a shared bill counts once. */
   events: number;
+  /** Band-appearances. Higher than `events` wherever a bill is shared. */
+  rows: number;
+  scored: number;
+  offLadder: number;
   commercial: number;
   campus: number;
   cross: number;
@@ -863,13 +938,35 @@ export function sameDayClashes(events = FULL_SCHEDULE): number {
   return [...seen.values()].filter((n) => n > 1).length;
 }
 
+/**
+ * Distinct nights, not rows.
+ *
+ * Most rows are a whole night. A festival stage-day is not: it is ten acts on
+ * one bill, so it appears as ten rows in ten bands' seasons but is a single
+ * night on the calendar. Counting rows would inflate the season by 180 nights
+ * that do not exist.
+ */
+export function distinctNights(events = FULL_SCHEDULE): number {
+  const bills = new Set<string>();
+  let standalone = 0;
+  events.forEach((e) => {
+    if (e.billId) bills.add(e.billId);
+    else standalone += 1;
+  });
+  return standalone + bills.size;
+}
+
 export function scheduleTotals(events = FULL_SCHEDULE): ScheduleTotals {
   const commercial = events.filter((e) => e.kind === "commercial").length;
   const campus = events.filter((e) => e.kind === "campus").length;
   const cross = events.filter((e) => e.kind === "cross").length;
+  const scored = events.filter((e) => e.scored).length;
   const clashes = sameDayClashes(events);
   return {
-    events: events.length,
+    events: distinctNights(events),
+    rows: events.length,
+    scored,
+    offLadder: distinctNights(events.filter((e) => !e.scored)),
     commercial,
     campus,
     cross,
@@ -997,9 +1094,16 @@ export function releasesOn(dateLabel: string): ReleaseEvent[] {
  * cannot collide with a fixture by construction. Festival stages go on the one
  * recovery weekend, which carries no fixtures at all.
  */
+/**
+ * The nights that carry no points.
+ *
+ * These used to be generated separately and bolted onto the calendar. They are
+ * now part of every band's 24-week season — two house nights, two corporate
+ * shows and two festival slots each — so this is a view over the main schedule
+ * rather than a second source of truth.
+ */
 export interface OffLadderEvent {
   id: string;
-  /** The weekend this night hangs off, so the calendar can file it. */
   weekendIndex: number;
   date: Date;
   dateLabel: string;
@@ -1007,80 +1111,44 @@ export interface OffLadderEvent {
   slot: string;
   zoneSlug: string;
   zoneName: string;
-  /** Null for a festival stage, which is a zone event rather than a house one. */
   houseNumber: number | null;
   formatId: string;
   formatName: string;
   venue: VenueClass;
   city: string;
+  /** Rows sharing one bill — a festival stage-day is ten acts, one night. */
+  billId: string | null;
   /** Who is on the bill. Slots, not names — the line-up is settled in-season. */
   billing: string;
   scored: false;
 }
 
-/** House windows carrying a house night — one mid-season, one at the end. */
-export const HOUSE_NIGHT_WINDOWS = [4, 8];
-
-export function buildOffLadderSchedule(): OffLadderEvent[] {
-  const out: OffLadderEvent[] = [];
-  const byIndex = new Map(SEASON_CALENDAR.map((w) => [w.index, w]));
-  const recovery = SEASON_CALENDAR.find((w) => w.isRecovery) ?? SEASON_CALENDAR[0];
-
-  NATIONAL_ZONES.forEach((zone) => {
-    const windows = houseWindows(zone);
-
-    // ---- House nights: Thursday, so no band is on stage twice in a day.
-    Object.entries(windows).forEach(([houseKey, weekendIndices]) => {
-      const houseNumber = Number(houseKey);
-      HOUSE_NIGHT_WINDOWS.forEach((j, n) => {
-        const weekend = byIndex.get(weekendIndices[j]);
-        if (!weekend) return;
-        const date = addDays(weekend.date, -2);
-        out.push({
-          id: `${zone.slug}-h${houseNumber}-housenight-${n + 1}`,
-          weekendIndex: weekend.index,
-          date,
-          dateLabel: DAY_FMT.format(date),
-          weekday: WEEKDAY_FMT.format(date),
-          slot: "Thu night",
-          zoneSlug: zone.slug,
-          zoneName: zone.shortName,
-          houseNumber,
-          formatId: "house-night",
-          formatName: "House Night",
-          venue: "arena",
-          city: zone.hubCities[n % zone.hubCities.length].city,
-          billing: `All ${zone.bandsPerHouse} bands · House ${houseNumber}`,
-          scored: false,
-        });
-      });
-    });
-
-    // ---- Festival stages: the recovery weekend, which has no fixtures.
-    for (let n = 0; n < FESTIVAL_STAGES_PER_ZONE; n += 1) {
-      const date = addDays(recovery.date, n);
-      out.push({
-        id: `${zone.slug}-festival-${n + 1}`,
-        weekendIndex: recovery.index,
-        date,
-        dateLabel: DAY_FMT.format(date),
-        weekday: WEEKDAY_FMT.format(date),
-        slot: n === 0 ? "Sat night" : "Sun night",
-        zoneSlug: zone.slug,
-        zoneName: zone.shortName,
-        houseNumber: null,
-        formatId: "festival-stage",
-        formatName: "Festival Stage",
-        venue: "festival-ground",
-        city: zone.hubCities[n % zone.hubCities.length].city,
-        // Slots, not names — who plays is settled by the table, in season.
-        billing: `Zone rank ${n * 3 + 1}, ${n * 3 + 2}, ${n * 3 + 3}`,
-        scored: false,
-      });
-    }
-  });
-
-  return out.sort((a, b) => a.date.getTime() - b.date.getTime());
+export function buildOffLadderSchedule(events = FULL_SCHEDULE): OffLadderEvent[] {
+  return events
+    .filter((e) => !e.scored)
+    .map((e) => ({
+      id: e.id,
+      weekendIndex: e.weekendIndex,
+      date: e.date,
+      dateLabel: e.dateLabel,
+      weekday: e.weekday,
+      slot: e.slot,
+      zoneSlug: e.zoneSlug,
+      zoneName: e.zoneName,
+      houseNumber: e.houseNumber,
+      formatId: e.formatId,
+      formatName: e.formatName,
+      venue: e.venue,
+      city: e.city,
+      billId: e.billId,
+      billing:
+        e.formatId === "house-night"
+          ? `All ${e.bands.length} bands · House ${e.houseNumber}`
+          : e.formatId === "festival-stage"
+            ? `H${e.houseNumber} · B${e.bands.join(", B")} on a ${FESTIVAL_ACTS_PER_STAGE}-act bill`
+            : `H${e.houseNumber} · B${e.bands.join(", B")} · private booking`,
+      scored: false,
+    }));
 }
 
 export const OFF_LADDER_SCHEDULE = buildOffLadderSchedule();
@@ -1095,37 +1163,29 @@ export const OFF_LADDER_FORMATS = buildOffLadderFormats(
  * Corporate shows carry no date: they are booked when a buyer turns up. The
  * season budgets one per band and holds the empty Thursdays for them.
  */
+/** Corporate shows are now dated like everything else — two per band. */
 export const CORPORATE_PLAN = {
   perBand: CORPORATE_SHOWS_PER_BAND,
   nationalNights: TOTAL_BANDS * CORPORATE_SHOWS_PER_BAND,
-  scheduled: false,
-  note: "Booked on demand into the season's free Thursdays. No public gate — a flat fee, invoiced.",
+  scheduled: true,
+  note: "Two private bookings a band, placed in free weeks and offset across a house so it is not selling four private shows in the same fortnight. No public gate — a flat fee, invoiced.",
 };
 
 export const OFF_LADDER_TOTALS = {
   houseNights: OFF_LADDER_SCHEDULE.filter((e) => e.formatId === "house-night").length,
-  festivalStages: OFF_LADDER_SCHEDULE.filter((e) => e.formatId === "festival-stage").length,
-  corporate: CORPORATE_PLAN.nationalNights,
-  scheduled: OFF_LADDER_SCHEDULE.length,
-  get total() {
-    return this.scheduled + this.corporate;
-  },
-  /** Off-ladder nights must never collide with a scored fixture. */
-  clashesWithFixtures: (() => {
-    const fixtureDays = new Set(
-      FULL_SCHEDULE.flatMap((e) =>
-        e.bands.map((b) => `${e.zoneSlug}-h${e.houseNumber}-b${b}-${e.date.toISOString().slice(0, 10)}`),
-      ),
-    );
-    return OFF_LADDER_SCHEDULE.filter((e) => {
-      if (e.houseNumber === null) return false;
-      const day = e.date.toISOString().slice(0, 10);
-      const zone = NATIONAL_ZONES.find((z) => z.slug === e.zoneSlug);
-      const bands = zone ? zone.bandsPerHouse : 0;
-      for (let b = 1; b <= bands; b += 1) {
-        if (fixtureDays.has(`${e.zoneSlug}-h${e.houseNumber}-b${b}-${day}`)) return true;
-      }
-      return false;
-    }).length;
-  })(),
+  /** Stage-DAYS, not appearances — ten acts share one bill. */
+  festivalStages: new Set(
+    OFF_LADDER_SCHEDULE.filter((e) => e.formatId === "festival-stage").map((e) => e.billId),
+  ).size,
+  festivalAppearances: OFF_LADDER_SCHEDULE.filter((e) => e.formatId === "festival-stage").length,
+  corporate: OFF_LADDER_SCHEDULE.filter((e) => e.formatId === "corporate-show").length,
+  scheduled: distinctNights(FULL_SCHEDULE.filter((e) => !e.scored)),
+  total: distinctNights(FULL_SCHEDULE.filter((e) => !e.scored)),
+  /**
+   * A band appearing twice on one calendar day. Zero by construction now —
+   * every band plays exactly one show a week — but still counted, because a
+   * structural guarantee nobody checks is just a comment.
+   */
+  clashesWithFixtures: sameDayClashes(),
 };
+

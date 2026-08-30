@@ -168,13 +168,16 @@ export interface EconomicsInputs {
 export const DEFAULT_INPUTS: EconomicsInputs = {
   ticketPrice: 399,
   attendance: 300,
-  showsPerBand: 12,
+  // The SCORED ladder only: 11 commercial + 4 campus + 3 versus. House nights,
+  // corporate shows and festival stages are real income but sit outside the
+  // gate split, so folding them in here would overstate ticket revenue.
+  showsPerBand: 18,
   numFranchises: 25,
   bandsPerFranchise: 4,
   winningBid: 1000000,
   bandMembers: 5,
 
-  soloSharePct: 75,
+  soloSharePct: 83,
   coHeadlineUplift: 1.6,
 
   ticketingCommissionPct: 10,

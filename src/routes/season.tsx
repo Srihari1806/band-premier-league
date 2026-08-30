@@ -146,7 +146,7 @@ function SeasonPage() {
               {[
                 { v: TOTAL_BANDS, l: "Bands", h: `${TOTAL_HOUSES} houses` },
                 { v: TOTAL_INDIVIDUAL_FIXTURES, l: "Individual fixtures", h: `${INDIVIDUAL_FIXTURES_PER_BAND} per band` },
-                { v: COMPETITION_WEEKENDS, l: "Competition weekends", h: `23 Jan – ${SEASON_END_LABEL}` },
+                { v: COMPETITION_WEEKENDS, l: "Competition weekends", h: `31 Dec – ${SEASON_END_LABEL}` },
                 { v: NATIONAL_CAPACITY.fixturesPerWeekend, l: "Fixtures / weekend", h: "Across all five zones" },
               ].map((s) => (
                 <div key={s.l} className="bpl-card p-4 border border-border/80 bg-surface/60">
@@ -296,7 +296,7 @@ function SeasonPage() {
                 <CalendarDays size={13} /> Regular Season
               </p>
               <h2 className="text-2xl sm:text-3xl font-display font-bold text-white">
-                {COMPETITION_WEEKENDS} weekends, 23 Jan to {SEASON_END_LABEL}
+                {COMPETITION_WEEKENDS} weekends, 31 Dec to {SEASON_END_LABEL}
               </h2>
               <p className="text-sm text-muted-foreground max-w-3xl leading-relaxed">
                 {TOTAL_CALENDAR_WEEKENDS} calendar weekends, one held back as a recovery and content

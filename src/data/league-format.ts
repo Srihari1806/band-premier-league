@@ -305,8 +305,8 @@ export const ZONE_ROSTERS: Record<string, { houses: number; bandsPerHouse: numbe
 export const STAGE_2_STRUCTURE: MatrixStructure = {
   houses: ZONE_ROSTERS["ap-ts"].houses,
   bandsPerHouse: ZONE_ROSTERS["ap-ts"].bandsPerHouse,
-  ticketedSoloPerBand: 6,
-  campusSoloPerBand: 3,
+  ticketedSoloPerBand: 11,
+  campusSoloPerBand: 4,
   intraHousePerBand: 3,
 };
 
@@ -470,7 +470,12 @@ export interface SeasonPhase {
 }
 
 /** Competition weekends in the regular season, shared by every zone. */
-export const COMPETITION_WEEKENDS = 20;
+/**
+ * Weekends in the regular season. THE source — national-season.ts imports this
+ * rather than declaring its own, because two of these drifted apart once
+ * already and put "20 weeks" on a page describing a 24-week season.
+ */
+export const COMPETITION_WEEKENDS = 24;
 
 /**
  * The calendar is now the NATIONAL one. AP/TS is a zone inside it, not a season
@@ -490,9 +495,9 @@ export const SEASON_PHASES: SeasonPhase[] = [
   {
     phase: "Phase 1",
     title: "Regular Season",
-    weeks: "23 Jan \u2013 12 Jun",
-    weekCount: 21,
-    detail: `${COMPETITION_WEEKENDS} competition weekends plus one recovery weekend. Each band plays its ${STAGE_2_MATRIX.individualShowsPerBand} individual fixtures inside its house's own weekends, with originals dropping on a rolling schedule.`,
+    weeks: "31 Dec – 12 Jun",
+    weekCount: 24,
+    detail: `${COMPETITION_WEEKENDS} weekends, and every band plays exactly one show a week — ${STAGE_2_MATRIX.individualShowsPerBand} individual fixtures, three versus nights and six off-ladder nights. One show a week is what makes a same-day clash impossible rather than merely unlikely.`,
   },
   {
     phase: "Phase 2",

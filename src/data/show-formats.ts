@@ -8,8 +8,9 @@
  *
  * Two tiers, and the distinction matters:
  *
- *   SCORED    the twelve nights that decide the table. Every band plays the
- *             same twelve formats, so no band can be handed an easier season.
+ *   SCORED    the eighteen nights that decide the table. Every band plays the
+ *             same formats in the same proportions, so no band can be handed
+ *             an easier season than its rivals.
  *   OFF-LADDER  house nights, festival stages and corporate bookings. Real
  *             revenue and real reach, but no points — they are not equal
  *             across bands, so they must never touch the standings.
@@ -125,7 +126,7 @@ export const SCORED_FORMATS: ShowFormat[] = [
     kind: "commercial",
     venue: "cafe",
     scored: true,
-    perBand: 1,
+    perBand: 2,
     actsOnStage: 1,
     capacityIdx: capacityIndexOf("cafe-set"),
     priceIdx: 0.6,
@@ -139,7 +140,7 @@ export const SCORED_FORMATS: ShowFormat[] = [
     kind: "commercial",
     venue: "pub",
     scored: true,
-    perBand: 1,
+    perBand: 2,
     actsOnStage: 1,
     capacityIdx: capacityIndexOf("pub-night"),
     priceIdx: 0.9,
@@ -153,7 +154,7 @@ export const SCORED_FORMATS: ShowFormat[] = [
     kind: "commercial",
     venue: "club",
     scored: true,
-    perBand: 1,
+    perBand: 2,
     actsOnStage: 1,
     capacityIdx: capacityIndexOf("club-headline"),
     priceIdx: 1.1,
@@ -167,7 +168,7 @@ export const SCORED_FORMATS: ShowFormat[] = [
     kind: "commercial",
     venue: "listening-room",
     scored: true,
-    perBand: 1,
+    perBand: 2,
     actsOnStage: 1,
     capacityIdx: capacityIndexOf("unplugged"),
     priceIdx: 1.6,
@@ -195,7 +196,7 @@ export const SCORED_FORMATS: ShowFormat[] = [
     kind: "commercial",
     venue: "arena",
     scored: true,
-    perBand: 1,
+    perBand: 2,
     actsOnStage: 1,
     capacityIdx: capacityIndexOf("arena-night"),
     priceIdx: 1.2,
@@ -209,7 +210,7 @@ export const SCORED_FORMATS: ShowFormat[] = [
     kind: "campus",
     venue: "campus",
     scored: true,
-    perBand: 1,
+    perBand: 2,
     actsOnStage: 1,
     capacityIdx: capacityIndexOf("fest-main-stage"),
     priceIdx: 0.5,
@@ -272,9 +273,14 @@ export interface OffLadderFormat extends ShowFormat {
   whyUnscored: string;
 }
 
-export const HOUSE_NIGHTS_PER_HOUSE = 2;
-export const FESTIVAL_STAGES_PER_ZONE = 2;
-export const CORPORATE_SHOWS_PER_BAND = 1;
+export const HOUSE_NIGHTS_PER_BAND = 2;
+export const CORPORATE_SHOWS_PER_BAND = 2;
+export const FESTIVAL_SLOTS_PER_BAND = 2;
+/** Acts sharing one festival day. A stage-day, not a single slot. */
+export const FESTIVAL_ACTS_PER_STAGE = 10;
+
+/** A house night puts the whole roster on one bill, so it is one night for four bands. */
+export const HOUSE_NIGHTS_PER_HOUSE = HOUSE_NIGHTS_PER_BAND;
 
 export function buildOffLadderFormats(
   houses: number,
@@ -292,12 +298,12 @@ export function buildOffLadderFormats(
       actsOnStage: 4,
       capacityIdx: 3.2,
       priceIdx: 1.3,
-      nationalNights: houses * HOUSE_NIGHTS_PER_HOUSE,
+      nationalNights: houses * HOUSE_NIGHTS_PER_BAND,
       purpose:
         "Every band a production house signed, on one bill, under the house's own name. It is the only night the house sells itself rather than a band, and the only place a house brand can be built.",
       ticketing: "One ticket for the whole roster — four sets, one gate.",
       whyUnscored:
-        "Four bands on a shared bill cannot be ranked against a band playing a solo night. Points here would reward roster size, not performance.",
+        "Every band plays exactly two, so these are equal — but four bands on one bill cannot be ranked against a band carrying a solo night. Points here would measure the roster, not the band.",
     },
     {
       id: "festival-stage",
@@ -305,16 +311,16 @@ export function buildOffLadderFormats(
       kind: "festival",
       venue: "festival-ground",
       scored: false,
-      perBand: 1,
-      actsOnStage: 3,
+      perBand: FESTIVAL_SLOTS_PER_BAND,
+      actsOnStage: FESTIVAL_ACTS_PER_STAGE,
       capacityIdx: 6,
       priceIdx: 0,
-      nationalNights: zones * FESTIVAL_STAGES_PER_ZONE,
+      nationalNights: Math.round((bands * FESTIVAL_SLOTS_PER_BAND) / FESTIVAL_ACTS_PER_STAGE),
       purpose:
-        "A league-curated stage inside an existing festival. The league supplies a programmed line-up, the festival supplies a crowd the league has not had to buy.",
+        "A league-curated stage-day inside an existing festival — ten acts across one bill. The league supplies a programmed line-up, the festival supplies a crowd the league has not had to buy.",
       ticketing: "No league gate — the festival's own pass admits. Paid as a stage fee.",
       whyUnscored:
-        "Only a handful of bands get a slot and the crowd is not the league's. Scoring it would hand points to whoever the promoter happened to pick.",
+        "The crowd is not the league's and the room is not comparable to any other night. Scoring it would measure the festival's draw rather than the band's.",
     },
     {
       id: "corporate-show",
@@ -331,7 +337,7 @@ export function buildOffLadderFormats(
         "A private booking — an office party, a product launch, a wedding season slot. The band is paid a flat fee and the league takes a booking margin.",
       ticketing: "No public ticket. Flat fee, invoiced.",
       whyUnscored:
-        "A closed room with an audience that did not choose to be there measures nothing the league is trying to measure.",
+        "A closed room has no public gate to scan and no crowd that chose to be there, so two of the three scoring metrics have nothing to read.",
     },
   ];
 }
@@ -357,6 +363,10 @@ const sumPerBand = (list: ShowFormat[]) => list.reduce((s, f) => s + f.perBand, 
  * that is the normalisation. `grossIdx` is free to move, and the gap between
  * them is the venue ladder's actual effect on revenue.
  */
+/** Off-ladder nights every band plays, on top of the scored ladder. */
+export const OFF_LADDER_PER_BAND =
+  HOUSE_NIGHTS_PER_BAND + CORPORATE_SHOWS_PER_BAND + FESTIVAL_SLOTS_PER_BAND;
+
 export const FORMAT_MIX = (() => {
   const solo = SOLO_FORMATS;
   const seatIdx = solo.reduce((s, f) => s + f.capacityIdx * f.perBand, 0) / sumPerBand(solo);
@@ -368,6 +378,9 @@ export const FORMAT_MIX = (() => {
     crossPerBand: sumPerBand(CROSS_FORMATS),
     soloPerBand: sumPerBand(solo),
     totalPerBand: sumPerBand(SCORED_FORMATS),
+    /** Scored ladder plus the off-ladder nights — a band's whole season. */
+    showsPerBand: sumPerBand(SCORED_FORMATS) + OFF_LADDER_PER_BAND,
+    offLadderPerBand: OFF_LADDER_PER_BAND,
     /** Seat-weighted mean room size. Normalised to 1. */
     seatIdx,
     /** Seat-weighted mean revenue per solo night, against a flat-priced season. */
