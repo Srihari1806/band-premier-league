@@ -925,7 +925,20 @@ export interface ScheduleTotals {
    * 46 appearances a band is not 46 nights.
    */
   appearances: number;
-  appearancesPerBand: number;
+  /**
+   * Appearances a band makes across the whole calendar, launch included.
+   *
+   * Deliberately NOT the same as APPEARANCES_PER_BAND, which counts the
+   * 24-week season only. Both are true and they differ by exactly the New
+   * Year's Eve launch — the names now say which is which, because two exports
+   * called almost the same thing and disagreeing by one is how a reader
+   * decides the model is sloppy.
+   */
+  appearancesPerBandAllIn: number;
+  /** Season appearances only. Must equal APPEARANCES_PER_BAND. */
+  appearancesPerBandInSeason: number;
+  /** True when the generated season matches the published constant. */
+  appearancesReconcile: boolean;
   /** Reserved weeks carrying no published date (private bookings). */
   heldSlots: number;
   /** Band-appearances. Higher than `events` wherever a bill is shared. */
@@ -981,11 +994,19 @@ export function scheduleTotals(events = FULL_SCHEDULE): ScheduleTotals {
   const scored = events.filter((e) => e.scored).length;
   const clashes = sameDayClashes(events);
   const appearances = events.reduce((sum, e) => sum + e.bands.length, 0);
+  // The launch is a real appearance but sits outside the 24-week season, which
+  // is what APPEARANCES_PER_BAND counts.
+  const seasonAppearances = events
+    .filter((e) => e.kind !== "launch")
+    .reduce((sum, e) => sum + e.bands.length, 0);
 
   return {
     events: distinctNights(dated),
     appearances,
-    appearancesPerBand: Math.round(appearances / Math.max(1, TOTAL_BANDS)),
+    appearancesPerBandAllIn: Math.round(appearances / Math.max(1, TOTAL_BANDS)),
+    appearancesPerBandInSeason: Math.round(seasonAppearances / Math.max(1, TOTAL_BANDS)),
+    appearancesReconcile:
+      Math.round(seasonAppearances / Math.max(1, TOTAL_BANDS)) === APPEARANCES_PER_BAND,
     /** Weeks reserved for private bookings, with no published date. */
     heldSlots: held.length,
     rows: events.length,

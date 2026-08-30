@@ -596,6 +596,7 @@ export function applyScope(base: EconomicsInputs, scope: Scope): EconomicsInputs
     attendance: Math.max(10, Math.round(base.attendance * fmtCapacity * scope.attendanceMult)),
     showsPerBand: scope.showsPerBand,
     soloSharePct: scope.soloSharePct,
+    actsPerSharedShow: scope.fixture.actsPerFixture,
     numFranchises: scope.houses,
     bandsPerFranchise: scope.bandsPerHouse,
     winningBid: Math.round(base.winningBid * scope.bidMult),

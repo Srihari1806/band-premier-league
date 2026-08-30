@@ -139,9 +139,12 @@ const PER_BAND: Record<string, number> = {
  * a copy, which is how /economics came to publish 5 celebrity nights against
  * the schedule's 100.
  *
- * Distinct from `ShowFormat.actsOnStage`, which describes the format in the
- * abstract. This is how the league actually bills it: a campus format is a
- * solo set, but the league sends a house's whole roster to a campus.
+ * `ShowFormat.actsOnStage` reads this rather than restating it. They were
+ * allowed to differ once, on the theory that a campus format is "a solo set
+ * the league happens to bundle" — but the schedule puts four bands on every
+ * campus event, so a solo set is not what it is. The economics believed the
+ * abstraction and priced 400 solo campus nights that do not exist, paying one
+ * band a whole gate that four of them share.
  */
 export const ACTS_PER_BILL: Record<string, number> = {
   commercial: 1,
@@ -275,7 +278,7 @@ export const SCORED_FORMATS: ShowFormat[] = [
     venue: "campus",
     scored: true,
     perBand: PER_BAND["fest-main-stage"],
-    actsOnStage: 1,
+    actsOnStage: ACTS_PER_BILL.campus,
     capacityIdx: capacityIndexOf("fest-main-stage"),
     priceIdx: 0.5,
     purpose:
@@ -289,7 +292,7 @@ export const SCORED_FORMATS: ShowFormat[] = [
     venue: "campus",
     scored: true,
     perBand: PER_BAND["campus-battle"],
-    actsOnStage: 1,
+    actsOnStage: ACTS_PER_BILL.campus,
     capacityIdx: capacityIndexOf("campus-battle"),
     priceIdx: 0.4,
     purpose:
@@ -303,7 +306,7 @@ export const SCORED_FORMATS: ShowFormat[] = [
     venue: "campus",
     scored: true,
     perBand: PER_BAND["quad-session"],
-    actsOnStage: 1,
+    actsOnStage: ACTS_PER_BILL.campus,
     capacityIdx: capacityIndexOf("quad-session"),
     priceIdx: 0.3,
     purpose:

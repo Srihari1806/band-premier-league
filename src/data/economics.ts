@@ -134,6 +134,15 @@ export const OPERATOR_COSTS_TOTAL = OPERATIONS.operating;
 /** Acts sharing one versus night. Two is the format; named rather than magic. */
 export const ACTS_PER_SHARED_SHOW = 2;
 
+/**
+ * Acts sharing a bill on the SELECTED format.
+ *
+ * The constant above is the versus-night default and was applied to every
+ * shared format, so a house night — four bands on one stage — was counted as
+ * two events per pair rather than one per roster. `applyScope` overrides it
+ * from the format the slicer is actually on.
+ */
+
 /* ------------------------------------------------------------------ *
  * Inputs — everything the page can move
  * ------------------------------------------------------------------ */
@@ -154,6 +163,8 @@ export interface EconomicsInputs {
   /* Fixture format mix */
   /** Share of a band's fixtures that are solo showcases; the rest are versus nights. */
   soloSharePct: number;
+  /** Acts sharing a bill on the selected format. Defaults to the versus night's two. */
+  actsPerSharedShow?: number;
   /** Footfall multiplier on a shared night — two fanbases in one room. */
   coHeadlineUplift: number;
 
@@ -523,8 +534,9 @@ export function computeEconomics(inputs: EconomicsInputs): EconomicsModel {
 
   const totalBands = Math.max(1, numFranchises * bandsPerFranchise);
   const soloFixtures = totalBands * soloShowsPerBand;
-  // A versus night is one ticketed event shared by ACTS_PER_SHARED_SHOW bands.
-  const sharedFixtures = Math.round((totalBands * sharedShowsPerBand) / ACTS_PER_SHARED_SHOW);
+  // One ticketed event shared by however many acts THIS format puts on a bill.
+  const actsShared = Math.max(1, inputs.actsPerSharedShow ?? ACTS_PER_SHARED_SHOW);
+  const sharedFixtures = Math.round((totalBands * sharedShowsPerBand) / actsShared);
   const totalFixtures = soloFixtures + sharedFixtures;
   const totalAdmissions = soloFixtures * attendance + sharedFixtures * sharedAttendance;
 
