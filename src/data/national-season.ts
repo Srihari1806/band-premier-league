@@ -579,8 +579,17 @@ export interface ScheduledEvent {
   /** Band numbers within the house. Two of them on a cross night. */
   bands: number[];
   kind: EventKind;
-  /** False for house nights, festival stages and corporate shows. */
+  /** False for launches, house nights, festival stages and corporate shows. */
   scored: boolean;
+  /**
+   * Whether this night has a real date, or only a reserved week.
+   *
+   * A corporate show is a private booking that happens when a buyer turns up.
+   * The season reserves two weeks a band for them so the load is planned for,
+   * but publishing "Fri 28 May, Tirupati" would assert a sale nobody has made.
+   * Held weeks are excluded from the published calendar and counted separately.
+   */
+  dated: boolean;
   /**
    * Rows sharing one bill. A festival stage-day is ten acts drawn from across
    * the zone, so it is ten rows in a band's season but one night on the
@@ -899,6 +908,7 @@ export function buildFullSchedule(): ScheduledEvent[] {
             kind,
             billId,
             scored: !!fmt,
+            dated: formatId !== "corporate-show",
             formatId,
             formatName: fmt ? fmt.name : off ?? formatId,
             venue: fmt
@@ -988,8 +998,10 @@ export function buildFullSchedule(): ScheduledEvent[] {
 export const FULL_SCHEDULE = buildFullSchedule();
 
 export interface ScheduleTotals {
-  /** Distinct nights on the calendar — a shared bill counts once. */
+  /** Distinct DATED nights on the calendar — a shared bill counts once. */
   events: number;
+  /** Reserved weeks carrying no published date (private bookings). */
+  heldSlots: number;
   /** Band-appearances. Higher than `events` wherever a bill is shared. */
   rows: number;
   scored: number;
@@ -1035,13 +1047,17 @@ export function distinctNights(events = FULL_SCHEDULE): number {
 }
 
 export function scheduleTotals(events = FULL_SCHEDULE): ScheduleTotals {
+  const dated = events.filter((e) => e.dated);
+  const held = events.filter((e) => !e.dated);
   const commercial = events.filter((e) => e.kind === "commercial").length;
   const campus = events.filter((e) => e.kind === "campus").length;
   const cross = events.filter((e) => e.kind === "cross").length;
   const scored = events.filter((e) => e.scored).length;
   const clashes = sameDayClashes(events);
   return {
-    events: distinctNights(events),
+    events: distinctNights(dated),
+    /** Weeks reserved for private bookings, with no published date. */
+    heldSlots: held.length,
     rows: events.length,
     scored,
     offLadder: distinctNights(events.filter((e) => !e.scored)),

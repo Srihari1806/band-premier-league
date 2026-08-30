@@ -92,6 +92,8 @@ const KIND_META: Record<EventKind, { label: string; chip: string; dot: string }>
     chip: "border-slate-500/40 bg-slate-500/10 text-slate-300",
     dot: "bg-slate-400",
   },
+  // NOTE: corporate is intentionally absent from KIND_FILTERS below — those
+  // nights hold a week but carry no published date.
   launch: {
     label: "League launch",
     chip: "border-amber-500/50 bg-amber-500/15 text-amber-200",
@@ -358,6 +360,9 @@ function CalendarPage() {
   const filtered = useMemo(
     () =>
       FULL_SCHEDULE.filter((e) => {
+        // Private bookings hold a week but have no published date — putting one
+        // on the calendar would assert a sale nobody has made.
+        if (!e.dated) return false;
         if (zone !== "all" && e.zoneSlug !== zone) return false;
         if (house !== "all" && e.houseNumber !== Number(house)) return false;
         if (band !== "all" && !e.bands.includes(Number(band))) return false;
@@ -474,6 +479,20 @@ function CalendarPage() {
         </section>
 
         <div className="mx-auto max-w-7xl px-4 sm:px-6 py-10 space-y-6">
+          {/* What is deliberately not on this calendar */}
+          <div className="bpl-card p-4 border border-border bg-surface/40 flex gap-3">
+            <Info size={15} className="text-primary-glow shrink-0 mt-0.5" />
+            <p className="text-[11px] text-muted-foreground leading-relaxed">
+              <span className="font-semibold text-white">
+                {SCHEDULE_TOTALS.heldSlots} corporate bookings are not dated here.
+              </span>{" "}
+              Every band&apos;s season reserves two weeks for private shows so the load is planned
+              for, but a corporate booking happens when a buyer turns up. Publishing a date and a
+              city for one would assert a sale nobody has made. They are held weeks, and they appear
+              on the band&apos;s season plan rather than on this calendar.
+            </p>
+          </div>
+
           {/* Reconciliation */}
           <div
             className={`bpl-card p-4 border flex gap-3 ${
@@ -604,6 +623,9 @@ function CalendarPage() {
                   { id: "commercial", label: "Commercial" },
                   { id: "campus", label: "Campus" },
                   { id: "cross", label: "Cross night" },
+                  { id: "house", label: "House night" },
+                  { id: "festival", label: "Festival" },
+                  { id: "launch", label: "League launch" },
                 ]}
                 onChange={setKind}
               />
@@ -615,12 +637,14 @@ function CalendarPage() {
               />
             </div>
             <div className="flex flex-wrap gap-3 pt-1">
-              {(Object.keys(KIND_META) as EventKind[]).map((k) => (
-                <span key={k} className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
-                  <span className={`h-2 w-2 rounded-full ${KIND_META[k].dot}`} />
-                  {KIND_META[k].label}
-                </span>
-              ))}
+              {(Object.keys(KIND_META) as EventKind[])
+                .filter((k) => k !== "corporate")
+                .map((k) => (
+                  <span key={k} className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
+                    <span className={`h-2 w-2 rounded-full ${KIND_META[k].dot}`} />
+                    {KIND_META[k].label}
+                  </span>
+                ))}
               <span className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
                 <Radio size={10} className="text-amber-400" /> Cricket-window weekend
               </span>
