@@ -1265,7 +1265,7 @@ function LeaguePage() {
           {/* Fest calendar vs the fixture calendar */}
           <div className="bpl-card p-6 mb-6 border-emerald-500/20 bg-emerald-500/5">
             <h4 className="text-xs font-bold uppercase tracking-wider text-white flex items-center gap-2 mb-3">
-              <CalendarDays size={14} className="text-emerald-400" /> Scheduled Around Fest Season
+              <CalendarDays size={14} className="text-emerald-400" /> Campus Nights by Month
             </h4>
             <div className="grid grid-cols-3 sm:grid-cols-6 gap-2 mb-4">
               {CAMPUS_LOAD.map((m) => {
