@@ -193,7 +193,8 @@ function SeasonPage() {
                   A city absorbs {ZONE_CAPACITY[0].appearancesPerWeek} band appearances across
                   roughly {ZONE_CAPACITY[0].eventsPerWeek} physical events over Friday, Saturday and
                   Sunday — the difference being that versus nights, campus dates, house nights and
-                  the celebrity milestones all put several bands on one bill. Nationally that is{" "}
+                  festival stages all put several bands on one bill. A celebrity night does not: it
+                  is one band, one guest, one night. Nationally that is{" "}
                   {NATIONAL_CAPACITY.appearancesPerWeek} appearances a week across{" "}
                   {NATIONAL_CAPACITY.eventsPerWeek} events. Rest between a band&apos;s appearances
                   averages {AVERAGE_REST_DAYS} days.

@@ -23,6 +23,7 @@
 import { NATIONAL_TOTAL_BANDS, NATIONAL_TOTAL_HOUSES, ZONES } from "./league-format";
 import { EVENT_SPLIT, CONTENT_SPLIT } from "./economics";
 import { COST_BUCKETS, amountAt } from "./league-capital";
+import { ACTS_PER_BILL } from "./show-formats";
 
 /* ------------------------------------------------------------------ *
  * Inputs
@@ -341,6 +342,26 @@ export interface EventResult {
    * night is a bet on the door.
    */
   sponsorshipCushionPct: number;
+  /**
+   * Contribution as a share of what the night took — the promoter's own
+   * yardstick, on an all-in cost base. Every cost the night carries is inside
+   * it, including any guest fee that was recovered off the gate rather than
+   * paid out of the operator's share.
+   */
+  marginPct: number;
+  /**
+   * What the 40/30/30 actually runs on. The net gate everywhere except a
+   * celebrity night, where the guest fee is recovered first.
+   */
+  splitBase?: number;
+  /** Guest fee recovered off the gate before the split. Celebrity nights only. */
+  feeOffTop?: number;
+  /**
+   * How the room was actually sold, where one ticket price does not describe
+   * it. A celebrity night is tiered, so "1,050 in at 999" would be false for
+   * a fifth of the room and would understate the gate.
+   */
+  gateNote?: string;
 }
 
 /**
@@ -353,6 +374,7 @@ function promoterMetrics(totalRevenue: number, attendees: number, sponsorish: nu
   return {
     revenuePerAttendee: attendees > 0 ? Math.round(totalRevenue / attendees) : 0,
     sponsorshipCushionPct: cost > 0 ? (sponsorish / cost) * 100 : 0,
+    marginPct: totalRevenue > 0 ? ((totalRevenue - cost) / totalRevenue) * 100 : 0,
   };
 }
 
@@ -503,13 +525,18 @@ export function computeEvent(type: EventType, i: SimInputs): EventResult {
    * share — it loses money on a night that made a profit, which is exactly
    * what the promoter model avoids by keeping the gate and paying a fee. Taken
    * off the top, everybody splits what the night actually cleared.
+   *
+   * It changes WHAT IS SPLIT, not what the night cost. The fee stays a cost
+   * line at its full value and `splitBase` is what the 40/30/30 runs on —
+   * netting it out of revenue instead reports a margin on money the night
+   * never kept, and leaves the same card carrying two different cost bases.
    */
   const feeOffTop = i.celebrityFeeOffTheTop ? Math.min(netGateRaw, i.celebrityFee) : 0;
-  const netGate = netGateRaw - feeOffTop;
+  const splitBase = netGateRaw - feeOffTop;
 
-  const bandPool = Math.round(netGate * (EVENT_SPLIT.bands / 100));
-  const housePool = Math.round(netGate * (EVENT_SPLIT.productionHouse / 100));
-  const operatorGatePool = netGate - bandPool - housePool;
+  const bandPool = Math.round(splitBase * (EVENT_SPLIT.bands / 100));
+  const housePool = Math.round(splitBase * (EVENT_SPLIT.productionHouse / 100));
+  const operatorGatePool = splitBase - bandPool - housePool;
 
   const fnb = Math.round(
     celAttendees * i.celebrityFnbPerHead * (i.celebrityFnbCommissionPct / 100),
@@ -524,9 +551,10 @@ export function computeEvent(type: EventType, i: SimInputs): EventResult {
   const ancillaryTotal = ancillary.reduce((s, a) => s + a.amount, 0);
 
   const costLines = [
-    ...(i.celebrityFeeOffTheTop
-      ? [{ label: "Celebrity fee (taken off the gate)", amount: 0 }]
-      : [{ label: "Celebrity fee", amount: i.celebrityFee }]),
+    {
+      label: i.celebrityFeeOffTheTop ? "Celebrity fee (recovered off the gate)" : "Celebrity fee",
+      amount: i.celebrityFee,
+    },
     { label: "Travel", amount: i.celebrityTravel },
     { label: "Accommodation", amount: i.celebrityAccommodation },
     { label: "Hospitality", amount: i.celebrityHospitality },
@@ -539,7 +567,7 @@ export function computeEvent(type: EventType, i: SimInputs): EventResult {
     attendees: celAttendees,
     grossGate,
     ticketingFee,
-    netGate,
+    netGate: netGateRaw,
   };
   const totalRevenue = g.netGate + ancillaryTotal;
 
@@ -559,15 +587,20 @@ export function computeEvent(type: EventType, i: SimInputs): EventResult {
     totalRevenue,
     cost,
     contribution: totalRevenue - cost,
-    operatorResult: operatorGatePool + ancillaryTotal - cost,
+    /*
+     * The operator does not pay the fee twice. Whatever came off the gate has
+     * already left the pool it takes its 30% of, so only the balance of the
+     * cost stack lands on the operator.
+     */
+    operatorResult: operatorGatePool + ancillaryTotal - (cost - feeOffTop),
     verdict: verdictFor(totalRevenue, cost),
     costLines,
-    ...promoterMetrics(
-      totalRevenue,
-      g.attendees,
-      i.celebritySponsor,
-      cost + (i.celebrityFeeOffTheTop ? i.celebrityFee : 0),
-    ),
+    splitBase,
+    feeOffTop,
+    gateNote: `${generalSeats.toLocaleString("en-IN")} at ${inrLocal(
+      i.celebrityTicketPrice,
+    )} + ${vipSeats.toLocaleString("en-IN")} premium at ${inrLocal(i.celebrityVipPrice)}`,
+    ...promoterMetrics(totalRevenue, g.attendees, i.celebritySponsor, cost),
   };
 }
 
@@ -650,20 +683,12 @@ export function breakEven(i: SimInputs): BreakEven {
 /**
  * Bands sharing one bill, by format.
  *
- * This table is the whole appearances-versus-events distinction: six versus
- * appearances are three physical nights, and a celebrity milestone is one
- * night carrying an entire zone roster. Quoting 48 shows a band when the
- * league stages far fewer is the difference between a defensible operating
- * plan and an unbuildable one.
+ * Re-exported, not restated. This module prices the nights and
+ * `national-season.ts` dates them; when each kept its own copy of the table
+ * they drifted, and /economics published 5 celebrity nights against the
+ * schedule's 100. `ACTS_PER_BILL` in show-formats.ts is the only owner.
  */
-export const ACTS_ON_BILL: Record<string, number> = {
-  commercial: 1,
-  cross: 2,
-  campus: 4,
-  house: 4,
-  festival: 10,
-  celebrity: 20,
-};
+export const ACTS_ON_BILL = ACTS_PER_BILL;
 
 export interface BandResult {
   touchpoints: { label: string; count: number; acts: number; events: number }[];
@@ -928,8 +953,8 @@ export function computeLeague(i: SimInputs, cfg = leagueConfig()): LeagueResult 
 
   // Nights, not appearances — a cross night is one stage for two bands, a
   // house night one stage for the whole roster, a festival day one bill.
-  // Appearances divided by how many acts share the bill — a versus night is one
-  // stage for two bands, a celebrity milestone one stage for a whole roster.
+  // A celebrity night is the exception that is NOT shared: one band, one
+  // guest, one night, so 100 appearances are 100 nights.
   const nightCounts = [
     { label: "Commercial", app: bands * i.commercialShows, acts: ACTS_ON_BILL.commercial, ev: commercial },
     { label: "Cross nights", app: bands * i.crossNights, acts: ACTS_ON_BILL.cross, ev: cross },
@@ -1018,9 +1043,35 @@ export function findings(i: SimInputs, cfg = leagueConfig()): Finding[] {
         100 - EVENT_SPLIT.operator
       }% of the net gate before the operator sees any of it — so the operator is ${inrLocal(
         Math.abs(celeb.operatorResult),
-      )} down on every one. Either the guest fee comes off the top before the split, or it has to be sponsor-funded. Across ${
-        cfg.bands * i.celebrityShows
+      )} down on every one. The fix is the "fee off the top" switch — recover the guest fee from the gate before the 40/30/30, the way a promoter keeps the gate and pays the artist a fee. Across ${
+        Math.round((cfg.bands * i.celebrityShows) / ACTS_ON_BILL.celebrity)
       } of them that is the difference between a surplus and a hole.`,
+    });
+  }
+
+  /*
+   * One per band means 100 of them, and 100 is a different proposition to 15.
+   *
+   * This is now the largest single line in the league view, and it rests on two
+   * things the model cannot conjure: a sponsor for every night and a guest
+   * artist for every night. Both are per-night deals, not one contract.
+   */
+  const celebNights = Math.round((cfg.bands * i.celebrityShows) / ACTS_ON_BILL.celebrity);
+  const celebSponsorTotal = i.celebritySponsor * celebNights;
+  if (celebNights > 0 && celebSponsorTotal > 10000000) {
+    out.push({
+      id: "celebrity-scale",
+      severity: "warn",
+      headline: `${celebNights} celebrity nights need ${inrLocal(celebSponsorTotal)} of sponsorship and ${celebNights} guest artists`,
+      detail: `One celebrity night per band is ${celebNights} nights nationally, each modelled with a ${inrLocal(
+        i.celebritySponsor,
+      )} sponsor covering ${celeb.sponsorshipCushionPct.toFixed(
+        0,
+      )}% of its cost and a ${inrLocal(
+        i.celebrityFee,
+      )} guest fee. They contribute ${inrLocal(
+        celeb.operatorResult * celebNights,
+      )} to the operator — the largest line in the league view — and every rupee of it is ${celebNights} separate bookings and ${celebNights} separate sponsor conversations. Booking availability, not money, is the binding constraint here.`,
     });
   }
 
@@ -1034,9 +1085,11 @@ export function findings(i: SimInputs, cfg = leagueConfig()): Finding[] {
         cfg.bands * i.campusShows
       } campus nights is modelled with a ${inrLocal(
         i.campusSponsor,
-      )} sponsor behind it. That is the single largest assumption in the league view, and it is ${
-        cfg.bands * i.campusShows
-      } separate conversations, not one deal.`,
+      )} sponsor behind it. ${
+        campusSponsorTotal >= celebSponsorTotal
+          ? "That is the single largest assumption in the league view"
+          : `That sits behind the ${inrLocal(celebSponsorTotal)} of celebrity sponsorship as the second largest assumption in the league view`
+      }, and it is ${cfg.bands * i.campusShows} separate conversations, not one deal.`,
     });
   }
 

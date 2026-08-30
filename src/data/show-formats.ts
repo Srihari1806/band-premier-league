@@ -94,11 +94,63 @@ const RAW_CAPACITY: Record<string, number> = {
   "pub-night": 250,
   "club-headline": 450,
   unplugged: 200,
-  "launch-night": 700,
+  "launch-night": 1500,
   "arena-night": 1200,
   "fest-main-stage": 800,
   "campus-battle": 300,
   "quad-session": 250,
+};
+
+/**
+ * Nights of each format one band plays in a season. THE single owner.
+ *
+ * Every format literal below reads its `perBand` from here, and so does the
+ * weighting that normalises the capacity indices. They used to be two lists,
+ * and the moment the celebrity night went from three a band to one they
+ * disagreed — `perBand` said 1, the weights still said 3, and
+ * `FORMAT_MIX.seatsNeutral` quietly became false while every gate figure in
+ * economics.ts took a 7% haircut that never surfaced as an error.
+ *
+ * The literals cannot read this off SCORED_FORMATS instead: `capacityIndexOf`
+ * is called while that array is still being constructed, so the weights have
+ * to exist first. One map above both is the way out.
+ */
+const PER_BAND: Record<string, number> = {
+  "cafe-set": 5,
+  "pub-night": 5,
+  "club-headline": 5,
+  unplugged: 4,
+  /** One per band, so all 100 bands get the platform exactly once. */
+  "launch-night": 1,
+  "arena-night": 5,
+  "fest-main-stage": 4,
+  "campus-battle": 3,
+  "quad-session": 3,
+  "versus-night": 6,
+};
+
+/**
+ * Bands sharing one DATED bill, by kind — the other single owner.
+ *
+ * This is the appearances-versus-events distinction: six versus appearances
+ * are three physical nights, a festival stage-day is ten acts on one bill, and
+ * a celebrity night is one band with one guest. `national-season.ts` dates the
+ * nights and `simulator.ts` prices them; both import this rather than keeping
+ * a copy, which is how /economics came to publish 5 celebrity nights against
+ * the schedule's 100.
+ *
+ * Distinct from `ShowFormat.actsOnStage`, which describes the format in the
+ * abstract. This is how the league actually bills it: a campus format is a
+ * solo set, but the league sends a house's whole roster to a campus.
+ */
+export const ACTS_PER_BILL: Record<string, number> = {
+  commercial: 1,
+  cross: 2,
+  campus: 4,
+  house: 4,
+  festival: 10,
+  celebrity: 1,
+  launch: 20,
 };
 
 /**
@@ -110,20 +162,9 @@ const RAW_CAPACITY: Record<string, number> = {
  * or the "seats are neutral" guarantee quietly becomes false.
  */
 const SOLO_IDS = Object.keys(RAW_CAPACITY);
-const SOLO_WEIGHTS: Record<string, number> = {
-  "cafe-set": 5,
-  "pub-night": 5,
-  "club-headline": 5,
-  unplugged: 4,
-  "launch-night": 3,
-  "arena-night": 5,
-  "fest-main-stage": 4,
-  "campus-battle": 3,
-  "quad-session": 3,
-};
-const WEIGHT_TOTAL = SOLO_IDS.reduce((s, id) => s + (SOLO_WEIGHTS[id] ?? 1), 0);
+const WEIGHT_TOTAL = SOLO_IDS.reduce((s, id) => s + (PER_BAND[id] ?? 1), 0);
 const MEAN_RAW =
-  SOLO_IDS.reduce((s, id) => s + RAW_CAPACITY[id] * (SOLO_WEIGHTS[id] ?? 1), 0) / WEIGHT_TOTAL;
+  SOLO_IDS.reduce((s, id) => s + RAW_CAPACITY[id] * (PER_BAND[id] ?? 1), 0) / WEIGHT_TOTAL;
 
 /** Room size as a multiple of the season's average room. Mean is exactly 1.0. */
 export function capacityIndexOf(id: string): number {
@@ -147,7 +188,7 @@ export const SCORED_FORMATS: ShowFormat[] = [
     kind: "commercial",
     venue: "cafe",
     scored: true,
-    perBand: 5,
+    perBand: PER_BAND["cafe-set"],
     actsOnStage: 1,
     capacityIdx: capacityIndexOf("cafe-set"),
     priceIdx: 0.6,
@@ -161,7 +202,7 @@ export const SCORED_FORMATS: ShowFormat[] = [
     kind: "commercial",
     venue: "pub",
     scored: true,
-    perBand: 5,
+    perBand: PER_BAND["pub-night"],
     actsOnStage: 1,
     capacityIdx: capacityIndexOf("pub-night"),
     priceIdx: 0.9,
@@ -175,7 +216,7 @@ export const SCORED_FORMATS: ShowFormat[] = [
     kind: "commercial",
     venue: "club",
     scored: true,
-    perBand: 5,
+    perBand: PER_BAND["club-headline"],
     actsOnStage: 1,
     capacityIdx: capacityIndexOf("club-headline"),
     priceIdx: 1.1,
@@ -189,7 +230,7 @@ export const SCORED_FORMATS: ShowFormat[] = [
     kind: "commercial",
     venue: "listening-room",
     scored: true,
-    perBand: 4,
+    perBand: PER_BAND["unplugged"],
     actsOnStage: 1,
     capacityIdx: capacityIndexOf("unplugged"),
     priceIdx: 1.6,
@@ -201,9 +242,11 @@ export const SCORED_FORMATS: ShowFormat[] = [
     id: "launch-night",
     name: "Celebrity Night",
     kind: "celebrity",
-    venue: "auditorium",
+    // The guest fills a bigger room than the band can carry alone, which is
+    // the whole reason the night is worth a guest fee.
+    venue: "arena",
     scored: true,
-    perBand: 1,
+    perBand: PER_BAND["launch-night"],
     actsOnStage: 1,
     capacityIdx: capacityIndexOf("launch-night"),
     priceIdx: 1.5,
@@ -217,12 +260,12 @@ export const SCORED_FORMATS: ShowFormat[] = [
     kind: "commercial",
     venue: "arena",
     scored: true,
-    perBand: 5,
+    perBand: PER_BAND["arena-night"],
     actsOnStage: 1,
     capacityIdx: capacityIndexOf("arena-night"),
     priceIdx: 1.2,
     purpose:
-      "The biggest room a league band plays before the play-offs, and the last scored commercial night of its season.",
+      "The biggest room a band carries on its own name, and the last scored commercial night of its season. Only the celebrity night puts it in front of more people, and that room belongs to the guest.",
     ticketing: "Tiered — front standing and general.",
   },
   {
@@ -231,7 +274,7 @@ export const SCORED_FORMATS: ShowFormat[] = [
     kind: "campus",
     venue: "campus",
     scored: true,
-    perBand: 4,
+    perBand: PER_BAND["fest-main-stage"],
     actsOnStage: 1,
     capacityIdx: capacityIndexOf("fest-main-stage"),
     priceIdx: 0.5,
@@ -245,7 +288,7 @@ export const SCORED_FORMATS: ShowFormat[] = [
     kind: "campus",
     venue: "campus",
     scored: true,
-    perBand: 3,
+    perBand: PER_BAND["campus-battle"],
     actsOnStage: 1,
     capacityIdx: capacityIndexOf("campus-battle"),
     priceIdx: 0.4,
@@ -259,7 +302,7 @@ export const SCORED_FORMATS: ShowFormat[] = [
     kind: "campus",
     venue: "campus",
     scored: true,
-    perBand: 3,
+    perBand: PER_BAND["quad-session"],
     actsOnStage: 1,
     capacityIdx: capacityIndexOf("quad-session"),
     priceIdx: 0.3,
@@ -273,7 +316,7 @@ export const SCORED_FORMATS: ShowFormat[] = [
     kind: "cross",
     venue: "auditorium",
     scored: true,
-    perBand: 6,
+    perBand: PER_BAND["versus-night"],
     actsOnStage: 2,
     capacityIdx: 1,
     priceIdx: 1.25,

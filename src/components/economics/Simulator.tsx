@@ -267,7 +267,7 @@ export function Simulator() {
             <p className="text-[11px] text-white leading-relaxed">
               <span className="font-bold">One city a week.</span> A zone activates a single city at
               a time — Friday and Sunday are paid shows, Saturday is campus, house, festival or a
-              celebrity milestone — then the league moves on. Over {i.seasonWeeks} weeks that is a
+              celebrity night — then the league moves on. Over {i.seasonWeeks} weeks that is a
               tour of the zone&apos;s hubs rather than three cities running at once, which is what
               makes it possible to run with one ops team per zone.
             </p>
@@ -339,7 +339,7 @@ export function Simulator() {
           </p>
 
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-            <Big value={inr(ev.totalRevenue)} label="Total event revenue" hint={ev.netGate > 0 ? `${ev.attendees} in at ${inr(ev.ticketPrice)}` : "No gate on this format"} />
+            <Big value={inr(ev.totalRevenue)} label="Total event revenue" hint={ev.netGate > 0 ? (ev.gateNote ?? `${ev.attendees} in at ${inr(ev.ticketPrice)}`) : "No gate on this format"} />
             <Big value={inr(ev.cost)} label="Event cost" tone="text-rose-300" />
             <Big
               value={`${ev.contribution < 0 ? "−" : ""}${inr(Math.abs(ev.contribution))}`}
@@ -367,6 +367,16 @@ export function Simulator() {
                   </span>{" "}
                   of cost covered before a ticket sells
                 </p>
+                <p className="text-[10px] text-muted-foreground">
+                  <span
+                    className={`font-semibold tabular-nums ${
+                      ev.marginPct < 0 ? "text-rose-300" : "text-white"
+                    }`}
+                  >
+                    {ev.marginPct.toFixed(0)}%
+                  </span>{" "}
+                  margin, all-in
+                </p>
               </div>
               <p className="text-[10px] text-muted-foreground leading-snug">
                 Operator keeps{" "}
@@ -385,6 +395,12 @@ export function Simulator() {
                 <Line label="Gross gate" amount={ev.grossGate} note={`${ev.attendees} × ${inr(ev.ticketPrice)}`} />
                 <Line label={`Ticketing (${i.ticketingPct}%)`} amount={ev.ticketingFee} negative />
                 <Line label="Net gate" amount={ev.netGate} bold />
+                {!!ev.feeOffTop && (
+                  <>
+                    <Line label="Guest fee, recovered first" amount={ev.feeOffTop} negative />
+                    <Line label="Splits on" amount={ev.splitBase ?? ev.netGate} bold />
+                  </>
+                )}
                 <Line label={`Bands (${EVENT_SPLIT.bands}%)`} amount={ev.bandPool} note={ev.acts > 1 ? `${inr(ev.bandPerAct)} each across ${ev.acts} acts` : undefined} />
                 <Line label={`Production house (${EVENT_SPLIT.productionHouse}%)`} amount={ev.housePool} />
                 <Line label={`League operator (${EVENT_SPLIT.operator}%)`} amount={ev.operatorGatePool} />

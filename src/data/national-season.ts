@@ -30,6 +30,7 @@ import {
   type Zone,
 } from "./league-format";
 import {
+  ACTS_PER_BILL,
   buildOffLadderFormats,
   CAMPUS_FORMATS,
   SCORED_FORMATS,
@@ -91,8 +92,8 @@ export const TOTAL_INDIVIDUAL_FIXTURES = TOTAL_BANDS * INDIVIDUAL_FIXTURES_PER_B
  *
  * Every band plays 46 appearances across these 24 weeks: a commercial night
  * every week, a versus night on six of them, and a Saturday special on
- * eighteen. Friday and Sunday are the revenue engine and Saturday is the
- * ecosystem — campus, house nights, festivals and the celebrity milestones.
+ * sixteen. Friday and Sunday are the revenue engine and Saturday is the
+ * ecosystem — campus, house nights, festivals and the band's celebrity night.
  */
 export const SEASON_START_ISO = "2027-01-02";
 export const SEASON_OPENS_ISO = "2026-12-31";
@@ -658,8 +659,8 @@ export function cityBlocks(zone: NationalZone): CityBlock[] {
  *
  * A band plays one commercial night every week and a versus night on six of
  * them, which fills 30 of its 48 Friday and Sunday slots. The other 16 are
- * Saturdays: campus, house nights, festivals and the celebrity milestones.
- * Six Saturdays are deliberately left empty — a season with no slack does not
+ * Saturdays: campus, house nights, festivals and its one celebrity night.
+ * Five Saturdays are deliberately left empty — a season with no slack does not
  * survive its first cancellation.
  */
 interface DaySlot {
@@ -680,8 +681,22 @@ const THU = 3;
 
 /** Weeks carrying a versus night, spread across the season. */
 export const CROSS_WEEKS = [3, 7, 11, 15, 19, 23];
-/** Zone-wide Saturdays: every band in the league is on the bill. */
-export const CELEBRITY_WEEKS = [11];
+/**
+ * Celebrity Saturdays — four of them, one per band in a house.
+ *
+ * One band, one guest, one night. A house stages the k-th of its bands on the
+ * k-th of these weeks, so a zone gets 5 nights a Saturday (one per house, the
+ * same load as a campus or house-night Saturday) and 20 across the season —
+ * 100 nationally, every band exactly once.
+ *
+ * A single celebrity week does NOT work: it puts all 20 of a zone's nights on
+ * one date, which is 20 separate 1,500-cap rooms and 20 guest artists in the
+ * one city that zone has activated that week.
+ *
+ * All four sit in the back half, after every band's first original is out —
+ * the night is that song's live premiere, so it cannot precede the release.
+ */
+export const CELEBRITY_WEEKS = [11, 16, 19, 22];
 export const FESTIVAL_WEEKS = [5, 13, 21];
 /** House-level Saturdays. */
 export const HOUSE_NIGHT_WEEKS = [8, 18];
@@ -689,19 +704,12 @@ export const CAMPUS_WEEKS = [0, 2, 3, 4, 6, 7, 9, 10, 12, 14];
 export const LAUNCH_WEEK = 0;
 
 /**
- * Bands sharing one bill, by format. This is the whole appearances-vs-events
- * distinction in one table: six versus appearances are three physical nights,
- * and a celebrity milestone is one night carrying the entire zone roster.
+ * Bands sharing one bill, by format.
+ *
+ * Re-exported, not restated — see `ACTS_PER_BILL` in show-formats.ts, which
+ * owns it for both this module and the simulator.
  */
-export const ACTS_PER_EVENT: Record<string, number> = {
-  commercial: 1,
-  cross: 2,
-  campus: 4,
-  house: 4,
-  festival: 10,
-  celebrity: 1,
-  launch: 20,
-};
+export const ACTS_PER_EVENT = ACTS_PER_BILL;
 
 /** Distinct pairings inside a house, in a stable order. */
 export function housePairings(bands: number): number[][] {
@@ -834,9 +842,12 @@ export function buildFullSchedule(): ScheduledEvent[] {
       if (isCelebrity && celebrityFormat) {
         // One band, one celebrity, one night — not a roster showcase. The guest
         // fee only makes sense against a room the band is actually carrying.
-        for (let h = 1; h <= zone.houses; h += 1) {
-          for (let b = 1; b <= zone.bandsPerHouse; b += 1) {
-            push(SAT, h, [b], celebrityFormat.id, hub.city, `celeb-b${b}`);
+        // Which band is decided by WHICH celebrity week this is, so a house
+        // stages one of these a Saturday rather than all four at once.
+        const band = CELEBRITY_WEEKS.indexOf(w) + 1;
+        if (band <= zone.bandsPerHouse) {
+          for (let h = 1; h <= zone.houses; h += 1) {
+            push(SAT, h, [band], celebrityFormat.id, hub.city, `celeb-b${band}`);
           }
         }
       } else if (isFestival) {
@@ -910,8 +921,8 @@ export interface ScheduleTotals {
   events: number;
   /**
    * Band appearances. Always higher than `events`, and the gap is the point:
-   * a versus night is two appearances on one stage, a celebrity milestone is
-   * a festival bill ten. 46 appearances a band is not 46 nights.
+   * a versus night is two appearances on one stage and a festival bill ten.
+   * 46 appearances a band is not 46 nights.
    */
   appearances: number;
   appearancesPerBand: number;
