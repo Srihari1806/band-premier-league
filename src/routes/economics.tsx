@@ -83,6 +83,7 @@ import {
   AUCTION,
   DEFAULT_BIDS,
   SPEND_CAPS,
+  SONGS_PER_BAND,
   SIGNING_SPLIT,
   signingSplitOf,
   PRIZE_SPLIT,
@@ -489,50 +490,23 @@ function EventEconomics({ scope }: { scope: Scope }) {
           sub={`${scope.breadcrumb[1]} · ${scope.city ? scope.city.city : "all cities"}. The room, the ticket and the cost stack are sized to the market in the slicer; every cost is pulled from the shared assumption registry. Change the format below to override the default room for this fixture type.`}
         />
 
-        {/* Preset + tier selectors */}
-        <div className="flex flex-wrap items-center gap-2 mb-5">
-          <span className="text-[10px] uppercase tracking-wider font-bold text-muted-foreground flex items-center gap-1.5 mr-1">
+        {/* One filter. The Format dimension in the slicer decides the room and
+            the production tier; this panel used to re-decide both with its own
+            two rows of buttons, which is two controls for one question. */}
+        <div className="bpl-card p-3 border border-border bg-surface/40 mb-4 flex flex-wrap items-center gap-x-4 gap-y-1.5">
+          <span className="text-[10px] uppercase tracking-wider font-bold text-muted-foreground flex items-center gap-1.5">
             <Building2 size={12} className="text-primary-glow" /> Format
           </span>
-          {EVENT_PRESETS.map((p) => (
-            <button
-              key={p.id}
-              type="button"
-              title={p.blurb}
-              onClick={() => selectPreset(p.id)}
-              className={`px-3 py-1.5 rounded-full border text-[11px] font-bold transition cursor-pointer ${
-                ev.presetId === p.id
-                  ? "border-primary/60 bg-primary/15 text-primary-glow"
-                  : "border-border bg-secondary/40 text-muted-foreground hover:text-white hover:border-primary/40"
-              }`}
-            >
-              {p.label}
-            </button>
-          ))}
-        </div>
-
-        <div className="flex flex-wrap items-center gap-2 mb-6">
-          <span className="text-[10px] uppercase tracking-wider font-bold text-muted-foreground flex items-center gap-1.5 mr-1">
-            <Swords size={12} className="text-amber-300" /> Fixture tier
+          <span className="text-xs font-bold text-white">{scope.fixture.label}</span>
+          <span className="text-[10px] text-muted-foreground">
+            {e.preset.label} cost stack · {e.tier.label}
+            {e.tier.multiplier !== 1 && (
+              <span className="tabular-nums"> · production ×{e.tier.multiplier}</span>
+            )}
           </span>
-          {EVENT_TIERS.map((t) => (
-            <button
-              key={t.id}
-              type="button"
-              title={`${t.note} — production spend × ${t.multiplier}`}
-              onClick={() => setEv((prev) => ({ ...prev, tierId: t.id }))}
-              className={`px-3 py-1.5 rounded-full border text-[11px] font-bold transition cursor-pointer ${
-                ev.tierId === t.id
-                  ? "border-amber-500/60 bg-amber-500/15 text-amber-200"
-                  : "border-border bg-secondary/40 text-muted-foreground hover:text-white hover:border-amber-500/40"
-              }`}
-            >
-              {t.label}
-              {t.multiplier !== 1 && (
-                <span className="ml-1 opacity-70 tabular-nums">{t.multiplier}×</span>
-              )}
-            </button>
-          ))}
+          <span className="text-[10px] text-muted-foreground ml-auto">
+            Set in the slicer at the top of the page.
+          </span>
         </div>
 
         <p className="text-xs text-muted-foreground leading-relaxed mb-6 max-w-3xl">
@@ -1471,8 +1445,11 @@ function AuctionPurse({ seasonReturn }: { seasonReturn: number }) {
 
   const purse = useMemo(() => evaluatePurse(bids), [bids]);
   const commitment = useMemo(() => {
-    const creative = capOf("creative") * AUCTION.bandsRequired;
-    const marketing = capOf("marketing");
+    // Creative and marketing are quoted PER SONG, so a house pays them for
+    // every original its whole roster ships, not once a season.
+    const songsPerRoster = SONGS_PER_BAND * AUCTION.bandsRequired;
+    const creative = capOf("creative") * songsPerRoster;
+    const marketing = capOf("marketing") * songsPerRoster;
     const mentor = capOf("mentor");
     return {
       acquisition: purse.spent,
@@ -1637,21 +1614,21 @@ function AuctionPurse({ seasonReturn }: { seasonReturn: number }) {
                 muted
               />
               <CostLine
-                label={`Creative allocation (per band × ${AUCTION.bandsRequired})`}
+                label={`Creative allocation (per song × ${SONGS_PER_BAND * AUCTION.bandsRequired})`}
                 rate={capOf("creative")}
                 amount={commitment.creative}
-                multiplier={AUCTION.bandsRequired}
+                multiplier={SONGS_PER_BAND * AUCTION.bandsRequired}
                 onChange={(v) => setCapOverrides((prev) => ({ ...prev, creative: v }))}
               />
               <CostLine
-                label="Marketing cap"
+                label={`Song marketing (per song × ${SONGS_PER_BAND * AUCTION.bandsRequired})`}
                 rate={capOf("marketing")}
                 amount={commitment.marketing}
-                multiplier={1}
+                multiplier={SONGS_PER_BAND * AUCTION.bandsRequired}
                 onChange={(v) => setCapOverrides((prev) => ({ ...prev, marketing: v }))}
               />
               <CostLine
-                label="Mentor cap"
+                label="Mentor association (per house)"
                 rate={capOf("mentor")}
                 amount={commitment.mentor}
                 multiplier={1}
@@ -2777,18 +2754,30 @@ function EconomicsPage() {
                 {m.phVariablePct.toFixed(0)}% of the headline return — needs rights deals to land
               </p>
             </div>
-            <div className="bpl-card p-4 border border-border/80 bg-surface/60 space-y-1">
-              <div className="flex items-center gap-1.5 text-primary-glow">
+            <div
+              className={`bpl-card p-4 border space-y-1 ${
+                m.phCommitmentMultiple < 1
+                  ? "border-rose-500/35 bg-rose-500/5"
+                  : "border-border/80 bg-surface/60"
+              }`}
+            >
+              <div
+                className={`flex items-center gap-1.5 ${
+                  m.phCommitmentMultiple < 1 ? "text-rose-300" : "text-primary-glow"
+                }`}
+              >
                 <TrendingUp size={13} />
                 <span className="text-[10px] uppercase tracking-wider font-bold">
-                  Combined Multiple
+                  On everything committed
                 </span>
               </div>
               <p className="text-2xl font-display font-extrabold text-white tabular-nums">
-                {m.phSeasonMultiple.toFixed(2)}×
+                {m.phCommitmentMultiple.toFixed(2)}×
               </p>
               <p className="text-[11px] text-muted-foreground">
-                {inr(scopedInputs.winningBid)} in, {inr(m.phSeasonTotal)} back
+                {inr(m.phTotalCommitment)} in, {inr(m.phSeasonTotal)} back —{" "}
+                {m.phSeasonMultiple.toFixed(2)}× if you count only the{" "}
+                {inr(scopedInputs.winningBid)} bid
               </p>
             </div>
           </div>

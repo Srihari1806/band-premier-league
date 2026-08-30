@@ -19,6 +19,7 @@
  */
 
 import {
+  RELEASES_PER_BAND,
   RELEASE_CYCLE_DAYS,
   COMPETITION_WEEKENDS,
   STAGE_2_STRUCTURE,
@@ -1056,7 +1057,6 @@ export const SCHEDULE_TOTALS = scheduleTotals();
  * put ₹10,400 behind each of them. Three is a budget a band can actually make
  * something with.
  */
-export const RELEASES_PER_BAND = 3;
 /** Days between one band's drops. */
 export const BAND_CYCLE_DAYS = 60;
 /** Days between consecutive drops from the same house. */

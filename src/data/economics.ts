@@ -18,9 +18,10 @@
  * via `soloSharePct` and `coHeadlineUplift`.
  */
 
-import { SEASON_WEEKS, SEASONS_PER_YEAR } from "./league-format";
+import { SEASON_WEEKS, SEASONS_PER_YEAR, RELEASES_PER_BAND } from "./league-format";
 import { FORMAT_MIX } from "./show-formats";
 import { costOperations, SEASON_1_SCALE } from "./league-capital";
+import { SPEND_CAPS } from "./regulations";
 
 /**
  * Indian-format rupee string, e.g. 805950 -> "₹8,05,950".
@@ -166,8 +167,8 @@ export interface EconomicsInputs {
 }
 
 export const DEFAULT_INPUTS: EconomicsInputs = {
-  ticketPrice: 399,
-  attendance: 300,
+  ticketPrice: 250,
+  attendance: 200,
   // The SCORED ladder only: 11 commercial + 4 campus + 3 versus. House nights,
   // corporate shows and festival stages are real income but sit outside the
   // gate split, so folding them in here would overstate ticket revenue.
@@ -409,6 +410,10 @@ export interface EconomicsModel {
   phSeasonMultiple: number;
   /** What the venue ladder does to solo-night revenue vs a flat-priced season. */
   venueMixIdx: number;
+  /** Everything a house commits: the bid plus every regulated cap. */
+  phTotalCommitment: number;
+  /** Season return against the FULL commitment, not just the bid. */
+  phCommitmentMultiple: number;
   /** Head count on a co-headlined night — a bigger room, split two ways. */
   sharedAttendance: number;
   /** Seats sold across every night one production house's bands play. */
@@ -630,6 +635,24 @@ export function computeEconomics(inputs: EconomicsInputs): EconomicsModel {
   ];
 
   const phSeasonTotal = phSeasonReturn.reduce((s, r) => s + r.amount, 0);
+
+  /*
+   * The honest denominator.
+   *
+   * A return multiple against the winning bid alone flatters the house: the
+   * bid is one line of what it signs up for. Creative allocation and song
+   * marketing are quoted per song and land on every original the whole roster
+   * ships, and the mentor association is a house-level fee. Against all of it
+   * the picture is very different, and the page shows both rather than the
+   * kinder one.
+   */
+  const songsPerRoster = RELEASES_PER_BAND * bandsPerFranchise;
+  const phTotalCommitment =
+    winningBid +
+    SPEND_CAPS.reduce(
+      (sum, c) => sum + (c.basis === "per song" ? c.amount * songsPerRoster : c.amount),
+      0,
+    );
   const phGateBackedTotal = phSeasonReturn
     .filter((r) => r.certainty === "gate")
     .reduce((s, r) => s + r.amount, 0);
@@ -789,6 +812,8 @@ export function computeEconomics(inputs: EconomicsInputs): EconomicsModel {
     phSeasonProfit: phSeasonTotal - winningBid,
     phSeasonMultiple: phSeasonTotal / Math.max(1, winningBid),
     venueMixIdx,
+    phTotalCommitment,
+    phCommitmentMultiple: phSeasonTotal / Math.max(1, phTotalCommitment),
     sharedAttendance,
     phSeatsSeason,
     phGrossGateSeason,

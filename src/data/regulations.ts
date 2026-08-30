@@ -25,6 +25,8 @@
  * rather than a number buried in a component.
  */
 
+import { RELEASES_PER_BAND } from "./league-format";
+
 import { inr } from "./economics";
 
 /* ------------------------------------------------------------------ *
@@ -189,8 +191,21 @@ export interface SpendCap {
   id: string;
   label: string;
   amount: number;
-  basis: "per band" | "per house" | "central";
+  basis: "per song" | "per band" | "per house" | "central";
   rule: string;
+}
+
+/**
+ * Songs a band ships in a season. Two caps are quoted per SONG, so they scale
+ * with the release cadence rather than sitting as a flat number that quietly
+ * stops matching it — the last time these drifted apart the model had 10,400
+ * behind a track it was describing as fully produced.
+ */
+export const SONGS_PER_BAND = RELEASES_PER_BAND;
+
+/** A cap resolved to what one band costs across the season. */
+export function perBandAmount(cap: SpendCap): number {
+  return cap.basis === "per song" ? cap.amount * SONGS_PER_BAND : cap.amount;
 }
 
 export const SPEND_CAPS: SpendCap[] = [
@@ -198,22 +213,22 @@ export const SPEND_CAPS: SpendCap[] = [
     id: "creative",
     label: "Creative Allocation",
     amount: 125000,
-    basis: "per band",
-    rule: "Equal for every band regardless of what it cost to acquire. Spend it across music, video, session players, writers and directors however the band and house see fit. Unused budget rolls forward to that band's next release — and can never be moved to a different band.",
+    basis: "per song",
+    rule: "Per song, not per season — music, video, session players, writers and directors for one original. Equal for every band regardless of what it cost to acquire. Unused budget rolls forward to that band's next release and can never be moved to a different band.",
   },
   {
     id: "marketing",
-    label: "Marketing",
-    amount: 200000,
-    basis: "per house",
-    rule: "Cash marketing spend across the whole roster. A house posting an artist on its own channels is owned media, not cash — it is tracked separately and does not consume this cap.",
+    label: "Song Marketing",
+    amount: 75000,
+    basis: "per song",
+    rule: "Cash promotion behind each release. A house posting an artist on its own channels is owned media, not cash — tracked separately and does not consume this cap.",
   },
   {
     id: "mentor",
     label: "Mentor Fees",
-    amount: 200000,
+    amount: 1000000,
     basis: "per house",
-    rule: "Mentors are drawn from a central approved list and matched by two-sided preference. A more famous mentor never earns a band a single point.",
+    rule: "One mentor association for the house, negotiated centrally against a defined schedule of content and appearances. A more famous mentor never earns a band a single point.",
   },
 ];
 

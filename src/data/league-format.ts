@@ -587,6 +587,13 @@ export interface ReleaseStage {
  */
 export const RELEASE_CYCLE_DAYS = 60;
 
+/**
+ * Originals a band ships inside the season. Lives here rather than with the
+ * schedule because the spend caps are quoted per song and need it too, and a
+ * second copy is how "12 tracks at 10,400 each" happened.
+ */
+export const RELEASES_PER_BAND = 3;
+
 /** Eight weeks, end to end, for one finished original. */
 export const RELEASE_CYCLE: ReleaseStage[] = [
   {

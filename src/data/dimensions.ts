@@ -16,6 +16,8 @@
  */
 
 import {
+  NATIONAL_TOTAL_HOUSES,
+  NATIONAL_TOTAL_BANDS,
   STAGE_2_MATRIX,
   STAGE_2_FINALS,
   ZONES,
@@ -23,6 +25,7 @@ import {
   type HubCity,
   type Zone,
 } from "./league-format";
+import { SCORED_FORMATS, buildOffLadderFormats } from "./show-formats";
 import type { EconomicsInputs } from "./economics";
 import { DEFAULT_INPUTS } from "./economics";
 import {
@@ -102,6 +105,77 @@ export interface FixtureDim {
   /** Default room and production tier for this format. */
   presetId: string;
   tierId: string;
+  /** Room size against the base attendance input. 1 for the roll-up rows. */
+  capacityIdx?: number;
+  /** Ticket against the base price input. 1 for the roll-up rows. */
+  priceIdx?: number;
+  /** Set on the named show formats, so the UI can group them apart. */
+  group?: "roll-up" | "scored" | "off-ladder" | "post-season";
+}
+
+/**
+ * Which event cost stack a venue class books against.
+ *
+ * The presets are cost stacks, not room sizes — a club and an auditorium both
+ * need a real PA, an operator and security, and differ in how many seats are
+ * in front of them. Size comes from the format's own capacity index; this only
+ * picks which stack of line items applies.
+ */
+const PRESET_FOR_VENUE: Record<string, string> = {
+  cafe: "cafe",
+  pub: "cafe",
+  club: "auditorium",
+  "listening-room": "auditorium",
+  auditorium: "auditorium",
+  arena: "marquee",
+  campus: "college",
+  "festival-ground": "marquee",
+  private: "cafe",
+};
+
+/**
+ * The named formats, lifted straight out of the show catalogue.
+ *
+ * Before this the Fixture dimension had six coarse rows and the event panel
+ * carried its own Format and Tier buttons on top — two controls deciding the
+ * same thing, and the coarse one was wrong anyway: every one of the eleven
+ * commercial nights mapped to a cafe, though they run from a 100-cap room to
+ * an arena. One list, derived from the formats that actually exist.
+ */
+function formatDims(): FixtureDim[] {
+  const scored: FixtureDim[] = SCORED_FORMATS.map((f) => ({
+    id: `fmt-${f.id}`,
+    label: f.name,
+    note: f.purpose,
+    showsPerBand: f.perBand,
+    actsPerFixture: f.actsOnStage,
+    soloSharePct: f.actsOnStage === 1 ? 100 : 0,
+    presetId: PRESET_FOR_VENUE[f.venue] ?? "cafe",
+    tierId: f.actsOnStage > 1 ? "rivalry" : "individual",
+    capacityIdx: f.capacityIdx,
+    priceIdx: f.priceIdx,
+    group: "scored",
+  }));
+
+  const off: FixtureDim[] = buildOffLadderFormats(
+    NATIONAL_TOTAL_HOUSES,
+    ZONES.filter((z) => z.tier === "state").length,
+    NATIONAL_TOTAL_BANDS,
+  ).map((f) => ({
+    id: `fmt-${f.id}`,
+    label: f.name,
+    note: f.purpose,
+    showsPerBand: f.perBand,
+    actsPerFixture: f.actsOnStage,
+    soloSharePct: f.actsOnStage === 1 ? 100 : 0,
+    presetId: PRESET_FOR_VENUE[f.venue] ?? "cafe",
+    tierId: "individual",
+    capacityIdx: f.capacityIdx,
+    priceIdx: f.priceIdx,
+    group: "off-ladder",
+  }));
+
+  return [...scored, ...off];
 }
 
 const CAT = STAGE_2_MATRIX.categories;
@@ -121,6 +195,7 @@ export const FIXTURE_DIMS: FixtureDim[] = [
     ),
     presetId: "cafe",
     tierId: "individual",
+    group: "roll-up",
   },
   {
     id: "commercial",
@@ -131,6 +206,7 @@ export const FIXTURE_DIMS: FixtureDim[] = [
     soloSharePct: 100,
     presetId: "cafe",
     tierId: "individual",
+    group: "roll-up",
   },
   {
     id: "campus",
@@ -141,6 +217,7 @@ export const FIXTURE_DIMS: FixtureDim[] = [
     soloSharePct: 100,
     presetId: "college",
     tierId: "individual",
+    group: "roll-up",
   },
   {
     id: "cross",
@@ -151,6 +228,7 @@ export const FIXTURE_DIMS: FixtureDim[] = [
     soloSharePct: 0,
     presetId: "auditorium",
     tierId: "rivalry",
+    group: "roll-up",
   },
   {
     id: "rivalry",
@@ -162,6 +240,7 @@ export const FIXTURE_DIMS: FixtureDim[] = [
     bandsOverride: STAGE_2_FINALS.finalists,
     presetId: "auditorium",
     tierId: "eliminator",
+    group: "post-season",
   },
   {
     id: "finals",
@@ -173,7 +252,9 @@ export const FIXTURE_DIMS: FixtureDim[] = [
     bandsOverride: 4,
     presetId: "marquee",
     tierId: "final",
+    group: "post-season",
   },
+  ...formatDims(),
 ];
 
 /* ------------------------------------------------------------------ *
@@ -342,6 +423,22 @@ export const SLICEABLE_ZONES: Zone[] = [
  * Mean of each league's own price x capacity index. Used to keep the national
  * roll-up equal to the five leagues added together (see resolveScope).
  */
+/**
+ * The national market is the reference, indexed to 1.000.
+ *
+ * Every market index is expressed RELATIVE to All India rather than to some
+ * unnamed base, which means the price and headcount you set are the numbers
+ * the page opens on — Karnataka then reads as a premium on that and Kerala as
+ * a discount, instead of both being multiples of a figure nobody chose.
+ */
+function nationalPriceIdx(): number {
+  const states = ZONES.filter((z) => z.tier === "state");
+  if (states.length === 0) return 1;
+  return (
+    states.reduce((sum, z) => sum + zoneIndex(z.hubCities, "priceIdx"), 0) / states.length
+  );
+}
+
 function meanZoneProduct(): number {
   const states = ZONES.filter((z) => z.tier === "state");
   if (states.length === 0) return 1;
@@ -447,8 +544,11 @@ export function resolveScope(sel: DimensionSelection): Scope {
     house,
     band,
 
-    priceMult: priceIdx * season.priceGrowth,
-    attendanceMult: capacityIdx * season.attendanceGrowth,
+    // Normalised so All India is exactly 1.000 and every other slice reads as
+    // a premium or a discount on the national picture.
+    priceMult: (priceIdx / nationalPriceIdx()) * season.priceGrowth,
+    attendanceMult:
+      (capacityIdx / (meanZoneProduct() / nationalPriceIdx())) * season.attendanceGrowth,
     costMult: costIdx,
     reachMult: reachIdx * season.reachGrowth,
     sponsorMult: season.sponsorGrowth * (city ? city.reachIdx : reachIdx),
@@ -479,10 +579,21 @@ export function resolveScope(sel: DimensionSelection): Scope {
  * compose: the sliders set the base case, the slicer says where and when.
  */
 export function applyScope(base: EconomicsInputs, scope: Scope): EconomicsInputs {
+  /*
+   * The format's own room and ticket, folded in alongside the market.
+   *
+   * Slicing to "Cafe Set" should not leave the season figures priced for an
+   * average room — it is a 100-cap night at a low ticket, and the whole page
+   * ought to say so. The roll-up rows carry no index, so "All fixtures" is
+   * unchanged and the season keeps its blended average.
+   */
+  const fmtCapacity = scope.fixture.capacityIdx ?? 1;
+  const fmtPrice = scope.fixture.priceIdx ?? 1;
+
   return {
     ...base,
-    ticketPrice: Math.round(base.ticketPrice * scope.priceMult),
-    attendance: Math.max(10, Math.round(base.attendance * scope.attendanceMult)),
+    ticketPrice: Math.round(base.ticketPrice * fmtPrice * scope.priceMult),
+    attendance: Math.max(10, Math.round(base.attendance * fmtCapacity * scope.attendanceMult)),
     showsPerBand: scope.showsPerBand,
     soloSharePct: scope.soloSharePct,
     numFranchises: scope.houses,
@@ -497,23 +608,30 @@ export function applyScope(base: EconomicsInputs, scope: Scope): EconomicsInputs
 /** Event defaults for the room the selected fixture type actually plays. */
 export function scopedEventInputs(scope: Scope): EventInputs {
   /*
-   * The event calculator opens on a fixed, legible room: 250 seats at 80% is
-   * 200 in, at a flat ₹250, with every cost line at zero.
+   * One filter drives this panel.
    *
-   * Market multipliers are deliberately NOT applied to capacity or price here.
-   * This panel is a what-if calculator you type real quotes into, and it is
-   * far more useful starting from a round number than from a market-adjusted
-   * ₹274 nobody chose. The season-level figures above it stay fully sliced —
-   * only the structural parts of the scope (which preset, which tier, how many
-   * acts share the bill) carry through.
+   * The format decides the room and the cost stack; the zone and city decide
+   * the market. Both come from the slicer, so the panel no longer carries its
+   * own Format and Tier buttons re-deciding what the slicer already decided.
+   *
+   * At the default slice — All India, all fixtures — the market indices are
+   * normalised to 1.000, so the page opens on exactly the base room: 250 seats
+   * at 80% is 200 in, at a flat 250, with every cost line at zero. Pick a zone
+   * and it flexes; pick a format and the room resizes with it.
    */
   const base = openingEventInputs(scope.fixture.presetId);
+  const capacityIdx = scope.fixture.capacityIdx ?? 1;
+  const priceIdx = scope.fixture.priceIdx ?? 1;
+
   return {
     ...base,
     tierId: scope.fixture.tierId,
     acts: scope.fixture.actsPerFixture,
+    capacity: Math.max(40, Math.round(base.capacity * capacityIdx * scope.attendanceMult)),
+    ticketPrice: Math.max(0, Math.round(base.ticketPrice * priceIdx * scope.priceMult)),
   };
 }
+
 
 /**
  * Sponsor deal sized to the fixtures and reach actually inside the scope.

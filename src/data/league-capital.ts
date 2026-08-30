@@ -693,12 +693,12 @@ export interface OpenDecision {
 
 export const OPEN_DECISIONS: OpenDecision[] = [
   {
-    id: "creative-budget",
+    id: "house-returns",
     question:
-      "Three originals a band on a ₹1.25L creative allocation is ₹41,700 a track. Enough for a video too?",
-    why: "The 60-day cycle asks each band for three finished originals — 300 nationally. At ₹1.25L a band that is roughly ₹41,700 a track, which covers a properly produced single but not a produced single AND a video. The gap is far smaller than it was at twelve tracks a band, but it is still a gap, and it sits on the production house rather than the operator.",
+      "A house commits ₹44L and gets roughly ₹43L back. Why would anyone buy one?",
+    why: "Quoting creative and marketing per song makes them real budgets — ₹3.75L and ₹2.25L a band — but it also means the house's commitment is 4.4x the bid it won, not the bid alone. At the modelled inputs the season returns about what it costs. The page used to show 4.27x because it divided by the ₹10L bid and ignored the other ₹34L.",
     recommendation:
-      "Fund one flagship video and let the other two be live-session or performance cuts shot at fixtures the league is already filming and paying for. That is the cheapest real video a band will ever get, the footage exists either way, and it puts the cash behind the single most likely to travel rather than spreading it thinly across three.",
+      "Do not fix this by cutting the song budgets — that was the previous mistake in reverse. Fix it on the revenue side: the house share of prize money, the catalogue's value beyond one season, and the fact that a house is buying a four-band roster whose IP it half-owns in perpetuity. Model those explicitly. If it still does not clear, the bid is too high, not the budgets too generous.",
     owner: "Board",
     impact: "high",
   },
