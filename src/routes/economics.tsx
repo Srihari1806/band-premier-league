@@ -2629,6 +2629,11 @@ function EconomicsPage() {
                   v: inr(scopedInputs.ticketPrice),
                   n: `${scope.zone.shortName} market`,
                 },
+                {
+                  k: "Venue mix",
+                  v: `${(m.venueMixIdx * 100).toFixed(1)}%`,
+                  n: "cafe to arena, not a flat room",
+                },
               ].map((c, i) => (
                 <div key={c.k} className="flex items-stretch gap-2">
                   {i > 0 && (

@@ -26,6 +26,8 @@ import {
   SCHEDULE_TOTALS,
   SEASON_CALENDAR,
   NATIONAL_ZONES,
+  OFF_LADDER_SCHEDULE,
+  WINDOWS_PER_HOUSE,
   TOTAL_BANDS,
   TOTAL_HOUSES,
   COMPETITION_WEEKENDS,
@@ -36,6 +38,7 @@ import {
   type EventKind,
   type ScheduledEvent,
 } from "@/data/national-season";
+import { FORMAT_MIX } from "@/data/show-formats";
 import {
   POST_SEASON,
   POST_SEASON_TOTALS,
@@ -359,6 +362,25 @@ function CalendarPage() {
     return map;
   }, [zone, house, band, month]);
 
+  // House nights and festival stages sit alongside the fixtures — they are on
+  // the same calendar, they just do not carry points.
+  const offLadderByDay = useMemo(() => {
+    const map = new Map<string, typeof OFF_LADDER_SCHEDULE>();
+    OFF_LADDER_SCHEDULE.forEach((o) => {
+      if (zone !== "all" && o.zoneSlug !== zone) return;
+      if (house !== "all" && o.houseNumber !== null && o.houseNumber !== Number(house)) return;
+      if (month !== "all" && !o.dateLabel.includes(month)) return;
+      if (!map.has(o.dateLabel)) map.set(o.dateLabel, []);
+      map.get(o.dateLabel)!.push(o);
+    });
+    return map;
+  }, [zone, house, month]);
+
+  // A day row seeded by an off-ladder night has no fixture to read a date from,
+  // so fall back to the off-ladder event's own date for ordering.
+  const dayOrder = (label: string) =>
+    OFF_LADDER_SCHEDULE.find((o) => o.dateLabel === label)?.date.getTime() ?? 0;
+
   // Group by weekend, then by calendar day inside it.
   const grouped = useMemo(() => {
     const byWeekend = new Map<number, Map<string, ScheduledEvent[]>>();
@@ -368,8 +390,37 @@ function CalendarPage() {
       if (!days.has(e.dateLabel)) days.set(e.dateLabel, []);
       days.get(e.dateLabel)!.push(e);
     });
-    return [...byWeekend.entries()].sort((a, b) => a[0] - b[0]);
-  }, [filtered]);
+
+    // House nights sit on a Thursday and festival stages on the recovery
+    // weekend, so neither has a fixture to hang off. Seed their days empty or
+    // they never get a row to render into.
+    if (kind === "all") {
+      OFF_LADDER_SCHEDULE.forEach((o) => {
+        if (zone !== "all" && o.zoneSlug !== zone) return;
+        if (house !== "all" && o.houseNumber !== null && o.houseNumber !== Number(house)) return;
+        if (month !== "all" && !o.dateLabel.includes(month)) return;
+        if (!byWeekend.has(o.weekendIndex)) byWeekend.set(o.weekendIndex, new Map());
+        const days = byWeekend.get(o.weekendIndex)!;
+        if (!days.has(o.dateLabel)) days.set(o.dateLabel, []);
+      });
+    }
+
+    return [...byWeekend.entries()]
+      .map(
+        ([wi, days]) =>
+          [
+            wi,
+            new Map(
+              [...days.entries()].sort(
+                (a, b) =>
+                  (a[1][0]?.date.getTime() ?? dayOrder(a[0])) -
+                  (b[1][0]?.date.getTime() ?? dayOrder(b[0])),
+              ),
+            ),
+          ] as [number, Map<string, ScheduledEvent[]>],
+      )
+      .sort((a, b) => a[0] - b[0]);
+  }, [filtered, kind, zone, house, month]);
 
   const isDefault =
     zone === "all" && house === "all" && band === "all" && kind === "all" && month === "all";
@@ -412,8 +463,12 @@ function CalendarPage() {
             <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 pt-2 text-left">
               {[
                 { v: SCHEDULE_TOTALS.events, l: "Events", h: `${COMPETITION_WEEKENDS} weekends` },
-                { v: SCHEDULE_TOTALS.commercial, l: "Commercial", h: "5 per band" },
-                { v: SCHEDULE_TOTALS.campus, l: "Campus", h: "3 per band" },
+                {
+                  v: SCHEDULE_TOTALS.commercial,
+                  l: "Commercial",
+                  h: `${FORMAT_MIX.commercialPerBand} per band`,
+                },
+                { v: SCHEDULE_TOTALS.campus, l: "Campus", h: `${FORMAT_MIX.campusPerBand} per band` },
                 { v: SCHEDULE_TOTALS.cross, l: "Cross nights", h: "Shared stages" },
                 { v: RELEASE_TOTALS.releases, l: "Song releases", h: `${RELEASE_TOTALS.perBand} per band` },
               ].map((s) => (
@@ -454,8 +509,10 @@ function CalendarPage() {
                   <Link to="/season" className="text-primary-glow font-semibold hover:underline">
                     capacity engine
                   </Link>{" "}
-                  says the structure requires. Every band gets 5 commercial and 3 campus nights;
-                  cross nights follow house size, so AP/TS bands get three and the rest get one.
+                  says the structure requires. Every band gets {FORMAT_MIX.commercialPerBand}{" "}
+                  commercial, {FORMAT_MIX.campusPerBand} campus and {FORMAT_MIX.crossPerBand} versus
+                  nights — the same {FORMAT_MIX.totalPerBand} formats in the same proportions, in
+                  every zone.
                 </>
               ) : (
                 <span className="font-semibold text-rose-200">
@@ -624,7 +681,25 @@ function CalendarPage() {
                         <div key={dayLabel} className="px-4 py-3">
                           <div className="flex flex-wrap items-center gap-2 mb-2">
                             <p className="text-[11px] font-bold text-white">{dayLabel}</p>
-                            {(releasesByDay.get(dayLabel)?.length ?? 0) > 0 && (
+                            {(offLadderByDay.get(dayLabel)?.length ?? 0) > 0 && (
+                            <div className="mt-2 rounded-md border border-sky-500/25 bg-sky-500/5 px-2.5 py-2">
+                              <p className="text-[9px] uppercase tracking-wider font-bold text-sky-300 mb-1">
+                                Off the ladder · no points
+                              </p>
+                              <div className="space-y-1">
+                                {(offLadderByDay.get(dayLabel) ?? []).map((o) => (
+                                  <p key={o.id} className="text-[10px] text-white leading-snug">
+                                    <span className="font-semibold">{o.formatName}</span>{" "}
+                                    <span className="text-muted-foreground">
+                                      — {o.zoneName} · {o.billing} · {o.city}
+                                    </span>
+                                  </p>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+
+                          {(releasesByDay.get(dayLabel)?.length ?? 0) > 0 && (
                               <span className="inline-flex items-center gap-1 text-[9px] uppercase tracking-wider font-bold px-1.5 py-0.5 rounded border border-fuchsia-500/40 bg-fuchsia-500/10 text-fuchsia-300">
                                 <Disc3 size={9} />
                                 {releasesByDay.get(dayLabel)!.length} release
@@ -650,6 +725,10 @@ function CalendarPage() {
                                       {e.bands.map((b) => `B${b}`).join(" v ")}
                                     </p>
                                     <p className="text-[10px] text-muted-foreground flex flex-wrap items-center gap-x-1.5">
+                                      <span className="text-primary-glow font-semibold">
+                                        {e.formatName}
+                                      </span>
+                                      <span className="opacity-40">·</span>
                                       <span>{e.slot}</span>
                                       <span className="opacity-40">·</span>
                                       <span className="inline-flex items-center gap-0.5">
@@ -706,10 +785,11 @@ function CalendarPage() {
             <div className="space-y-2">
               <p className="text-[11px] text-muted-foreground leading-relaxed">
                 <span className="font-semibold text-white">What this is.</span> A structurally valid
-                schedule: every house gets its eight weekends, every band its five commercial and
-                three campus nights, every pairing inside a house meets once, and no band plays two
-                weekends running more often than the rotation forces. Bands and houses are shown by
-                slot — H2·B3 is the third band signed by the second house in that zone.
+                schedule: every house gets its {WINDOWS_PER_HOUSE} weekends, every band its{" "}
+                {FORMAT_MIX.commercialPerBand} commercial and {FORMAT_MIX.campusPerBand} campus
+                nights, every pairing inside a house meets once, and no band plays two weekends
+                running more often than the rotation forces. Bands and houses are shown by slot —
+                H2·B3 is the third band signed by the second house in that zone.
               </p>
               <p className="text-[11px] text-muted-foreground leading-relaxed">
                 <span className="font-semibold text-white">What it is not.</span> A booked calendar.

@@ -27,7 +27,15 @@ import {
   CheckCircle2,
   Flag,
 } from "lucide-react";
-import { TOTAL_LEAGUE_NIGHTS, RELEASE_TOTALS } from "@/data/national-season";
+import {
+  TOTAL_LEAGUE_NIGHTS,
+  RELEASE_TOTALS,
+  TOTAL_BANDS,
+  SCHEDULE_TOTALS,
+  OFF_LADDER_FORMATS,
+  OFF_LADDER_TOTALS,
+} from "@/data/national-season";
+import { SCORED_FORMATS, FORMAT_MIX, venueOf } from "@/data/show-formats";
 import {
   CAMPUS_PLANS,
   CAMPUS_TOTALS,
@@ -777,6 +785,182 @@ function LeaguePage() {
                 money. They are priced for reach, run through the student chapter network, and
                 measured on votes, follows and turnout. A band that cannot fill a campus room will
                 not fill a paying one either — which is exactly what makes them worth scoring.
+              </p>
+            </div>
+          </div>
+        </section>
+
+        {/* SECTION 3C-1: SHOW FORMATS */}
+        <section className="py-20 px-4 max-w-7xl mx-auto relative z-10 border-t border-border/45">
+          <div className="text-center max-w-3xl mx-auto mb-12 space-y-3">
+            <h2 className="text-xs uppercase tracking-widest text-primary-glow font-bold">
+              Show Formats
+            </h2>
+            <h3 className="text-3xl sm:text-4xl font-display font-bold text-white">
+              Twelve nights, twelve different rooms
+            </h3>
+            <p className="text-sm text-muted-foreground leading-relaxed">
+              A fixture count says a band plays {FORMAT_MIX.totalPerBand} nights. It does not say
+              what any of them are. Every band plays these same twelve formats — the same cafe, the
+              same listening room, the same arena — so no band can be handed a softer season than
+              its rivals.
+            </p>
+          </div>
+
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 mb-6">
+            {SCORED_FORMATS.map((f) => (
+              <div
+                key={f.id}
+                className={`bpl-card p-4 space-y-2 border ${
+                  f.id === "launch-night"
+                    ? "border-amber-500/35 bg-amber-500/5"
+                    : f.kind === "campus"
+                      ? "border-emerald-500/25 bg-emerald-500/5"
+                      : f.kind === "cross"
+                        ? "border-fuchsia-500/25 bg-fuchsia-500/5"
+                        : "border-border bg-surface/40"
+                }`}
+              >
+                <div className="flex items-start justify-between gap-2">
+                  <div className="min-w-0">
+                    <h4 className="text-sm font-bold text-white leading-tight">{f.name}</h4>
+                    <p className="text-[10px] text-muted-foreground">{venueOf(f.venue).name}</p>
+                  </div>
+                  <span className="text-[9px] uppercase tracking-wider font-bold px-1.5 py-0.5 rounded border border-border/70 bg-surface/60 text-muted-foreground shrink-0">
+                    {f.perBand}×
+                  </span>
+                </div>
+                <div className="flex flex-wrap gap-x-3 gap-y-0.5 text-[10px] tabular-nums">
+                  <span className="text-white">
+                    <span className="text-muted-foreground">Room </span>
+                    {Math.round(f.capacityIdx * 100)}%
+                  </span>
+                  <span className="text-white">
+                    <span className="text-muted-foreground">Ticket </span>
+                    {Math.round(f.priceIdx * 100)}%
+                  </span>
+                  {f.actsOnStage > 1 && (
+                    <span className="text-white">
+                      <span className="text-muted-foreground">Bill </span>
+                      {f.actsOnStage} acts
+                    </span>
+                  )}
+                </div>
+                <p className="text-[10px] text-muted-foreground leading-relaxed">{f.purpose}</p>
+                <p className="text-[10px] text-muted-foreground/80 leading-snug border-t border-border/40 pt-1.5">
+                  {f.ticketing}
+                </p>
+              </div>
+            ))}
+          </div>
+
+          <div className="bpl-card p-5 border border-border bg-surface/40 mb-10 space-y-2">
+            <h4 className="text-sm font-bold text-white">
+              The ladder moves the audience around, not the audience size
+            </h4>
+            <p className="text-[11px] text-muted-foreground leading-relaxed">
+              Room sizes are indexed so the average across the {FORMAT_MIX.soloPerBand} solo nights
+              is exactly 100% — a cafe at {Math.round(SCORED_FORMATS[0].capacityIdx * 100)}% and an
+              arena at{" "}
+              {Math.round(
+                (SCORED_FORMATS.find((f) => f.id === "arena-night")?.capacityIdx ?? 1) * 100,
+              )}
+              % average back to the same season attendance the flat model assumed. Ticket prices are
+              not normalised, and they should not be: the arena is the biggest room on the ladder
+              and one of the cheapest tickets on it, while the dearest ticket of the season is a
+              seated room a fifth its size. Net effect on gate revenue is{" "}
+              <span
+                className={
+                  FORMAT_MIX.grossIdx < 1
+                    ? "text-amber-300 font-semibold"
+                    : "text-emerald-300 font-semibold"
+                }
+              >
+                {FORMAT_MIX.grossIdx < 1 ? "−" : "+"}
+                {Math.abs((FORMAT_MIX.grossIdx - 1) * 100).toFixed(1)}%
+              </span>{" "}
+              against a season priced flat. That is what a ladder starting in a cafe costs, and it
+              is worth paying — a band that only ever played 450-cap clubs would tell you nothing.
+            </p>
+          </div>
+
+          <div className="text-center max-w-3xl mx-auto mb-8 space-y-3">
+            <h3 className="text-2xl sm:text-3xl font-display font-bold text-white">
+              Three more kinds of night, none of them scored
+            </h3>
+            <p className="text-sm text-muted-foreground leading-relaxed">
+              Real inventory and real income, deliberately kept off the table. Each is unequal in
+              some way that would corrupt a ranking — so it earns money instead of points.
+            </p>
+          </div>
+
+          <div className="grid gap-4 lg:grid-cols-3 mb-6">
+            {OFF_LADDER_FORMATS.map((f) => (
+              <div
+                key={f.id}
+                className="bpl-card p-5 border border-sky-500/25 bg-sky-500/5 space-y-2"
+              >
+                <div className="flex items-start justify-between gap-2">
+                  <div className="min-w-0">
+                    <h4 className="text-sm font-bold text-white leading-tight">{f.name}</h4>
+                    <p className="text-[10px] text-muted-foreground">{venueOf(f.venue).name}</p>
+                  </div>
+                  <span className="text-[9px] uppercase tracking-wider font-bold px-1.5 py-0.5 rounded border border-sky-500/40 bg-sky-500/10 text-sky-300 shrink-0">
+                    No points
+                  </span>
+                </div>
+                <p className="text-lg font-display font-extrabold text-white tabular-nums leading-none">
+                  {f.nationalNights}
+                  <span className="text-[10px] font-sans font-normal text-muted-foreground ml-1.5">
+                    nights a season
+                  </span>
+                </p>
+                <p className="text-[10px] text-muted-foreground leading-relaxed">{f.purpose}</p>
+                <p className="text-[10px] text-muted-foreground/80 leading-snug">{f.ticketing}</p>
+                <p className="text-[10px] leading-relaxed border-t border-sky-500/20 pt-1.5 text-sky-200/80">
+                  <span className="font-semibold text-sky-300">Why no points: </span>
+                  {f.whyUnscored}
+                </p>
+              </div>
+            ))}
+          </div>
+
+          <div className="grid gap-4 sm:grid-cols-3">
+            <div className="bpl-card p-4 border border-border bg-surface/40">
+              <p className="text-2xl font-display font-extrabold text-primary-glow tabular-nums">
+                {SCHEDULE_TOTALS.events.toLocaleString("en-IN")}
+              </p>
+              <p className="text-[10px] uppercase tracking-wider font-bold text-white mt-0.5">
+                Scored fixtures
+              </p>
+              <p className="text-[10px] text-muted-foreground leading-snug mt-1">
+                {FORMAT_MIX.commercialPerBand} commercial, {FORMAT_MIX.campusPerBand} campus and{" "}
+                {FORMAT_MIX.crossPerBand} versus nights for each of {TOTAL_BANDS} bands.
+              </p>
+            </div>
+            <div className="bpl-card p-4 border border-sky-500/25 bg-sky-500/5">
+              <p className="text-2xl font-display font-extrabold text-sky-300 tabular-nums">
+                {OFF_LADDER_TOTALS.total}
+              </p>
+              <p className="text-[10px] uppercase tracking-wider font-bold text-white mt-0.5">
+                Off-ladder nights
+              </p>
+              <p className="text-[10px] text-muted-foreground leading-snug mt-1">
+                {OFF_LADDER_TOTALS.houseNights} house nights and{" "}
+                {OFF_LADDER_TOTALS.festivalStages} festival stages are dated;{" "}
+                {OFF_LADDER_TOTALS.corporate} corporate shows are booked on demand.
+              </p>
+            </div>
+            <div className="bpl-card p-4 border border-emerald-500/25 bg-emerald-500/5">
+              <p className="text-2xl font-display font-extrabold text-emerald-300 tabular-nums">
+                {OFF_LADDER_TOTALS.clashesWithFixtures}
+              </p>
+              <p className="text-[10px] uppercase tracking-wider font-bold text-white mt-0.5">
+                Clashes with a fixture
+              </p>
+              <p className="text-[10px] text-muted-foreground leading-snug mt-1">
+                Fixtures only ever use Friday to Sunday, so house nights take the Thursday and
+                festival stages take the one recovery weekend. Nothing collides by construction.
               </p>
             </div>
           </div>

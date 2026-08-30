@@ -19,6 +19,7 @@
  */
 
 import { SEASON_WEEKS, SEASONS_PER_YEAR } from "./league-format";
+import { FORMAT_MIX } from "./show-formats";
 
 /**
  * Indian-format rupee string, e.g. 805950 -> "₹8,05,950".
@@ -395,6 +396,8 @@ export interface EconomicsModel {
   phSeasonTotal: number;
   phSeasonProfit: number;
   phSeasonMultiple: number;
+  /** What the venue ladder does to solo-night revenue vs a flat-priced season. */
+  venueMixIdx: number;
   /** Seats sold across every night one production house's bands play. */
   phSeatsSeason: number;
   /** Those seats at the scoped ticket price, before platform fee and tax. */
@@ -449,7 +452,24 @@ export function computeEconomics(inputs: EconomicsInputs): EconomicsModel {
   const sharedShowsPerBand = showsPerBand - soloShowsPerBand;
 
   const sharedAttendance = Math.round(attendance * coHeadlineUplift);
-  const soloShow = computeShowEconomics(ticketPrice, attendance, ticketingCommissionPct, 1);
+
+  /*
+   * The venue ladder's effect on revenue, applied once.
+   *
+   * A band's nine solo nights are not nine identical rooms — they run from a
+   * cafe to an arena, and price moves the opposite way to capacity. Room sizes
+   * are normalised so the season's seat count is unchanged, but the negative
+   * correlation between size and ticket means the mix earns slightly less than
+   * a flat-priced season would. Folding it in here keeps every downstream solo
+   * figure consistent instead of scattering the multiplier around the engine.
+   */
+  const venueMixIdx = FORMAT_MIX.grossIdx;
+  const soloShow = computeShowEconomics(
+    ticketPrice * venueMixIdx,
+    attendance,
+    ticketingCommissionPct,
+    1,
+  );
   const sharedShow = computeShowEconomics(
     ticketPrice,
     sharedAttendance,
@@ -537,7 +557,7 @@ export function computeEconomics(inputs: EconomicsInputs): EconomicsModel {
     (soloShowsPerBand * attendance + sharedShowsPerBand * (sharedAttendance / 2)) *
       bandsPerFranchise,
   );
-  const phGrossGateSeason = Math.round(phSeatsSeason * ticketPrice);
+  const phGrossGateSeason = Math.round(phSeatsSeason * ticketPrice * venueMixIdx);
 
   const phSeasonReturn: ReturnStream[] = [
     {
@@ -731,6 +751,7 @@ export function computeEconomics(inputs: EconomicsInputs): EconomicsModel {
     phSeasonTotal,
     phSeasonProfit: phSeasonTotal - winningBid,
     phSeasonMultiple: phSeasonTotal / Math.max(1, winningBid),
+    venueMixIdx,
     phSeatsSeason,
     phGrossGateSeason,
     phBandNightsSeason,

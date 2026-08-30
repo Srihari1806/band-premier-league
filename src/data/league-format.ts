@@ -305,8 +305,8 @@ export const ZONE_ROSTERS: Record<string, { houses: number; bandsPerHouse: numbe
 export const STAGE_2_STRUCTURE: MatrixStructure = {
   houses: ZONE_ROSTERS["ap-ts"].houses,
   bandsPerHouse: ZONE_ROSTERS["ap-ts"].bandsPerHouse,
-  ticketedSoloPerBand: 5,
-  campusSoloPerBand: 4,
+  ticketedSoloPerBand: 6,
+  campusSoloPerBand: 3,
   intraHousePerBand: 3,
 };
 
