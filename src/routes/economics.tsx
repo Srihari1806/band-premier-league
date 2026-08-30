@@ -92,6 +92,7 @@ import {
   houseCommitment,
 } from "@/data/regulations";
 import {
+  COST_EXCLUSIONS,
   OPEN_DECISIONS,
   PRIZE_SHARE_OF_PROFIT,
   PROFIT_ALLOCATION,
@@ -3075,13 +3076,43 @@ function EconomicsPage() {
                 {inr(m.operatorCostsTotal)}
               </span>
             </div>
-            <p className="text-[10px] text-muted-foreground leading-relaxed pt-1">
-              {inrCompact(OPERATIONS.fixed)} of this is genuinely fixed — the central team,
-              platform, brand campaign and corporate base. The other{" "}
-              {inrCompact(OPERATIONS.variable)} scales with zones, nights, campuses and bands, so
-              expansion is cheaper per unit but is never free. That works out at{" "}
-              {inr(Math.round(OPERATIONS.perNight))} of central cost behind every night staged.
-            </p>
+            <div className="border-t border-border/50 pt-3 space-y-2">
+              <p className="text-[10px] text-muted-foreground leading-relaxed">
+                {inrCompact(OPERATIONS.fixed)} of this is genuinely fixed — the central team,
+                platform, brand campaign and corporate base. The other{" "}
+                {inrCompact(OPERATIONS.variable)} scales with zones, nights, campuses and bands, so
+                expansion is cheaper per unit but is never free.
+              </p>
+              <div className="rounded-lg border border-border/60 bg-surface/40 p-3 space-y-1.5">
+                <p className="text-[10px] uppercase tracking-wider font-bold text-muted-foreground">
+                  This is not what a night costs to stage
+                </p>
+                <div className="flex flex-wrap gap-x-5 gap-y-1.5">
+                  <div>
+                    <p className="text-base font-display font-extrabold text-white tabular-nums leading-tight">
+                      {inr(OPERATIONS.perNightIncurred)}
+                    </p>
+                    <p className="text-[9px] text-muted-foreground">
+                      actually incurred by one more fixture
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-base font-display font-extrabold text-muted-foreground tabular-nums leading-tight">
+                      {inr(Math.round(OPERATIONS.perNightAllocatedOverhead))}
+                    </p>
+                    <p className="text-[9px] text-muted-foreground">
+                      head office, divided by nights
+                    </p>
+                  </div>
+                </div>
+                <p className="text-[10px] text-muted-foreground leading-relaxed">
+                  Only the first number is caused by staging a fixture — a league representative
+                  there to verify the scanned gate, and getting them there. The second is the
+                  organisation, divided by nights so it can be compared. Cancel a night and it does
+                  not go away.
+                </p>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -3121,6 +3152,31 @@ function EconomicsPage() {
                 ? "Operating deficit at these inputs"
                 : `Operating surplus · ${m.operatorMarginPct.toFixed(0)}% margin`}
             </p>
+          </div>
+        </div>
+
+        {/* What the base deliberately leaves out — the obvious objection, answered. */}
+        <div className="mt-6 bpl-card p-5 border border-border bg-surface/40 space-y-3">
+          <div className="space-y-1">
+            <h4 className="text-sm font-bold text-white">What the league does not pay for</h4>
+            <p className="text-[11px] text-muted-foreground leading-relaxed max-w-3xl">
+              Nothing that happens on a stage is in the figure above. The operator&apos;s base is
+              the organisation that runs a competition — if it were also carrying venues and band
+              logistics it would be double-counting money the event budget and the production
+              houses already spend.
+            </p>
+          </div>
+          <div className="grid gap-2.5 sm:grid-cols-2">
+            {COST_EXCLUSIONS.map((x) => (
+              <div
+                key={x.item}
+                className="rounded-lg border border-border/60 bg-surface/30 p-3 space-y-1"
+              >
+                <p className="text-[11px] font-semibold text-white leading-snug">{x.item}</p>
+                <p className="text-[10px] text-primary-glow font-semibold">{x.borneBy}</p>
+                <p className="text-[10px] text-muted-foreground leading-relaxed">{x.where}</p>
+              </div>
+            ))}
           </div>
         </div>
 

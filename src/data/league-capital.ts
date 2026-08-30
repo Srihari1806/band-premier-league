@@ -35,11 +35,14 @@ export interface OperatingCostLine {
  * The org chart, in money. A league that cannot staff itself does not run,
  * and every line here is something somebody has to be paid to do.
  */
+/** Prize money is a share of profit, not a fixed pool. See PROFIT_ALLOCATION. */
+export const PRIZE_SHARE_OF_PROFIT = 25;
+
 export const OPERATING_COSTS: OperatingCostLine[] = [
   /* ---- People ---- */
   {
     id: "central-team",
-    category: "People",
+    category: "Core Team",
     label: "Central team",
     rate: 12000000,
     basis: "fixed",
@@ -47,7 +50,7 @@ export const OPERATING_COSTS: OperatingCostLine[] = [
   },
   {
     id: "zone-staff",
-    category: "People",
+    category: "Core Team",
     label: "Zone lead + 2 coordinators",
     rate: 1700000,
     basis: "per zone",
@@ -55,7 +58,7 @@ export const OPERATING_COSTS: OperatingCostLine[] = [
   },
   {
     id: "campus-chapter",
-    category: "People",
+    category: "Event Operations",
     label: "Campus chapter activation",
     rate: 10000,
     basis: "per campus",
@@ -63,7 +66,7 @@ export const OPERATING_COSTS: OperatingCostLine[] = [
   },
   {
     id: "artist-services",
-    category: "People",
+    category: "Core Team",
     label: "Artist onboarding & services",
     rate: 6000,
     basis: "per band",
@@ -73,7 +76,7 @@ export const OPERATING_COSTS: OperatingCostLine[] = [
   /* ---- Technology ---- */
   {
     id: "platform",
-    category: "Technology",
+    category: "Technology & Platform",
     label: "App & web platform",
     rate: 4500000,
     basis: "fixed",
@@ -81,7 +84,7 @@ export const OPERATING_COSTS: OperatingCostLine[] = [
   },
   {
     id: "vote-integrity",
-    category: "Technology",
+    category: "Technology & Platform",
     label: "Vote integrity & anti-fraud",
     rate: 1500000,
     basis: "fixed",
@@ -89,7 +92,7 @@ export const OPERATING_COSTS: OperatingCostLine[] = [
   },
   {
     id: "data-hosting",
-    category: "Technology",
+    category: "Technology & Platform",
     label: "Data, hosting & analytics",
     rate: 900000,
     basis: "fixed",
@@ -99,7 +102,7 @@ export const OPERATING_COSTS: OperatingCostLine[] = [
   /* ---- Content ---- */
   {
     id: "content-central",
-    category: "Content",
+    category: "Central Media Production",
     label: "Central content & post",
     rate: 4200000,
     basis: "fixed",
@@ -107,7 +110,7 @@ export const OPERATING_COSTS: OperatingCostLine[] = [
   },
   {
     id: "distribution",
-    category: "Content",
+    category: "Central Media Production",
     label: "Streaming & distribution",
     rate: 1500000,
     basis: "fixed",
@@ -117,7 +120,7 @@ export const OPERATING_COSTS: OperatingCostLine[] = [
   /* ---- Marketing ---- */
   {
     id: "brand-national",
-    category: "Marketing",
+    category: "Marketing & Brand",
     label: "National brand campaign",
     rate: 6000000,
     basis: "fixed",
@@ -125,7 +128,7 @@ export const OPERATING_COSTS: OperatingCostLine[] = [
   },
   {
     id: "zone-marketing",
-    category: "Marketing",
+    category: "Marketing & Brand",
     label: "Zone always-on digital",
     rate: 800000,
     basis: "per zone",
@@ -135,7 +138,7 @@ export const OPERATING_COSTS: OperatingCostLine[] = [
   /* ---- Competition operations ---- */
   {
     id: "matchday-audit",
-    category: "Competition Ops",
+    category: "Event Operations",
     label: "Match-day officiating & audit",
     rate: 2500,
     basis: "per night",
@@ -143,7 +146,7 @@ export const OPERATING_COSTS: OperatingCostLine[] = [
   },
   {
     id: "ops-travel",
-    category: "Competition Ops",
+    category: "Internal Team Logistics",
     label: "League travel to fixtures",
     rate: 1200,
     basis: "per night",
@@ -151,7 +154,7 @@ export const OPERATING_COSTS: OperatingCostLine[] = [
   },
   {
     id: "zone-ops",
-    category: "Competition Ops",
+    category: "Internal Team Logistics",
     label: "Zone office, travel & admin",
     rate: 400000,
     basis: "per zone",
@@ -161,7 +164,7 @@ export const OPERATING_COSTS: OperatingCostLine[] = [
   /* ---- Corporate ---- */
   {
     id: "legal-finance",
-    category: "Corporate",
+    category: "Legal, IP & Compliance",
     label: "Legal, audit & compliance",
     rate: 2800000,
     basis: "fixed",
@@ -169,7 +172,7 @@ export const OPERATING_COSTS: OperatingCostLine[] = [
   },
   {
     id: "insurance-annual",
-    category: "Corporate",
+    category: "Contingency & Insurance",
     label: "Insurance (annual policies)",
     rate: 1200000,
     basis: "fixed",
@@ -177,11 +180,51 @@ export const OPERATING_COSTS: OperatingCostLine[] = [
   },
   {
     id: "office-admin",
-    category: "Corporate",
+    category: "Core Team",
     label: "Office & administration",
     rate: 1800000,
     basis: "fixed",
     note: "Central office, software, accounting and the ordinary cost of a company existing.",
+  },
+  {
+    id: "contingency",
+    category: "Contingency & Insurance",
+    label: "Operating contingency",
+    rate: 2900000,
+    basis: "fixed",
+    note: "Roughly 5% of everything above, held unallocated for in-season overruns. This is NOT the profit reserve — that one absorbs a bad season, this one absorbs a bad month inside a good season. A live-events budget without a contingency line is a forecast, not a budget.",
+  },
+];
+
+/**
+ * What the league's cost base deliberately does NOT contain.
+ *
+ * Worth stating, because the obvious reading of a per-night figure is that it
+ * is what a night costs to put on. It is not. Staging is the venue's and the
+ * event budget's; getting a band and its gear to the room is the production
+ * house's. The operator's base is the organisation that runs a competition —
+ * nothing that happens on a stage is in it.
+ */
+export const COST_EXCLUSIONS: { item: string; borneBy: string; where: string }[] = [
+  {
+    item: "Venue hire, sound, lighting, stage and backline",
+    borneBy: "The venue and the event budget",
+    where: "Costed per night in the event model, never in the central base.",
+  },
+  {
+    item: "Band travel, freight, accommodation and per diems",
+    borneBy: "The production house that signed the band",
+    where: "Its roster, its logistics — the league does not move other people's bands.",
+  },
+  {
+    item: "Permits, security, medical standby and site clear-up",
+    borneBy: "The event budget for that night",
+    where: "Scales with room size, so it belongs on the fixture rather than on head office.",
+  },
+  {
+    item: "Prize money",
+    borneBy: "A share of profit, not a cost line",
+    where: `Set at ${PRIZE_SHARE_OF_PROFIT}% of what the league makes, so it can never be a liability in a season that made nothing.`,
   },
 ];
 
@@ -220,7 +263,12 @@ export function costOperations(scale: CostScale): {
   total: number;
   fixed: number;
   variable: number;
+  /** Total divided by nights. An allocation for comparison, NOT a staging cost. */
   perNight: number;
+  /** What a single extra night actually adds to the central base. */
+  perNightIncurred: number;
+  /** Central overhead that exists whether or not any given night happens. */
+  perNightAllocatedOverhead: number;
 } {
   const lines: CostedLine[] = OPERATING_COSTS.map((l) => {
     const units = unitsFor(l.basis, scale);
@@ -239,13 +287,23 @@ export function costOperations(scale: CostScale): {
     })
     .sort((a, b) => b.amount - a.amount);
 
+  // Only the per-night lines are genuinely caused by staging one more fixture.
+  // Everything else is the organisation, and dividing it by nights is a way of
+  // comparing scale — not a claim about what a night costs.
+  const perNightIncurred = lines
+    .filter((l) => l.basis === "per night")
+    .reduce((s, l) => s + l.rate, 0);
+  const perNight = scale.nights === 0 ? 0 : total / scale.nights;
+
   return {
     lines,
     byCategory,
     total,
     fixed,
     variable: total - fixed,
-    perNight: scale.nights === 0 ? 0 : total / scale.nights,
+    perNight,
+    perNightIncurred,
+    perNightAllocatedOverhead: perNight - perNightIncurred,
   };
 }
 
@@ -261,7 +319,6 @@ export function costOperations(scale: CostScale): {
  * Taking it off profit instead means the prize grows with the league, and the
  * bands are paid out of something they demonstrably helped create.
  */
-export const PRIZE_SHARE_OF_PROFIT = 25;
 
 export interface ProfitSlice {
   id: string;
