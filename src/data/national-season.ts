@@ -69,7 +69,7 @@ export const TOTAL_BANDS = NATIONAL_TOTAL_BANDS;
 
 /** Individual (solo) fixtures every band plays, in every zone. */
 /** Season appearances a band makes. The Dec launch sits outside this. */
-export const APPEARANCES_PER_BAND = 48;
+export const APPEARANCES_PER_BAND = 46;
 
 export const INDIVIDUAL_FIXTURES_PER_BAND =
   STAGE_2_STRUCTURE.ticketedSoloPerBand + STAGE_2_STRUCTURE.campusSoloPerBand;
@@ -89,7 +89,7 @@ export const TOTAL_INDIVIDUAL_FIXTURES = TOTAL_BANDS * INDIVIDUAL_FIXTURES_PER_B
  * Year's Eve without any special-casing — Thursday is the house-night slot,
  * and the first one lands there.
  *
- * Every band plays 48 appearances across these 24 weeks: a commercial night
+ * Every band plays 46 appearances across these 24 weeks: a commercial night
  * every week, a versus night on six of them, and a Saturday special on
  * eighteen. Friday and Sunday are the revenue engine and Saturday is the
  * ecosystem — campus, house nights, festivals and the celebrity milestones.
@@ -657,7 +657,7 @@ export function cityBlocks(zone: NationalZone): CityBlock[] {
  * Friday and Sunday are the revenue engine; Saturday is the ecosystem.
  *
  * A band plays one commercial night every week and a versus night on six of
- * them, which fills 30 of its 48 Friday and Sunday slots. The other 18 are
+ * them, which fills 30 of its 48 Friday and Sunday slots. The other 16 are
  * Saturdays: campus, house nights, festivals and the celebrity milestones.
  * Six Saturdays are deliberately left empty — a season with no slack does not
  * survive its first cancellation.
@@ -681,7 +681,7 @@ const THU = 3;
 /** Weeks carrying a versus night, spread across the season. */
 export const CROSS_WEEKS = [3, 7, 11, 15, 19, 23];
 /** Zone-wide Saturdays: every band in the league is on the bill. */
-export const CELEBRITY_WEEKS = [1, 11, 22];
+export const CELEBRITY_WEEKS = [11];
 export const FESTIVAL_WEEKS = [5, 13, 21];
 /** House-level Saturdays. */
 export const HOUSE_NIGHT_WEEKS = [8, 18];
@@ -699,7 +699,7 @@ export const ACTS_PER_EVENT: Record<string, number> = {
   campus: 4,
   house: 4,
   festival: 10,
-  celebrity: 20,
+  celebrity: 1,
   launch: 20,
 };
 
@@ -832,9 +832,12 @@ export function buildFullSchedule(): ScheduledEvent[] {
       const isCelebrity = CELEBRITY_WEEKS.includes(w);
       const isFestival = FESTIVAL_WEEKS.includes(w);
       if (isCelebrity && celebrityFormat) {
+        // One band, one celebrity, one night — not a roster showcase. The guest
+        // fee only makes sense against a room the band is actually carrying.
         for (let h = 1; h <= zone.houses; h += 1) {
-          const all = Array.from({ length: zone.bandsPerHouse }, (_, k) => k + 1);
-          push(SAT, h, all, celebrityFormat.id, hub.city, "celeb", `${zone.slug}-w${w}-celebrity`);
+          for (let b = 1; b <= zone.bandsPerHouse; b += 1) {
+            push(SAT, h, [b], celebrityFormat.id, hub.city, `celeb-b${b}`);
+          }
         }
       } else if (isFestival) {
         for (let h = 1; h <= zone.houses; h += 1) {
@@ -908,7 +911,7 @@ export interface ScheduleTotals {
   /**
    * Band appearances. Always higher than `events`, and the gap is the point:
    * a versus night is two appearances on one stage, a celebrity milestone is
-   * the whole zone roster on one. 48 appearances a band is not 48 nights.
+   * a festival bill ten. 46 appearances a band is not 46 nights.
    */
   appearances: number;
   appearancesPerBand: number;
@@ -982,8 +985,8 @@ export function scheduleTotals(events = FULL_SCHEDULE): ScheduleTotals {
     cross,
     individual: commercial + campus,
     // One show a week is gone; the guarantee now is that every band gets the
-    // same 48 appearances and none of them collide on a day.
-    reconciles: appearances - 100 === TOTAL_BANDS * 48 && clashes === 0,
+    // same appearance count and none of them collide on a day.
+    reconciles: appearances - 100 === TOTAL_BANDS * APPEARANCES_PER_BAND && clashes === 0,
     sameDayClashes: clashes,
   };
 }
@@ -1144,7 +1147,7 @@ export const RELEASE_TOTALS = {
  * The production reality behind three tracks a band.
  *
  * Three finished pieces in six months is a schedule a band can hold alongside
- * playing 48 appearances. The December window still matters — arriving with the first
+ * playing 46 appearances. The December window still matters — arriving with the first
  * track already recorded is what keeps the January drop from being written
  * during the opening fortnight of the competition.
  */

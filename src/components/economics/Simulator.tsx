@@ -501,8 +501,8 @@ export function Simulator() {
                   {band.totalTouchpoints} shows
                 </h3>
                 <p className="text-[11px] text-muted-foreground leading-relaxed">
-                  A versus night is two bands on one stage; a celebrity milestone is a whole zone
-                  roster on one. So {band.totalTouchpoints} appearances resolve into roughly{" "}
+                  A versus night is two bands on one stage, a house night is four, and a festival
+                  bill carries ten. So {band.totalTouchpoints} appearances resolve into roughly{" "}
                   <span className="font-semibold text-white">
                     {band.physicalEvents.toFixed(0)} physical events
                   </span>{" "}

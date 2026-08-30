@@ -525,7 +525,7 @@ export const SEASON_PHASES: SeasonPhase[] = [
     title: "Regular Season",
     weeks: "31 Dec – 12 Jun",
     weekCount: 24,
-    detail: `${COMPETITION_WEEKENDS} weekends, one city a week. Friday and Sunday are paid shows, Saturday is campus, house, festival or a celebrity milestone — 48 appearances a band, which the league stages as far fewer physical events.`,
+    detail: `${COMPETITION_WEEKENDS} weekends, one city a week. Friday and Sunday are paid shows, Saturday is campus, house, festival or a celebrity night — ${24 + 6 + 10 + 2 + 3 + 1} appearances a band, which the league stages as far fewer physical events.`,
   },
   {
     phase: "Phase 2",

@@ -804,7 +804,7 @@ function LeaguePage() {
               what any of them are. Every band plays the same {FORMAT_MIX.showsPerBand}{" "}
               appearances across {COMPETITION_WEEKENDS} weeks, through the same rooms, so no band
               can be handed a softer season than its rivals. A versus night is two bands on one
-              stage and a celebrity milestone is a whole zone roster on one, so the league stages
+              stage, a house night four and a festival bill ten, so the league stages
               considerably fewer nights than it delivers touchpoints — which is the difference
               between an operating plan and a wish.
             </p>

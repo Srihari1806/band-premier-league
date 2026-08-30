@@ -69,8 +69,24 @@ export interface SimInputs {
   /* ---- celebrity / mentor night ---- */
   celebrityCapacity: number;
   celebrityTicketPrice: number;
+  /** Share of the room sold as premium seats. */
+  celebrityVipSharePct: number;
+  celebrityVipPrice: number;
   celebritySponsor: number;
-  celebrityVip: number;
+  /** Commission on third-party food and beverage inside the venue. */
+  celebrityFnbPerHead: number;
+  celebrityFnbCommissionPct: number;
+  celebrityMerchPerHead: number;
+  /**
+   * Whether the guest fee comes off the gate BEFORE the 40/30/30 split.
+   *
+   * This is the difference between the promoter model and ours. A promoter
+   * keeps the gate and pays the artist a fee; our operator pays every cost and
+   * keeps 30%. On an ordinary night that is fine — the costs are small. On a
+   * night carrying a guest fee it inverts the economics, and the operator
+   * loses money on a show that made a profit.
+   */
+  celebrityFeeOffTheTop: boolean;
   celebrityFee: number;
   celebrityTravel: number;
   celebrityAccommodation: number;
@@ -167,7 +183,7 @@ export const DEFAULT_SIM: SimInputs = {
   ticketingPct: 5,
 
   // 24 weeks, one city a week. Friday and Sunday are the revenue engine and
-  // Saturday is the ecosystem, which gives 48 appearances across the season.
+  // Saturday is the ecosystem. 24 + 6 + 10 + 2 + 3 + 1 = 46 appearances.
   seasonWeeks: 24,
   citiesPerWeek: 1,
   commercialShows: 24,
@@ -175,7 +191,7 @@ export const DEFAULT_SIM: SimInputs = {
   houseNights: 2,
   campusShows: 10,
   festivals: 3,
-  celebrityShows: 3,
+  celebrityShows: 1,
   songs: 3,
 
   crossCapacityMult: 1.5,
@@ -190,17 +206,25 @@ export const DEFAULT_SIM: SimInputs = {
   festivalRegistrationValue: 25000,
   festivalCost: 90000,
 
-  celebrityCapacity: 800,
-  celebrityTicketPrice: 599,
-  celebritySponsor: 150000,
-  celebrityVip: 60000,
-  celebrityFee: 200000,
-  celebrityTravel: 50000,
-  celebrityAccommodation: 25000,
-  celebrityHospitality: 15000,
-  celebritySecurity: 20000,
-  celebrityProduction: 75000,
-  celebrityMarketing: 50000,
+  // A proper city celebrity night, priced on the promoter blueprint: a premium
+  // tier alongside general admission, sponsorship covering ~40% of the cost
+  // before a ticket sells, and F&B and merch as real revenue layers.
+  celebrityCapacity: 1500,
+  celebrityTicketPrice: 999,
+  celebrityVipSharePct: 20,
+  celebrityVipPrice: 2999,
+  celebritySponsor: 800000,
+  celebrityFnbPerHead: 250,
+  celebrityFnbCommissionPct: 25,
+  celebrityMerchPerHead: 90,
+  celebrityFeeOffTheTop: true,
+  celebrityFee: 500000,
+  celebrityTravel: 150000,
+  celebrityAccommodation: 60000,
+  celebrityHospitality: 40000,
+  celebritySecurity: 100000,
+  celebrityProduction: 400000,
+  celebrityMarketing: 250000,
 
   bandAcquisition: 200000,
   musicPerSong: 100000,
@@ -456,18 +480,53 @@ export function computeEvent(type: EventType, i: SimInputs): EventResult {
   }
 
   // ---- celebrity: separate P&L, and the fee stays inside it
-  const g = gateOf(i.celebrityCapacity, i.celebrityTicketPrice, i.occupancyPct, i.ticketingPct);
-  const bandPool = Math.round(g.netGate * (EVENT_SPLIT.bands / 100));
-  const housePool = Math.round(g.netGate * (EVENT_SPLIT.productionHouse / 100));
-  const operatorGatePool = g.netGate - bandPool - housePool;
+  /*
+   * A celebrity night, built on the promoter revenue architecture rather than
+   * on one ticket price.
+   *
+   * The blueprint that framework comes from layers a stadium show as general
+   * admission, a premium tier, sponsorship taken before the on-sale, and a cut
+   * of food and merch. Scaled to a 1,500-cap city room the same layers apply,
+   * and the layering is the reason the night carries a guest fee at all.
+   */
+  const celAttendees = Math.round(i.celebrityCapacity * (i.occupancyPct / 100));
+  const vipSeats = Math.round(celAttendees * (i.celebrityVipSharePct / 100));
+  const generalSeats = celAttendees - vipSeats;
+  const grossGate = Math.round(generalSeats * i.celebrityTicketPrice + vipSeats * i.celebrityVipPrice);
+  const ticketingFee = Math.round(grossGate * (i.ticketingPct / 100));
+  const netGateRaw = grossGate - ticketingFee;
+
+  /*
+   * The guest fee comes off the top.
+   *
+   * Split the gate first and the operator pays a five-lakh fee out of a 30%
+   * share — it loses money on a night that made a profit, which is exactly
+   * what the promoter model avoids by keeping the gate and paying a fee. Taken
+   * off the top, everybody splits what the night actually cleared.
+   */
+  const feeOffTop = i.celebrityFeeOffTheTop ? Math.min(netGateRaw, i.celebrityFee) : 0;
+  const netGate = netGateRaw - feeOffTop;
+
+  const bandPool = Math.round(netGate * (EVENT_SPLIT.bands / 100));
+  const housePool = Math.round(netGate * (EVENT_SPLIT.productionHouse / 100));
+  const operatorGatePool = netGate - bandPool - housePool;
+
+  const fnb = Math.round(
+    celAttendees * i.celebrityFnbPerHead * (i.celebrityFnbCommissionPct / 100),
+  );
+  const merch = Math.round(celAttendees * i.celebrityMerchPerHead);
   const ancillary = [
     { label: "Event sponsor", amount: i.celebritySponsor },
-    { label: "VIP & activation", amount: i.celebrityVip },
+    { label: `F&B commission (${i.celebrityFnbCommissionPct}% of ${inrLocal(i.celebrityFnbPerHead)}/head)`, amount: fnb },
+    { label: "Merchandise", amount: merch },
     { label: `Stalls (${i.stalls} × ${i.stallPrice})`, amount: stallIncome },
   ];
   const ancillaryTotal = ancillary.reduce((s, a) => s + a.amount, 0);
+
   const costLines = [
-    { label: "Celebrity fee", amount: i.celebrityFee },
+    ...(i.celebrityFeeOffTheTop
+      ? [{ label: "Celebrity fee (taken off the gate)", amount: 0 }]
+      : [{ label: "Celebrity fee", amount: i.celebrityFee }]),
     { label: "Travel", amount: i.celebrityTravel },
     { label: "Accommodation", amount: i.celebrityAccommodation },
     { label: "Hospitality", amount: i.celebrityHospitality },
@@ -476,6 +535,12 @@ export function computeEvent(type: EventType, i: SimInputs): EventResult {
     { label: "Marketing", amount: i.celebrityMarketing },
   ];
   const cost = costLines.reduce((s, c) => s + c.amount, 0);
+  const g = {
+    attendees: celAttendees,
+    grossGate,
+    ticketingFee,
+    netGate,
+  };
   const totalRevenue = g.netGate + ancillaryTotal;
 
   return {
@@ -497,7 +562,12 @@ export function computeEvent(type: EventType, i: SimInputs): EventResult {
     operatorResult: operatorGatePool + ancillaryTotal - cost,
     verdict: verdictFor(totalRevenue, cost),
     costLines,
-    ...promoterMetrics(totalRevenue, g.attendees, i.celebritySponsor + i.celebrityVip, cost),
+    ...promoterMetrics(
+      totalRevenue,
+      g.attendees,
+      i.celebritySponsor,
+      cost + (i.celebrityFeeOffTheTop ? i.celebrityFee : 0),
+    ),
   };
 }
 

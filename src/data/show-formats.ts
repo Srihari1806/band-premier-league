@@ -203,7 +203,7 @@ export const SCORED_FORMATS: ShowFormat[] = [
     kind: "celebrity",
     venue: "auditorium",
     scored: true,
-    perBand: 3,
+    perBand: 1,
     actsOnStage: 1,
     capacityIdx: capacityIndexOf("launch-night"),
     priceIdx: 1.5,
