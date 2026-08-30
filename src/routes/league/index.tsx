@@ -1246,21 +1246,11 @@ function LeaguePage() {
               {CAMPUSES_PER_ZONE} campuses per zone, {CAMPUS_TOTALS.campuses} nationally
             </h3>
             <p className="text-xs text-muted-foreground leading-relaxed">
-              The campus leg stages {CAMPUS_TOTALS.nights} nights a season across{" "}
-              {CAMPUS_TOTALS.campuses} campuses —{" "}
-              {CAMPUS_TOTALS.nights === CAMPUS_TOTALS.campuses ? (
-                <>
-                  exactly one night each. Every college in the network gets a show and none has to
-                  host twice, which is what dropping the campus leg from four nights a band to{" "}
-                  {FORMAT_MIX.campusPerBand} bought.
-                </>
-              ) : (
-                <>
-                  {(CAMPUS_TOTALS.nights / CAMPUS_TOTALS.campuses).toFixed(2)} nights each — enough
-                  contact to build a relationship, not so much that a college is carrying the
-                  league.
-                </>
-              )}
+              The campus leg stages {CAMPUS_TOTALS.nights} campus events a season across{" "}
+              {CAMPUS_TOTALS.campuses} campuses, carrying{" "}
+              {(CAMPUS_TOTALS.nights * 4).toLocaleString("en-IN")} band appearances — four bands to
+              a bill. Not every campus hosts every season, which is deliberate: a network you visit
+              is worth more than a list you have signed.
             </p>
           </div>
 

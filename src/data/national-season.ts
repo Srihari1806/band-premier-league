@@ -68,6 +68,9 @@ export const TOTAL_HOUSES = NATIONAL_TOTAL_HOUSES;
 export const TOTAL_BANDS = NATIONAL_TOTAL_BANDS;
 
 /** Individual (solo) fixtures every band plays, in every zone. */
+/** Season appearances a band makes. The Dec launch sits outside this. */
+export const APPEARANCES_PER_BAND = 48;
+
 export const INDIVIDUAL_FIXTURES_PER_BAND =
   STAGE_2_STRUCTURE.ticketedSoloPerBand + STAGE_2_STRUCTURE.campusSoloPerBand;
 /** Alias used by the schedule generator. */
@@ -183,6 +186,10 @@ export interface ZoneCapacity {
   /** What a single house window per weekend would actually deliver. */
   servedBySingleWindow: number;
   shortfallAtSingleWindow: number;
+  /** Band appearances a zone stages in one city, in one week. */
+  appearancesPerWeek: number;
+  /** Physical events behind them — fewer, because bills are shared. */
+  eventsPerWeek: number;
   /** Cross nights: pairings inside each house, counted once per shared stage. */
   crossNights: number;
   crossPerBand: number;
@@ -196,11 +203,28 @@ export function zoneCapacity(
   const bands = zone.houses * zone.bandsPerHouse;
   const fixturesNeeded = bands * fixturesPerBand;
 
-  // Each house window stages every one of that house's bands once, so a band
-  // gets exactly one fixture per window its house is allocated.
-  const houseWindowsPerHouse = fixturesPerBand;
-  const windowsPerWeekend = (zone.houses * houseWindowsPerHouse) / weekends;
-  const fixturesPerWeekend = windowsPerWeekend * zone.bandsPerHouse;
+  /*
+   * Capacity is a city-takeover question now, not a rotation one.
+   *
+   * Every house is active every week, in one city, so what matters is how much
+   * a single city absorbs across Friday, Saturday and Sunday. The old
+   * windows-per-weekend arithmetic described a rotation the schedule no longer
+   * uses, and it was reaching the page as 7.083333333333333.
+   *
+   * Whole numbers throughout: a fraction of a fixture is not a thing.
+   */
+  const houseWindowsPerHouse = weekends;
+  const windowsPerWeekend = zone.houses;
+  const fixturesPerWeekend = Math.round(fixturesNeeded / weekends);
+
+  // A band appears twice a week on average: a commercial night, plus either a
+  // versus night or a Saturday special.
+  const appearancesPerWeek = Math.round((bands * APPEARANCES_PER_BAND) / weekends);
+  // Commercial nights are solo; the rest share a bill, so the event count is
+  // materially lower than the appearance count.
+  const eventsPerWeek = Math.round(
+    bands / 1 + (bands * (APPEARANCES_PER_BAND - 24)) / weekends / 3,
+  );
 
   const servedBySingleWindow = weekends * zone.bandsPerHouse;
 
@@ -212,6 +236,8 @@ export function zoneCapacity(
     zone,
     bands,
     fixturesNeeded,
+    appearancesPerWeek,
+    eventsPerWeek,
     houseWindowsPerHouse,
     windowsPerWeekend,
     fixturesPerWeekend,
@@ -231,14 +257,19 @@ export const NATIONAL_CAPACITY = {
   servedBySingleWindow: ZONE_CAPACITY.reduce((s, c) => s + c.servedBySingleWindow, 0),
   shortfallAtSingleWindow: ZONE_CAPACITY.reduce((s, c) => s + c.shortfallAtSingleWindow, 0),
   crossNights: ZONE_CAPACITY.reduce((s, c) => s + c.crossNights, 0),
+  appearancesPerWeek: ZONE_CAPACITY.reduce((s, c) => s + c.appearancesPerWeek, 0),
+  eventsPerWeek: ZONE_CAPACITY.reduce((s, c) => s + c.eventsPerWeek, 0),
+  /** Cities live on any given week — one per zone, by the operating rule. */
+  citiesPerWeek: ZONE_CAPACITY.length,
 };
 
 export const TOTAL_LEAGUE_NIGHTS =
   NATIONAL_CAPACITY.fixturesNeeded + NATIONAL_CAPACITY.crossNights;
 
 /** Average days between a band's fixtures at this calendar density. */
-export const AVERAGE_REST_DAYS =
-  (COMPETITION_WEEKENDS / INDIVIDUAL_FIXTURES_PER_BAND) * 7;
+export const AVERAGE_REST_DAYS = Math.round(
+  (COMPETITION_WEEKENDS / APPEARANCES_PER_BAND) * 7,
+);
 
 /* ------------------------------------------------------------------ *
  * Illustrative fixture stagger
@@ -509,7 +540,8 @@ export type EventKind =
   | "house"
   | "festival"
   | "corporate"
-  | "launch";
+  | "launch"
+  | "celebrity";
 
 export interface ScheduledEvent {
   id: string;

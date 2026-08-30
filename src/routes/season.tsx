@@ -28,6 +28,7 @@ import {
   TOTAL_HOUSES,
   TOTAL_BANDS,
   INDIVIDUAL_FIXTURES_PER_BAND,
+  APPEARANCES_PER_BAND,
   TOTAL_INDIVIDUAL_FIXTURES,
   COMPETITION_WEEKENDS,
   TOTAL_CALENDAR_WEEKENDS,
@@ -147,7 +148,7 @@ function SeasonPage() {
                 { v: TOTAL_BANDS, l: "Bands", h: `${TOTAL_HOUSES} houses` },
                 { v: TOTAL_INDIVIDUAL_FIXTURES, l: "Individual fixtures", h: `${INDIVIDUAL_FIXTURES_PER_BAND} per band` },
                 { v: COMPETITION_WEEKENDS, l: "Competition weekends", h: `31 Dec – ${SEASON_END_LABEL}` },
-                { v: NATIONAL_CAPACITY.fixturesPerWeekend, l: "Fixtures / weekend", h: "Across all five zones" },
+                { v: NATIONAL_CAPACITY.appearancesPerWeek, l: "Appearances / week", h: `${NATIONAL_CAPACITY.eventsPerWeek} physical events` },
               ].map((s) => (
                 <div key={s.l} className="bpl-card p-4 border border-border/80 bg-surface/60">
                   <p className="text-2xl font-display font-extrabold text-cyan-300 tabular-nums">
@@ -171,13 +172,14 @@ function SeasonPage() {
                 <Layers size={13} /> Capacity Check
               </p>
               <h2 className="text-2xl sm:text-3xl font-display font-bold text-white">
-                Two house windows per region, every weekend
+                One city a week, every house in it
               </h2>
               <p className="text-sm text-muted-foreground max-w-3xl leading-relaxed">
-                A house window is a weekend where one production house is in town and stages each of
-                its bands. Running {ZONE_CAPACITY[0].windowsPerWeekend} concurrently in every zone
-                is what makes the fixture list fit the calendar — and the number is not a choice so
-                much as an answer, since it falls straight out of the roster and the rest rule.
+                The league no longer rotates house windows across a zone — it takes over one city at
+                a time. All {ZONE_CAPACITY[0].windowsPerWeekend} houses are active every week, in
+                the same city, then the whole operation moves on. That is far easier to run than
+                three cities at once, and it lets a hub serve its catchment rather than the league
+                touring past it.
               </p>
             </div>
 
@@ -185,18 +187,16 @@ function SeasonPage() {
               <CheckCircle2 size={16} className="text-emerald-400 shrink-0 mt-0.5" />
               <div className="space-y-1">
                 <p className="text-sm font-bold text-emerald-200">
-                  {ZONE_CAPACITY[0].windowsPerWeekend} windows per region per weekend,{" "}
-                  {NATIONAL_CAPACITY.windowsPerWeekend} nationally — and the calendar closes exactly.
+                  {NATIONAL_CAPACITY.citiesPerWeek} cities live in any given week — one per zone.
                 </p>
                 <p className="text-[11px] text-muted-foreground leading-relaxed">
-                  Each house gets {ZONE_CAPACITY[0].houseWindowsPerHouse} windows across the season,
-                  every band gets its {INDIVIDUAL_FIXTURES_PER_BAND} solo fixtures, and the national
-                  calendar stages {NATIONAL_CAPACITY.fixturesPerWeekend} ×{" "}
-                  {COMPETITION_WEEKENDS} ={" "}
-                  {NATIONAL_CAPACITY.fixturesPerWeekend * COMPETITION_WEEKENDS} — the requirement to
-                  the fixture, with nothing left over and nothing missing. Rest between a
-                  band&apos;s fixtures averages {AVERAGE_REST_DAYS.toFixed(1)} days, clearing the{" "}
-                  {MIN_REST_DAYS}-day rule.
+                  A city absorbs {ZONE_CAPACITY[0].appearancesPerWeek} band appearances across
+                  roughly {ZONE_CAPACITY[0].eventsPerWeek} physical events over Friday, Saturday and
+                  Sunday — the difference being that versus nights, campus dates, house nights and
+                  the celebrity milestones all put several bands on one bill. Nationally that is{" "}
+                  {NATIONAL_CAPACITY.appearancesPerWeek} appearances a week across{" "}
+                  {NATIONAL_CAPACITY.eventsPerWeek} events. Rest between a band&apos;s appearances
+                  averages {AVERAGE_REST_DAYS} days.
                 </p>
               </div>
             </div>
@@ -233,9 +233,9 @@ function SeasonPage() {
                     <th className="py-2.5 px-3 font-bold text-muted-foreground uppercase tracking-wider text-[10px] text-center">Houses</th>
                     <th className="py-2.5 px-3 font-bold text-muted-foreground uppercase tracking-wider text-[10px] text-center">Bands</th>
                     <th className="py-2.5 px-3 font-bold text-primary-glow uppercase tracking-wider text-[10px] text-center">Fixtures needed</th>
-                    <th className="py-2.5 px-3 font-bold text-muted-foreground uppercase tracking-wider text-[10px] text-center">Windows / weekend</th>
-                    <th className="py-2.5 px-3 font-bold text-muted-foreground uppercase tracking-wider text-[10px] text-center">Fixtures / weekend</th>
-                    <th className="py-2.5 px-3 font-bold text-muted-foreground uppercase tracking-wider text-[10px] text-center">Fixtures / band</th>
+                    <th className="py-2.5 px-3 font-bold text-muted-foreground uppercase tracking-wider text-[10px] text-center">Appearances / week</th>
+                    <th className="py-2.5 px-3 font-bold text-muted-foreground uppercase tracking-wider text-[10px] text-center">Events / week</th>
+                    <th className="py-2.5 px-3 font-bold text-muted-foreground uppercase tracking-wider text-[10px] text-center">Appearances / band</th>
                     <th className="py-2.5 px-3 font-bold text-muted-foreground uppercase tracking-wider text-[10px] text-center">Cross nights</th>
                   </tr>
                 </thead>
@@ -246,9 +246,9 @@ function SeasonPage() {
                       <td className="py-2.5 px-3 text-center text-muted-foreground tabular-nums">{c.zone.houses}</td>
                       <td className="py-2.5 px-3 text-center text-white font-semibold tabular-nums">{c.bands}</td>
                       <td className="py-2.5 px-3 text-center font-bold text-primary-glow tabular-nums">{c.fixturesNeeded}</td>
-                      <td className="py-2.5 px-3 text-center text-muted-foreground tabular-nums">{c.windowsPerWeekend}</td>
-                      <td className="py-2.5 px-3 text-center text-muted-foreground tabular-nums">{c.fixturesPerWeekend}</td>
-                      <td className="py-2.5 px-3 text-center text-muted-foreground tabular-nums">{INDIVIDUAL_FIXTURES_PER_BAND + c.crossPerBand}</td>
+                      <td className="py-2.5 px-3 text-center text-muted-foreground tabular-nums">{c.appearancesPerWeek}</td>
+                      <td className="py-2.5 px-3 text-center text-muted-foreground tabular-nums">{c.eventsPerWeek}</td>
+                      <td className="py-2.5 px-3 text-center text-muted-foreground tabular-nums">{APPEARANCES_PER_BAND}</td>
                       <td className="py-2.5 px-3 text-center text-muted-foreground tabular-nums">{c.crossNights}</td>
                     </tr>
                   ))}
@@ -259,9 +259,9 @@ function SeasonPage() {
                     <td className="py-2.5 px-3 text-center font-bold text-white tabular-nums">{TOTAL_HOUSES}</td>
                     <td className="py-2.5 px-3 text-center font-bold text-white tabular-nums">{TOTAL_BANDS}</td>
                     <td className="py-2.5 px-3 text-center font-extrabold text-primary-glow tabular-nums">{NATIONAL_CAPACITY.fixturesNeeded}</td>
-                    <td className="py-2.5 px-3 text-center font-bold text-white tabular-nums">{NATIONAL_CAPACITY.windowsPerWeekend}</td>
-                    <td className="py-2.5 px-3 text-center font-bold text-white tabular-nums">{NATIONAL_CAPACITY.fixturesPerWeekend}</td>
-                    <td className="py-2.5 px-3 text-center font-bold text-white tabular-nums">{INDIVIDUAL_FIXTURES_PER_BAND + ZONE_CAPACITY[0].crossPerBand}</td>
+                    <td className="py-2.5 px-3 text-center font-bold text-white tabular-nums">{NATIONAL_CAPACITY.appearancesPerWeek}</td>
+                    <td className="py-2.5 px-3 text-center font-bold text-white tabular-nums">{NATIONAL_CAPACITY.eventsPerWeek}</td>
+                    <td className="py-2.5 px-3 text-center font-bold text-white tabular-nums">{APPEARANCES_PER_BAND}</td>
                     <td className="py-2.5 px-3 text-center font-bold text-white tabular-nums">{NATIONAL_CAPACITY.crossNights}</td>
                   </tr>
                 </tfoot>

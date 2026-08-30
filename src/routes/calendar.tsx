@@ -98,6 +98,11 @@ const KIND_META: Record<EventKind, { label: string; chip: string; dot: string }>
     label: "League launch",
     chip: "border-amber-500/50 bg-amber-500/15 text-amber-200",
     dot: "bg-amber-400",
+  },
+  celebrity: {
+    label: "Celebrity",
+    chip: "border-pink-500/45 bg-pink-500/10 text-pink-300",
+    dot: "bg-pink-400",
   }
 };
 
@@ -646,6 +651,7 @@ function CalendarPage() {
                   { id: "house", label: "House night" },
                   { id: "festival", label: "Festival" },
                   { id: "launch", label: "League launch" },
+                  { id: "celebrity", label: "Celebrity night" },
                 ]}
                 onChange={setKind}
               />
