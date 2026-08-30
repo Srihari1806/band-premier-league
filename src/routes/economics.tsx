@@ -75,6 +75,7 @@ import {
   formatRate,
   type EventInputs,
   type AssumptionOverrides,
+  zeroedCostOverrides,
   type SponsorRoiInputs,
 } from "@/data/event-model";
 import {
@@ -93,6 +94,9 @@ import {
 } from "@/data/regulations";
 import {
   COST_EXCLUSIONS,
+  COST_OWNERSHIP,
+  NO_DOUBLE_PAY,
+  leagueWaterfall,
   OPEN_DECISIONS,
   PRIZE_SHARE_OF_PROFIT,
   PROFIT_ALLOCATION,
@@ -458,7 +462,9 @@ function ShowCard({
 
 function EventEconomics({ scope }: { scope: Scope }) {
   const [ev, setEv] = useState<EventInputs>(() => scopedEventInputs(scope));
-  const [overrides, setOverrides] = useState<AssumptionOverrides>({});
+  // Costs open at zero — the registry keeps every planning base, but the page
+  // shows what a night earns before it shows what somebody guessed it costs.
+  const [overrides, setOverrides] = useState<AssumptionOverrides>(() => zeroedCostOverrides());
   /**
    * What a line ACTUALLY cost once a night was settled. Kept separate from the
    * planning override on purpose: the live rate is what we expect to pay, this
@@ -877,7 +883,7 @@ function EventEconomics({ scope }: { scope: Scope }) {
                 <button
                   type="button"
                   onClick={() => {
-                    setOverrides({});
+                    setOverrides(zeroedCostOverrides());
                     setActuals({});
                   }}
                   className="inline-flex items-center gap-1 text-[11px] font-semibold text-muted-foreground hover:text-white transition cursor-pointer shrink-0"
@@ -1948,9 +1954,21 @@ function EconomicsPage() {
   const scopedInputs = useMemo(() => applyScope(inputs, scope), [inputs, scope]);
   const m = useMemo(() => computeEconomics(scopedInputs), [scopedInputs]);
   // Season 1 policy: prize is a share of profit, so it re-derives with the page.
+  // Event contribution -> regional -> EBITDA -> PBT -> net. Direct event cost
+  // to the operator is zero by design: venues and houses carry the night.
+  const waterfall = useMemo(
+    () =>
+      leagueWaterfall({
+        operatorRevenue: m.operatorGross,
+        directEventCostToOperator: 0,
+        centralOperating: OPERATIONS.operating,
+        prizePool: OPERATIONS.prize,
+      }),
+    [m.operatorGross],
+  );
   const allocation = useMemo(
-    () => allocateProfit(m.operatorNet, PROFIT_ROADMAP[0], PRIZE_SPLIT.band),
-    [m.operatorNet],
+    () => allocateProfit(waterfall.netProfit, PROFIT_ROADMAP[0], PRIZE_SPLIT.band),
+    [waterfall.netProfit],
   );
 
   const activePreset = PRESETS.find((p) =>
@@ -2042,7 +2060,7 @@ function EconomicsPage() {
             <Stat
               icon={<PieChart size={13} />}
               value={inrCompact(m.operatorNet)}
-              label="Operator Surplus"
+              label="League EBITDA"
               hint={`${m.operatorMarginPct.toFixed(0)}% margin on ${inrCompact(m.operatorGross)} gross`}
               accent="text-purple-400"
             />
@@ -3078,10 +3096,10 @@ function EconomicsPage() {
             </div>
             <div className="border-t border-border/50 pt-3 space-y-2">
               <p className="text-[10px] text-muted-foreground leading-relaxed">
-                {inrCompact(OPERATIONS.fixed)} of this is genuinely fixed — the central team,
-                platform, brand campaign and corporate base. The other{" "}
-                {inrCompact(OPERATIONS.variable)} scales with zones, nights, campuses and bands, so
-                expansion is cheaper per unit but is never free.
+                Planning range for the whole season is {inrCompact(OPERATIONS.low)} to{" "}
+                {inrCompact(OPERATIONS.high)}; the model sits at the midpoint. Contingency runs at{" "}
+                {OPERATIONS.contingencyPct.toFixed(1)}% of the buckets it protects
+                {OPERATIONS.contingencyInBand ? ", inside the 10–15% target" : ", outside the 10–15% target"}.
               </p>
               <div className="rounded-lg border border-border/60 bg-surface/40 p-3 space-y-1.5">
                 <p className="text-[10px] uppercase tracking-wider font-bold text-muted-foreground">
@@ -3119,21 +3137,22 @@ function EconomicsPage() {
         <div className="mt-6 bpl-card p-5 sm:p-6 border border-primary/30 bg-gradient-to-r from-primary/10 via-surface to-emerald-900/10 flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="space-y-1 text-center sm:text-left">
             <p className="text-[11px] uppercase tracking-widest text-primary-glow font-bold">
-              Operator Net Position — Per Season
+              League EBITDA — Per Season
             </p>
             <p className="text-sm text-muted-foreground max-w-xl leading-relaxed">
               {inrCompact(m.operatorGross)} gross less {inrCompact(m.operatorCostsTotal)} of
               operating cost.{" "}
               {m.operatorNet < 0 ? (
                 <>
-                  A first season on a fully-staffed cost base does not pay for itself out of the
-                  gate, and pretending otherwise would just move the problem to March. Closing this
-                  is a sponsorship and broadcast job, not a ticket-price one.
+                  A season that does not cover its own central base has to be funded on purpose
+                  rather than discovered in March. Closing this is a sponsorship and broadcast job,
+                  not a ticket-price one.
                 </>
               ) : (
                 <>
-                  Most of the cost base is fixed, so adding zones and fixtures widens the margin
-                  without a matching rise in central spend.
+                  This is before the prize pool and tax — the full drop to net profit is in the
+                  waterfall below. The base is asset-light by design, so adding zones and fixtures
+                  widens the margin without a matching rise in central spend.
                 </>
               )}
             </p>
@@ -3152,6 +3171,164 @@ function EconomicsPage() {
                 ? "Operating deficit at these inputs"
                 : `Operating surplus · ${m.operatorMarginPct.toFixed(0)}% margin`}
             </p>
+          </div>
+        </div>
+
+        {/* ---------------- THE WATERFALL ---------------- */}
+        <div className="mt-10 space-y-4">
+          <div className="space-y-2">
+            <p className="text-[11px] uppercase tracking-[0.2em] text-primary-glow font-bold">
+              League P&amp;L
+            </p>
+            <h3 className="text-2xl sm:text-3xl font-display font-bold text-white">
+              Event contribution down to distributable profit
+            </h3>
+            <p className="text-sm text-muted-foreground max-w-3xl leading-relaxed">
+              One giant &ldquo;operational expenses&rdquo; number hides which layer is actually
+              working. Split into steps, it is obvious where the margin comes from and where it
+              goes — and the prize pool is taken separately from operating cost, because it is a
+              commitment to the bands rather than a cost of running the office.
+            </p>
+          </div>
+
+          <div className="bpl-card p-4 sm:p-5 border border-border bg-surface/40">
+            <div className="space-y-1.5">
+              {waterfall.steps.map((st) => {
+                const isSub = st.kind === "subtotal" || st.kind === "result";
+                return (
+                  <div
+                    key={st.id}
+                    className={`flex flex-wrap items-baseline justify-between gap-x-3 gap-y-0.5 rounded-md px-3 py-2 ${
+                      st.kind === "result"
+                        ? "border border-emerald-500/30 bg-emerald-500/5"
+                        : isSub
+                          ? "border-t border-border/60 bg-surface/40"
+                          : ""
+                    }`}
+                  >
+                    <div className="min-w-0">
+                      <p
+                        className={`text-xs leading-snug ${
+                          isSub ? "font-bold text-white" : "text-white"
+                        }`}
+                      >
+                        {st.kind === "cost" && (
+                          <span className="text-muted-foreground mr-1">less</span>
+                        )}
+                        {st.label}
+                      </p>
+                      <p className="text-[10px] text-muted-foreground leading-snug">{st.note}</p>
+                    </div>
+                    <span
+                      className={`font-display font-extrabold tabular-nums shrink-0 ${
+                        st.kind === "result"
+                          ? "text-xl text-emerald-300"
+                          : isSub
+                            ? "text-base text-white"
+                            : st.amount < 0
+                              ? "text-sm text-rose-300"
+                              : "text-sm text-white"
+                      }`}
+                    >
+                      {st.amount < 0 ? "−" : ""}
+                      {inrCompact(Math.abs(st.amount))}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Cash requirement — operating and prize kept apart */}
+          <div className="grid gap-3 sm:grid-cols-3">
+            <div className="bpl-card p-4 border border-border bg-surface/40">
+              <p className="text-[9px] uppercase tracking-wider font-bold text-muted-foreground">
+                Central operating cost
+              </p>
+              <p className="text-xl font-display font-extrabold text-white tabular-nums">
+                {inrCompact(OPERATIONS.operating)}
+              </p>
+              <p className="text-[10px] text-muted-foreground leading-snug mt-0.5">
+                Nine buckets. What it costs to run the competition.
+              </p>
+            </div>
+            <div className="bpl-card p-4 border border-amber-500/30 bg-amber-500/5">
+              <p className="text-[9px] uppercase tracking-wider font-bold text-amber-300">
+                Prize pool
+              </p>
+              <p className="text-xl font-display font-extrabold text-white tabular-nums">
+                {inrCompact(OPERATIONS.prize)}
+              </p>
+              <p className="text-[10px] text-muted-foreground leading-snug mt-0.5">
+                The announced floor, held apart from operating cost.
+              </p>
+            </div>
+            <div className="bpl-card p-4 border border-primary/40 bg-primary/10">
+              <p className="text-[9px] uppercase tracking-wider font-bold text-primary-glow">
+                Total league cash requirement
+              </p>
+              <p className="text-xl font-display font-extrabold text-white tabular-nums">
+                {inrCompact(OPERATIONS.cashRequirement)}
+              </p>
+              <p className="text-[10px] text-muted-foreground leading-snug mt-0.5">
+                What a funder is actually asked for.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* ---------------- WHO PAYS FOR WHAT ---------------- */}
+        <div className="mt-10 space-y-4">
+          <div className="space-y-2">
+            <h3 className="text-2xl sm:text-3xl font-display font-bold text-white">
+              Who pays for what
+            </h3>
+            <p className="text-sm text-muted-foreground max-w-3xl leading-relaxed">
+              The operator runs the competition. It does not develop artists and it does not
+              execute shows — those are the production house&apos;s and the venue&apos;s, and every
+              rupee of them is already being spent by somebody. Asset-light throughout: no owned
+              sound, lighting, staging, transport or campus network.
+            </p>
+          </div>
+
+          <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
+            {COST_OWNERSHIP.map((row) => (
+              <div
+                key={row.owner}
+                className={`bpl-card p-4 space-y-2 border ${
+                  row.owner === "League operator"
+                    ? "border-primary/35 bg-primary/5"
+                    : "border-border bg-surface/40"
+                }`}
+              >
+                <h4 className="text-xs font-bold text-white">{row.owner}</h4>
+                <ul className="space-y-0.5">
+                  {row.items.map((it) => (
+                    <li key={it} className="text-[10px] text-muted-foreground leading-snug">
+                      · {it}
+                    </li>
+                  ))}
+                </ul>
+                <p className="text-[10px] text-muted-foreground leading-relaxed border-t border-border/40 pt-1.5">
+                  {row.principle}
+                </p>
+              </div>
+            ))}
+          </div>
+
+          <div className="bpl-card p-4 border border-emerald-500/25 bg-emerald-500/5 space-y-2">
+            <h4 className="text-xs font-bold text-emerald-300">
+              The biggest cost-saving principle: do not pay twice
+            </h4>
+            <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+              {NO_DOUBLE_PAY.map((r) => (
+                <p key={r.item} className="text-[10px] text-muted-foreground leading-relaxed">
+                  <span className="text-white font-semibold">{r.alreadyPaidBy}</span> already pays
+                  for <span className="text-white">{r.item}</span> — so the operator does not{" "}
+                  {r.soOperatorDoesNot}.
+                </p>
+              ))}
+            </div>
           </div>
         </div>
 
@@ -3214,7 +3391,7 @@ function EconomicsPage() {
                   </span>
                 </div>
                 <p className="text-xl font-display font-extrabold text-white tabular-nums">
-                  {m.operatorNet > 0 ? inrCompact(sl.amount) : "—"}
+                  {waterfall.netProfit > 0 ? inrCompact(sl.amount) : "—"}
                 </p>
                 <p className="text-[10px] text-muted-foreground leading-relaxed">
                   {PROFIT_ALLOCATION.find((a) => a.id === sl.id)?.purpose}
@@ -3223,7 +3400,7 @@ function EconomicsPage() {
             ))}
           </div>
 
-          {m.operatorNet <= 0 && (
+          {waterfall.netProfit <= 0 && (
             <div className="bpl-card p-4 border border-amber-500/30 bg-amber-500/5 space-y-1.5">
               <p className="text-xs font-bold text-amber-300">
                 At these inputs the season makes no profit, so {PRIZE_SHARE_OF_PROFIT}% of it is

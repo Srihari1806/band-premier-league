@@ -465,6 +465,49 @@ export function computeEventPnL(
   };
 }
 
+/**
+ * The room the page opens on, before anybody has entered a real quote.
+ *
+ * Deliberately neutral: a 250-seat room at 80% is 200 in, at a flat ₹250
+ * ticket. It is not any one preset's real shape — it is a starting point that
+ * makes the arithmetic legible before assumptions start moving.
+ */
+export const OPENING_EVENT = { capacity: 250, ticketPrice: 250, occupancyPct: 80 } as const;
+
+/** Head count the page opens showing. */
+export const OPENING_ATTENDANCE = Math.round(
+  (OPENING_EVENT.capacity * OPENING_EVENT.occupancyPct) / 100,
+);
+
+/**
+ * Cost categories start at zero on load.
+ *
+ * Every rate in the registry keeps its planning `base`, so the reference is
+ * never lost — but the live figure opens at nothing, so the page shows what a
+ * night earns before it shows what somebody guessed it costs. Real quotes get
+ * typed in as they arrive, and the variance column then measures against the
+ * planning base rather than against another guess.
+ *
+ * Revenue-side lines (stalls, F&B, merch, sponsorship) and the ticketing fee
+ * are NOT zeroed — they are not costs to stage.
+ */
+export const COST_CATEGORIES: AssumptionCategory[] = [
+  "Venue",
+  "Production",
+  "Crew & Safety",
+  "Content",
+  "Travel & Logistics",
+  "Marketing",
+];
+
+export function zeroedCostOverrides(): AssumptionOverrides {
+  const out: AssumptionOverrides = {};
+  ASSUMPTIONS.forEach((a) => {
+    if (COST_CATEGORIES.includes(a.category)) out[a.id] = 0;
+  });
+  return out;
+}
+
 export function defaultEventInputs(presetId = "cafe"): EventInputs {
   const p = EVENT_PRESETS.find((x) => x.id === presetId) ?? EVENT_PRESETS[0];
   return {
@@ -475,6 +518,16 @@ export function defaultEventInputs(presetId = "cafe"): EventInputs {
     occupancyPct: p.occupancyPct,
     stalls: p.stalls,
     acts: 1,
+  };
+}
+
+/** What the page loads with: the neutral room, on the chosen preset's stack. */
+export function openingEventInputs(presetId = "cafe"): EventInputs {
+  return {
+    ...defaultEventInputs(presetId),
+    capacity: OPENING_EVENT.capacity,
+    ticketPrice: OPENING_EVENT.ticketPrice,
+    occupancyPct: OPENING_EVENT.occupancyPct,
   };
 }
 

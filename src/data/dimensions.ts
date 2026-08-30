@@ -28,6 +28,7 @@ import { DEFAULT_INPUTS } from "./economics";
 import {
   DEFAULT_SPONSOR_ROI,
   defaultEventInputs,
+  openingEventInputs,
   type EventInputs,
   type SponsorRoiInputs,
 } from "./event-model";
@@ -495,12 +496,21 @@ export function applyScope(base: EconomicsInputs, scope: Scope): EconomicsInputs
 
 /** Event defaults for the room the selected fixture type actually plays. */
 export function scopedEventInputs(scope: Scope): EventInputs {
-  const base = defaultEventInputs(scope.fixture.presetId);
+  /*
+   * The event calculator opens on a fixed, legible room: 250 seats at 80% is
+   * 200 in, at a flat ₹250, with every cost line at zero.
+   *
+   * Market multipliers are deliberately NOT applied to capacity or price here.
+   * This panel is a what-if calculator you type real quotes into, and it is
+   * far more useful starting from a round number than from a market-adjusted
+   * ₹274 nobody chose. The season-level figures above it stay fully sliced —
+   * only the structural parts of the scope (which preset, which tier, how many
+   * acts share the bill) carry through.
+   */
+  const base = openingEventInputs(scope.fixture.presetId);
   return {
     ...base,
     tierId: scope.fixture.tierId,
-    capacity: Math.max(50, Math.round(base.capacity * scope.attendanceMult)),
-    ticketPrice: Math.round(base.ticketPrice * scope.priceMult),
     acts: scope.fixture.actsPerFixture,
   };
 }

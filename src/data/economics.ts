@@ -105,7 +105,8 @@ export const OPERATIONS = costOperations(SEASON_1_SCALE);
 export const OPERATOR_COSTS: { label: string; amount: number }[] =
   OPERATIONS.byCategory.map((c) => ({ label: c.category, amount: c.amount }));
 
-export const OPERATOR_COSTS_TOTAL = OPERATIONS.total;
+/** Operating cost only. The prize pool is a separate cash commitment. */
+export const OPERATOR_COSTS_TOTAL = OPERATIONS.operating;
 
 /** Acts sharing one versus night. Two is the format; named rather than magic. */
 export const ACTS_PER_SHARED_SHOW = 2;
