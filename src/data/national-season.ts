@@ -345,6 +345,39 @@ export interface CyclePhase {
   accent: string;
 }
 
+/**
+ * The cycle, told for the season on screen.
+ *
+ * "Five regional leagues run simultaneously" is true of season 2 and false of
+ * a launch year playing one state — and the whole point of this section is
+ * that the twelve-month shape holds whatever the league's size, so it has to
+ * describe the size it is actually being read against.
+ */
+export function annualCycleFor(seasonId: string): CyclePhase[] {
+  const plan = seasonPlan(seasonId);
+  const zones = plan.zones;
+  return ANNUAL_CYCLE.map((phase) => {
+    if (phase.id === "league") {
+      return {
+        ...phase,
+        detail:
+          zones === 1
+            ? `One regional league across ${COMPETITION_WEEKENDS} competition weekends. Gate, fan voting and the points table.`
+            : `${zones} regional leagues run simultaneously across ${COMPETITION_WEEKENDS} competition weekends. Gate, fan voting and the points table.`,
+      };
+    }
+    if (phase.id === "national" && zones === 1) {
+      return {
+        ...phase,
+        name: "Knockout & Broadcast",
+        detail:
+          "The group stage settles the table and the bracket goes to national television, voted live. One zone means one champion, decided on air rather than across regions.",
+      };
+    }
+    return phase;
+  });
+}
+
 export const ANNUAL_CYCLE: CyclePhase[] = [
   {
     id: "league",

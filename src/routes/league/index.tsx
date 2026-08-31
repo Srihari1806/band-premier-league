@@ -28,7 +28,6 @@ import {
   Flag,
 } from "lucide-react";
 import {
-  TOTAL_LEAGUE_NIGHTS,
   RELEASE_TOTALS,
   TOTAL_BANDS,
   totalsFor,
@@ -768,7 +767,7 @@ function LeaguePage() {
             {[
               { v: plan.bands, l: "Bands Competing" },
               { v: STAGE_2_MATRIX.showsPerBand, l: "Fixtures Per Band" },
-              { v: TOTAL_LEAGUE_NIGHTS, l: "League-Phase Nights" },
+              { v: totals.events.toLocaleString("en-IN"), l: "League-Phase Nights" },
               { v: plan.houses, l: "Production Houses" },
               { v: `${STAGE_2_MATRIX.showsPerBand * MAX_POINTS_PER_FIXTURE}`, l: "Max League Points" },
             ].map((s) => (

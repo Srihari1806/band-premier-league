@@ -25,6 +25,7 @@ import {
 } from "lucide-react";
 import {
   NATIONAL_ZONES,
+  annualCycleFor,
   TOTAL_HOUSES,
   TOTAL_BANDS,
   INDIVIDUAL_FIXTURES_PER_BAND,
@@ -97,6 +98,7 @@ function SeasonPage() {
    * fixtures against a season that stages 680 — the national figure wearing
    * the launch season's label.
    */
+  const cycle = useMemo(() => annualCycleFor(season), [season]);
   const seasonTotals = useMemo(
     () => ({
       fixturesNeeded: seasonCapacity.reduce((s, c) => s + c.fixturesNeeded, 0),
@@ -677,7 +679,7 @@ function SeasonPage() {
             </div>
 
             <div className="hidden sm:flex h-3 w-full rounded-full overflow-hidden border border-border/50">
-              {ANNUAL_CYCLE.map((p) => (
+              {cycle.map((p) => (
                 <div
                   key={p.id}
                   title={`${p.name} — ${p.period}`}
@@ -713,6 +715,11 @@ function SeasonPage() {
             </div>
           </section>
 
+          {/* ---------------- LADDER — the national ladder is a season-2 concept.
+              One zone does not qualify anyone to anywhere; season 1 ends in
+              its own televised knockout, which the league page carries. */}
+          {plan.zones > 1 && (
+          <>
           {/* ---------------- LADDER ---------------- */}
           <section className="py-14 space-y-6">
             <div className="space-y-2">
@@ -748,22 +755,29 @@ function SeasonPage() {
               ))}
             </div>
           </section>
+          </>
+          )}
 
           {/* ---------------- FOOT ---------------- */}
           <section className="py-14">
             <div className="bpl-card p-6 border border-border bg-surface/30 space-y-3">
               <h3 className="text-sm font-bold text-white">What is deliberately not here</h3>
               <p className="text-[11px] text-muted-foreground leading-relaxed">
-                {TOTAL_INDIVIDUAL_FIXTURES} dated fixtures. The structure is what needs locking
+                {seasonTotals.fixturesNeeded.toLocaleString("en-IN")} dated fixtures. The
+                structure is what needs locking
                 first; the matrix comes from a scheduler that knows venue availability, travel
                 distance, college calendars, regional holidays, broadcast clashes and the{" "}
                 {MIN_REST_DAYS}-day rest rule. Inventing the dates by hand now would be a worse
                 answer that merely looks more complete.
               </p>
               <p className="text-[11px] text-muted-foreground leading-relaxed">
-                Across the national build that is {seasonTotals.fixturesNeeded} individual
-                fixtures plus {seasonTotals.crossNights} cross nights ={" "}
-                <span className="font-bold text-white">{TOTAL_LEAGUE_NIGHTS} league nights</span>{" "}
+                Across {plan.zones === 1 ? "this season" : "the national build"} that is{" "}
+                {seasonTotals.fixturesNeeded.toLocaleString("en-IN")} individual fixtures plus{" "}
+                {seasonTotals.crossNights} cross nights ={" "}
+                <span className="font-bold text-white">
+                  {(seasonTotals.fixturesNeeded + seasonTotals.crossNights).toLocaleString("en-IN")}{" "}
+                  league nights
+                </span>{" "}
                 before the finals. The{" "}
                 <Link to="/economics" className="text-primary-glow font-semibold hover:underline">
                   economics page
