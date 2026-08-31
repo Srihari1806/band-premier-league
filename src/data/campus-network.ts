@@ -20,8 +20,11 @@
 import {
   NATIONAL_ZONES,
   FULL_SCHEDULE,
+  scheduleFor,
+  type ScheduledEvent,
   type NationalZone,
 } from "./national-season";
+import { seasonPlan } from "./season-plan";
 
 /** Campus slots each zone should line up. */
 export const CAMPUSES_PER_ZONE = 60;
@@ -152,9 +155,12 @@ export interface ZoneCampusPlan {
   tierCounts: { tier: CampusTier; count: number }[];
 }
 
-export function campusPlan(zone: NationalZone): ZoneCampusPlan {
+export function campusPlan(
+  zone: NationalZone,
+  schedule: ScheduledEvent[] = FULL_SCHEDULE,
+): ZoneCampusPlan {
   const bands = zone.houses * zone.bandsPerHouse;
-  const nightsNeeded = FULL_SCHEDULE.filter(
+  const nightsNeeded = schedule.filter(
     (e) => e.zoneSlug === zone.slug && e.kind === "campus",
   ).length;
 
@@ -191,13 +197,34 @@ export function campusPlan(zone: NationalZone): ZoneCampusPlan {
   };
 }
 
-export const CAMPUS_PLANS = NATIONAL_ZONES.map(campusPlan);
+export const CAMPUS_PLANS = NATIONAL_ZONES.map((z) => campusPlan(z));
 
-export const CAMPUS_TOTALS = {
-  campuses: CAMPUS_PLANS.reduce((s, p) => s + p.totalSlots, 0),
-  nights: CAMPUS_PLANS.reduce((s, p) => s + p.nightsNeeded, 0),
-  perZone: CAMPUSES_PER_ZONE,
-};
+/**
+ * The campus network for one season.
+ *
+ * Season 1 runs one zone, so it is 60 campuses and one zone's nights — not the
+ * national 300. A page showing the national network under a season-1 heading
+ * is describing a partnership footprint the launch year does not have.
+ */
+export function campusPlansFor(seasonId: string): ZoneCampusPlan[] {
+  const slugs = seasonPlan(seasonId).zoneSlugs;
+  const schedule = scheduleFor(seasonId);
+  return NATIONAL_ZONES.filter((z) => slugs.includes(z.slug)).map((z) =>
+    campusPlan(z, schedule),
+  );
+}
+
+export function campusTotalsFor(seasonId: string) {
+  const plans = campusPlansFor(seasonId);
+  return {
+    campuses: plans.reduce((s, p) => s + p.totalSlots, 0),
+    nights: plans.reduce((s, p) => s + p.nightsNeeded, 0),
+    perZone: CAMPUSES_PER_ZONE,
+    zones: plans.length,
+  };
+}
+
+export const CAMPUS_TOTALS = campusTotalsFor("s2");
 
 /* ------------------------------------------------------------------ *
  * The finding: does the fixture calendar sit inside fest season?
@@ -211,9 +238,11 @@ export interface CampusMonthLoad {
 }
 
 /** Campus nights the schedule actually places in each month. */
-export function campusLoadByMonth(): CampusMonthLoad[] {
+export function campusLoadByMonth(
+  schedule: ScheduledEvent[] = FULL_SCHEDULE,
+): CampusMonthLoad[] {
   return FEST_CALENDAR.map((f) => {
-    const nights = FULL_SCHEDULE.filter(
+    const nights = schedule.filter(
       (e) => e.kind === "campus" && e.dateLabel.includes(f.month),
     ).length;
     return {
@@ -227,11 +256,20 @@ export function campusLoadByMonth(): CampusMonthLoad[] {
 
 export const CAMPUS_LOAD = campusLoadByMonth();
 
-export const CAMPUS_CLASH = {
-  total: CAMPUS_LOAD.reduce((s, m) => s + m.nights, 0),
-  inSeason: CAMPUS_LOAD.filter((m) => m.viable).reduce((s, m) => s + m.nights, 0),
-  offSeason: CAMPUS_LOAD.filter((m) => !m.viable).reduce((s, m) => s + m.nights, 0),
-};
+export function campusLoadFor(seasonId: string): CampusMonthLoad[] {
+  return campusLoadByMonth(scheduleFor(seasonId));
+}
+
+export function campusClashFor(seasonId: string) {
+  const load = campusLoadFor(seasonId);
+  return {
+    total: load.reduce((s, m) => s + m.nights, 0),
+    inSeason: load.filter((m) => m.viable).reduce((s, m) => s + m.nights, 0),
+    offSeason: load.filter((m) => !m.viable).reduce((s, m) => s + m.nights, 0),
+  };
+}
+
+export const CAMPUS_CLASH = campusClashFor("s2");
 
 export const CAMPUS_SELECTION_NOTE =
   "Campuses are selected on engagement rather than prestige: an active music society, a committee that has booked a paid act before, and a student ambassador in place before the fixture is confirmed. A large college with a dormant cultural body is a worse night than a small one with a live scene.";

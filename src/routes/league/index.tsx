@@ -49,11 +49,11 @@ import {
 } from "@/data/knockout";
 import { SCORED_FORMATS, FORMAT_MIX, venueOf } from "@/data/show-formats";
 import {
-  CAMPUS_PLANS,
-  CAMPUS_TOTALS,
+  campusPlansFor,
+  campusTotalsFor,
   CAMPUS_TIERS,
-  CAMPUS_LOAD,
-  CAMPUS_CLASH,
+  campusLoadFor,
+  campusClashFor,
   FEST_CALENDAR,
   FEST_INTENSITY_META,
   CAMPUS_SELECTION_NOTE,
@@ -175,6 +175,12 @@ function LeaguePage() {
   const plan = useMemo(() => seasonPlan(season), [season]);
   const seasonZones = useMemo(() => zonesForSeason(season), [season]);
   const totals = useMemo(() => totalsFor(season), [season]);
+  // The campus network is a season footprint too — season 1 runs one zone's
+  // sixty campuses, not the national three hundred.
+  const campusPlans = useMemo(() => campusPlansFor(season), [season]);
+  const campusTotals = useMemo(() => campusTotalsFor(season), [season]);
+  const campusLoad = useMemo(() => campusLoadFor(season), [season]);
+  const campusClash = useMemo(() => campusClashFor(season), [season]);
   const [activeZone, setActiveZone] = useState<string>("ap-ts");
   const activeZoneMeta = ZONES.find((z) => z.slug === activeZone);
   const standings = standingsForZone(activeZone);
@@ -1410,7 +1416,7 @@ function LeaguePage() {
               <CalendarDays size={14} className="text-emerald-400" /> Campus Nights by Month
             </h4>
             <div className="grid grid-cols-3 sm:grid-cols-6 gap-2 mb-4">
-              {CAMPUS_LOAD.map((m) => {
+              {campusLoad.map((m) => {
                 const meta = FEST_INTENSITY_META[m.intensity];
                 const fest = FEST_CALENDAR.find((f) => f.month === m.month);
                 return (
@@ -1434,7 +1440,7 @@ function LeaguePage() {
               <span className="font-semibold text-emerald-200">
                 The campus leg runs the whole season, not one quarter of it.
               </span>{" "}
-              An earlier version crushed all {CAMPUS_CLASH.total} nights into January to March on
+              An earlier version crushed all {campusClash.total} nights into January to March on
               the assumption of a school-style summer holiday. Colleges do not work that way — most
               run shorter breaks, many run summer terms, and June is intake and orientation, which
               is one of the better moments of the year to put a band in front of a room.
@@ -1462,20 +1468,20 @@ function LeaguePage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-border/40">
-                {CAMPUS_PLANS.map((plan) => (
-                  <tr key={plan.zone.slug} className="hover:bg-secondary/10 align-top">
+                {campusPlans.map((cp) => (
+                  <tr key={cp.zone.slug} className="hover:bg-secondary/10 align-top">
                     <td className="py-2.5 px-3 font-bold text-white whitespace-nowrap">
-                      {plan.zone.shortName}
+                      {cp.zone.shortName}
                     </td>
                     <td className="py-2.5 px-3 text-center font-bold text-primary-glow tabular-nums">
-                      {plan.totalSlots}
+                      {cp.totalSlots}
                     </td>
                     <td className="py-2.5 px-3 text-center text-muted-foreground tabular-nums">
-                      {plan.nightsNeeded}
+                      {cp.nightsNeeded}
                     </td>
                     <td className="py-2.5 px-3">
                       <div className="flex flex-wrap gap-1.5">
-                        {plan.allocations.map((a) => (
+                        {cp.allocations.map((a) => (
                           <span
                             key={a.location}
                             title={a.note}
