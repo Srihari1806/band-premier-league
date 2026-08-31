@@ -41,6 +41,7 @@ import {
   formatOf,
   type VenueClass,
 } from "./show-formats";
+import { seasonPlan } from "./season-plan";
 
 /** Poster names for the three formats that carry no points. */
 const OFF_LADDER_LOOKUP: Record<string, string> = {
@@ -781,12 +782,20 @@ function campusLadder(): string[] {
   return CAMPUS_FORMATS.flatMap((f) => Array.from({ length: f.perBand }, () => f.id));
 }
 
-export function buildFullSchedule(): ScheduledEvent[] {
+/**
+ * Generate a season's schedule.
+ *
+ * Season 1 runs AP/TS alone; season 2 runs all five leagues. The generator
+ * takes the zone list rather than assuming the national one, because a launch
+ * season's calendar is a different document from the national one and showing
+ * either in place of the other is misleading about what year it is.
+ */
+export function buildFullSchedule(zones: NationalZone[] = NATIONAL_ZONES): ScheduledEvent[] {
   const events: ScheduledEvent[] = [];
   const byIndex = new Map(SEASON_CALENDAR.map((w) => [w.index, w]));
   const celebrityFormat = SCORED_FORMATS.find((f) => f.kind === "celebrity");
 
-  NATIONAL_ZONES.forEach((zone) => {
+  zones.forEach((zone) => {
     const rounds = crossRounds(zone.bandsPerHouse);
     const ladder = commercialLadder();
     const campus = campusLadder();
@@ -956,9 +965,31 @@ export function buildFullSchedule(): ScheduledEvent[] {
   return events.sort((a, b) => a.date.getTime() - b.date.getTime());
 }
 
-export const FULL_SCHEDULE = buildFullSchedule();
+/** Zones live in a given season, as the schedule generator wants them. */
+export function zonesFor(seasonId: string): NationalZone[] {
+  const slugs = seasonPlan(seasonId).zoneSlugs;
+  return NATIONAL_ZONES.filter((z) => slugs.includes(z.slug));
+}
+
+/** One schedule per season, generated once. */
+export const SCHEDULE_BY_SEASON: Record<string, ScheduledEvent[]> = {
+  s1: buildFullSchedule(zonesFor("s1")),
+  s2: buildFullSchedule(zonesFor("s2")),
+};
+
+export function scheduleFor(seasonId: string): ScheduledEvent[] {
+  return SCHEDULE_BY_SEASON[seasonId] ?? SCHEDULE_BY_SEASON.s1;
+}
+
+/**
+ * The national schedule, kept as the default export for anything that has not
+ * been made season-aware. Prefer `scheduleFor(seasonId)`.
+ */
+export const FULL_SCHEDULE = SCHEDULE_BY_SEASON.s2;
 
 export interface ScheduleTotals {
+  /** Bands actually in this schedule — 20 in season 1, 100 in season 2. */
+  bands: number;
   /** Distinct DATED nights on the calendar — a shared bill counts once. */
   events: number;
   /**
@@ -1037,6 +1068,20 @@ export function scheduleTotals(events = FULL_SCHEDULE): ScheduleTotals {
   const cross = events.filter((e) => e.kind === "cross").length;
   const scored = events.filter((e) => e.scored).length;
   const clashes = sameDayClashes(events);
+  /*
+   * Bands are counted from the schedule, not from the national constant.
+   *
+   * Dividing a season-1 schedule by 100 gave 9 appearances a band against a
+   * season of 46 and reported a reconciliation failure that was an artefact of
+   * the divisor. A one-zone season has twenty bands and the totals have to
+   * know that.
+   */
+  const bandKeys = new Set<string>();
+  events.forEach((e) =>
+    e.bands.forEach((b) => bandKeys.add(`${e.zoneSlug}-h${e.houseNumber}-b${b}`)),
+  );
+  const bandsInScope = Math.max(1, bandKeys.size);
+
   const appearances = events.reduce((sum, e) => sum + e.bands.length, 0);
   // The launch is a real appearance but sits outside the 24-week season, which
   // is what APPEARANCES_PER_BAND counts.
@@ -1048,19 +1093,19 @@ export function scheduleTotals(events = FULL_SCHEDULE): ScheduleTotals {
     .reduce((sum, e) => sum + e.bands.length, 0);
 
   return {
+    bands: bandsInScope,
     events: distinctNights(dated),
     appearances,
-    appearancesPerBandAllIn: Math.round(appearances / Math.max(1, TOTAL_BANDS)),
-    appearancesPerBandInSeason: Math.round(datedSeasonAppearances / Math.max(1, TOTAL_BANDS)),
+    appearancesPerBandAllIn: Math.round(appearances / bandsInScope),
+    appearancesPerBandInSeason: Math.round(datedSeasonAppearances / bandsInScope),
     /** Season appearances including the held private bookings. */
-    appearancesPerBandAllFormats: Math.round(seasonAppearances / Math.max(1, TOTAL_BANDS)),
+    appearancesPerBandAllFormats: Math.round(seasonAppearances / bandsInScope),
     // Dated against the dated constant, and the full season against the full
     // constant — comparing the season total to the dated one was reading 49
     // against 46 and reporting a mismatch that was not there.
     appearancesReconcile:
-      Math.round(datedSeasonAppearances / Math.max(1, TOTAL_BANDS)) ===
-        DATED_APPEARANCES_PER_BAND &&
-      Math.round(seasonAppearances / Math.max(1, TOTAL_BANDS)) === APPEARANCES_PER_BAND,
+      Math.round(datedSeasonAppearances / bandsInScope) === DATED_APPEARANCES_PER_BAND &&
+      Math.round(seasonAppearances / bandsInScope) === APPEARANCES_PER_BAND,
     /** Weeks reserved for private bookings, with no published date. */
     heldSlots: held.length,
     rows: events.length,
@@ -1077,12 +1122,22 @@ export function scheduleTotals(events = FULL_SCHEDULE): ScheduleTotals {
     // Dated appearances only: corporate bookings hold a week without a date,
     // and the launch sits outside the season count.
     reconciles:
-      datedSeasonAppearances === TOTAL_BANDS * DATED_APPEARANCES_PER_BAND && clashes === 0,
+      datedSeasonAppearances === bandsInScope * DATED_APPEARANCES_PER_BAND && clashes === 0,
     sameDayClashes: clashes,
   };
 }
 
 export const SCHEDULE_TOTALS = scheduleTotals();
+
+/** Totals for a given season, so a page can show the year it is on. */
+export function totalsFor(seasonId: string): ScheduleTotals {
+  return scheduleTotals(scheduleFor(seasonId));
+}
+
+export const TOTALS_BY_SEASON: Record<string, ScheduleTotals> = {
+  s1: totalsFor("s1"),
+  s2: totalsFor("s2"),
+};
 
 /* ------------------------------------------------------------------ *
  * Release schedule

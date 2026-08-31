@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { PageShell } from "@/components/layout/PageShell";
 import { motion } from "framer-motion";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import {
   Trophy,
   Music,
@@ -31,10 +31,12 @@ import {
   TOTAL_LEAGUE_NIGHTS,
   RELEASE_TOTALS,
   TOTAL_BANDS,
-  SCHEDULE_TOTALS,
+  totalsFor,
   OFF_LADDER_FORMATS,
   OFF_LADDER_TOTALS,
 } from "@/data/national-season";
+import { SeasonSwitch } from "@/components/SeasonSwitch";
+import { seasonPlan, zonesForSeason, type SeasonId } from "@/data/season-plan";
 import { SCORED_FORMATS, FORMAT_MIX, venueOf } from "@/data/show-formats";
 import {
   CAMPUS_PLANS,
@@ -158,6 +160,11 @@ const ADVANTAGES = [
 ];
 
 function LeaguePage() {
+  // The launch season is AP/TS alone; the national five arrive in season 2.
+  const [season, setSeason] = useState<SeasonId>("s1");
+  const plan = useMemo(() => seasonPlan(season), [season]);
+  const seasonZones = useMemo(() => zonesForSeason(season), [season]);
+  const totals = useMemo(() => totalsFor(season), [season]);
   const [activeZone, setActiveZone] = useState<string>("ap-ts");
   const activeZoneMeta = ZONES.find((z) => z.slug === activeZone);
   const standings = standingsForZone(activeZone);
@@ -205,6 +212,13 @@ function LeaguePage() {
           </motion.div>
         </section>
 
+        {/* Which season everything below is describing. */}
+        <section className="relative z-10 px-4 max-w-7xl mx-auto pb-6">
+          <div className="bpl-card p-4 border border-primary/25 bg-primary/5">
+            <SeasonSwitch value={season} onChange={setSeason} />
+          </div>
+        </section>
+
         {/* SECTION 1: WHAT IS THE LEAGUE? */}
         <section className="py-20 px-4 max-w-4xl mx-auto relative z-10 border-t border-border/45">
           <div className="bpl-card p-8 md:p-12 space-y-6 border-primary/20 bg-primary/3 text-left">
@@ -218,7 +232,7 @@ function LeaguePage() {
               production house financing the work behind it.
             </p>
             <p className="text-xs text-muted-foreground leading-relaxed">
-              {NATIONAL_TOTAL_HOUSES} production houses field {NATIONAL_TOTAL_BANDS} bands between
+              {plan.houses} production houses field {plan.bands} bands between
               them — {STAGE_2_MATRIX.houses} houses and {STAGE_2_MATRIX.totalBands} bands in every
               zone, with no zone larger than another. Every band plays the same{" "}
               {STAGE_2_MATRIX.showsPerBand} fixtures:{" "}
@@ -231,7 +245,7 @@ function LeaguePage() {
             <div className="grid gap-4 sm:grid-cols-4 pt-4">
               {[
                 { v: `${ZONE_HUBS.length} Leagues`, l: "Running In Parallel" },
-                { v: `${NATIONAL_TOTAL_BANDS} Bands`, l: `${NATIONAL_TOTAL_HOUSES} Production Houses` },
+                { v: `${plan.bands} Bands`, l: `${plan.houses} Production Houses` },
                 { v: `${TOTAL_LEAGUE_NIGHTS} Nights`, l: `${COMPETITION_WEEKENDS} Weekends, Dec–Jun` },
                 { v: `Top ${STAGE_2_FINALS.finalists}`, l: "Qualify Per Zone" },
               ].map((stat) => (
@@ -665,7 +679,7 @@ function LeaguePage() {
         <section className="py-20 px-4 max-w-7xl mx-auto relative z-10 border-t border-border/45">
           <div className="text-center max-w-2xl mx-auto mb-12 space-y-3">
             <h2 className="text-xs uppercase tracking-widest text-primary-glow font-bold">
-              Season 1 · Fixture Structure — Every Zone
+              {plan.label} · Fixture Structure — Every Zone
             </h2>
             <h3 className="text-3xl font-display font-bold text-white">The Match Matrix</h3>
             <p className="text-xs text-muted-foreground leading-relaxed">
@@ -934,7 +948,7 @@ function LeaguePage() {
           <div className="grid gap-4 sm:grid-cols-3">
             <div className="bpl-card p-4 border border-border bg-surface/40">
               <p className="text-2xl font-display font-extrabold text-primary-glow tabular-nums">
-                {SCHEDULE_TOTALS.events.toLocaleString("en-IN")}
+                {totals.events.toLocaleString("en-IN")}
               </p>
               <p className="text-[10px] uppercase tracking-wider font-bold text-white mt-0.5">
                 Scored fixtures
@@ -968,7 +982,7 @@ function LeaguePage() {
               </p>
               <p className="text-[10px] text-muted-foreground leading-snug mt-1">
                 A band never takes two slots on the same day, and the generator asserts it
-                across every one of the {SCHEDULE_TOTALS.appearances.toLocaleString("en-IN")}{" "}
+                across every one of the {totals.appearances.toLocaleString("en-IN")}{" "}
                 appearances rather than trusting the rule that produced them.
               </p>
             </div>

@@ -51,6 +51,8 @@ import {
   RELEASE_SCHEDULE,
   RELEASE_TOTALS,
 } from "@/data/national-season";
+import { SeasonSwitch } from "@/components/SeasonSwitch";
+import { seasonPlan, type SeasonId } from "@/data/season-plan";
 
 export const Route = createFileRoute("/season")({
   head: () => ({
@@ -75,8 +77,37 @@ function Card({ children, className = "" }: { children: React.ReactNode; classNa
 }
 
 function SeasonPage() {
+  // The launch season is one zone; the national shape is season 2.
+  const [season, setSeason] = useState<SeasonId>("s1");
+  const plan = useMemo(() => seasonPlan(season), [season]);
+  const seasonZones = useMemo(
+    () => NATIONAL_ZONES.filter((z) => plan.zoneSlugs.includes(z.slug)),
+    [plan],
+  );
+  const seasonCapacity = useMemo(
+    () => ZONE_CAPACITY.filter((c) => plan.zoneSlugs.includes(c.zone.slug)),
+    [plan],
+  );
   const [zoneId, setZoneId] = useState(NATIONAL_ZONES[0].slug);
-  const cap = ZONE_CAPACITY.find((c) => c.zone.slug === zoneId) ?? ZONE_CAPACITY[0];
+  const cap = seasonCapacity.find((c) => c.zone.slug === zoneId) ?? seasonCapacity[0];
+  /*
+   * Capacity for the season on screen, not the national roll-up.
+   *
+   * These read NATIONAL_CAPACITY before, so a season-1 page reported 3,400
+   * fixtures against a season that stages 680 — the national figure wearing
+   * the launch season's label.
+   */
+  const seasonTotals = useMemo(
+    () => ({
+      fixturesNeeded: seasonCapacity.reduce((s, c) => s + c.fixturesNeeded, 0),
+      appearancesPerWeek: seasonCapacity.reduce((s, c) => s + c.appearancesPerWeek, 0),
+      eventsPerWeek: seasonCapacity.reduce((s, c) => s + c.eventsPerWeek, 0),
+      crossNights: seasonCapacity.reduce((s, c) => s + c.crossNights, 0),
+      servedBySingleWindow: seasonCapacity.reduce((s, c) => s + c.servedBySingleWindow, 0),
+      citiesPerWeek: seasonCapacity.length,
+    }),
+    [seasonCapacity],
+  );
   const bandsInZone = cap.bands;
 
   // Illustrative stagger for the selected zone — proof the constraints hold,
@@ -139,16 +170,16 @@ function SeasonPage() {
               Five leagues, <span className="gradient-text">one weekend</span> at a time
             </h1>
             <p className="text-sm text-muted-foreground max-w-2xl mx-auto leading-relaxed">
-              {TOTAL_BANDS} bands across {TOTAL_HOUSES} production houses and{" "}
-              {NATIONAL_ZONES.length} regional leagues, all running simultaneously so no two zones
+              {plan.bands} bands across {plan.houses} production houses and{" "}
+              {plan.zones} regional league{plan.zones === 1 ? "" : "s"}, all running simultaneously so no two zones
               compete for the same audience on the same night.
             </p>
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 pt-2 text-left">
               {[
-                { v: TOTAL_BANDS, l: "Bands", h: `${TOTAL_HOUSES} houses` },
-                { v: TOTAL_INDIVIDUAL_FIXTURES, l: "Individual fixtures", h: `${INDIVIDUAL_FIXTURES_PER_BAND} per band` },
+                { v: plan.bands, l: "Bands", h: `${plan.houses} houses` },
+                { v: seasonTotals.fixturesNeeded, l: "Individual fixtures", h: `${INDIVIDUAL_FIXTURES_PER_BAND} per band` },
                 { v: COMPETITION_WEEKENDS, l: "Competition weekends", h: `31 Dec – ${SEASON_END_LABEL}` },
-                { v: NATIONAL_CAPACITY.appearancesPerWeek, l: "Appearances / week", h: `${NATIONAL_CAPACITY.eventsPerWeek} physical events` },
+                { v: seasonTotals.appearancesPerWeek, l: "Appearances / week", h: `${seasonTotals.eventsPerWeek} physical events` },
               ].map((s) => (
                 <div key={s.l} className="bpl-card p-4 border border-border/80 bg-surface/60">
                   <p className="text-2xl font-display font-extrabold text-cyan-300 tabular-nums">
@@ -164,6 +195,12 @@ function SeasonPage() {
           </div>
         </section>
 
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 pt-8">
+          <div className="bpl-card p-4 border border-primary/25 bg-primary/5">
+            <SeasonSwitch value={season} onChange={setSeason} />
+          </div>
+        </div>
+
         <div className="mx-auto max-w-7xl px-4 sm:px-6 divide-y divide-border">
           {/* ---------------- CAPACITY ---------------- */}
           <section className="py-14 space-y-6">
@@ -176,7 +213,7 @@ function SeasonPage() {
               </h2>
               <p className="text-sm text-muted-foreground max-w-3xl leading-relaxed">
                 The league no longer rotates house windows across a zone — it takes over one city at
-                a time. All {ZONE_CAPACITY[0].windowsPerWeekend} houses are active every week, in
+                a time. All {seasonCapacity[0].windowsPerWeekend} houses are active every week, in
                 the same city, then the whole operation moves on. That is far easier to run than
                 three cities at once, and it lets a hub serve its catchment rather than the league
                 touring past it.
@@ -187,16 +224,18 @@ function SeasonPage() {
               <CheckCircle2 size={16} className="text-emerald-400 shrink-0 mt-0.5" />
               <div className="space-y-1">
                 <p className="text-sm font-bold text-emerald-200">
-                  {NATIONAL_CAPACITY.citiesPerWeek} cities live in any given week — one per zone.
+                  {seasonTotals.citiesPerWeek}{" "}
+                  {seasonTotals.citiesPerWeek === 1 ? "city is" : "cities are"} live in any given
+                  week — one per zone.
                 </p>
                 <p className="text-[11px] text-muted-foreground leading-relaxed">
-                  A city absorbs {ZONE_CAPACITY[0].appearancesPerWeek} band appearances across
-                  roughly {ZONE_CAPACITY[0].eventsPerWeek} physical events over Friday, Saturday and
+                  A city absorbs {seasonCapacity[0].appearancesPerWeek} band appearances across
+                  roughly {seasonCapacity[0].eventsPerWeek} physical events over Friday, Saturday and
                   Sunday — the difference being that versus nights, campus dates, house nights and
                   festival stages all put several bands on one bill. A celebrity night does not: it
                   is one band, one guest, one night. Nationally that is{" "}
-                  {NATIONAL_CAPACITY.appearancesPerWeek} appearances a week across{" "}
-                  {NATIONAL_CAPACITY.eventsPerWeek} events. Rest between a band&apos;s appearances
+                  {seasonTotals.appearancesPerWeek} appearances a week across{" "}
+                  {seasonTotals.eventsPerWeek} events. Rest between a band&apos;s appearances
                   averages {AVERAGE_REST_DAYS} days.
                 </p>
               </div>
@@ -215,12 +254,12 @@ function SeasonPage() {
               </summary>
               <p className="px-5 pb-4 text-[11px] text-muted-foreground leading-relaxed">
                 One house at a time was the obvious first shape, and it does not fit. With{" "}
-                {ZONE_CAPACITY[0].zone.houses} houses rotating singly across{" "}
+                {seasonCapacity[0].zone.houses} houses rotating singly across{" "}
                 {COMPETITION_WEEKENDS} weekends, each house gets only{" "}
-                {COMPETITION_WEEKENDS / ZONE_CAPACITY[0].zone.houses} windows, so its bands get{" "}
-                {COMPETITION_WEEKENDS / ZONE_CAPACITY[0].zone.houses} fixtures against the{" "}
-                {INDIVIDUAL_FIXTURES_PER_BAND} they are owed — {NATIONAL_CAPACITY.servedBySingleWindow}{" "}
-                of {NATIONAL_CAPACITY.fixturesNeeded} nationally, short by exactly half in every
+                {COMPETITION_WEEKENDS / seasonCapacity[0].zone.houses} windows, so its bands get{" "}
+                {COMPETITION_WEEKENDS / seasonCapacity[0].zone.houses} fixtures against the{" "}
+                {INDIVIDUAL_FIXTURES_PER_BAND} they are owed — {seasonTotals.servedBySingleWindow}{" "}
+                of {seasonTotals.fixturesNeeded} nationally, short by exactly half in every
                 zone regardless of roster size. Doubling the concurrent windows is the whole fix;
                 the rest of the calendar follows from it.
               </p>
@@ -241,7 +280,7 @@ function SeasonPage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border/40">
-                  {ZONE_CAPACITY.map((c) => (
+                  {seasonCapacity.map((c) => (
                     <tr key={c.zone.slug} className="hover:bg-secondary/10">
                       <td className="py-2.5 px-3 font-bold text-white">{c.zone.shortName}</td>
                       <td className="py-2.5 px-3 text-center text-muted-foreground tabular-nums">{c.zone.houses}</td>
@@ -259,11 +298,11 @@ function SeasonPage() {
                     <td className="py-2.5 px-3 font-bold text-white">National</td>
                     <td className="py-2.5 px-3 text-center font-bold text-white tabular-nums">{TOTAL_HOUSES}</td>
                     <td className="py-2.5 px-3 text-center font-bold text-white tabular-nums">{TOTAL_BANDS}</td>
-                    <td className="py-2.5 px-3 text-center font-extrabold text-primary-glow tabular-nums">{NATIONAL_CAPACITY.fixturesNeeded}</td>
-                    <td className="py-2.5 px-3 text-center font-bold text-white tabular-nums">{NATIONAL_CAPACITY.appearancesPerWeek}</td>
-                    <td className="py-2.5 px-3 text-center font-bold text-white tabular-nums">{NATIONAL_CAPACITY.eventsPerWeek}</td>
+                    <td className="py-2.5 px-3 text-center font-extrabold text-primary-glow tabular-nums">{seasonTotals.fixturesNeeded}</td>
+                    <td className="py-2.5 px-3 text-center font-bold text-white tabular-nums">{seasonTotals.appearancesPerWeek}</td>
+                    <td className="py-2.5 px-3 text-center font-bold text-white tabular-nums">{seasonTotals.eventsPerWeek}</td>
                     <td className="py-2.5 px-3 text-center font-bold text-white tabular-nums">{APPEARANCES_PER_BAND}</td>
-                    <td className="py-2.5 px-3 text-center font-bold text-white tabular-nums">{NATIONAL_CAPACITY.crossNights}</td>
+                    <td className="py-2.5 px-3 text-center font-bold text-white tabular-nums">{seasonTotals.crossNights}</td>
                   </tr>
                 </tfoot>
               </table>
@@ -280,11 +319,11 @@ function SeasonPage() {
                 in different zones arrived at the national stage having played different numbers of
                 fixtures. Since points accumulate per fixture, that made the national table
                 incomparable without adjustment. Equalising every zone to{" "}
-                {ZONE_CAPACITY[0].zone.houses} houses × {ZONE_CAPACITY[0].zone.bandsPerHouse} bands
+                {seasonCapacity[0].zone.houses} houses × {seasonCapacity[0].zone.bandsPerHouse} bands
                 removes it: every band anywhere plays{" "}
-                {INDIVIDUAL_FIXTURES_PER_BAND + ZONE_CAPACITY[0].crossPerBand} fixtures —{" "}
-                {INDIVIDUAL_FIXTURES_PER_BAND} solo and {ZONE_CAPACITY[0].crossPerBand} cross — for
-                the same {ZONE_CAPACITY[0].crossNights} cross nights per zone. No normalisation, no
+                {INDIVIDUAL_FIXTURES_PER_BAND + seasonCapacity[0].crossPerBand} fixtures —{" "}
+                {INDIVIDUAL_FIXTURES_PER_BAND} solo and {seasonCapacity[0].crossPerBand} cross — for
+                the same {seasonCapacity[0].crossNights} cross nights per zone. No normalisation, no
                 asterisk.
               </p>
             </div>
@@ -364,7 +403,7 @@ function SeasonPage() {
             </div>
 
             <div className="flex flex-wrap gap-2">
-              {NATIONAL_ZONES.map((z) => (
+              {seasonZones.map((z) => (
                 <button
                   key={z.slug}
                   type="button"
@@ -722,8 +761,8 @@ function SeasonPage() {
                 answer that merely looks more complete.
               </p>
               <p className="text-[11px] text-muted-foreground leading-relaxed">
-                Across the national build that is {NATIONAL_CAPACITY.fixturesNeeded} individual
-                fixtures plus {NATIONAL_CAPACITY.crossNights} cross nights ={" "}
+                Across the national build that is {seasonTotals.fixturesNeeded} individual
+                fixtures plus {seasonTotals.crossNights} cross nights ={" "}
                 <span className="font-bold text-white">{TOTAL_LEAGUE_NIGHTS} league nights</span>{" "}
                 before the finals. The{" "}
                 <Link to="/economics" className="text-primary-glow font-semibold hover:underline">

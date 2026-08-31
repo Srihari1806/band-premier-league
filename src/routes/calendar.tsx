@@ -22,8 +22,8 @@ import {
   MapPin,
 } from "lucide-react";
 import {
-  FULL_SCHEDULE,
-  SCHEDULE_TOTALS,
+  scheduleFor,
+  totalsFor,
   SEASON_CALENDAR,
   NATIONAL_ZONES,
   WINDOWS_PER_HOUSE,
@@ -37,6 +37,8 @@ import {
   type EventKind,
   type ScheduledEvent,
 } from "@/data/national-season";
+import { SeasonSwitch } from "@/components/SeasonSwitch";
+import { zonesForSeason, type SeasonId } from "@/data/season-plan";
 import { FORMAT_MIX } from "@/data/show-formats";
 import {
   POST_SEASON,
@@ -350,6 +352,12 @@ function ChampionshipView({
 function CalendarPage() {
   const [half, setHalf] = useState<"regular" | "championship">("regular");
   const [stage, setStage] = useState<string>("all");
+  // Season 1 is AP/TS alone, season 2 the national five. The page opens on
+  // the launch season, because that is the one that has to be believable.
+  const [season, setSeason] = useState<SeasonId>("s1");
+  const schedule = useMemo(() => scheduleFor(season), [season]);
+  const totals = useMemo(() => totalsFor(season), [season]);
+  const seasonZones = useMemo(() => zonesForSeason(season), [season]);
   const [zone, setZone] = useState("all");
   const [house, setHouse] = useState("all");
   const [band, setBand] = useState("all");
@@ -364,7 +372,7 @@ function CalendarPage() {
 
   const filtered = useMemo(
     () =>
-      FULL_SCHEDULE.filter((e) => {
+      schedule.filter((e) => {
         // Private bookings hold a week but have no published date — putting one
         // on the calendar would assert a sale nobody has made.
         if (!e.dated) return false;
@@ -472,21 +480,21 @@ function CalendarPage() {
             </h1>
             <p className="text-sm text-muted-foreground max-w-2xl mx-auto leading-relaxed">
               The complete regular season, 31 December to 12 June — all{" "}
-              {SCHEDULE_TOTALS.events} events across {NATIONAL_ZONES.length} regional leagues,{" "}
+              {totals.events} events across {seasonZones.length} regional league{seasonZones.length === 1 ? "" : "s"},{" "}
               {TOTAL_HOUSES} production houses and {TOTAL_BANDS} bands, generated from the season
               structure rather than typed out.
             </p>
 
             <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 pt-2 text-left">
               {[
-                { v: SCHEDULE_TOTALS.events, l: "Events", h: `${COMPETITION_WEEKENDS} weekends` },
+                { v: totals.events, l: "Events", h: `${COMPETITION_WEEKENDS} weekends` },
                 {
-                  v: SCHEDULE_TOTALS.commercial,
+                  v: totals.commercial,
                   l: "Commercial",
                   h: `${FORMAT_MIX.commercialPerBand} per band`,
                 },
-                { v: SCHEDULE_TOTALS.campus, l: "Campus", h: `${FORMAT_MIX.campusPerBand} per band` },
-                { v: SCHEDULE_TOTALS.cross, l: "Cross nights", h: "Shared stages" },
+                { v: totals.campus, l: "Campus", h: `${FORMAT_MIX.campusPerBand} per band` },
+                { v: totals.cross, l: "Cross nights", h: "Shared stages" },
                 { v: RELEASE_TOTALS.releases, l: "Song releases", h: `${RELEASE_TOTALS.perBand} per band` },
               ].map((s) => (
                 <div key={s.l} className="bpl-card p-4 border border-border/80 bg-surface/60">
@@ -504,40 +512,45 @@ function CalendarPage() {
         </section>
 
         <div className="mx-auto max-w-7xl px-4 sm:px-6 py-10 space-y-6">
+          {/* Which season this calendar is describing. */}
+          <div className="bpl-card p-4 border border-primary/25 bg-primary/5">
+            <SeasonSwitch value={season} onChange={setSeason} />
+          </div>
+
           {/* What is deliberately not on this calendar */}
           <div className="bpl-card p-4 border border-border bg-surface/40 flex gap-3">
             <Info size={15} className="text-primary-glow shrink-0 mt-0.5" />
             <p className="text-[11px] text-muted-foreground leading-relaxed">
               <span className="font-semibold text-white">
-                {SCHEDULE_TOTALS.heldSlots} corporate bookings are held, not dated.
+                {totals.heldSlots} corporate bookings are held, not dated.
               </span>{" "}
               Every band&apos;s season reserves three weeks for private shows, taken from the
               Saturdays nothing else claims, so the load is planned for rather than discovered. But
               a corporate booking happens when a buyer turns up — publishing a date and a city for
               one would assert a sale nobody has made. That is why a band&apos;s season is{" "}
-              {SCHEDULE_TOTALS.appearancesPerBandAllFormats} appearances while this calendar dates{" "}
-              {SCHEDULE_TOTALS.appearancesPerBandInSeason} of them.
+              {totals.appearancesPerBandAllFormats} appearances while this calendar dates{" "}
+              {totals.appearancesPerBandInSeason} of them.
             </p>
           </div>
 
           {/* Reconciliation */}
           <div
             className={`bpl-card p-4 border flex gap-3 ${
-              SCHEDULE_TOTALS.reconciles
+              totals.reconciles
                 ? "border-emerald-500/30 bg-emerald-500/5"
                 : "border-rose-500/30 bg-rose-500/5"
             }`}
           >
-            {SCHEDULE_TOTALS.reconciles ? (
+            {totals.reconciles ? (
               <CheckCircle2 size={15} className="text-emerald-400 shrink-0 mt-0.5" />
             ) : (
               <AlertTriangle size={15} className="text-rose-400 shrink-0 mt-0.5" />
             )}
             <p className="text-[11px] text-muted-foreground leading-relaxed">
-              {SCHEDULE_TOTALS.reconciles ? (
+              {totals.reconciles ? (
                 <>
                   <span className="font-semibold text-emerald-200">Schedule reconciles.</span> The{" "}
-                  {SCHEDULE_TOTALS.individual} individual fixtures and {SCHEDULE_TOTALS.cross} cross
+                  {totals.individual} individual fixtures and {totals.cross} cross
                   nights generated here match exactly what the{" "}
                   <Link to="/season" className="text-primary-glow font-semibold hover:underline">
                     capacity engine
@@ -560,7 +573,7 @@ function CalendarPage() {
           <div className="flex flex-wrap gap-2">
             {(
               [
-                { id: "regular", label: "Regular Season · Jan–Jun", n: SCHEDULE_TOTALS.events },
+                { id: "regular", label: "Regular Season · Jan–Jun", n: totals.events },
                 { id: "championship", label: "Championship · Jul–Dec", n: POST_SEASON_TOTALS.events },
               ] as const
             ).map((h) => (
@@ -591,7 +604,7 @@ function CalendarPage() {
                 <Filter size={12} /> Filter
               </span>
               <span className="text-[11px] text-muted-foreground">
-                {filtered.length} of {SCHEDULE_TOTALS.events} events
+                {filtered.length} of {totals.events} events
               </span>
               <div className="flex-1" />
               {!isDefault && (
@@ -610,7 +623,7 @@ function CalendarPage() {
                 value={zone}
                 options={[
                   { id: "all", label: "All zones" },
-                  ...NATIONAL_ZONES.map((z) => ({ id: z.slug, label: z.shortName })),
+                  ...seasonZones.map((z) => ({ id: z.slug, label: z.shortName })),
                 ]}
                 onChange={(v) => {
                   setZone(v);
