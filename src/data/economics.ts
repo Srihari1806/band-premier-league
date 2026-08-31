@@ -135,6 +135,334 @@ export const OPERATOR_COSTS_TOTAL = OPERATIONS.operating;
 export const ACTS_PER_SHARED_SHOW = 2;
 
 /* ------------------------------------------------------------------ *
+ * The season, by event type
+ *
+ * ONE definition of what a season contains, used by both the simulator and
+ * the detailed model. Before this the two computed it separately and
+ * disagreed by roughly a factor of two on gross gate, league revenue and what
+ * a production house gets back — with both numbers on the same page.
+ * ------------------------------------------------------------------ */
+
+export interface SeasonMixRow {
+  id: string;
+  label: string;
+  /** Appearances one band makes in this format across the season. */
+  perBand: number;
+  /** Bands sharing one bill. A versus night is two, a house night four. */
+  actsOnBill: number;
+  /** Room size against the base attendance, from the format catalogue. */
+  capacityIdx: number;
+  /** Ticket against the base price. Zero where the night has no league gate. */
+  priceIdx: number;
+  /** Whether this night sells tickets at all. */
+  ticketed: boolean;
+  /**
+   * Head count and ticket stated outright, rather than as a multiple of the
+   * base room. A stadium night is not "the café, times a number" — quoting it
+   * that way buries a 25,000-cap show inside an index nobody can sanity-check.
+   */
+  attendanceAbs?: number;
+  generalTicket?: number;
+  /** Premium seats: how many, and at what. */
+  premiumSeats?: number;
+  premiumTicket?: number;
+  /** Money that arrives whatever the door does. */
+  sponsorPerEvent?: number;
+  /** Per-head commission on third-party food and beverage. */
+  fnbPerEvent?: number;
+  /** Merchandise, parking, add-ons. */
+  merchPerEvent?: number;
+  /**
+   * Promoter-funded: the operator puts up the whole build and keeps what is
+   * left, paying the artist a fee rather than a share.
+   *
+   * This is how a large concert is actually financed, and it is the opposite
+   * of the league's ordinary night. On a café show the operator's costs are
+   * small and a 30% share of the gate covers them comfortably. On a night
+   * carrying a stadium build, splitting the gate 40/30/30 first and then
+   * asking the operator to fund the whole thing out of its 30% loses money on
+   * a show that made a profit. So this night is split the promoter's way.
+   */
+  promoterFunded?: boolean;
+  /** Total build: artist fee, production, venue and marketing. */
+  eventCost?: number;
+  /**
+   * Stated ticket figures are already net of any booking fee.
+   *
+   * On a large concert the platform fee is charged to the buyer on top of face
+   * value rather than taken out of it, so deducting it again understates the
+   * night by the fee.
+   */
+  ticketingIncluded?: boolean;
+  /**
+   * Share of non-gate income that goes to the band rather than the operator.
+   *
+   * Sponsorship on a campus or festival night is the league's — it sold it. A
+   * corporate booking is the opposite: the band is hired and paid, and the
+   * league takes a booking margin on top.
+   */
+  nonGateToBandPct?: number;
+  /**
+   * The GUEST's guaranteed fee, paid out of the build.
+   *
+   * On a stadium night the headline act is the celebrity, not the league band
+   * — the band is the support slot. Paying the league band the guest's fee
+   * gave every band 50L for one night and made a season's live income five
+   * times what the other 48 nights produce combined.
+   */
+  guestGuarantee?: number;
+  /** What the LEAGUE band is paid for the support slot. */
+  bandFeePerEvent?: number;
+  /**
+   * A fee taken off the gate BEFORE the 40/30/30, per event.
+   *
+   * The guest fee on a celebrity night. Split the gate first and the operator
+   * pays the whole fee out of a 30% share, losing money on a night that made a
+   * profit; taken off the top, everyone splits what the night actually
+   * cleared. It belongs here rather than in the cost stack because it changes
+   * what there is to divide, not what it costs to run the room.
+   */
+  feePerEvent?: number;
+}
+
+/**
+ * The mix, read off the format catalogue rather than restated.
+ *
+ * Campus and festival carry a gate in the model because the catalogue prices
+ * them; celebrity carries its guest fee off the top before the split, which is
+ * handled where the split happens rather than here.
+ */
+/**
+ * The access tier.
+ *
+ * Campus, festival and corporate nights do not sell a full-price ticket. They
+ * run on sponsorship, and the ticket is a 99-rupee access pass — a membership
+ * price rather than a gate. It is set low deliberately: those nights are
+ * bought by a brand and paid for in reach, and pricing them like a club night
+ * would just empty the room the sponsor came for.
+ */
+export const ACCESS_TICKET = 99;
+
+/**
+ * The season, format by format.
+ *
+ * 24 commercial + 6 versus + 10 campus + 2 house + 3 festival + 3 corporate =
+ * 48 appearances, with the celebrity night and the New Year's Eve launch
+ * sitting outside that count.
+ *
+ * The celebrity night is quoted at its real scale rather than as a multiple of
+ * a café: 25,000 capacity, 20,000 general at ₹1,750 and 3,000 premium at
+ * ₹4,000, ₹2Cr of sponsorship, and F&B and merchandise as revenue layers in
+ * their own right. That is ₹7.5Cr against a ₹5Cr build.
+ */
+export const SEASON_MIX: SeasonMixRow[] = [
+  { id: "commercial", label: "Commercial", perBand: 24, actsOnBill: 1, capacityIdx: 1, priceIdx: 1, ticketed: true },
+  { id: "cross", label: "Versus night", perBand: 6, actsOnBill: 2, capacityIdx: 1.5, priceIdx: 1.25, ticketed: true },
+  {
+    id: "campus",
+    label: "Campus",
+    perBand: 10,
+    actsOnBill: 4,
+    capacityIdx: 1.6,
+    priceIdx: 0,
+    ticketed: true,
+    attendanceAbs: 600,
+    generalTicket: ACCESS_TICKET,
+    sponsorPerEvent: 50000,
+  },
+  { id: "house", label: "House night", perBand: 2, actsOnBill: 4, capacityIdx: 3.2, priceIdx: 1.3, ticketed: true },
+  {
+    id: "festival",
+    label: "Festival",
+    perBand: 3,
+    actsOnBill: 10,
+    capacityIdx: 6,
+    priceIdx: 0,
+    ticketed: true,
+    attendanceAbs: 2500,
+    generalTicket: ACCESS_TICKET,
+    sponsorPerEvent: 150000,
+  },
+  {
+    id: "corporate",
+    label: "Corporate show",
+    perBand: 3,
+    actsOnBill: 1,
+    capacityIdx: 1,
+    priceIdx: 0,
+    ticketed: false,
+    attendanceAbs: 300,
+    sponsorPerEvent: 175000,
+    nonGateToBandPct: 70,
+  },
+  {
+    id: "celebrity",
+    label: "Celebrity night",
+    perBand: 1,
+    actsOnBill: 1,
+    capacityIdx: 1,
+    priceIdx: 0,
+    ticketed: true,
+    attendanceAbs: 20000,
+    generalTicket: 1750,
+    premiumSeats: 3000,
+    premiumTicket: 4000,
+    sponsorPerEvent: 20000000,
+    fnbPerEvent: 5000000,
+    merchPerEvent: 3000000,
+    promoterFunded: true,
+    ticketingIncluded: true,
+    eventCost: 50000000,
+    // Neither of these is in the blueprint, which gives the build as one
+    // figure. A headline guarantee near a tenth of the build is the ordinary
+    // shape, and a support slot on a night like this pays in reach far more
+    // than in fee. Both are assumptions; every other figure on this row is not.
+    guestGuarantee: 5000000,
+    bandFeePerEvent: 200000,
+  },
+];
+
+export const APPEARANCES_PER_BAND_MIX = SEASON_MIX.reduce((s, r) => s + r.perBand, 0);
+
+export interface SeasonRow extends SeasonMixRow {
+  /** Physical nights: appearances divided by acts on the bill. */
+  events: number;
+  attendance: number;
+  ticketPrice: number;
+  grossGate: number;
+  /** Sponsorship, F&B and merchandise — outside the gate and outside the split. */
+  nonGate: number;
+  /** Total build on promoter-funded nights. Zero elsewhere. */
+  build: number;
+  /** Guest fees taken off the gate before the split. */
+  guestFees: number;
+  netGate: number;
+  bandPool: number;
+  housePool: number;
+  operatorPool: number;
+  /** One band's share of this format across the whole season. */
+  bandSeason: number;
+  houseSeasonPerBand: number;
+}
+
+export interface SeasonRollup {
+  rows: SeasonRow[];
+  events: number;
+  appearances: number;
+  appearancesPerBand: number;
+  grossGate: number;
+  nonGate: number;
+  build: number;
+  guestFees: number;
+  netGate: number;
+  admissions: number;
+  bandPool: number;
+  housePool: number;
+  operatorPool: number;
+  /** What ONE band earns from live across the season. */
+  bandLiveSeason: number;
+  /** What ONE house earns from live, across the bands it signed. */
+  houseLiveSeason: number;
+}
+
+/**
+ * Roll the season up from its event types.
+ *
+ * Every figure is derived from the mix rather than from a solo/shared blend,
+ * so the fixture count here equals the count the schedule generates.
+ */
+export function rollUpSeason(
+  inputs: EconomicsInputs,
+  mix: SeasonMixRow[] = SEASON_MIX,
+): SeasonRollup {
+  const bands = Math.max(1, inputs.numFranchises * inputs.bandsPerFranchise);
+  const feeFactor = 1 - inputs.ticketingCommissionPct / 100;
+
+  const rows: SeasonRow[] = mix.map((m) => {
+    const appearances = bands * m.perBand;
+    const events = Math.round(appearances / Math.max(1, m.actsOnBill));
+    // A stated head count wins over an index off the base room.
+    const general = m.attendanceAbs ?? Math.round(inputs.attendance * m.capacityIdx);
+    const premium = m.premiumSeats ?? 0;
+    const attendance = Math.max(0, general + premium);
+    const ticketPrice = m.ticketed
+      ? (m.generalTicket ?? Math.round(inputs.ticketPrice * m.priceIdx))
+      : 0;
+
+    // Gate is general plus premium; sponsorship, F&B and merch are not gate and
+    // are never split 40/30/30 — they belong to whoever carries the night.
+    const grossGate = Math.round(
+      events * (general * ticketPrice + premium * (m.premiumTicket ?? 0)),
+    );
+    const nonGate = Math.round(
+      events * ((m.sponsorPerEvent ?? 0) + (m.fnbPerEvent ?? 0) + (m.merchPerEvent ?? 0)),
+    );
+    // Ticketing commission first, then any guest fee that comes off the top.
+    const afterTicketing = m.ticketingIncluded ? grossGate : Math.round(grossGate * feeFactor);
+    const guestFees = Math.min(afterTicketing, events * (m.feePerEvent ?? 0));
+    const netGate = afterTicketing - guestFees;
+
+    // A promoter-funded night pays the artist a fee and gives the operator
+    // whatever the night cleared; everything else splits the league's way.
+    const build = events * (m.eventCost ?? 0);
+    // Non-gate income: the league's, unless the format says otherwise.
+    const nonGateToBand = Math.round(nonGate * ((m.nonGateToBandPct ?? 0) / 100));
+    const bandPool = m.promoterFunded
+      ? events * (m.bandFeePerEvent ?? 0)
+      : Math.round(netGate * (EVENT_SPLIT.bands / 100)) + nonGateToBand;
+    const housePool = m.promoterFunded
+      ? 0
+      : Math.round(netGate * (EVENT_SPLIT.productionHouse / 100));
+
+    return {
+      ...m,
+      events,
+      attendance,
+      ticketPrice,
+      grossGate,
+      nonGate,
+      guestFees,
+      netGate,
+      bandPool,
+      housePool,
+      build,
+      // Sponsorship, stalls, F&B and merch sit outside the 40/30/30 and accrue
+      // to whoever carries the night — they were being computed and then
+      // dropped, so a corporate season earned nobody anything.
+      operatorPool: m.promoterFunded
+        ? netGate + nonGate - build - events * (m.bandFeePerEvent ?? 0)
+        : netGate -
+          Math.round(netGate * (EVENT_SPLIT.bands / 100)) -
+          housePool +
+          (nonGate - nonGateToBand),
+      bandSeason: Math.round(bandPool / bands),
+      houseSeasonPerBand: Math.round(housePool / bands),
+    };
+  });
+
+  const sum = (f: (r: SeasonRow) => number) => rows.reduce((s, r) => s + f(r), 0);
+  const appearances = bands * mix.reduce((s, m) => s + m.perBand, 0);
+
+  return {
+    rows,
+    events: sum((r) => r.events),
+    appearances,
+    appearancesPerBand: Math.round(appearances / bands),
+    grossGate: sum((r) => r.grossGate),
+    nonGate: sum((r) => r.nonGate),
+    build: sum((r) => r.build),
+    guestFees: sum((r) => r.guestFees),
+    netGate: sum((r) => r.netGate),
+    admissions: sum((r) => r.events * r.attendance),
+    bandPool: sum((r) => r.bandPool),
+    housePool: sum((r) => r.housePool),
+    operatorPool: sum((r) => r.operatorPool),
+    bandLiveSeason: sum((r) => r.bandSeason),
+    houseLiveSeason: sum((r) => r.houseSeasonPerBand) * inputs.bandsPerFranchise,
+  };
+}
+
+/* ------------------------------------------------------------------ *
  * Inputs — everything the page can move
  * ------------------------------------------------------------------ */
 
@@ -156,6 +484,19 @@ export interface EconomicsInputs {
   soloSharePct: number;
   /** Acts sharing a bill on the selected format. Defaults to the versus night's two. */
   actsPerSharedShow?: number;
+
+  /* ---- the season, by event type ---------------------------------- *
+   * A season is not one blended room repeated. It is six different kinds of
+   * night with six different P&Ls, and the blend was producing 3,700 ticketed
+   * nights against a schedule that stages 3,135. These are the counts a band
+   * plays; the engine turns them into events using how many acts share a bill.
+   */
+  commercialPerBand?: number;
+  crossPerBand?: number;
+  campusPerBand?: number;
+  housePerBand?: number;
+  festivalPerBand?: number;
+  celebrityPerBand?: number;
   /** Footfall multiplier on a shared night — two fanbases in one room. */
   coHeadlineUplift: number;
 
@@ -191,8 +532,16 @@ export interface EconomicsInputs {
 }
 
 export const DEFAULT_INPUTS: EconomicsInputs = {
-  ticketPrice: 250,
-  attendance: 200,
+  /*
+   * The base case, shared with the simulator.
+   *
+   * These were 250 and 200 here while the simulator ran 299 at 70% of a
+   * 200-cap room, so the same band earned two different numbers depending on
+   * which half of the page you read. One engine needs one set of base
+   * assumptions: a 200-cap room at 70% is 140 in, at 299.
+   */
+  ticketPrice: 299,
+  attendance: 140,
   // The SCORED ladder only: 11 commercial + 4 campus + 3 versus. House nights,
   // corporate shows and festival stages are real income but sit outside the
   // gate split, so folding them in here would overstate ticket revenue.
@@ -396,6 +745,8 @@ export interface EconomicsModel {
   totalBands: number;
   soloFixtures: number;
   sharedFixtures: number;
+  /** The season broken down by event type — the single source for all of it. */
+  season: SeasonRollup;
   totalFixtures: number;
   totalAdmissions: number;
   showsPerYearPerBand: number;
@@ -524,12 +875,23 @@ export function computeEconomics(inputs: EconomicsInputs): EconomicsModel {
   );
 
   const totalBands = Math.max(1, numFranchises * bandsPerFranchise);
+  /*
+   * The season, rolled up from its event types.
+   *
+   * The solo/shared blend below is kept for the per-show views — "what does an
+   * average solo night look like" is still a fair question — but every SEASON
+   * total now comes from the rollup, because the blend counted 3,700 ticketed
+   * nights against a schedule that stages 3,135, and the simulator and this
+   * model were publishing gate figures a factor of two apart.
+   */
+  const season = rollUpSeason(inputs);
+
   const soloFixtures = totalBands * soloShowsPerBand;
   // One ticketed event shared by however many acts THIS format puts on a bill.
   const actsShared = Math.max(1, inputs.actsPerSharedShow ?? ACTS_PER_SHARED_SHOW);
   const sharedFixtures = Math.round((totalBands * sharedShowsPerBand) / actsShared);
-  const totalFixtures = soloFixtures + sharedFixtures;
-  const totalAdmissions = soloFixtures * attendance + sharedFixtures * sharedAttendance;
+  const totalFixtures = season.events;
+  const totalAdmissions = season.admissions;
 
   /* ---- catalogue, per band per year ---------------------------------- */
   const youtubeAnnual = Math.round((inputs.youtubeViewsAnnual / 1000) * inputs.youtubeRpm);
@@ -564,9 +926,8 @@ export function computeEconomics(inputs: EconomicsInputs): EconomicsModel {
   const contentHalfPerSeason = Math.round(contentHalfAnnual / SEASON_STRUCTURE.seasonsPerYear);
 
   /* ---- what one band earns off the gate ------------------------------ */
-  const bandGateSeason = Math.round(
-    soloShowsPerBand * soloShow.bandPool + sharedShowsPerBand * sharedShow.bandPerAct,
-  );
+  // One band's live income, summed across the formats it actually plays.
+  const bandGateSeason = season.bandLiveSeason;
   const bandGateSeasonAllSolo = soloShow.bandPool * showsPerBand;
   const sharedNightExtraFootfall = sharedShowsPerBand * (sharedAttendance - attendance);
 
@@ -611,10 +972,8 @@ export function computeEconomics(inputs: EconomicsInputs): EconomicsModel {
   const artistYearTotal = artistSeasonTotal * SEASON_STRUCTURE.seasonsPerYear;
 
   /* ---- what one franchise earns -------------------------------------- */
-  const phGatePerBandSeason = Math.round(
-    soloShowsPerBand * soloShow.productionHousePool +
-      sharedShowsPerBand * sharedShow.productionHousePerAct,
-  );
+  // What a house earns from live across its whole roster, same rollup.
+  const phGatePerBandSeason = Math.round(season.houseLiveSeason / Math.max(1, bandsPerFranchise));
 
   // The gate arithmetic the page shows out loud: seats x price x every night
   // this house's bands are on stage. A shared night is co-headlined, so the
@@ -685,16 +1044,14 @@ export function computeEconomics(inputs: EconomicsInputs): EconomicsModel {
 
   /* ---- league season -------------------------------------------------- */
   const seasonNetGatePool =
-    soloFixtures * soloShow.netRevenue + sharedFixtures * sharedShow.netRevenue;
-  const seasonGrossGatePool =
-    soloFixtures * soloShow.grossTicketRevenue + sharedFixtures * sharedShow.grossTicketRevenue;
+    season.netGate;
+  const seasonGrossGatePool = season.grossGate;
   const seasonCataloguePool = Math.round(
     (contentTotal * totalBands) / SEASON_STRUCTURE.seasonsPerYear,
   );
   const membershipRevenue = inputs.membersCount * inputs.membershipPrice;
   const bidsPool = winningBid * numFranchises;
-  const operatorGateIncome =
-    soloFixtures * soloShow.operatorShare + sharedFixtures * sharedShow.operatorShare;
+  const operatorGateIncome = season.operatorPool;
   const broadcastOperatorShare = Math.round(
     inputs.leagueBroadcastSeason * (OPERATOR_RIGHTS_SHARE_PCT / 100),
   );
@@ -706,7 +1063,7 @@ export function computeEconomics(inputs: EconomicsInputs): EconomicsModel {
     {
       label: "Ticket Sales (net)",
       amount: seasonNetGatePool,
-      detail: `${totalFixtures} fixtures — ${soloFixtures} solo, ${sharedFixtures} versus`,
+      detail: `${totalFixtures} nights across ${season.rows.length} formats — ${season.appearances.toLocaleString("en-IN")} band appearances`,
     },
     {
       label: "Production House Bids",
@@ -802,6 +1159,7 @@ export function computeEconomics(inputs: EconomicsInputs): EconomicsModel {
     soloShow,
     sharedShow,
     totalBands,
+    season,
     soloFixtures,
     sharedFixtures,
     totalFixtures,

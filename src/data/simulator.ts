@@ -21,7 +21,13 @@
  */
 
 import { NATIONAL_TOTAL_BANDS, NATIONAL_TOTAL_HOUSES, ZONES } from "./league-format";
-import { EVENT_SPLIT, CONTENT_SPLIT } from "./economics";
+import {
+  EVENT_SPLIT,
+  CONTENT_SPLIT,
+  SEASON_MIX,
+  rollUpSeason,
+  type EconomicsInputs,
+} from "./economics";
 import { COST_BUCKETS, amountAt } from "./league-capital";
 import { ACTS_PER_BILL } from "./show-formats";
 
@@ -49,6 +55,7 @@ export interface SimInputs {
   houseNights: number;
   campusShows: number;
   festivals: number;
+  corporateShows: number;
   celebrityShows: number;
   songs: number;
 
@@ -192,6 +199,7 @@ export const DEFAULT_SIM: SimInputs = {
   houseNights: 2,
   campusShows: 10,
   festivals: 3,
+  corporateShows: 3,
   celebrityShows: 1,
   songs: 3,
 
@@ -724,6 +732,37 @@ export function songRevenue(i: SimInputs): number {
   return Math.round(youtube + streaming);
 }
 
+/**
+ * The simulator's inputs, expressed as the shared engine's inputs.
+ *
+ * Both views used to carry their own arithmetic and disagreed by roughly a
+ * factor of two on gate, league revenue and what a house gets back. There is
+ * one engine now; this is the adapter onto it.
+ */
+export function asEconomicsInputs(i: SimInputs, bands: number, bandsPerHouse: number): EconomicsInputs {
+  return {
+    ticketPrice: i.ticketPrice,
+    attendance: Math.round(i.venueCapacity * (i.occupancyPct / 100)),
+    ticketingCommissionPct: i.ticketingPct,
+    numFranchises: Math.max(1, Math.round(bands / Math.max(1, bandsPerHouse))),
+    bandsPerFranchise: bandsPerHouse,
+  } as EconomicsInputs;
+}
+
+/** The season mix, with the simulator's editable counts folded in. */
+export function simSeasonMix(i: SimInputs) {
+  const byId: Record<string, number> = {
+    commercial: i.commercialShows,
+    cross: i.crossNights,
+    campus: i.campusShows,
+    house: i.houseNights,
+    festival: i.festivals,
+    corporate: i.corporateShows,
+    celebrity: i.celebrityShows,
+  };
+  return SEASON_MIX.map((m) => ({ ...m, perBand: byId[m.id] ?? m.perBand }));
+}
+
 export function computeBand(i: SimInputs): BandResult {
   const commercial = computeEvent("commercial", i);
   const cross = computeEvent("cross", i);
@@ -732,23 +771,29 @@ export function computeBand(i: SimInputs): BandResult {
   const festival = computeEvent("festival", i);
   const celebrity = computeEvent("celebrity", i);
 
-  const touchpoints = [
-    { label: "Commercial", count: i.commercialShows, acts: ACTS_ON_BILL.commercial },
-    { label: "Cross nights", count: i.crossNights, acts: ACTS_ON_BILL.cross },
-    { label: "Campus", count: i.campusShows, acts: ACTS_ON_BILL.campus },
-    { label: "House nights", count: i.houseNights, acts: ACTS_ON_BILL.house },
-    { label: "Festivals", count: i.festivals, acts: ACTS_ON_BILL.festival },
-    { label: "Celebrity", count: i.celebrityShows, acts: ACTS_ON_BILL.celebrity },
-  ].map((t) => ({ ...t, events: t.count / t.acts }));
+  // Read off the shared season mix rather than restated — this list had
+  // already fallen behind by one format, reporting 46 appearances against a
+  // season of 49.
+  const touchpoints = simSeasonMix(i).map((m) => ({
+    label: m.label,
+    count: m.perBand,
+    acts: m.actsOnBill,
+    events: m.perBand / Math.max(1, m.actsOnBill),
+  }));
   const totalTouchpoints = touchpoints.reduce((s, t) => s + t.count, 0);
   const physicalEvents = touchpoints.reduce((s, t) => s + t.events, 0);
 
-  // ---- live: the band's 40% share, divided by however many acts share the bill
-  const liveCommercial = commercial.bandPool * i.commercialShows;
-  const liveCross = cross.bandPerAct * i.crossNights;
-  const liveHouse = house.bandPerAct * i.houseNights;
-  const liveCelebrity = celebrity.bandPool * i.celebrityShows;
-  const liveEarnings = liveCommercial + liveCross + liveHouse + liveCelebrity;
+  /*
+   * Live income comes from the shared season engine.
+   *
+   * It used to be summed here from the per-event P&Ls, which is a second way
+   * of computing the same thing — and the two answers were 8.27L and 11.40L
+   * for the same band. The per-event figures still drive the event selector;
+   * the season total is computed once, in economics.ts.
+   */
+  const cfgBands = 100;
+  const shared = rollUpSeason(asEconomicsInputs(i, cfgBands, 4), simSeasonMix(i));
+  const liveEarnings = shared.bandLiveSeason;
 
   // ---- music: 50/50 with the house
   const catalogueRevenue = songRevenue(i) * i.songs;

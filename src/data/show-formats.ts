@@ -341,7 +341,7 @@ export interface OffLadderFormat extends ShowFormat {
 }
 
 export const HOUSE_NIGHTS_PER_BAND = 2;
-export const CORPORATE_SHOWS_PER_BAND = 0;
+export const CORPORATE_SHOWS_PER_BAND = 3;
 export const FESTIVAL_SLOTS_PER_BAND = 3;
 /** Acts sharing one festival day. A stage-day, not a single slot. */
 export const FESTIVAL_ACTS_PER_STAGE = 10;

@@ -69,8 +69,17 @@ export const TOTAL_HOUSES = NATIONAL_TOTAL_HOUSES;
 export const TOTAL_BANDS = NATIONAL_TOTAL_BANDS;
 
 /** Individual (solo) fixtures every band plays, in every zone. */
-/** Season appearances a band makes. The Dec launch sits outside this. */
-export const APPEARANCES_PER_BAND = 46;
+/**
+ * Season appearances a band makes. The New Year's Eve launch sits outside it.
+ *
+ * 24 commercial + 6 versus + 10 campus + 2 house + 3 festival + 3 corporate =
+ * 48, plus the one celebrity night. Three of those 49 are corporate bookings,
+ * which hold a week but carry no published date — so the dated calendar shows
+ * 46 and the other three are held slots.
+ */
+export const APPEARANCES_PER_BAND = 49;
+/** Of those, the ones that appear on the calendar with a date. */
+export const DATED_APPEARANCES_PER_BAND = 46;
 
 export const INDIVIDUAL_FIXTURES_PER_BAND =
   STAGE_2_STRUCTURE.ticketedSoloPerBand + STAGE_2_STRUCTURE.campusSoloPerBand;
@@ -1018,7 +1027,8 @@ export function scheduleTotals(events = FULL_SCHEDULE): ScheduleTotals {
     appearancesPerBandAllIn: Math.round(appearances / Math.max(1, TOTAL_BANDS)),
     appearancesPerBandInSeason: Math.round(seasonAppearances / Math.max(1, TOTAL_BANDS)),
     appearancesReconcile:
-      Math.round(seasonAppearances / Math.max(1, TOTAL_BANDS)) === APPEARANCES_PER_BAND,
+      Math.round(seasonAppearances / Math.max(1, TOTAL_BANDS)) ===
+      DATED_APPEARANCES_PER_BAND,
     /** Weeks reserved for private bookings, with no published date. */
     heldSlots: held.length,
     rows: events.length,
@@ -1030,7 +1040,10 @@ export function scheduleTotals(events = FULL_SCHEDULE): ScheduleTotals {
     individual: commercial + campus,
     // One show a week is gone; the guarantee now is that every band gets the
     // same appearance count and none of them collide on a day.
-    reconciles: appearances - 100 === TOTAL_BANDS * APPEARANCES_PER_BAND && clashes === 0,
+    // Dated appearances only — corporate bookings are held weeks with no date,
+    // and the launch sits outside the season count.
+    reconciles:
+      appearances - TOTAL_BANDS === TOTAL_BANDS * DATED_APPEARANCES_PER_BAND && clashes === 0,
     sameDayClashes: clashes,
   };
 }
