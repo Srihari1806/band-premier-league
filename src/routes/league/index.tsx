@@ -37,6 +37,16 @@ import {
 } from "@/data/national-season";
 import { SeasonSwitch } from "@/components/SeasonSwitch";
 import { seasonPlan, zonesForSeason, type SeasonId } from "@/data/season-plan";
+import {
+  BRACKET,
+  BANDS_PER_GROUP,
+  GROUPS,
+  GROUP_DRAW,
+  GROUP_STAGE,
+  KNOCKOUT_LADDER,
+  KNOCKOUT_STAGING,
+  QUALIFY_PER_GROUP,
+} from "@/data/knockout";
 import { SCORED_FORMATS, FORMAT_MIX, venueOf } from "@/data/show-formats";
 import {
   CAMPUS_PLANS,
@@ -996,7 +1006,120 @@ function LeaguePage() {
           </div>
         </section>
 
-        {/* SECTION 3C-2: ROAD TO THE FINAL */}
+        {/* SECTION 3C-1b: SEASON 1 KNOCKOUT — groups, bracket, broadcast */}
+        {plan.zones === 1 && (
+        <section className="py-20 px-4 max-w-7xl mx-auto relative z-10 border-t border-border/45 bg-slate-950/10">
+          <div className="text-center max-w-3xl mx-auto mb-12 space-y-3">
+            <h2 className="text-xs uppercase tracking-widest text-primary-glow font-bold">
+              Groups &amp; Knockout
+            </h2>
+            <h3 className="text-3xl font-display font-bold text-white">
+              Four groups, then live television
+            </h3>
+            <p className="text-sm text-muted-foreground leading-relaxed">
+              A league table settles who was best across a season. It does not make anyone watch it
+              happen. So the twenty bands play out of {GROUPS.length} groups and the last{" "}
+              {KNOCKOUT_STAGING.nights} nights are national broadcasts with the audience voting live
+              during the show.
+            </p>
+          </div>
+
+          {/* the draw */}
+          <div className="bpl-card p-5 border border-border bg-surface/40 mb-6 space-y-3">
+            <div className="space-y-1">
+              <h4 className="text-sm font-bold text-white">
+                One band from each house in every group
+              </h4>
+              <p className="text-[11px] text-muted-foreground leading-relaxed">
+                Five houses, five bands to a group, one from each. A house cannot knock its own
+                bands out before the quarterfinals, and no group can be stacked by whoever drafted
+                best in December. With {GROUPS.length} groups and {plan.bandsPerHouse} bands a
+                house the mapping is exact — nothing is left over and no tie-break is needed.
+              </p>
+            </div>
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+              {GROUPS.map((g) => (
+                <div key={g} className="rounded-lg border border-border/70 bg-surface/50 p-3">
+                  <p className="text-[10px] uppercase tracking-wider font-bold text-primary-glow mb-1.5">
+                    Group {g}
+                  </p>
+                  <div className="space-y-0.5">
+                    {GROUP_DRAW.filter((d) => d.group === g).map((d) => (
+                      <p key={d.label} className="text-[11px] text-white tabular-nums">
+                        {d.label}
+                      </p>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+            <p className="text-[10px] text-muted-foreground leading-relaxed border-t border-border/40 pt-2">
+              Round robin inside each group — {GROUP_STAGE.matchesPerBand} matches a band,{" "}
+              {GROUP_STAGE.totalFixtures} across the four. Top{" "}
+              {QUALIFY_PER_GROUP} of each go through, which is{" "}
+              {GROUP_STAGE.qualifiers} bands into the bracket.
+            </p>
+          </div>
+
+          {/* the bracket */}
+          <div className="grid gap-3 lg:grid-cols-3 mb-6">
+            {(["Quarterfinal", "Semifinal", "Final"] as const).map((round) => (
+              <div key={round} className="bpl-card p-4 border border-border bg-surface/40 space-y-2">
+                <div className="flex items-baseline justify-between gap-2">
+                  <h4 className="text-xs font-bold text-white">{round}s</h4>
+                  <span className="text-[10px] text-muted-foreground tabular-nums">
+                    {BRACKET.filter((t) => t.round === round).length} night
+                    {BRACKET.filter((t) => t.round === round).length === 1 ? "" : "s"}
+                  </span>
+                </div>
+                {BRACKET.filter((t) => t.round === round).map((t) => (
+                  <div key={t.id} className="rounded-md border border-border/60 bg-surface/40 px-3 py-2">
+                    <p className="text-[9px] uppercase tracking-wider font-bold text-primary-glow">
+                      {t.label}
+                    </p>
+                    <p className="text-[11px] text-white leading-snug">
+                      {t.home} <span className="text-muted-foreground">v</span> {t.away}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            ))}
+          </div>
+
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="bpl-card p-4 border border-border bg-surface/40 space-y-2">
+              <h4 className="text-xs font-bold text-white">Who is left, and when</h4>
+              {KNOCKOUT_LADDER.map((l) => (
+                <div key={l.stage} className="flex items-baseline justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="text-[11px] font-semibold text-white">{l.stage}</p>
+                    <p className="text-[10px] text-muted-foreground leading-snug">{l.detail}</p>
+                  </div>
+                  <span className="text-lg font-display font-extrabold text-white tabular-nums shrink-0">
+                    {l.bands}
+                  </span>
+                </div>
+              ))}
+            </div>
+            <div className="bpl-card p-4 border border-amber-500/30 bg-amber-500/5 space-y-2">
+              <h4 className="text-xs font-bold text-amber-200">
+                {KNOCKOUT_STAGING.nights} broadcast nights, voted live
+              </h4>
+              <p className="text-[11px] text-muted-foreground leading-relaxed">
+                {KNOCKOUT_STAGING.note}
+              </p>
+              <p className="text-[10px] text-muted-foreground leading-relaxed border-t border-amber-500/20 pt-2">
+                A televised elimination with live voting is a different production from a league
+                fixture and a different cost line — which is why the knockout carries its own budget
+                rather than being averaged into the season&apos;s per-night figures.
+              </p>
+            </div>
+          </div>
+        </section>
+        )}
+
+        {/* SECTION 3C-2: ROAD TO THE FINAL — the national championship, season 2 */}
+        {plan.zones > 1 && (
         <section className="py-20 px-4 max-w-7xl mx-auto relative z-10 border-t border-border/45 bg-slate-950/10">
           <div className="text-center max-w-2xl mx-auto mb-12 space-y-3">
             <h2 className="text-xs uppercase tracking-widest text-primary-glow font-bold">
@@ -1078,7 +1201,13 @@ function LeaguePage() {
           </div>
         </section>
 
-        {/* SECTION 3D: REGIONAL EXPANSION */}
+        )}
+
+        {/* SECTION 3D: REGIONAL EXPANSION — season 2 only.
+            A launch season playing one state should not open with a page about
+            five leagues and a national championship; that is next year's
+            document and showing it here is how a plan reads as a fantasy. */}
+        {plan.zones > 1 && (
         <section className="py-20 px-4 max-w-7xl mx-auto relative z-10 border-t border-border/45 bg-slate-950/20">
           <div className="text-center max-w-2xl mx-auto mb-12 space-y-3">
             <h2 className="text-xs uppercase tracking-widest text-primary-glow font-bold">
@@ -1189,6 +1318,7 @@ function LeaguePage() {
             </div>
           </div>
         </section>
+        )}
 
         {/* SECTION 4: LEAGUE REVENUE INFOGRAPHIC */}
         <section className="py-20 px-4 max-w-5xl mx-auto relative z-10 border-t border-border/45 bg-slate-950/20">
