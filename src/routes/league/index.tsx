@@ -31,8 +31,8 @@ import {
   RELEASE_TOTALS,
   TOTAL_BANDS,
   totalsFor,
-  OFF_LADDER_FORMATS,
-  OFF_LADDER_TOTALS,
+  offLadderFormatsFor,
+  offLadderTotalsFor,
   APPEARANCES_PER_BAND,
 } from "@/data/national-season";
 import { SeasonSwitch } from "@/components/SeasonSwitch";
@@ -73,7 +73,7 @@ import {
   MAX_POINTS_PER_FIXTURE,
   GATE_POINT_SCALE,
   TIE_BREAKERS,
-  QUALIFICATION,
+  qualificationFor,
   STAGE_2_MATRIX,
   STAGE_2_STRUCTURE,
   STAGE_2_FINALS,
@@ -185,6 +185,29 @@ function LeaguePage() {
   const campusTotals = useMemo(() => campusTotalsFor(season), [season]);
   const campusLoad = useMemo(() => campusLoadFor(season), [season]);
   const campusClash = useMemo(() => campusClashFor(season), [season]);
+  const offLadder = useMemo(() => offLadderTotalsFor(season), [season]);
+  const offLadderFormats = useMemo(() => offLadderFormatsFor(season), [season]);
+  const qualification = useMemo(
+    () => qualificationFor(plan.zones, GROUP_STAGE.qualifiers, plan.bands),
+    [plan.zones, plan.bands],
+  );
+  const journey = useMemo(
+    () =>
+      plan.zones > 1
+        ? JOURNEY_STEPS
+        : JOURNEY_STEPS.map((s) =>
+            s.id === "top25"
+              ? {
+                  ...s,
+                  label: "Group Stage",
+                  desc: `Four groups of five; the top two of each — ${GROUP_STAGE.qualifiers} bands — reach the bracket.`,
+                }
+              : s.id === "finals"
+                ? { ...s, label: "Televised Knockout", desc: "Quarterfinals to the final, broadcast, with the audience voting live." }
+                : s,
+          ),
+    [plan.zones],
+  );
   const [activeZone, setActiveZone] = useState<string>("ap-ts");
   const activeZoneMeta = ZONES.find((z) => z.slug === activeZone);
   const standings = standingsForZone(activeZone);
@@ -245,17 +268,22 @@ function LeaguePage() {
             <h3 className="text-2xl font-display font-extrabold text-white">What is the League?</h3>
             <p className="text-xs text-muted-foreground leading-relaxed">
               {plan.label} opens {plan.zones === 1 ? "in one state" : "across all of India at once"}.{" "}
-              <strong>{plan.zones} regional
-              leagues</strong> — AP/TS, Karnataka, Tamil Nadu, Kerala and North India — play the same{" "}
-              <strong>{COMPETITION_WEEKENDS} weekends</strong> from 31 December to 12
-              June, simultaneously, so no two zones ever compete for the same audience on the same
-              night. Rather than chasing one-off gigs, a band enters a fixed calendar with a
-              production house financing the work behind it.
+              <strong>
+                {plan.zones} regional league{plan.zones === 1 ? "" : "s"}
+              </strong>{" "}
+              — {seasonZones.map((z) => z.name).join(", ").replace(/, ([^,]*)$/, " and $1")} —
+              play{plan.zones === 1 ? "s" : ""} the same{" "}
+              <strong>{COMPETITION_WEEKENDS} weekends</strong> from 31 December to 12 June
+              {plan.zones === 1
+                ? ". Rather than chasing one-off gigs, a band enters a fixed calendar with a production house financing the work behind it."
+                : ", simultaneously, so no two zones ever compete for the same audience on the same night. Rather than chasing one-off gigs, a band enters a fixed calendar with a production house financing the work behind it."}
             </p>
             <p className="text-xs text-muted-foreground leading-relaxed">
               {plan.houses} production houses field {plan.bands} bands between
-              them — {STAGE_2_MATRIX.houses} houses and {STAGE_2_MATRIX.totalBands} bands in every
-              zone, with no zone larger than another. Every band plays the same{" "}
+              them{plan.zones === 1
+                ? ""
+                : ` — ${STAGE_2_MATRIX.houses} houses and ${STAGE_2_MATRIX.totalBands} bands in every zone, with no zone larger than another`}
+              . Every band plays the same{" "}
               {STAGE_2_MATRIX.showsPerBand} fixtures:{" "}
               {STAGE_2_STRUCTURE.ticketedSoloPerBand} ticketed nights,{" "}
               {STAGE_2_STRUCTURE.campusSoloPerBand} campus nights and{" "}
@@ -274,7 +302,9 @@ function LeaguePage() {
                   v: `${totals.events.toLocaleString("en-IN")} Nights`,
                   l: `${COMPETITION_WEEKENDS} Weekends, Dec–Jun`,
                 },
-                { v: `Top ${STAGE_2_FINALS.finalists}`, l: "Qualify Per Zone" },
+                plan.zones === 1
+                  ? { v: `Top ${GROUP_STAGE.qualifiers}`, l: "Into The Knockout" }
+                  : { v: `Top ${STAGE_2_FINALS.finalists}`, l: "Qualify Per Zone" },
               ].map((stat) => (
                 <div key={stat.l} className="border border-border/50 rounded-lg p-4 bg-surface/30">
                   <p className="text-base font-bold text-primary-glow">{stat.v}</p>
@@ -293,7 +323,7 @@ function LeaguePage() {
           </div>
 
           <div className="relative border-l border-border/50 pl-6 space-y-8 text-left">
-            {JOURNEY_STEPS.map((step, idx) => (
+            {journey.map((step, idx) => (
               <motion.div
                 key={step.id}
                 initial={{ opacity: 0, x: -20 }}
@@ -559,7 +589,7 @@ function LeaguePage() {
                 <Trophy size={14} className="text-primary-glow" /> Qualification
               </h4>
               <div className="space-y-3">
-                {QUALIFICATION.map((q, idx) => (
+                {qualification.map((q, idx) => (
                   <div key={q.stage} className="flex gap-3">
                     <div className="h-6 w-6 rounded bg-primary/10 border border-primary/20 flex items-center justify-center text-primary-glow shrink-0 text-[10px] font-bold">
                       {idx + 1}
@@ -683,7 +713,9 @@ function LeaguePage() {
           <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
             <p className="text-[10px] text-muted-foreground flex items-center gap-2">
               <span className="inline-block h-2.5 w-2.5 rounded-sm bg-primary/30 border border-primary/50" />
-              Highlighted rows are inside the top 25% and qualify for the grand finals.
+              {plan.zones === 1
+                ? `Highlighted rows are the seeded top of the table going into the group stage.`
+                : `Highlighted rows are inside the top 25% and qualify for the grand finals.`}
             </p>
             {activeZoneMeta && (
               <Link
@@ -706,14 +738,19 @@ function LeaguePage() {
         <section className="py-20 px-4 max-w-7xl mx-auto relative z-10 border-t border-border/45">
           <div className="text-center max-w-2xl mx-auto mb-12 space-y-3">
             <h2 className="text-xs uppercase tracking-widest text-primary-glow font-bold">
-              {plan.label} · Fixture Structure — Every Zone
+              {plan.label} · Fixture Structure{plan.zones === 1 ? "" : " — Every Zone"}
             </h2>
             <h3 className="text-3xl font-display font-bold text-white">The Match Matrix</h3>
             <p className="text-xs text-muted-foreground leading-relaxed">
-              Identical in all {plan.zones} league{plan.zones === 1 ? "" : "s"}. Each zone runs{" "}
-              {STAGE_2_MATRIX.houses} houses signing {STAGE_2_MATRIX.bandsPerHouse} bands —{" "}
-              {STAGE_2_MATRIX.totalBands} bands per zone, {plan.bands} this season — and
-              every band anywhere plays the same {STAGE_2_MATRIX.showsPerBand} fixtures. Inside a
+              {plan.zones === 1
+                ? "The matrix every zone will run, proved in one. "
+                : `Identical in all ${plan.zones} leagues. `}
+              {plan.zones === 1 ? "The" : "Each"} zone runs {STAGE_2_MATRIX.houses} houses signing{" "}
+              {STAGE_2_MATRIX.bandsPerHouse} bands —{" "}
+              {plan.zones === 1
+                ? `${plan.bands} bands`
+                : `${STAGE_2_MATRIX.totalBands} bands per zone, ${plan.bands} this season`}{" "}
+              — and every band plays the same {STAGE_2_MATRIX.showsPerBand} fixtures. Inside a
               house all {STAGE_2_MATRIX.crossPairsPerHouse} pairings meet exactly once. Because a
               cross night is one shared stage rather than two shows, a zone's{" "}
               {STAGE_2_MATRIX.totalBands * STAGE_2_MATRIX.showsPerBand} band appearances resolve
@@ -772,7 +809,13 @@ function LeaguePage() {
             {[
               { v: plan.bands, l: "Bands Competing" },
               { v: STAGE_2_MATRIX.showsPerBand, l: "Fixtures Per Band" },
-              { v: totals.events.toLocaleString("en-IN"), l: "League-Phase Nights" },
+              {
+                // League phase means the scored ladder. Printing every dated
+                // night here folded house, festival, celebrity and launch
+                // nights into a count labelled as fixtures.
+                v: (totals.individual + totals.cross).toLocaleString("en-IN"),
+                l: "League-Phase Nights",
+              },
               { v: plan.houses, l: "Production Houses" },
               { v: `${STAGE_2_MATRIX.showsPerBand * MAX_POINTS_PER_FIXTURE}`, l: "Max League Points" },
             ].map((s) => (
@@ -789,12 +832,12 @@ function LeaguePage() {
             <CalendarDays size={16} className="text-primary-glow shrink-0 mt-0.5" />
             <p className="text-[11px] text-muted-foreground leading-relaxed">
               <span className="font-semibold text-white">How this sits in the calendar.</span> The
-              national scheduler solves for the {STAGE_2_MATRIX.individualShowsPerBand} individual
-              fixtures — that is the number that has to fit {COMPETITION_WEEKENDS} weekends across
-              five zones at once. Cross nights ride inside a house's own weekends, since both bands
-              are already in town when their house is on. Whether a cross night consumes one of a
-              band's eight slots or sits on top of them is still open, and it changes how many
-              appearances a band actually makes: see the{" "}
+              scheduler solves for {totals.individual.toLocaleString("en-IN")} individual
+              fixtures — that is the number that has to fit {COMPETITION_WEEKENDS} weekends
+              {plan.zones === 1 ? " in one zone" : ` across ${plan.zones} zones at once`}. Cross
+              nights ride inside a house's own weekends, since both bands are already in town when
+              their house is on, so a versus night costs the calendar one Saturday rather than two:
+              see the{" "}
               <Link to="/season" className="text-primary-glow font-semibold hover:underline">
                 season page
               </Link>{" "}
@@ -838,11 +881,11 @@ function LeaguePage() {
               Show Formats
             </h2>
             <h3 className="text-3xl sm:text-4xl font-display font-bold text-white">
-              Forty-eight appearances, not forty-eight shows
+              {APPEARANCES_PER_BAND} appearances, far fewer shows
             </h3>
             <p className="text-sm text-muted-foreground leading-relaxed">
-              A fixture count says a band plays {FORMAT_MIX.totalPerBand} nights. It does not say
-              what any of them are. Every band plays the same {FORMAT_MIX.showsPerBand}{" "}
+              A fixture count says a band plays {FORMAT_MIX.totalPerBand} scored nights. It does
+              not say what any of them are. Every band plays the same {APPEARANCES_PER_BAND}{" "}
               appearances across {COMPETITION_WEEKENDS} weeks, through the same rooms, so no band
               can be handed a softer season than its rivals. A versus night is two bands on one
               stage, a house night four and a festival bill ten, so the league stages
@@ -942,7 +985,7 @@ function LeaguePage() {
           </div>
 
           <div className="grid gap-4 lg:grid-cols-3 mb-6">
-            {OFF_LADDER_FORMATS.map((f) => (
+            {offLadderFormats.map((f) => (
               <div
                 key={f.id}
                 className="bpl-card p-5 border border-sky-500/25 bg-sky-500/5 space-y-2"
@@ -975,7 +1018,7 @@ function LeaguePage() {
           <div className="grid gap-4 sm:grid-cols-3">
             <div className="bpl-card p-4 border border-border bg-surface/40">
               <p className="text-2xl font-display font-extrabold text-primary-glow tabular-nums">
-                {totals.events.toLocaleString("en-IN")}
+                {(totals.individual + totals.cross).toLocaleString("en-IN")}
               </p>
               <p className="text-[10px] uppercase tracking-wider font-bold text-white mt-0.5">
                 Scored fixtures
@@ -987,22 +1030,22 @@ function LeaguePage() {
             </div>
             <div className="bpl-card p-4 border border-sky-500/25 bg-sky-500/5">
               <p className="text-2xl font-display font-extrabold text-sky-300 tabular-nums">
-                {OFF_LADDER_TOTALS.total}
+                {offLadder.total}
               </p>
               <p className="text-[10px] uppercase tracking-wider font-bold text-white mt-0.5">
                 Off-ladder nights
               </p>
               <p className="text-[10px] text-muted-foreground leading-snug mt-1">
-{OFF_LADDER_TOTALS.launches} launch nights on 31 December,{" "}
-                {OFF_LADDER_TOTALS.houseNights} house nights,{" "}
-                {OFF_LADDER_TOTALS.festivalStages} festival stage-days carrying{" "}
-                {OFF_LADDER_TOTALS.festivalAppearances} slots, and{" "}
-                {OFF_LADDER_TOTALS.corporate} corporate shows — all dated.
+{offLadder.launches} launch night{offLadder.launches === 1 ? "" : "s"} on 31 December,{" "}
+                {offLadder.houseNights} house nights,{" "}
+                {offLadder.festivalStages} festival stage-days carrying{" "}
+                {offLadder.festivalAppearances} slots, and {offLadder.corporate} corporate
+                bookings held against free weeks.
               </p>
             </div>
             <div className="bpl-card p-4 border border-emerald-500/25 bg-emerald-500/5">
               <p className="text-2xl font-display font-extrabold text-emerald-300 tabular-nums">
-                {OFF_LADDER_TOTALS.clashesWithFixtures}
+                {offLadder.clashesWithFixtures}
               </p>
               <p className="text-[10px] uppercase tracking-wider font-bold text-white mt-0.5">
                 Clashes with a fixture
@@ -1409,8 +1452,10 @@ function LeaguePage() {
             <p className="text-xs text-muted-foreground leading-relaxed">
               The campus leg stages {totals.campus.toLocaleString("en-IN")} campus events a season
               across {(CAMPUSES_PER_ZONE * plan.zones).toLocaleString("en-IN")} campuses, carrying{" "}
-              {(totals.campus * 4).toLocaleString("en-IN")} band appearances — four bands to a bill. Not every campus hosts every season, which is deliberate: a network you visit
-              is worth more than a list you have signed.
+              {totals.campus.toLocaleString("en-IN")} band appearances — one band to a campus,
+              so a band builds its own room rather than splitting it four ways with its own
+              stablemates. Not every campus hosts every season, which is deliberate: a network you
+              visit is worth more than a list you have signed.
             </p>
           </div>
 
@@ -1643,7 +1688,9 @@ function LeaguePage() {
               produces filler, not catalogue. Each band gets{" "}
               <strong>one league release inside the season</strong>, on its own week in the zone
               rotation, with the December pre-season and the July artist season either side of it.
-              Across the country that is {RELEASE_TOTALS.perMonthNationally} releases a month, and inside any one house something out every fortnight.
+              Across {plan.zones === 1 ? "the season" : "the country"} that is{" "}
+              {Math.round(RELEASE_TOTALS.perMonthNationally * (plan.bands / TOTAL_BANDS))} releases
+              a month, and inside any one house something out every fortnight.
             </p>
           </div>
 

@@ -277,6 +277,40 @@ export interface QualificationStep {
   detail: string;
 }
 
+/**
+ * The path out of the league table, told for the season being read.
+ *
+ * A one-zone season has no zonal advancement to make and does not qualify a
+ * top quartile: it plays a group stage and puts eight bands into a televised
+ * bracket. Leaving the top-25% wording on a launch year contradicts the
+ * knockout printed further down the same page.
+ */
+export function qualificationFor(
+  zones: number,
+  qualifiers: number,
+  bands: number,
+): QualificationStep[] {
+  if (zones > 1) return QUALIFICATION;
+  return [
+    {
+      stage: "League Phase",
+      detail: "Every band plays its full fixture calendar against the other franchises in the zone.",
+    },
+    {
+      stage: "Group Stage",
+      detail: `The ${bands} bands split into four groups of five, one band from each production house in every group, so no house meets itself early and no group can be stacked.`,
+    },
+    {
+      stage: "House Trophy",
+      detail: "The production house whose bands accumulate the highest collective points takes the House Cup.",
+    },
+    {
+      stage: "Knockout",
+      detail: `The top two from each group — ${qualifiers} bands — go into a televised bracket, quarterfinals through the final, with the audience voting live.`,
+    },
+  ];
+}
+
 export const QUALIFICATION: QualificationStep[] = [
   {
     stage: "League Phase",

@@ -1502,6 +1502,36 @@ export const CORPORATE_PLAN = {
   note: "Two private bookings a band, placed in free weeks and offset across a house so it is not selling four private shows in the same fortnight. No public gate — a flat fee, invoiced.",
 };
 
+/**
+ * Off-ladder totals for one season, read off that season's schedule.
+ *
+ * The constant below is the national instance. A launch year staging one zone
+ * has one launch night and ten house nights, not five and fifty — printing the
+ * national figures against a twenty-band season is how a plan stops being
+ * checkable.
+ */
+export function offLadderTotalsFor(seasonId: string) {
+  const ev = scheduleFor(seasonId);
+  const of = (id: string) => ev.filter((e) => e.formatId === id);
+  const bills = (id: string) => new Set(of(id).map((e) => e.billId ?? e.id)).size;
+  return {
+    launches: bills("league-launch"),
+    houseNights: bills("house-night"),
+    festivalStages: bills("festival-stage"),
+    festivalAppearances: of("festival-stage").length,
+    corporate: of("corporate-show").length,
+    total: distinctNights(ev.filter((e) => !e.scored)),
+    scheduled: distinctNights(ev.filter((e) => !e.scored)),
+    clashesWithFixtures: sameDayClashes(ev),
+  };
+}
+
+/** The off-ladder catalogue sized for one season. */
+export function offLadderFormatsFor(seasonId: string) {
+  const plan = seasonPlan(seasonId);
+  return buildOffLadderFormats(plan.houses, plan.zones, plan.bands);
+}
+
 export const OFF_LADDER_TOTALS = {
   /** Launch nights — one per zone, all on 31 Dec. */
   launches: new Set(

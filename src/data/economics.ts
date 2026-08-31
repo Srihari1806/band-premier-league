@@ -609,20 +609,13 @@ export interface EconomicsInputs {
 
 export const DEFAULT_INPUTS: EconomicsInputs = {
   /*
-   * The base case, shared with the simulator.
-   *
-   * These were 250 and 200 here while the simulator ran 299 at 70% of a
-   * 200-cap room, so the same band earned two different numbers depending on
-   * which half of the page you read. One engine needs one set of base
-   * assumptions: a 200-cap room at 70% is 140 in, at 299.
+   * The base case: 5 production houses, 4 bands each, 20 bands total.
+   * Matches the consolidated 20-band / 5-house / 1-season model.
    */
   ticketPrice: 299,
   attendance: 140,
-  // The SCORED ladder only: 11 commercial + 4 campus + 3 versus. House nights,
-  // corporate shows and festival stages are real income but sit outside the
-  // gate split, so folding them in here would overstate ticket revenue.
-  showsPerBand: 18,
-  numFranchises: 25,
+  showsPerBand: 49,
+  numFranchises: 5,
   bandsPerFranchise: 4,
   winningBid: 1000000,
   bandMembers: 5,
@@ -641,8 +634,8 @@ export const DEFAULT_INPUTS: EconomicsInputs = {
   exclusivePartnerAnnual: 90000,
   bandSponsorshipAnnual: 170000,
 
-  leagueBroadcastSeason: 600000,
-  leagueSponsorshipSeason: 300000,
+  leagueBroadcastSeason: 20000000,
+  leagueSponsorshipSeason: 12600000,
   membersCount: 500,
   membershipPrice: 299,
 
@@ -701,8 +694,8 @@ export const PRESETS: Preset[] = [
   {
     id: "regional",
     label: "Stage 2 · AP/TS",
-    blurb: "The full regional league: 5 production houses, 4 bands each, 11 fixtures per band — 8 solo nights plus 3 house cross nights.",
-    patch: { ticketPrice: 299, attendance: 250, showsPerBand: 11, soloSharePct: 73, numFranchises: 5, bandsPerFranchise: 4, winningBid: 1000000 },
+    blurb: "The full regional league: 5 production houses, 4 bands each, 49 appearances per band — 40 solo nights plus 8 shared, one co-funded celebrity night per band.",
+    patch: { ticketPrice: 299, attendance: 140, showsPerBand: 49, soloSharePct: 83, numFranchises: 5, bandsPerFranchise: 4, winningBid: 1000000 },
   },
 ];
 
@@ -1485,3 +1478,103 @@ export const PITCH_POINTS: PitchPoint[] = [
   { title: "Low Competition", detail: "No structured franchise music ecosystem exists in India's regional markets today." },
   { title: "Scalable Playbook", detail: "The model replicates city by city and zone by zone on largely fixed central overhead." },
 ];
+
+/* ------------------------------------------------------------------ *
+ * Celebrity / Premium Show Economics
+ * ------------------------------------------------------------------ */
+
+export const CELEBRITY_SHOW = {
+  revenuePerShow: 50000000,
+  costPerShow: 38000000,
+  profitPerShow: 12000000,
+  houses: 5,
+  showsPerHouse: 4,
+  totalShows: 20,
+} as const;
+
+export const CELEBRITY_COST_FUNDING = {
+  productionHousePct: 50,
+  operatorPct: 50,
+  artistPct: 0,
+} as const;
+
+export const CELEBRITY_PROFIT_SPLIT = {
+  artist: 0,
+  productionHouse: 50,
+  operator: 50,
+} as const;
+
+export interface CelebrityEconomics {
+  totalRevenue: number;
+  totalCost: number;
+  totalProfit: number;
+  houseFunding: number;
+  operatorFunding: number;
+  houseProfit: number;
+  operatorProfit: number;
+  artistProfit: number;
+  perShow: {
+    revenue: number;
+    cost: number;
+    profit: number;
+    houseFunding: number;
+    operatorFunding: number;
+    houseProfit: number;
+    operatorProfit: number;
+  };
+}
+
+export function computeCelebrityEconomics(): CelebrityEconomics {
+  const totalRevenue = CELEBRITY_SHOW.totalShows * CELEBRITY_SHOW.revenuePerShow;
+  const totalCost = CELEBRITY_SHOW.totalShows * CELEBRITY_SHOW.costPerShow;
+  const totalProfit = totalRevenue - totalCost;
+  const houseFunding = Math.round(totalCost * (CELEBRITY_COST_FUNDING.productionHousePct / 100));
+  const operatorFunding = totalCost - houseFunding;
+  const houseProfit = Math.round(totalProfit * (CELEBRITY_PROFIT_SPLIT.productionHouse / 100));
+  const operatorProfit = Math.round(totalProfit * (CELEBRITY_PROFIT_SPLIT.operator / 100));
+  const artistProfit = Math.round(totalProfit * (CELEBRITY_PROFIT_SPLIT.artist / 100));
+
+  return {
+    totalRevenue,
+    totalCost,
+    totalProfit,
+    houseFunding,
+    operatorFunding,
+    houseProfit,
+    operatorProfit,
+    artistProfit,
+    perShow: {
+      revenue: CELEBRITY_SHOW.revenuePerShow,
+      cost: CELEBRITY_SHOW.costPerShow,
+      profit: CELEBRITY_SHOW.profitPerShow,
+      houseFunding: Math.round(CELEBRITY_SHOW.costPerShow * (CELEBRITY_COST_FUNDING.productionHousePct / 100)),
+      operatorFunding: Math.round(CELEBRITY_SHOW.costPerShow * (CELEBRITY_COST_FUNDING.operatorPct / 100)),
+      houseProfit: Math.round(CELEBRITY_SHOW.profitPerShow * (CELEBRITY_PROFIT_SPLIT.productionHouse / 100)),
+      operatorProfit: Math.round(CELEBRITY_SHOW.profitPerShow * (CELEBRITY_PROFIT_SPLIT.operator / 100)),
+    },
+  };
+}
+
+export interface HouseCelebrityEconomics {
+  shows: number;
+  investment: number;
+  profit: number;
+  net: number;
+  roiPct: number;
+}
+
+export function computeHouseCelebrityEconomics(): HouseCelebrityEconomics {
+  const shows = CELEBRITY_SHOW.showsPerHouse;
+  const investment = shows * CELEBRITY_SHOW.costPerShow * (CELEBRITY_COST_FUNDING.productionHousePct / 100);
+  const profit = shows * CELEBRITY_SHOW.profitPerShow * (CELEBRITY_PROFIT_SPLIT.productionHouse / 100);
+  return {
+    shows,
+    investment: Math.round(investment),
+    profit: Math.round(profit),
+    net: Math.round(profit - investment),
+    roiPct: investment > 0 ? ((profit - investment) / investment) * 100 : 0,
+  };
+}
+
+export const CELEBRITY_ECONOMICS = computeCelebrityEconomics();
+export const HOUSE_CELEBRITY_ECONOMICS = computeHouseCelebrityEconomics();
