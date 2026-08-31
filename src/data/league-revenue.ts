@@ -12,10 +12,10 @@
  * make and the hardest to see.
  */
 
-import { SPLITS } from "./economics";
+import { divide, type RevenueShare, type SplitName } from "./economics";
 import { seasonPlan, type SeasonPlan } from "./season-plan";
 
-export type SplitName = keyof typeof SPLITS;
+export type { RevenueShare, SplitName };
 
 export interface RevenueLine {
   id: string;
@@ -155,36 +155,30 @@ export const SPONSOR_CARD_VALUE = SPONSOR_CARD.reduce((s, r) => s + r.slots * r.
  * Rolling it up for a season
  * ------------------------------------------------------------------ */
 
-export interface RevenueShare {
-  artist: number;
-  productionHouse: number;
-  operator: number;
-}
-
 export interface RolledLine extends RevenueLine {
   /** Season total after scaling by the roster. */
   total: number;
   share: RevenueShare;
 }
 
-function shareOf(total: number, split: SplitName): RevenueShare {
-  const s = SPLITS[split];
-  return {
-    artist: Math.round((total * s.artist) / 100),
-    productionHouse: Math.round((total * s.productionHouse) / 100),
-    operator: Math.round((total * s.operator) / 100),
-  };
+/**
+ * How many of a line there are in a season.
+ *
+ * A per-band line is multiplied by the roster, a per-house line by the number
+ * of houses, and a season line is already a season total. Mixing the three is
+ * the easiest arithmetic error in the model to make and the hardest to see,
+ * which is why every line states its basis rather than leaving it to the reader.
+ */
+export function scaleOf(basis: RevenueLine["basis"], plan: SeasonPlan): number {
+  return basis === "band" ? plan.bands : basis === "house" ? plan.houses : 1;
 }
 
 export function rollUpRevenue(plan: SeasonPlan | string = "s1") {
   const p = typeof plan === "string" ? seasonPlan(plan) : plan;
 
-  const scaleOf = (basis: RevenueLine["basis"]) =>
-    basis === "band" ? p.bands : basis === "house" ? p.houses : 1;
-
   const lines: RolledLine[] = [...CONTENT_LINES, ...SEASON_LINES].map((l) => {
-    const total = l.amount * scaleOf(l.basis);
-    return { ...l, total, share: shareOf(total, l.split) };
+    const total = l.amount * scaleOf(l.basis, p);
+    return { ...l, total, share: divide(total, l.split) };
   });
 
   const sum = (f: (l: RolledLine) => number) => lines.reduce((s, l) => s + f(l), 0);
