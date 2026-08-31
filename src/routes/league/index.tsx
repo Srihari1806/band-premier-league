@@ -224,7 +224,8 @@ function LeaguePage() {
           <div className="bpl-card p-8 md:p-12 space-y-6 border-primary/20 bg-primary/3 text-left">
             <h3 className="text-2xl font-display font-extrabold text-white">What is the League?</h3>
             <p className="text-xs text-muted-foreground leading-relaxed">
-              Season 1 opens across all of India at once. <strong>{ZONE_HUBS.length} regional
+              {plan.label} opens {plan.zones === 1 ? "in one state" : "across all of India at once"}.{" "}
+              <strong>{plan.zones} regional
               leagues</strong> — AP/TS, Karnataka, Tamil Nadu, Kerala and North India — play the same{" "}
               <strong>{COMPETITION_WEEKENDS} weekends</strong> from 31 December to 12
               June, simultaneously, so no two zones ever compete for the same audience on the same
@@ -244,9 +245,15 @@ function LeaguePage() {
             </p>
             <div className="grid gap-4 sm:grid-cols-4 pt-4">
               {[
-                { v: `${ZONE_HUBS.length} Leagues`, l: "Running In Parallel" },
+                {
+                  v: `${plan.zones} League${plan.zones === 1 ? "" : "s"}`,
+                  l: plan.zones === 1 ? "One State, One League" : "Running In Parallel",
+                },
                 { v: `${plan.bands} Bands`, l: `${plan.houses} Production Houses` },
-                { v: `${TOTAL_LEAGUE_NIGHTS} Nights`, l: `${COMPETITION_WEEKENDS} Weekends, Dec–Jun` },
+                {
+                  v: `${totals.events.toLocaleString("en-IN")} Nights`,
+                  l: `${COMPETITION_WEEKENDS} Weekends, Dec–Jun`,
+                },
                 { v: `Top ${STAGE_2_FINALS.finalists}`, l: "Qualify Per Zone" },
               ].map((stat) => (
                 <div key={stat.l} className="border border-border/50 rounded-lg p-4 bg-surface/30">
@@ -561,7 +568,7 @@ function LeaguePage() {
 
           {/* Regional selector */}
           <div className="flex flex-wrap justify-center gap-2 mb-6">
-            {ZONE_HUBS.map((zone) => (
+            {seasonZones.map((zone) => (
               <button
                 key={zone.slug}
                 type="button"
@@ -683,15 +690,15 @@ function LeaguePage() {
             </h2>
             <h3 className="text-3xl font-display font-bold text-white">The Match Matrix</h3>
             <p className="text-xs text-muted-foreground leading-relaxed">
-              Identical in all {ZONE_HUBS.length} leagues. Each zone runs{" "}
+              Identical in all {plan.zones} league{plan.zones === 1 ? "" : "s"}. Each zone runs{" "}
               {STAGE_2_MATRIX.houses} houses signing {STAGE_2_MATRIX.bandsPerHouse} bands —{" "}
-              {STAGE_2_MATRIX.totalBands} bands per zone, {NATIONAL_TOTAL_BANDS} nationally — and
+              {STAGE_2_MATRIX.totalBands} bands per zone, {plan.bands} this season — and
               every band anywhere plays the same {STAGE_2_MATRIX.showsPerBand} fixtures. Inside a
               house all {STAGE_2_MATRIX.crossPairsPerHouse} pairings meet exactly once. Because a
               cross night is one shared stage rather than two shows, a zone's{" "}
               {STAGE_2_MATRIX.totalBands * STAGE_2_MATRIX.showsPerBand} band appearances resolve
               into {STAGE_2_MATRIX.totalFixtures} live nights, and{" "}
-              {TOTAL_LEAGUE_NIGHTS} across the country. Equal rosters mean the national table
+              {totals.events.toLocaleString("en-IN")} across the season. Equal rosters mean the table
               compares like with like without adjustment — the{" "}
               <Link to="/calendar" className="text-primary-glow font-semibold hover:underline">
                 full 2027 calendar
@@ -743,10 +750,10 @@ function LeaguePage() {
 
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
             {[
-              { v: NATIONAL_TOTAL_BANDS, l: "Bands Competing" },
+              { v: plan.bands, l: "Bands Competing" },
               { v: STAGE_2_MATRIX.showsPerBand, l: "Fixtures Per Band" },
               { v: TOTAL_LEAGUE_NIGHTS, l: "League-Phase Nights" },
-              { v: NATIONAL_TOTAL_HOUSES, l: "Production Houses" },
+              { v: plan.houses, l: "Production Houses" },
               { v: `${STAGE_2_MATRIX.showsPerBand * MAX_POINTS_PER_FIXTURE}`, l: "Max League Points" },
             ].map((s) => (
               <div key={s.l} className="border border-border/50 rounded-lg p-5 bg-surface/30 text-center">
@@ -955,7 +962,7 @@ function LeaguePage() {
               </p>
               <p className="text-[10px] text-muted-foreground leading-snug mt-1">
                 {FORMAT_MIX.commercialPerBand} commercial, {FORMAT_MIX.campusPerBand} campus and{" "}
-                {FORMAT_MIX.crossPerBand} versus nights for each of {TOTAL_BANDS} bands.
+                {FORMAT_MIX.crossPerBand} versus nights for each of {plan.bands} bands.
               </p>
             </div>
             <div className="bpl-card p-4 border border-sky-500/25 bg-sky-500/5">
@@ -1257,13 +1264,12 @@ function LeaguePage() {
               Campus Network
             </h2>
             <h3 className="text-3xl font-display font-bold text-white">
-              {CAMPUSES_PER_ZONE} campuses per zone, {CAMPUS_TOTALS.campuses} nationally
+              {CAMPUSES_PER_ZONE} campuses per zone, {CAMPUSES_PER_ZONE * plan.zones} this season
             </h3>
             <p className="text-xs text-muted-foreground leading-relaxed">
-              The campus leg stages {CAMPUS_TOTALS.nights} campus events a season across{" "}
-              {CAMPUS_TOTALS.campuses} campuses, carrying{" "}
-              {(CAMPUS_TOTALS.nights * 4).toLocaleString("en-IN")} band appearances — four bands to
-              a bill. Not every campus hosts every season, which is deliberate: a network you visit
+              The campus leg stages {totals.campus.toLocaleString("en-IN")} campus events a season
+              across {(CAMPUSES_PER_ZONE * plan.zones).toLocaleString("en-IN")} campuses, carrying{" "}
+              {(totals.campus * 4).toLocaleString("en-IN")} band appearances — four bands to a bill. Not every campus hosts every season, which is deliberate: a network you visit
               is worth more than a list you have signed.
             </p>
           </div>
