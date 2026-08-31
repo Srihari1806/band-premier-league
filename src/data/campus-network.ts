@@ -260,12 +260,33 @@ export function campusLoadFor(seasonId: string): CampusMonthLoad[] {
   return campusLoadByMonth(scheduleFor(seasonId));
 }
 
+/**
+ * What the campus leg actually spans, read off the schedule.
+ *
+ * The page used to name its own months — "January to March", "May and June" —
+ * and those sentences went stale every time a Saturday moved. The span is a
+ * consequence of which Saturdays are free once festivals, house nights and
+ * celebrity nights have taken theirs, so it is read rather than asserted.
+ */
 export function campusClashFor(seasonId: string) {
   const load = campusLoadFor(seasonId);
+  const used = load.filter((m) => m.nights > 0);
   return {
     total: load.reduce((s, m) => s + m.nights, 0),
     inSeason: load.filter((m) => m.viable).reduce((s, m) => s + m.nights, 0),
     offSeason: load.filter((m) => !m.viable).reduce((s, m) => s + m.nights, 0),
+    /** Months that carry at least one campus night. */
+    monthsUsed: used.length,
+    firstMonth: used[0]?.month ?? "",
+    lastMonth: used[used.length - 1]?.month ?? "",
+    /** Months the fest calendar rates as viable but the schedule never reaches. */
+    unreached: load
+      .filter((m) => m.viable && m.nights === 0)
+      .map((m) => m.month),
+    /** Nights outside the front quarter — the claim the copy is making. */
+    afterMarch: load
+      .filter((m) => !["Jan", "Feb", "Mar"].includes(m.month))
+      .reduce((s, m) => s + m.nights, 0),
   };
 }
 

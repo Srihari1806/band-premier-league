@@ -511,6 +511,45 @@ export const COMPETITION_WEEKENDS = 24;
  * so a separate 23-week pilot calendar would have contradicted the national
  * build the moment both were on the site. Full architecture on /season.
  */
+/**
+ * The phases, told for the season being read.
+ *
+ * "Qualifiers from all five zones" and "each zone sends its top 5 up" are
+ * season-2 sentences. A launch year has one zone, no cross-zone qualification
+ * and a televised knockout instead of a national championship.
+ */
+export function seasonPhasesFor(zones: number, appearances: number): SeasonPhase[] {
+  return SEASON_PHASES.map((p) => {
+    if (p.title === "Regular Season") {
+      return {
+        ...p,
+        detail: `${COMPETITION_WEEKENDS} weekends, one city a week. Friday and Sunday are paid shows, Saturday is campus, house, festival or a celebrity night — ${appearances} appearances a band, which the league stages as far fewer physical events.`,
+      };
+    }
+    if (p.title === "Regional Finals") {
+      return {
+        ...p,
+        title: zones === 1 ? "Finals & Development" : p.title,
+        detail:
+          zones === 1
+            ? "The group stage settles the table and the bracket goes to national television. Post-season shows run alongside as commercial gigs rather than fixtures."
+            : p.detail,
+      };
+    }
+    if (p.title === "National Championship") {
+      return {
+        ...p,
+        title: zones === 1 ? "Broadcast Knockout" : p.title,
+        detail:
+          zones === 1
+            ? "Quarterfinals, semifinals and the final, each a national broadcast with the audience voting live. Placed here so it never collides with the next season's draft."
+            : p.detail,
+      };
+    }
+    return p;
+  });
+}
+
 export const SEASON_PHASES: SeasonPhase[] = [
   {
     phase: "Phase 0",
@@ -525,7 +564,14 @@ export const SEASON_PHASES: SeasonPhase[] = [
     title: "Regular Season",
     weeks: "31 Dec – 12 Jun",
     weekCount: 24,
-    detail: `${COMPETITION_WEEKENDS} weekends, one city a week. Friday and Sunday are paid shows, Saturday is campus, house, festival or a celebrity night — ${24 + 6 + 10 + 2 + 3 + 1} appearances a band, which the league stages as far fewer physical events.`,
+    /**
+     * The appearance count is owned by the format catalogue, not by this
+     * sentence — it was hand-summed here and went stale the moment corporate
+     * shows went from none to three. Callers that know the season pass the
+     * live figure through `seasonPhasesFor`; this fallback stays only for
+     * surfaces that render the phases with no season in hand.
+     */
+    detail: `${COMPETITION_WEEKENDS} weekends, one city a week. Friday and Sunday are paid shows, Saturday is campus, house, festival or a celebrity night — a full slate of appearances a band, which the league stages as far fewer physical events.`,
   },
   {
     phase: "Phase 2",

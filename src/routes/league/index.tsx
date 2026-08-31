@@ -33,6 +33,7 @@ import {
   totalsFor,
   OFF_LADDER_FORMATS,
   OFF_LADDER_TOTALS,
+  APPEARANCES_PER_BAND,
 } from "@/data/national-season";
 import { SeasonSwitch } from "@/components/SeasonSwitch";
 import { seasonPlan, zonesForSeason, type SeasonId } from "@/data/season-plan";
@@ -78,7 +79,7 @@ import {
   STAGE_2_FINALS,
   STAGE_2_SEASON_FIXTURES,
   KNOCKOUT_ROUTE,
-  SEASON_PHASES,
+  seasonPhasesFor,
   SEASON_WEEKS,
   COMPETITIVE_WEEKS,
   ANNUAL_CYCLE_WEEKS,
@@ -174,6 +175,10 @@ function LeaguePage() {
   const plan = useMemo(() => seasonPlan(season), [season]);
   const seasonZones = useMemo(() => zonesForSeason(season), [season]);
   const totals = useMemo(() => totalsFor(season), [season]);
+  const phases = useMemo(
+    () => seasonPhasesFor(plan.zones, APPEARANCES_PER_BAND),
+    [plan.zones],
+  );
   // The campus network is a season footprint too — season 1 runs one zone's
   // sixty campuses, not the national three hundred.
   const campusPlans = useMemo(() => campusPlansFor(season), [season]);
@@ -1437,21 +1442,32 @@ function LeaguePage() {
             </div>
             <p className="text-[11px] text-muted-foreground leading-relaxed">
               <span className="font-semibold text-emerald-200">
-                The campus leg runs the whole season, not one quarter of it.
+                The campus leg spreads across {campusClash.monthsUsed} months,{" "}
+                {campusClash.firstMonth} to {campusClash.lastMonth}, not one quarter of the season.
               </span>{" "}
               An earlier version crushed all {campusClash.total} nights into January to March on
               the assumption of a school-style summer holiday. Colleges do not work that way — most
-              run shorter breaks, many run summer terms, and June is intake and orientation, which
-              is one of the better moments of the year to put a band in front of a room.
+              run shorter breaks and many run summer terms, so{" "}
+              {campusClash.afterMarch} of these nights now sit in April and later.
             </p>
             <p className="text-[11px] text-muted-foreground leading-relaxed">
               Fest season still gets the biggest night: every{" "}
               <span className="font-semibold text-white">Fest Main Stage</span> lands between
               January and March, when committees are actually booking headliners. The lighter
               formats carry the back half — battle rounds through the exam shoulder, and open quad
-              sessions in May and June where the audience is a new intake looking for something to
-              join. Which specific campus takes which date is still a booking decision made against
-              that college&apos;s own calendar.
+              sessions in the closing weeks.
+              {campusClash.unreached.length > 0 && (
+                <>
+                  {" "}
+                  {campusClash.unreached.join(" and ")} stay
+                  {campusClash.unreached.length === 1 ? "s" : ""} empty for a scheduling reason
+                  rather than an academic one: by then every remaining Saturday is already a
+                  festival, a house night or a celebrity night, so the campus leg has nowhere left
+                  to sit.
+                </>
+              )}{" "}
+              Which specific campus takes which date is still a booking decision made against that
+              college&apos;s own calendar.
             </p>
           </div>
 
@@ -1558,8 +1574,12 @@ function LeaguePage() {
             <p className="text-xs text-muted-foreground leading-relaxed">
               The league plays {COMPETITION_WEEKENDS} weekends between January and June, but the
               year does not stop there — {ANNUAL_CYCLE_WEEKS} weeks carry a band from the December
-              draft through regional finals, the national championship and the festival circuit. The
-              full national architecture, including the fixture capacity maths, is on the{" "}
+              draft through{" "}
+              {plan.zones === 1
+                ? "the group stage, the televised knockout and the festival circuit"
+                : "regional finals, the national championship and the festival circuit"}
+              . The full {plan.zones === 1 ? "" : "national "}architecture, including the fixture
+              capacity maths, is on the{" "}
               <Link to="/season" className="text-primary-glow font-semibold hover:underline">
                 season page
               </Link>
@@ -1569,7 +1589,7 @@ function LeaguePage() {
 
           {/* Proportional phase bar */}
           <div className="mb-8 hidden sm:flex h-3 w-full rounded-full overflow-hidden border border-border/50">
-            {SEASON_PHASES.map((phase, idx) => (
+            {phases.map((phase, idx) => (
               <div
                 key={phase.phase}
                 title={`${phase.title} — ${phase.weeks}`}
@@ -1584,7 +1604,7 @@ function LeaguePage() {
           </div>
 
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5 text-left">
-            {SEASON_PHASES.map((phase, idx) => (
+            {phases.map((phase, idx) => (
               <motion.div
                 key={phase.phase}
                 initial={{ opacity: 0, y: 20 }}

@@ -745,7 +745,15 @@ export const CELEBRITY_WEEKS = [11, 16, 19, 22];
 export const FESTIVAL_WEEKS = [5, 13, 21];
 /** House-level Saturdays. */
 export const HOUSE_NIGHT_WEEKS = [8, 18];
-export const CAMPUS_WEEKS = [0, 2, 3, 4, 6, 7, 9, 10, 12, 14];
+/**
+ * Campus Saturdays, spread as widely as the rest of the calendar allows.
+ *
+ * They were the first ten free weeks, which put every campus night between
+ * January and mid-April and made the "runs the whole season" claim false.
+ * These reach 22 May — the last Saturday not already taken by a festival, a
+ * celebrity night or a held corporate week.
+ */
+export const CAMPUS_WEEKS = [0, 2, 3, 6, 7, 9, 10, 14, 15, 20];
 /**
  * Weeks held for private bookings.
  *
@@ -950,15 +958,18 @@ export function buildFullSchedule(zones: NationalZone[] = NATIONAL_ZONES): Sched
         if (houseIdx >= 0) {
           push(SAT, houseNumber, all, "house-night", hub.city, "house", `${zone.slug}-h${houseNumber}-w${w}-house`);
         } else if (campusIdx >= 0) {
-          push(
-            SAT,
-            houseNumber,
-            all,
-            campus[campusIdx % campus.length],
-            CAMPUS_VENUE_LABEL,
-            "campus",
-            `${zone.slug}-h${houseNumber}-w${w}-campus`,
-          );
+          // One band, one campus. A band builds its own audience on this leg,
+          // so its house does not turn up mob-handed and split the room.
+          for (let b = 1; b <= zone.bandsPerHouse; b += 1) {
+            push(
+              SAT,
+              houseNumber,
+              [b],
+              campus[campusIdx % campus.length],
+              CAMPUS_VENUE_LABEL,
+              `campus-b${b}`,
+            );
+          }
         }
 
         /*

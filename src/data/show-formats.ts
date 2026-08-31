@@ -146,10 +146,18 @@ const PER_BAND: Record<string, number> = {
  * abstraction and priced 400 solo campus nights that do not exist, paying one
  * band a whole gate that four of them share.
  */
+/**
+ * A campus night is ONE band, not a house.
+ *
+ * It was four — a house taking its whole roster to a college — which made 10
+ * campus appearances a band into 2.5 events and a season of 50 nights. But a
+ * band operates its own ten campus shows: the campus leg is how a band builds
+ * an audience, and four bands sharing one room is four bands splitting one.
+ */
 export const ACTS_PER_BILL: Record<string, number> = {
   commercial: 1,
   cross: 2,
-  campus: 4,
+  campus: 1,
   house: 4,
   festival: 10,
   celebrity: 1,

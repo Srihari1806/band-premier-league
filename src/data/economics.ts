@@ -332,7 +332,7 @@ export const SEASON_MIX: SeasonMixRow[] = [
   },
   {
     // Bought by the college. No gate at all.
-    id: "campus", label: "Campus", perBand: 10, actsOnBill: 4,
+    id: "campus", label: "Campus", perBand: 10, actsOnBill: 1,
     capacityIdx: 1, priceIdx: 0, ticketed: false,
     attendanceAbs: 600, sponsorPerEvent: CAMPUS_SPONSOR,
   },
