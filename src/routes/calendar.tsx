@@ -509,12 +509,14 @@ function CalendarPage() {
             <Info size={15} className="text-primary-glow shrink-0 mt-0.5" />
             <p className="text-[11px] text-muted-foreground leading-relaxed">
               <span className="font-semibold text-white">
-                {SCHEDULE_TOTALS.heldSlots} corporate bookings are not dated here.
+                {SCHEDULE_TOTALS.heldSlots} corporate bookings are held, not dated.
               </span>{" "}
-              Every band&apos;s season reserves two weeks for private shows so the load is planned
-              for, but a corporate booking happens when a buyer turns up. Publishing a date and a
-              city for one would assert a sale nobody has made. They are held weeks, and they appear
-              on the band&apos;s season plan rather than on this calendar.
+              Every band&apos;s season reserves three weeks for private shows, taken from the
+              Saturdays nothing else claims, so the load is planned for rather than discovered. But
+              a corporate booking happens when a buyer turns up — publishing a date and a city for
+              one would assert a sale nobody has made. That is why a band&apos;s season is{" "}
+              {SCHEDULE_TOTALS.appearancesPerBandAllFormats} appearances while this calendar dates{" "}
+              {SCHEDULE_TOTALS.appearancesPerBandInSeason} of them.
             </p>
           </div>
 

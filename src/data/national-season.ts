@@ -602,6 +602,8 @@ const WEEKDAY_FMT = new Intl.DateTimeFormat("en-GB", { weekday: "short", timeZon
 
 /** Campus venues are per band and settled later, never a hub city. */
 export const CAMPUS_VENUE_LABEL = "Campus · TBC";
+/** Private bookings have no venue until somebody books one. */
+export const CORPORATE_VENUE_LABEL = "Private · TBC";
 
 /** House windows a band needs — one solo fixture each. */
 export const WINDOWS_PER_HOUSE = TOTAL_CALENDAR_WEEKENDS;
@@ -710,6 +712,15 @@ export const FESTIVAL_WEEKS = [5, 13, 21];
 /** House-level Saturdays. */
 export const HOUSE_NIGHT_WEEKS = [8, 18];
 export const CAMPUS_WEEKS = [0, 2, 3, 4, 6, 7, 9, 10, 12, 14];
+/**
+ * Weeks held for private bookings.
+ *
+ * Chosen from the Saturdays nothing else claims, so the load is planned for
+ * rather than discovered. They carry no city and no published date: a
+ * corporate show happens when a buyer turns up, and printing a date for one
+ * would assert a sale nobody has made. Reserved, not scheduled.
+ */
+export const CORPORATE_WEEKS = [1, 17, 23];
 export const LAUNCH_WEEK = 0;
 
 /**
@@ -822,7 +833,8 @@ export function buildFullSchedule(): ScheduledEvent[] {
           kind,
           billId,
           scored: !!fmt,
-          dated: true,
+          // A private booking holds the week but publishes no date or venue.
+          dated: formatId !== "corporate-show",
           formatId,
           formatName: fmt ? fmt.name : off ?? formatId,
           venue: fmt
@@ -842,6 +854,15 @@ export function buildFullSchedule(): ScheduledEvent[] {
         for (let h = 1; h <= zone.houses; h += 1) {
           const all = Array.from({ length: zone.bandsPerHouse }, (_, k) => k + 1);
           push(THU, h, all, "league-launch", zone.hubCities[0].city, "launch", `${zone.slug}-launch`);
+        }
+      }
+
+      // ---- private bookings: a week is held, no date is published
+      if (CORPORATE_WEEKS.includes(w)) {
+        for (let h = 1; h <= zone.houses; h += 1) {
+          for (let b = 1; b <= zone.bandsPerHouse; b += 1) {
+            push(SAT, h, [b], "corporate-show", CORPORATE_VENUE_LABEL, `corp-b${b}`);
+          }
         }
       }
 
@@ -956,8 +977,10 @@ export interface ScheduleTotals {
    * decides the model is sloppy.
    */
   appearancesPerBandAllIn: number;
-  /** Season appearances only. Must equal APPEARANCES_PER_BAND. */
+  /** Dated season appearances. Must equal DATED_APPEARANCES_PER_BAND. */
   appearancesPerBandInSeason: number;
+  /** Including the held private bookings. Must equal APPEARANCES_PER_BAND. */
+  appearancesPerBandAllFormats: number;
   /** True when the generated season matches the published constant. */
   appearancesReconcile: boolean;
   /** Reserved weeks carrying no published date (private bookings). */
@@ -1020,15 +1043,24 @@ export function scheduleTotals(events = FULL_SCHEDULE): ScheduleTotals {
   const seasonAppearances = events
     .filter((e) => e.kind !== "launch")
     .reduce((sum, e) => sum + e.bands.length, 0);
+  const datedSeasonAppearances = events
+    .filter((e) => e.kind !== "launch" && e.dated)
+    .reduce((sum, e) => sum + e.bands.length, 0);
 
   return {
     events: distinctNights(dated),
     appearances,
     appearancesPerBandAllIn: Math.round(appearances / Math.max(1, TOTAL_BANDS)),
-    appearancesPerBandInSeason: Math.round(seasonAppearances / Math.max(1, TOTAL_BANDS)),
+    appearancesPerBandInSeason: Math.round(datedSeasonAppearances / Math.max(1, TOTAL_BANDS)),
+    /** Season appearances including the held private bookings. */
+    appearancesPerBandAllFormats: Math.round(seasonAppearances / Math.max(1, TOTAL_BANDS)),
+    // Dated against the dated constant, and the full season against the full
+    // constant — comparing the season total to the dated one was reading 49
+    // against 46 and reporting a mismatch that was not there.
     appearancesReconcile:
-      Math.round(seasonAppearances / Math.max(1, TOTAL_BANDS)) ===
-      DATED_APPEARANCES_PER_BAND,
+      Math.round(datedSeasonAppearances / Math.max(1, TOTAL_BANDS)) ===
+        DATED_APPEARANCES_PER_BAND &&
+      Math.round(seasonAppearances / Math.max(1, TOTAL_BANDS)) === APPEARANCES_PER_BAND,
     /** Weeks reserved for private bookings, with no published date. */
     heldSlots: held.length,
     rows: events.length,
@@ -1042,8 +1074,10 @@ export function scheduleTotals(events = FULL_SCHEDULE): ScheduleTotals {
     // same appearance count and none of them collide on a day.
     // Dated appearances only — corporate bookings are held weeks with no date,
     // and the launch sits outside the season count.
+    // Dated appearances only: corporate bookings hold a week without a date,
+    // and the launch sits outside the season count.
     reconciles:
-      appearances - TOTAL_BANDS === TOTAL_BANDS * DATED_APPEARANCES_PER_BAND && clashes === 0,
+      datedSeasonAppearances === TOTAL_BANDS * DATED_APPEARANCES_PER_BAND && clashes === 0,
     sameDayClashes: clashes,
   };
 }
