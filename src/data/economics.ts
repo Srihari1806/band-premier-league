@@ -1578,3 +1578,171 @@ export function computeHouseCelebrityEconomics(): HouseCelebrityEconomics {
 
 export const CELEBRITY_ECONOMICS = computeCelebrityEconomics();
 export const HOUSE_CELEBRITY_ECONOMICS = computeHouseCelebrityEconomics();
+
+/* ------------------------------------------------------------------ *
+ * Consolidated 3-Tier Economics — 20 band / 5 house / 1 season
+ *
+ * These are the figures from the operating plan, stated once and read
+ * by the UI. Every number below is a planning projection, not an
+ * audited result.
+ * ------------------------------------------------------------------ */
+
+/** Normal league revenue pool — the season's non-celebrity income sources. */
+export interface NormalRevenueRow {
+  source: string;
+  seasonValue: number;
+  note?: string;
+}
+
+export const NORMAL_REVENUE_POOL: NormalRevenueRow[] = [
+  { source: "Commercial — 24", seasonValue: 1194000 },
+  { source: "Cross Night — 6", seasonValue: 448000 },
+  { source: "House Night — 2", seasonValue: 199000 },
+  { source: "Campus — 10", seasonValue: 500000 },
+  { source: "Festival — 3", seasonValue: 75000 },
+  { source: "Corporate — 3", seasonValue: 59000 },
+  { source: "League Launch", seasonValue: 0, note: "Free" },
+  { source: "Content — 20 bands", seasonValue: 13680000 },
+  { source: "Broadcast", seasonValue: 20000000 },
+  { source: "League Sponsorship", seasonValue: 12600000 },
+  { source: "Membership", seasonValue: 14950 },
+  { source: "Band acquisition", seasonValue: 5000000 },
+];
+
+export const NORMAL_POOL_TOTAL = NORMAL_REVENUE_POOL.reduce(
+  (s, r) => s + r.seasonValue,
+  0,
+);
+
+/** Normal league distribution — how the normal pool divides among the three parties. */
+export interface NormalDistributionRow {
+  category: string;
+  artist: number;
+  productionHouse: number;
+  svaraTribe: number;
+}
+
+export const NORMAL_DISTRIBUTION: NormalDistributionRow[] = [
+  { category: "Normal live", artist: 990000, productionHouse: 743000, svaraTribe: 743000 },
+  { category: "Content", artist: 6842000, productionHouse: 6842000, svaraTribe: 0 },
+  { category: "Broadcast", artist: 6000000, productionHouse: 6000000, svaraTribe: 8000000 },
+  { category: "Sponsorship", artist: 3780000, productionHouse: 3780000, svaraTribe: 5040000 },
+  { category: "Membership", artist: 0, productionHouse: 0, svaraTribe: 14950 },
+  { category: "Acquisition", artist: 3500000, productionHouse: 0, svaraTribe: 1500000 },
+];
+
+export const NORMAL_DIST_TOTALS = {
+  artist: NORMAL_DISTRIBUTION.reduce((s, r) => s + r.artist, 0),
+  productionHouse: NORMAL_DISTRIBUTION.reduce((s, r) => s + r.productionHouse, 0),
+  svaraTribe: NORMAL_DISTRIBUTION.reduce((s, r) => s + r.svaraTribe, 0),
+};
+
+/** Per-house economics from the normal league. */
+export const PER_HOUSE = {
+  bands: 4,
+  houses: 5,
+  normalAllocation: Math.round(NORMAL_DIST_TOTALS.productionHouse / 5),
+  /** Known investment per house. */
+  bandAcquisitions: 1000000,
+  /** 4 bands × 3 songs × ₹2L per song. */
+  songProduction: 2400000,
+  get knownInvestment() {
+    return this.bandAcquisitions + this.songProduction;
+  },
+  /** Celebrity program per house. */
+  celebrityInvestment: HOUSE_CELEBRITY_ECONOMICS.investment,
+  celebrityProfit: HOUSE_CELEBRITY_ECONOMICS.profit,
+};
+
+export const PER_HOUSE_TOTAL = {
+  normalAllocation: PER_HOUSE.normalAllocation,
+  celebrityProfit: PER_HOUSE.celebrityProfit,
+  totalInflow: PER_HOUSE.normalAllocation + PER_HOUSE.celebrityProfit,
+  normalInvestment: PER_HOUSE.knownInvestment,
+  celebrityInvestment: PER_HOUSE.celebrityInvestment,
+  totalInvestment: PER_HOUSE.knownInvestment + PER_HOUSE.celebrityInvestment,
+  premiumROI:
+    PER_HOUSE.celebrityInvestment > 0
+      ? (PER_HOUSE.celebrityProfit / PER_HOUSE.celebrityInvestment) * 100
+      : 0,
+};
+
+/** Per-artist economics — what an average non-celebrity band earns. */
+export interface ArtistIncomeRow {
+  label: string;
+  amount: number;
+}
+
+export const ARTIST_INCOME: ArtistIncomeRow[] = [
+  { label: "Acquisition payment", amount: 175000 },
+  { label: "Normal live-event share", amount: 50000 },
+  { label: "Content revenue", amount: 342000 },
+  { label: "Broadcast share", amount: 300000 },
+  { label: "Sponsorship share", amount: 189000 },
+];
+
+export const ARTIST_INCOME_TOTAL = ARTIST_INCOME.reduce(
+  (s, r) => s + r.amount,
+  0,
+);
+
+/** Production house music/video/marketing spend per band. */
+export const PH_SPEND_PER_BAND = 600000;
+
+/** Svara Tribe / League Operator consolidated economics. */
+export const SVARA_TRIBE = {
+  normalAllocation: NORMAL_DIST_TOTALS.svaraTribe,
+  celebrityProfit: CELEBRITY_ECONOMICS.operatorProfit,
+  totalBeforeCosts:
+    NORMAL_DIST_TOTALS.svaraTribe + CELEBRITY_ECONOMICS.operatorProfit,
+  /** Central operating cost — ₹71.5L. */
+  centralOperatingCost: 7150000,
+  get operatingSurplus() {
+    return this.totalBeforeCosts - this.centralOperatingCost;
+  },
+};
+
+/** Winner prize mechanics. */
+export const WINNER_PRIZE = {
+  /** Guaranteed winner prize. */
+  guaranteed: 7500000,
+  /** Post-cost league profit after guaranteed prize. */
+  get postCostProfit() {
+    return SVARA_TRIBE.operatingSurplus - this.guaranteed;
+  },
+  /** Share of defined post-cost profit that goes to the winner. */
+  profitSharePct: 25,
+  get bonusAmount() {
+    return Math.round(this.postCostProfit * (this.profitSharePct / 100));
+  },
+  get totalWinnerPayout() {
+    return this.guaranteed + this.bonusAmount;
+  },
+  get svaraTribeRemainder() {
+    return SVARA_TRIBE.operatingSurplus - this.totalWinnerPayout;
+  },
+};
+
+/** The Big Picture — comparison across all three parties. */
+export interface BigPictureRow {
+  label: string;
+  artist: string;
+  productionHouse: string;
+  svaraTribe: string;
+}
+
+export const BIG_PICTURE: BigPictureRow[] = [
+  { label: "Number", artist: "20", productionHouse: "5", svaraTribe: "1" },
+  { label: "Bands", artist: "1 each", productionHouse: "4 each", svaraTribe: "20" },
+  { label: "Acquisition", artist: "Receives 70%", productionHouse: "₹2.5L/band", svaraTribe: "30%" },
+  { label: "Normal live", artist: "40%", productionHouse: "30%", svaraTribe: "30%" },
+  { label: "Content", artist: "50%", productionHouse: "50%", svaraTribe: "—" },
+  { label: "Broadcast", artist: "30%", productionHouse: "30%", svaraTribe: "40%" },
+  { label: "Sponsorship", artist: "30%", productionHouse: "30%", svaraTribe: "40%" },
+  { label: "Membership", artist: "—", productionHouse: "—", svaraTribe: "100%" },
+  { label: "Celebrity Show cost", artist: "₹0", productionHouse: "50%", svaraTribe: "50%" },
+  { label: "Celebrity Show profit", artist: "0%", productionHouse: "50%", svaraTribe: "50%" },
+  { label: "Main investment", artist: "Talent/IP", productionHouse: "Artist + Celebrity Shows", svaraTribe: "League + Celebrity Shows" },
+  { label: "Main risk", artist: "Career opportunity", productionHouse: "High capital risk", svaraTribe: "Central/event risk" },
+  { label: "Main upside", artist: "Music/catalog career", productionHouse: "Artist IP + event profit", svaraTribe: "League/IP/media scale" },
+];

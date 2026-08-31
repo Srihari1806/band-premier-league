@@ -29,6 +29,8 @@ import {
   MapPin,
   ChevronUp,
   Gavel,
+  Trophy,
+  Award,
 } from "lucide-react";
 import {
   inr,
@@ -53,6 +55,18 @@ import {
   CELEBRITY_ECONOMICS,
   HOUSE_CELEBRITY_ECONOMICS,
   CELEBRITY_SHOW,
+  NORMAL_REVENUE_POOL,
+  NORMAL_POOL_TOTAL,
+  NORMAL_DISTRIBUTION,
+  NORMAL_DIST_TOTALS,
+  PER_HOUSE,
+  PER_HOUSE_TOTAL,
+  ARTIST_INCOME,
+  ARTIST_INCOME_TOTAL,
+  PH_SPEND_PER_BAND,
+  SVARA_TRIBE,
+  WINNER_PRIZE,
+  BIG_PICTURE,
   type EconomicsInputs,
   type Certainty,
   type ShowEconomics,
@@ -2083,6 +2097,686 @@ function EconomicsPage() {
           detailed model, unchanged, behind a disclosure. */}
       <Simulator />
 
+      {/* ================= 3-TIER ECONOMICS ================= */}
+      <section id="tiers" className="border-b border-border bg-surface/20 scroll-mt-24">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 py-14 space-y-12">
+          {/* Header & Season Structure */}
+          <div>
+            <SectionHeading
+              eyebrow="Svara Tribe — Complete 3-Tier Economics"
+              title="Normal League & Premium Celebrity Show Economics"
+              sub="Normal league economics and the premium Celebrity Show economics are separate. The Celebrity Show cost is 50% funded by the Production House + 50% by Svara Tribe, with the resulting profit split 50/50 between them. The artist gets no Celebrity Show profit share."
+            />
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-primary/40 bg-primary/10 text-xs font-bold text-primary-glow mt-1">
+              <Layers size={13} />
+              <span>Season structure: <strong>5 Production Houses × 4 Bands = 20 Bands</strong></span>
+            </div>
+          </div>
+
+          {/* Master 3-Tier Split Table */}
+          <div className="bpl-card p-5 border border-border bg-surface/40 overflow-x-auto space-y-3">
+            <h3 className="text-sm font-bold text-white flex items-center gap-2">
+              <PieChart size={15} className="text-primary-glow" /> 3-Tier Split Structure
+            </h3>
+            <table className="w-full text-xs border-collapse min-w-[640px]">
+              <thead>
+                <tr className="border-b border-border text-left">
+                  <th className="py-2.5 pr-3 font-bold text-muted-foreground uppercase tracking-wider text-[10px]">Economic Layer</th>
+                  <th className="py-2.5 px-3 font-bold text-amber-400 uppercase tracking-wider text-[10px] text-right">🎸 Artist</th>
+                  <th className="py-2.5 px-3 font-bold text-cyan-400 uppercase tracking-wider text-[10px] text-right">🏢 Production House</th>
+                  <th className="py-2.5 px-3 font-bold text-primary-glow uppercase tracking-wider text-[10px] text-right">🏆 Svara Tribe / League</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border/30">
+                <tr>
+                  <td className="py-2.5 pr-3 text-white font-semibold">Band acquisition</td>
+                  <td className="py-2.5 px-3 text-right text-amber-300 tabular-nums font-bold">70%</td>
+                  <td className="py-2.5 px-3 text-right text-muted-foreground tabular-nums">Pays acquisition</td>
+                  <td className="py-2.5 px-3 text-right text-primary-glow tabular-nums font-bold">30%</td>
+                </tr>
+                <tr>
+                  <td className="py-2.5 pr-3 text-white font-semibold">Normal Live Events</td>
+                  <td className="py-2.5 px-3 text-right text-amber-300 tabular-nums font-bold">40%</td>
+                  <td className="py-2.5 px-3 text-right text-cyan-300 tabular-nums font-bold">30%</td>
+                  <td className="py-2.5 px-3 text-right text-primary-glow tabular-nums font-bold">30%</td>
+                </tr>
+                <tr>
+                  <td className="py-2.5 pr-3 text-white font-semibold">Music / Content</td>
+                  <td className="py-2.5 px-3 text-right text-amber-300 tabular-nums font-bold">50%</td>
+                  <td className="py-2.5 px-3 text-right text-cyan-300 tabular-nums font-bold">50%</td>
+                  <td className="py-2.5 px-3 text-right text-muted-foreground tabular-nums">—</td>
+                </tr>
+                <tr>
+                  <td className="py-2.5 pr-3 text-white font-semibold">Broadcast Rights</td>
+                  <td className="py-2.5 px-3 text-right text-amber-300 tabular-nums font-bold">30%</td>
+                  <td className="py-2.5 px-3 text-right text-cyan-300 tabular-nums font-bold">30%</td>
+                  <td className="py-2.5 px-3 text-right text-primary-glow tabular-nums font-bold">40%</td>
+                </tr>
+                <tr>
+                  <td className="py-2.5 pr-3 text-white font-semibold">League Sponsorship</td>
+                  <td className="py-2.5 px-3 text-right text-amber-300 tabular-nums font-bold">30%</td>
+                  <td className="py-2.5 px-3 text-right text-cyan-300 tabular-nums font-bold">30%</td>
+                  <td className="py-2.5 px-3 text-right text-primary-glow tabular-nums font-bold">40%</td>
+                </tr>
+                <tr>
+                  <td className="py-2.5 pr-3 text-white font-semibold">Membership</td>
+                  <td className="py-2.5 px-3 text-right text-muted-foreground tabular-nums">—</td>
+                  <td className="py-2.5 px-3 text-right text-muted-foreground tabular-nums">—</td>
+                  <td className="py-2.5 px-3 text-right text-primary-glow tabular-nums font-bold">100%</td>
+                </tr>
+                <tr className="bg-amber-500/5">
+                  <td className="py-2.5 pr-3 text-white font-semibold">Celebrity Show Profit</td>
+                  <td className="py-2.5 px-3 text-right text-rose-300 tabular-nums font-bold">0%</td>
+                  <td className="py-2.5 px-3 text-right text-cyan-300 tabular-nums font-bold">50%</td>
+                  <td className="py-2.5 px-3 text-right text-primary-glow tabular-nums font-bold">50%</td>
+                </tr>
+                <tr>
+                  <td className="py-2.5 pr-3 text-white font-semibold">Prize Money</td>
+                  <td className="py-2.5 px-3 text-right text-amber-300 tabular-nums font-medium">Winner / qualifying bands</td>
+                  <td className="py-2.5 px-3 text-right text-muted-foreground tabular-nums">As per rules</td>
+                  <td className="py-2.5 px-3 text-right text-primary-glow tabular-nums font-medium">Funded centrally</td>
+                </tr>
+                <tr className="bg-amber-500/5">
+                  <td className="py-2.5 pr-3 text-white font-semibold">Celebrity Show Cost Funding</td>
+                  <td className="py-2.5 px-3 text-right text-muted-foreground tabular-nums font-bold">0%</td>
+                  <td className="py-2.5 px-3 text-right text-cyan-300 tabular-nums font-bold">50%</td>
+                  <td className="py-2.5 px-3 text-right text-primary-glow tabular-nums font-bold">50%</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          {/* ================= 1. NORMAL LEAGUE ECONOMICS ================= */}
+          <div className="space-y-4">
+            <div className="flex items-baseline justify-between gap-4 flex-wrap">
+              <div>
+                <h3 className="text-xl font-display font-bold text-white flex items-center gap-2">
+                  <Music size={18} className="text-emerald-400" /> 1. Normal League Economics
+                </h3>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  Current normal revenue pools across 20 bands, 5 production houses, and the regular fixture calendar.
+                </p>
+              </div>
+              <div className="px-3 py-1.5 rounded-lg border border-emerald-500/30 bg-emerald-500/10 text-xs font-bold text-emerald-300">
+                Normal Economic Pool: <span className="tabular-nums text-sm font-extrabold text-white">{inrCompact(NORMAL_POOL_TOTAL)}</span>
+              </div>
+            </div>
+
+            <div className="grid lg:grid-cols-2 gap-5">
+              {/* Normal Revenue Sources Table */}
+              <div className="bpl-card p-5 border border-border bg-surface/40 space-y-3">
+                <h4 className="text-xs font-bold text-white uppercase tracking-wider text-muted-foreground">
+                  Normal Revenue Sources
+                </h4>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-xs">
+                    <thead>
+                      <tr className="border-b border-border/60 text-left text-[10px] text-muted-foreground uppercase">
+                        <th className="py-2">Normal Revenue Source</th>
+                        <th className="py-2 text-right">Season Value</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-border/30">
+                      {NORMAL_REVENUE_POOL.map((row) => (
+                        <tr key={row.source}>
+                          <td className="py-1.5 text-muted-foreground font-medium">{row.source}</td>
+                          <td className="py-1.5 text-right font-bold text-white tabular-nums">
+                            {row.note ? row.note : inrCompact(row.seasonValue)}
+                          </td>
+                        </tr>
+                      ))}
+                      <tr className="border-t-2 border-border font-bold bg-secondary/30">
+                        <td className="py-2 text-white">Normal economic pool</td>
+                        <td className="py-2 text-right text-emerald-300 tabular-nums font-extrabold text-sm">
+                          {inrCompact(NORMAL_POOL_TOTAL)}
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              {/* Normal Distribution Table */}
+              <div className="bpl-card p-5 border border-border bg-surface/40 space-y-3">
+                <h4 className="text-xs font-bold text-white uppercase tracking-wider text-muted-foreground">
+                  Normal Pool Distribution
+                </h4>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-xs">
+                    <thead>
+                      <tr className="border-b border-border/60 text-left text-[10px] text-muted-foreground uppercase">
+                        <th className="py-2">Category</th>
+                        <th className="py-2 text-right text-amber-400">Artist</th>
+                        <th className="py-2 text-right text-cyan-400">Prod. Houses</th>
+                        <th className="py-2 text-right text-primary-glow">Svara Tribe</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-border/30">
+                      {NORMAL_DISTRIBUTION.map((row) => (
+                        <tr key={row.category}>
+                          <td className="py-1.5 text-white font-medium">{row.category}</td>
+                          <td className="py-1.5 text-right tabular-nums text-amber-300 font-semibold">
+                            {row.artist > 0 ? inrCompact(row.artist) : "—"}
+                          </td>
+                          <td className="py-1.5 text-right tabular-nums text-cyan-300 font-semibold">
+                            {row.productionHouse > 0 ? inrCompact(row.productionHouse) : "—"}
+                          </td>
+                          <td className="py-1.5 text-right tabular-nums text-primary-glow font-semibold">
+                            {row.svaraTribe > 0 ? inrCompact(row.svaraTribe) : "—"}
+                          </td>
+                        </tr>
+                      ))}
+                      <tr className="border-t-2 border-border font-bold bg-secondary/30">
+                        <td className="py-2 text-white">Total</td>
+                        <td className="py-2 text-right text-amber-300 tabular-nums font-extrabold text-sm">
+                          {inrCompact(NORMAL_DIST_TOTALS.artist)}
+                        </td>
+                        <td className="py-2 text-right text-cyan-300 tabular-nums font-extrabold text-sm">
+                          {inrCompact(NORMAL_DIST_TOTALS.productionHouse)}
+                        </td>
+                        <td className="py-2 text-right text-primary-glow tabular-nums font-extrabold text-sm">
+                          {inrCompact(NORMAL_DIST_TOTALS.svaraTribe)}
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* ================= 2. PREMIUM CELEBRITY ECONOMICS ================= */}
+          <div className="space-y-4">
+            <div>
+              <h3 className="text-xl font-display font-bold text-white flex items-center gap-2">
+                <Sparkles size={18} className="text-amber-400" /> 2. Premium Celebrity Economics
+              </h3>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                20 bands × 20 celebrity mentors = 20 Celebrity Shows. Each show: Revenue = ₹5Cr, Total cost = ₹3.8Cr.
+              </p>
+            </div>
+
+            {/* Quick Stat Highlights */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              <div className="bpl-card p-3 border border-border/80 bg-surface/40">
+                <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-bold">Shows & Mentors</span>
+                <p className="text-xl font-display font-extrabold text-white mt-1">20 Shows</p>
+                <p className="text-[10px] text-muted-foreground">1 show per band</p>
+              </div>
+              <div className="bpl-card p-3 border border-border/80 bg-surface/40">
+                <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-bold">Total Revenue</span>
+                <p className="text-xl font-display font-extrabold text-white mt-1">{inrCompact(CELEBRITY_ECONOMICS.totalRevenue)}</p>
+                <p className="text-[10px] text-muted-foreground">20 × ₹5Cr</p>
+              </div>
+              <div className="bpl-card p-3 border border-rose-500/30 bg-rose-500/5">
+                <span className="text-[10px] uppercase tracking-wider text-rose-300 font-bold">Total Cost</span>
+                <p className="text-xl font-display font-extrabold text-rose-300 mt-1">{inrCompact(CELEBRITY_ECONOMICS.totalCost)}</p>
+                <p className="text-[10px] text-muted-foreground">20 × ₹3.8Cr</p>
+              </div>
+              <div className="bpl-card p-3 border border-emerald-500/30 bg-emerald-500/5">
+                <span className="text-[10px] uppercase tracking-wider text-emerald-300 font-bold">Total Profit</span>
+                <p className="text-xl font-display font-extrabold text-emerald-300 mt-1">{inrCompact(CELEBRITY_ECONOMICS.totalProfit)}</p>
+                <p className="text-[10px] text-muted-foreground">₹100Cr − ₹76Cr</p>
+              </div>
+            </div>
+
+            <div className="grid md:grid-cols-2 gap-5">
+              {/* Cost Funding Table */}
+              <div className="bpl-card p-5 border border-border bg-surface/40 space-y-3">
+                <h4 className="text-xs font-bold text-white uppercase tracking-wider text-muted-foreground">
+                  Cost Funding (50% House / 50% Svara Tribe)
+                </h4>
+                <table className="w-full text-xs">
+                  <thead>
+                    <tr className="border-b border-border/60 text-left text-[10px] text-muted-foreground uppercase">
+                      <th className="py-2">Party</th>
+                      <th className="py-2 text-right">Per Show</th>
+                      <th className="py-2 text-right">20 Shows</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-border/30">
+                    <tr>
+                      <td className="py-2 font-medium text-cyan-300">Production House 50%</td>
+                      <td className="py-2 text-right font-bold text-white tabular-nums">
+                        {inrCompact(CELEBRITY_ECONOMICS.perShow.houseFunding)}
+                      </td>
+                      <td className="py-2 text-right font-bold text-cyan-300 tabular-nums">
+                        {inrCompact(CELEBRITY_ECONOMICS.houseFunding)}
+                      </td>
+                    </tr>
+                    <tr>
+                      <td className="py-2 font-medium text-primary-glow">Svara Tribe 50%</td>
+                      <td className="py-2 text-right font-bold text-white tabular-nums">
+                        {inrCompact(CELEBRITY_ECONOMICS.perShow.operatorFunding)}
+                      </td>
+                      <td className="py-2 text-right font-bold text-primary-glow tabular-nums">
+                        {inrCompact(CELEBRITY_ECONOMICS.operatorFunding)}
+                      </td>
+                    </tr>
+                    <tr className="border-t-2 border-border font-bold bg-secondary/30">
+                      <td className="py-2 text-white">Total investment</td>
+                      <td className="py-2 text-right text-rose-300 tabular-nums font-extrabold">
+                        {inrCompact(CELEBRITY_SHOW.costPerShow)}
+                      </td>
+                      <td className="py-2 text-right text-rose-300 tabular-nums font-extrabold text-sm">
+                        {inrCompact(CELEBRITY_ECONOMICS.totalCost)}
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Profit Split Table */}
+              <div className="bpl-card p-5 border border-border bg-surface/40 space-y-3">
+                <h4 className="text-xs font-bold text-white uppercase tracking-wider text-muted-foreground">
+                  Profit Split (50% House / 50% Svara Tribe / 0% Artist)
+                </h4>
+                <table className="w-full text-xs">
+                  <thead>
+                    <tr className="border-b border-border/60 text-left text-[10px] text-muted-foreground uppercase">
+                      <th className="py-2">Party</th>
+                      <th className="py-2 text-right">Per Show</th>
+                      <th className="py-2 text-right">20 Shows</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-border/30">
+                    <tr>
+                      <td className="py-2 font-medium text-cyan-300">Production House — 50%</td>
+                      <td className="py-2 text-right font-bold text-white tabular-nums">
+                        {inrCompact(CELEBRITY_ECONOMICS.perShow.houseProfit)}
+                      </td>
+                      <td className="py-2 text-right font-bold text-cyan-300 tabular-nums">
+                        {inrCompact(CELEBRITY_ECONOMICS.houseProfit)}
+                      </td>
+                    </tr>
+                    <tr>
+                      <td className="py-2 font-medium text-primary-glow">Svara Tribe — 50%</td>
+                      <td className="py-2 text-right font-bold text-white tabular-nums">
+                        {inrCompact(CELEBRITY_ECONOMICS.perShow.operatorProfit)}
+                      </td>
+                      <td className="py-2 text-right font-bold text-primary-glow tabular-nums">
+                        {inrCompact(CELEBRITY_ECONOMICS.operatorProfit)}
+                      </td>
+                    </tr>
+                    <tr>
+                      <td className="py-2 font-medium text-rose-300">Artist</td>
+                      <td className="py-2 text-right font-bold text-muted-foreground tabular-nums">₹0</td>
+                      <td className="py-2 text-right font-bold text-rose-300 tabular-nums">₹0</td>
+                    </tr>
+                    <tr className="border-t-2 border-border font-bold bg-secondary/30">
+                      <td className="py-2 text-white">Total profit</td>
+                      <td className="py-2 text-right text-emerald-300 tabular-nums font-extrabold">
+                        {inrCompact(CELEBRITY_SHOW.profitPerShow)}
+                      </td>
+                      <td className="py-2 text-right text-emerald-300 tabular-nums font-extrabold text-sm">
+                        {inrCompact(CELEBRITY_ECONOMICS.totalProfit)}
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          {/* ================= 3. PRODUCTION HOUSE — PER HOUSE ================= */}
+          <div className="space-y-4">
+            <div>
+              <h3 className="text-xl font-display font-bold text-white flex items-center gap-2">
+                <Building2 size={18} className="text-cyan-400" /> 3. Production House — Per House
+              </h3>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                Each Production House manages <strong>4 bands</strong> and stages <strong>4 Celebrity Shows</strong>.
+              </p>
+            </div>
+
+            <div className="grid md:grid-cols-3 gap-5">
+              {/* Normal House Economics */}
+              <div className="bpl-card p-5 border border-border bg-surface/40 space-y-3">
+                <h4 className="text-xs font-bold text-white uppercase tracking-wider text-cyan-300">
+                  Normal House Economics
+                </h4>
+                <div className="p-2.5 rounded-lg bg-surface/60 border border-border/60">
+                  <span className="text-[10px] text-muted-foreground block">Revenue allocation (₹1.736Cr ÷ 5)</span>
+                  <span className="text-lg font-display font-extrabold text-white tabular-nums">
+                    {inrCompact(PER_HOUSE.normalAllocation)}
+                  </span>
+                </div>
+                <div className="space-y-1.5 text-xs">
+                  <span className="text-[10px] font-bold uppercase text-muted-foreground block">Normal Investment:</span>
+                  <div className="flex justify-between text-muted-foreground">
+                    <span>4 band acquisitions</span>
+                    <span className="font-semibold text-white tabular-nums">{inrCompact(PER_HOUSE.bandAcquisitions)}</span>
+                  </div>
+                  <div className="flex justify-between text-muted-foreground">
+                    <span>4 bands × 3 songs × ₹2L</span>
+                    <span className="font-semibold text-white tabular-nums">{inrCompact(PER_HOUSE.songProduction)}</span>
+                  </div>
+                  <div className="flex justify-between border-t border-border/60 pt-1.5 font-bold text-white">
+                    <span>Known investment</span>
+                    <span className="text-rose-300 tabular-nums">{inrCompact(PER_HOUSE.knownInvestment)}</span>
+                  </div>
+                  <div className="flex justify-between text-[11px] text-muted-foreground">
+                    <span>Travel / logistics</span>
+                    <span>Additional</span>
+                  </div>
+                  <div className="border-t border-border/60 pt-1.5 flex justify-between font-bold text-xs text-white">
+                    <span>Base known investment</span>
+                    <span className="text-rose-300">₹34L + travel</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Celebrity Program per House */}
+              <div className="bpl-card p-5 border border-border bg-surface/40 space-y-3">
+                <h4 className="text-xs font-bold text-white uppercase tracking-wider text-amber-300">
+                  Celebrity Program (4 Shows)
+                </h4>
+                <div className="space-y-2 text-xs">
+                  <div className="p-2.5 rounded-lg bg-surface/60 border border-border/60">
+                    <span className="text-[10px] text-muted-foreground block">Celebrity Investment (4 × ₹1.9Cr)</span>
+                    <span className="text-lg font-display font-extrabold text-rose-300 tabular-nums">
+                      {inrCompact(PER_HOUSE.celebrityInvestment)}
+                    </span>
+                  </div>
+                  <div className="p-2.5 rounded-lg bg-surface/60 border border-border/60">
+                    <span className="text-[10px] text-muted-foreground block">Profit Received (4 × ₹60L)</span>
+                    <span className="text-lg font-display font-extrabold text-emerald-300 tabular-nums">
+                      {inrCompact(PER_HOUSE.celebrityProfit)}
+                    </span>
+                  </div>
+                  <div className="p-3 rounded-lg border border-emerald-500/30 bg-emerald-500/10 flex items-center justify-between">
+                    <span className="text-xs font-semibold text-muted-foreground">Premium Program ROI</span>
+                    <span className="text-xl font-display font-extrabold text-emerald-300 tabular-nums">
+                      {PER_HOUSE_TOTAL.premiumROI.toFixed(1)}%
+                    </span>
+                  </div>
+                  <p className="text-[10px] text-muted-foreground">
+                    ₹2.4Cr profit ÷ ₹7.6Cr investment = 31.6% return on the celebrity module.
+                  </p>
+                </div>
+              </div>
+
+              {/* House Total Rollup */}
+              <div className="bpl-card p-5 border border-cyan-500/30 bg-cyan-500/5 space-y-3">
+                <h4 className="text-xs font-bold text-white uppercase tracking-wider text-cyan-300">
+                  Production House Total
+                </h4>
+                <table className="w-full text-xs">
+                  <tbody className="divide-y divide-border/30">
+                    <tr>
+                      <td className="py-1.5 text-muted-foreground">Normal league allocation</td>
+                      <td className="py-1.5 text-right font-bold text-white tabular-nums">{inrCompact(PER_HOUSE_TOTAL.normalAllocation)}</td>
+                    </tr>
+                    <tr>
+                      <td className="py-1.5 text-muted-foreground">Celebrity profit share</td>
+                      <td className="py-1.5 text-right font-bold text-emerald-300 tabular-nums">{inrCompact(PER_HOUSE_TOTAL.celebrityProfit)}</td>
+                    </tr>
+                    <tr className="border-t border-border font-bold">
+                      <td className="py-1.5 text-white">Total economic inflow</td>
+                      <td className="py-1.5 text-right text-emerald-300 tabular-nums font-extrabold">{inrCompact(PER_HOUSE_TOTAL.totalInflow)}</td>
+                    </tr>
+                    <tr className="pt-2">
+                      <td className="py-1.5 text-muted-foreground">Normal House investment</td>
+                      <td className="py-1.5 text-right font-bold text-rose-300 tabular-nums">{inrCompact(PER_HOUSE_TOTAL.normalInvestment)}</td>
+                    </tr>
+                    <tr>
+                      <td className="py-1.5 text-muted-foreground">Celebrity investment</td>
+                      <td className="py-1.5 text-right font-bold text-rose-300 tabular-nums">{inrCompact(PER_HOUSE_TOTAL.celebrityInvestment)}</td>
+                    </tr>
+                    <tr className="border-t-2 border-border font-bold">
+                      <td className="py-1.5 text-white">Total investment</td>
+                      <td className="py-1.5 text-right text-rose-300 tabular-nums font-extrabold">₹7.94Cr + travel</td>
+                    </tr>
+                  </tbody>
+                </table>
+                <p className="text-[10px] text-muted-foreground leading-relaxed border-t border-border/40 pt-2">
+                  The ₹34L artist-development investment is separate and should be evaluated against the House's normal/content/catalog returns.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* ================= 4. INDIVIDUAL ARTIST & 5. THE CELEBRITY BAND ================= */}
+          <div className="grid lg:grid-cols-2 gap-5">
+            {/* 4. Individual Artist — Normal Band */}
+            <div className="bpl-card p-5 border border-border bg-surface/40 space-y-4">
+              <div>
+                <h3 className="text-lg font-display font-bold text-white flex items-center gap-2">
+                  <Users size={17} className="text-amber-400" /> 4. Individual Artist — Normal Band
+                </h3>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  Income model for an average non-celebrity band across a full season:
+                </p>
+              </div>
+
+              <div className="overflow-x-auto">
+                <table className="w-full text-xs">
+                  <thead>
+                    <tr className="border-b border-border/60 text-left text-[10px] text-muted-foreground uppercase">
+                      <th className="py-2">Artist Income Stream</th>
+                      <th className="py-2 text-right">Approx. Amount</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-border/30">
+                    {ARTIST_INCOME.map((row) => (
+                      <tr key={row.label}>
+                        <td className="py-1.5 text-muted-foreground font-medium">{row.label}</td>
+                        <td className="py-1.5 text-right font-bold text-amber-300 tabular-nums">
+                          {inrCompact(row.amount)}
+                        </td>
+                      </tr>
+                    ))}
+                    <tr className="border-t-2 border-border font-bold bg-amber-500/10">
+                      <td className="py-2 text-white">Total Artist Income</td>
+                      <td className="py-2 text-right text-amber-300 tabular-nums font-extrabold text-sm">
+                        {inrCompact(ARTIST_INCOME_TOTAL)}
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <div className="p-3 rounded-lg border border-border/80 bg-surface/60 text-xs text-muted-foreground space-y-1">
+                <p>
+                  The Production House funds: <span className="font-bold text-white">₹6L music/video/marketing</span> for the band's three releases.
+                </p>
+                <p className="text-white font-medium">
+                  The artist has <span className="text-emerald-300 font-bold">very low direct financial exposure</span> while participating fully in IP and league revenue.
+                </p>
+              </div>
+            </div>
+
+            {/* 5. The Celebrity Band */}
+            <div className="bpl-card p-5 border border-border bg-surface/40 space-y-4">
+              <div>
+                <h3 className="text-lg font-display font-bold text-white flex items-center gap-2">
+                  <Sparkles size={17} className="text-amber-400" /> 5. The Celebrity Band
+                </h3>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  How economics work for a celebrity-associated band:
+                </p>
+              </div>
+
+              <div className="grid sm:grid-cols-2 gap-3">
+                <div className="p-3.5 rounded-lg border border-amber-500/30 bg-amber-500/5 space-y-1">
+                  <span className="text-[10px] font-bold uppercase text-amber-300/80">Normal Artist Economics</span>
+                  <p className="text-2xl font-display font-extrabold text-amber-300 tabular-nums">
+                    ~{inrCompact(ARTIST_INCOME_TOTAL)}
+                  </p>
+                  <p className="text-[10px] text-muted-foreground">Full normal participation</p>
+                </div>
+                <div className="p-3.5 rounded-lg border border-rose-500/30 bg-rose-500/5 space-y-1">
+                  <span className="text-[10px] font-bold uppercase text-rose-300/80">Celebrity Show Profit Share</span>
+                  <p className="text-2xl font-display font-extrabold text-rose-300 tabular-nums">
+                    ₹0
+                  </p>
+                  <p className="text-[10px] text-muted-foreground">No profit share</p>
+                </div>
+              </div>
+
+              <div className="p-3.5 rounded-lg border border-border/80 bg-surface/60 text-xs text-muted-foreground leading-relaxed space-y-2">
+                <p>
+                  The artist gets <strong className="text-white">~₹10.56L</strong> from standard league streams, but <strong className="text-rose-300">₹0</strong> from the Celebrity Show profit because artist participation from the Celebrity Show profit has been explicitly removed.
+                </p>
+                <p>
+                  The celebrity is effectively a <strong className="text-white">premium commercial asset attached to the band</strong>, while the Production House and Svara Tribe take 100% of the financial risk of producing the large event.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* ================= 6. SVARA TRIBE & 7. AFTER WINNER PRIZE ================= */}
+          <div className="grid lg:grid-cols-2 gap-5">
+            {/* 6. Svara Tribe — League Operator */}
+            <div className="bpl-card p-5 border border-primary/30 bg-primary/5 space-y-4">
+              <div>
+                <h3 className="text-lg font-display font-bold text-white flex items-center gap-2">
+                  <ShieldCheck size={17} className="text-primary-glow" /> 6. Svara Tribe — League Operator
+                </h3>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  League-side income before central operating costs and prize pool:
+                </p>
+              </div>
+
+              <div className="space-y-2 text-xs">
+                <div className="flex justify-between items-center p-2 rounded bg-surface/50 border border-border/60">
+                  <span className="text-muted-foreground">Normal league allocation</span>
+                  <span className="font-bold text-white tabular-nums">{inrCompact(SVARA_TRIBE.normalAllocation)}</span>
+                </div>
+                <div className="flex justify-between items-center p-2 rounded bg-surface/50 border border-border/60">
+                  <span className="text-muted-foreground">Celebrity Show profit share</span>
+                  <span className="font-bold text-emerald-300 tabular-nums">{inrCompact(SVARA_TRIBE.celebrityProfit)}</span>
+                </div>
+                <div className="flex justify-between items-center p-2.5 rounded bg-primary/10 border border-primary/40 font-bold">
+                  <span className="text-white">Income before operating costs</span>
+                  <span className="text-primary-glow font-extrabold tabular-nums">{inrCompact(SVARA_TRIBE.totalBeforeCosts)}</span>
+                </div>
+                <div className="flex justify-between items-center p-2 rounded bg-surface/50 border border-border/60">
+                  <span className="text-rose-300">Central operating cost</span>
+                  <span className="font-bold text-rose-300 tabular-nums">−{inrCompact(SVARA_TRIBE.centralOperatingCost)}</span>
+                </div>
+                <div className="flex justify-between items-center p-3 rounded-lg bg-emerald-500/10 border border-emerald-500/40">
+                  <div>
+                    <span className="text-xs font-bold text-white block">Operating Surplus</span>
+                    <span className="text-[10px] text-muted-foreground">Before prize money and tax</span>
+                  </div>
+                  <span className="text-xl font-display font-extrabold text-emerald-300 tabular-nums">
+                    {inrCompact(SVARA_TRIBE.operatingSurplus)}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* 7. After Winner Prize */}
+            <div className="bpl-card p-5 border border-border bg-surface/40 space-y-4">
+              <div>
+                <h3 className="text-lg font-display font-bold text-white flex items-center gap-2">
+                  <Trophy size={17} className="text-amber-400" /> 7. After Winner Prize
+                </h3>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  Guaranteed prize money floor + 25% post-cost profit share formula:
+                </p>
+              </div>
+
+              <div className="space-y-2 text-xs">
+                <div className="flex justify-between items-center p-2 rounded bg-surface/50 border border-border/60">
+                  <span className="text-muted-foreground">Operating surplus</span>
+                  <span className="font-bold text-white tabular-nums">{inrCompact(SVARA_TRIBE.operatingSurplus)}</span>
+                </div>
+                <div className="flex justify-between items-center p-2 rounded bg-surface/50 border border-border/60">
+                  <span className="text-amber-300">Guaranteed winner prize floor</span>
+                  <span className="font-bold text-amber-300 tabular-nums">−{inrCompact(WINNER_PRIZE.guaranteed)}</span>
+                </div>
+                <div className="flex justify-between items-center p-2 rounded bg-surface/50 border border-border/60">
+                  <span className="text-muted-foreground">Post-floor defined profit</span>
+                  <span className="font-bold text-white tabular-nums">{inrCompact(WINNER_PRIZE.postCostProfit)}</span>
+                </div>
+                <div className="flex justify-between items-center p-2.5 rounded bg-amber-500/10 border border-amber-500/30">
+                  <span className="text-amber-300 font-semibold">25% post-cost winner bonus</span>
+                  <span className="font-bold text-amber-300 tabular-nums">{inrCompact(WINNER_PRIZE.bonusAmount)}</span>
+                </div>
+                <div className="p-3 rounded-lg border border-amber-500/40 bg-amber-500/15 flex justify-between items-center">
+                  <div>
+                    <span className="text-xs font-bold text-white block">Potential Winner Payout</span>
+                    <span className="text-[10px] text-muted-foreground">₹75L floor + ₹3.02Cr bonus</span>
+                  </div>
+                  <span className="text-xl font-display font-extrabold text-amber-300 tabular-nums">
+                    {inrCompact(WINNER_PRIZE.totalWinnerPayout)}
+                  </span>
+                </div>
+                <div className="p-2.5 rounded-lg border border-border/60 bg-surface/60 flex justify-between items-center">
+                  <span className="text-xs text-muted-foreground">Net Svara Tribe remainder (pre-tax/reinvest)</span>
+                  <span className="text-sm font-extrabold text-primary-glow tabular-nums">
+                    ~{inrCompact(WINNER_PRIZE.svaraTribeRemainder)}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* ================= 8. THE BIG PICTURE ================= */}
+          <div className="space-y-4">
+            <div>
+              <h3 className="text-xl font-display font-bold text-white flex items-center gap-2">
+                <Award size={18} className="text-primary-glow" /> 8. The Big Picture
+              </h3>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                Complete comparative matrix across Artist, Production House, and Svara Tribe:
+              </p>
+            </div>
+
+            {/* Big Picture Table */}
+            <div className="bpl-card p-5 border border-border bg-surface/40 overflow-x-auto">
+              <table className="w-full text-xs border-collapse min-w-[700px]">
+                <thead>
+                  <tr className="border-b border-border text-left">
+                    <th className="py-2.5 pr-4 font-bold text-muted-foreground uppercase tracking-wider text-[10px]">Dimension</th>
+                    <th className="py-2.5 px-4 font-bold text-amber-400 uppercase tracking-wider text-[10px] text-right">🎸 Artist</th>
+                    <th className="py-2.5 px-4 font-bold text-cyan-400 uppercase tracking-wider text-[10px] text-right">🏢 Production House</th>
+                    <th className="py-2.5 px-4 font-bold text-primary-glow uppercase tracking-wider text-[10px] text-right">🏆 Svara Tribe</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-border/30">
+                  {BIG_PICTURE.map((row) => (
+                    <tr key={row.label} className={row.label.includes("Celebrity") ? "bg-amber-500/5" : ""}>
+                      <td className="py-2.5 pr-4 text-white font-semibold">{row.label}</td>
+                      <td className="py-2.5 px-4 text-right text-amber-300 tabular-nums font-medium">{row.artist}</td>
+                      <td className="py-2.5 px-4 text-right text-cyan-300 tabular-nums font-medium">{row.productionHouse}</td>
+                      <td className="py-2.5 px-4 text-right text-primary-glow tabular-nums font-medium">{row.svaraTribe}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* In One Sentence Callout */}
+            <div className="p-4 rounded-xl border border-primary/40 bg-gradient-to-r from-primary/10 via-surface/60 to-cyan-500/10 space-y-1.5">
+              <span className="text-[10px] uppercase tracking-wider font-extrabold text-primary-glow flex items-center gap-1.5">
+                <Sparkles size={12} /> In One Sentence
+              </span>
+              <p className="text-sm font-medium text-white leading-relaxed">
+                <strong>Artists</strong> get the lowest capital risk and participate in the normal music/league economy;{" "}
+                <strong>Production Houses</strong> take the artist-development and 50% Celebrity Show investment risk in exchange for substantial upside;{" "}
+                <strong>Svara Tribe</strong> builds the league infrastructure and shares the premium-event profit while retaining the central league rights and revenue streams.
+              </p>
+            </div>
+
+            {/* Legal Advisory Rule Box */}
+            <div className="p-4 rounded-xl border border-amber-500/40 bg-amber-500/5 flex items-start gap-3">
+              <Gavel size={18} className="text-amber-400 shrink-0 mt-0.5" />
+              <div className="space-y-1 text-xs">
+                <span className="font-bold text-amber-300 block uppercase tracking-wide text-[10px]">
+                  Contract & Legal Rule Priority
+                </span>
+                <p className="text-muted-foreground leading-relaxed">
+                  Define whether the <strong className="text-white">₹2.5L acquisition payment</strong> is an <strong className="text-white">amount paid to acquire league participation/representation rights</strong> or <strong className="text-white">actual artist compensation</strong>. Don't mix those concepts in the contract.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* ================= ADVANCED ================= */}
       <section className="border-b border-border bg-surface/20">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 py-6">
@@ -3105,10 +3799,19 @@ function EconomicsPage() {
                 {r.detail && <p className="text-[10px] text-muted-foreground">{r.detail}</p>}
               </div>
             ))}
-            <div className="flex justify-between items-baseline pt-3 border-t border-border">
-              <span className="text-sm font-bold text-white">Gross</span>
+            {/* Celebrity Show profit — separate from normal operator income */}
+            <div className="border-t border-border/40 pt-2 space-y-1">
+              <p className="text-[9px] uppercase tracking-wider font-bold text-amber-300/80">Celebrity Show Profit (Separate)</p>
+              <div className="flex justify-between items-baseline text-sm gap-2">
+                <span className="text-muted-foreground">20 shows × ₹12Cr profit</span>
+                <span className="font-bold text-amber-300 tabular-nums shrink-0">{inrCompact(CELEBRITY_ECONOMICS.operatorProfit)}</span>
+              </div>
+              <p className="text-[10px] text-muted-foreground">50% of ₹24Cr total celebrity profit — co-funded 50/50 with production houses</p>
+            </div>
+            <div className="flex justify-between items-baseline pt-2 border-t border-border">
+              <span className="text-sm font-bold text-white">Gross (Normal + Celebrity)</span>
               <span className="text-xl font-display font-extrabold text-purple-300 tabular-nums">
-                {inr(m.operatorGross)}
+                {inr(m.operatorGross + CELEBRITY_ECONOMICS.operatorProfit)}
               </span>
             </div>
           </div>
