@@ -154,6 +154,16 @@ export const PRIZE_POOL_DEFAULT = COST_BUCKETS.filter((b) => !b.operating).reduc
  */
 export const PRIZE_FLOOR = 7500000;
 
+/**
+ * The winner's guarantee, and the share on top.
+ *
+ * ₹75L is committed before the season knows what it earned; 25% of what is
+ * left after central cost is paid on top of it. A guarantee the league can
+ * meet in a bad season is worth more to a band signing in December than a
+ * larger number that depends on the season going well.
+ */
+export const WINNER_GUARANTEE = 7500000;
+
 /** Prize money above the floor is a share of profit — see PRIZE_SHARE_OF_PROFIT. */
 export const PRIZE_PROFIT_SHARE_PCT = 25;
 

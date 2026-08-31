@@ -184,6 +184,13 @@ export interface SeasonMixRow {
    * a show that made a profit. So this night is split the promoter's way.
    */
   promoterFunded?: boolean;
+  /**
+   * Co-funded: the production house and the league each put up half the build
+   * and each take half the profit. The artist takes none.
+   */
+  coFunded?: boolean;
+  /** Total revenue on a co-funded night, stated rather than derived. */
+  eventRevenue?: number;
   /** Total build: artist fee, production, venue and marketing. */
   eventCost?: number;
   /**
@@ -255,70 +262,110 @@ export const ACCESS_TICKET = 99;
  * ₹4,000, ₹2Cr of sponsorship, and F&B and merchandise as revenue layers in
  * their own right. That is ₹7.5Cr against a ₹5Cr build.
  */
+/**
+ * Every split the league runs, in one table.
+ *
+ * There are five, and they are different on purpose — a live gate, a
+ * catalogue, a broadcast deal, a sponsorship card and a co-funded stadium show
+ * are not the same kind of money and do not divide the same way. Keeping them
+ * apart is what stops "the 40/30/30" being quoted at things it was never
+ * about.
+ */
+export const SPLITS = {
+  /** Ticketed nights the league stages itself. */
+  live: { artist: 40, productionHouse: 30, operator: 30 },
+  /** Recordings and video. The operator takes nothing. */
+  content: { artist: 50, productionHouse: 50, operator: 0 },
+  /** OTT and broadcast rights. */
+  broadcast: { artist: 30, productionHouse: 30, operator: 40 },
+  /** The season sponsorship card. */
+  sponsorship: { artist: 30, productionHouse: 30, operator: 40 },
+  /** Membership passes are the operator's alone. */
+  membership: { artist: 0, productionHouse: 0, operator: 100 },
+  /**
+   * The celebrity show is co-funded and the artist takes none of the profit.
+   *
+   * The house and the operator each put up half the build and each take half
+   * what it clears. The band is on the bill and paid for the season it is
+   * having; it is not carrying half a crore of event risk.
+   */
+  celebrity: { artist: 0, productionHouse: 50, operator: 50 },
+  /** The signing fee: the artist's, less the league's cut for running it. */
+  acquisition: { artist: 70, productionHouse: 0, operator: 30 },
+} as const;
+
+/* ---- the season's live events, at the stated gate ------------------ */
+
+/** Commercial night: 250 tickets at ₹199. */
+export const COMMERCIAL_GATE = { tickets: 250, price: 199 };
+/** Corporate show: free to attend on a ₹99 pass, 200 in. */
+export const CORPORATE_GATE = { tickets: 200, price: 99 };
+/** A campus night is bought by the college, not the crowd. */
+export const CAMPUS_SPONSOR = 50000;
+/** A festival slot is a television booking, paid as a fee. */
+export const FESTIVAL_FEE = 25000;
+/** Cross and house nights are the commercial night, bigger. */
+export const CROSS_MULTIPLE = 1.5;
+export const HOUSE_MULTIPLE = 2;
+
+const COMMERCIAL_VALUE = COMMERCIAL_GATE.tickets * COMMERCIAL_GATE.price;
+
 export const SEASON_MIX: SeasonMixRow[] = [
-  { id: "commercial", label: "Commercial", perBand: 24, actsOnBill: 1, capacityIdx: 1, priceIdx: 1, ticketed: true },
-  { id: "cross", label: "Versus night", perBand: 6, actsOnBill: 2, capacityIdx: 1.5, priceIdx: 1.25, ticketed: true },
   {
-    id: "campus",
-    label: "Campus",
-    perBand: 10,
-    actsOnBill: 4,
-    capacityIdx: 1.6,
-    priceIdx: 0,
-    ticketed: true,
-    attendanceAbs: 600,
-    generalTicket: ACCESS_TICKET,
-    sponsorPerEvent: 50000,
-  },
-  { id: "house", label: "House night", perBand: 2, actsOnBill: 4, capacityIdx: 3.2, priceIdx: 1.3, ticketed: true },
-  {
-    id: "festival",
-    label: "Festival",
-    perBand: 3,
-    actsOnBill: 10,
-    capacityIdx: 6,
-    priceIdx: 0,
-    ticketed: true,
-    attendanceAbs: 2500,
-    generalTicket: ACCESS_TICKET,
-    sponsorPerEvent: 150000,
+    id: "commercial", label: "Commercial", perBand: 24, actsOnBill: 1,
+    capacityIdx: 1, priceIdx: 1, ticketed: true,
+    attendanceAbs: COMMERCIAL_GATE.tickets, generalTicket: COMMERCIAL_GATE.price,
   },
   {
-    id: "corporate",
-    label: "Corporate show",
-    perBand: 3,
-    actsOnBill: 1,
-    capacityIdx: 1,
-    priceIdx: 0,
-    ticketed: false,
-    attendanceAbs: 300,
-    sponsorPerEvent: 175000,
-    nonGateToBandPct: 70,
+    // A versus night is the commercial night at 1.5x, taken on the room rather
+    // than on the profit — a bigger room is what produces the bigger number.
+    id: "cross", label: "Versus night", perBand: 6, actsOnBill: 2,
+    capacityIdx: 1, priceIdx: 1, ticketed: true,
+    attendanceAbs: Math.round(COMMERCIAL_GATE.tickets * CROSS_MULTIPLE),
+    generalTicket: COMMERCIAL_GATE.price,
   },
   {
-    id: "celebrity",
-    label: "Celebrity night",
-    perBand: 1,
-    actsOnBill: 1,
-    capacityIdx: 1,
-    priceIdx: 0,
-    ticketed: true,
-    attendanceAbs: 20000,
-    generalTicket: 1750,
-    premiumSeats: 3000,
-    premiumTicket: 4000,
-    sponsorPerEvent: 20000000,
-    fnbPerEvent: 5000000,
-    merchPerEvent: 3000000,
-    promoterFunded: true,
+    id: "house", label: "House night", perBand: 2, actsOnBill: 4,
+    capacityIdx: 1, priceIdx: 1, ticketed: true,
+    attendanceAbs: Math.round(COMMERCIAL_GATE.tickets * HOUSE_MULTIPLE),
+    generalTicket: COMMERCIAL_GATE.price,
+  },
+  {
+    // Bought by the college. No gate at all.
+    id: "campus", label: "Campus", perBand: 10, actsOnBill: 4,
+    capacityIdx: 1, priceIdx: 0, ticketed: false,
+    attendanceAbs: 600, sponsorPerEvent: CAMPUS_SPONSOR,
+  },
+  {
+    // A television booking, paid as a fee.
+    id: "festival", label: "Festival (TV)", perBand: 3, actsOnBill: 10,
+    capacityIdx: 1, priceIdx: 0, ticketed: false,
+    attendanceAbs: 0, sponsorPerEvent: FESTIVAL_FEE,
+  },
+  {
+    // Free to attend on a 99-rupee pass.
+    id: "corporate", label: "Corporate show", perBand: 3, actsOnBill: 1,
+    capacityIdx: 1, priceIdx: 1, ticketed: true,
+    attendanceAbs: CORPORATE_GATE.tickets, generalTicket: CORPORATE_GATE.price,
+  },
+  {
+    /*
+     * The celebrity show is a different business bolted to the season.
+     *
+     * 5Cr of revenue against a 3.8Cr build, co-funded half by the production
+     * house and half by the league, and the profit divides the same way. The
+     * band takes none of it — it is on the bill and paid for its season, not
+     * carrying half a crore of event risk. 2Cr of the build is the artist
+     * signing, committed by the league up front.
+     */
+    id: "celebrity", label: "Celebrity night", perBand: 1, actsOnBill: 1,
+    capacityIdx: 1, priceIdx: 0, ticketed: false,
+    attendanceAbs: 0,
+    coFunded: true,
     ticketingIncluded: true,
-    eventCost: 50000000,
-    // Neither of these is in the blueprint, which gives the build as one
-    // figure. A headline guarantee near a tenth of the build is the ordinary
-    // shape, and a support slot on a night like this pays in reach far more
-    // than in fee. Both are assumptions; every other figure on this row is not.
-    guestGuarantee: 5000000,
-    bandFeePerEvent: 200000,
+    eventRevenue: 50000000,
+    eventCost: 38000000,
+    guestGuarantee: 20000000,
   },
 ];
 
@@ -332,8 +379,13 @@ export interface SeasonRow extends SeasonMixRow {
   grossGate: number;
   /** Sponsorship, F&B and merchandise — outside the gate and outside the split. */
   nonGate: number;
-  /** Total build on promoter-funded nights. Zero elsewhere. */
+  /** Total build on promoter-funded or co-funded nights. Zero elsewhere. */
   build: number;
+  /** Stated revenue on a co-funded night. */
+  coFundedRevenue: number;
+  coFundedProfit: number;
+  houseFunding: number;
+  operatorFunding: number;
   /** Guest fees taken off the gate before the split. */
   guestFees: number;
   netGate: number;
@@ -353,6 +405,10 @@ export interface SeasonRollup {
   grossGate: number;
   nonGate: number;
   build: number;
+  coFundedRevenue: number;
+  coFundedProfit: number;
+  houseFunding: number;
+  operatorFunding: number;
   guestFees: number;
   netGate: number;
   admissions: number;
@@ -402,17 +458,26 @@ export function rollUpSeason(
     const guestFees = Math.min(afterTicketing, events * (m.feePerEvent ?? 0));
     const netGate = afterTicketing - guestFees;
 
-    // A promoter-funded night pays the artist a fee and gives the operator
-    // whatever the night cleared; everything else splits the league's way.
+    /*
+     * A co-funded night stands outside the league's splits entirely: stated
+     * revenue against a stated build, divided in half between the two parties
+     * that funded it. Everything else splits the league's way.
+     */
     const build = events * (m.eventCost ?? 0);
+    const coFundedRevenue = m.coFunded ? events * (m.eventRevenue ?? 0) : 0;
+    const coFundedProfit = coFundedRevenue - build;
     // Non-gate income: the league's, unless the format says otherwise.
     const nonGateToBand = Math.round(nonGate * ((m.nonGateToBandPct ?? 0) / 100));
-    const bandPool = m.promoterFunded
-      ? events * (m.bandFeePerEvent ?? 0)
-      : Math.round(netGate * (EVENT_SPLIT.bands / 100)) + nonGateToBand;
-    const housePool = m.promoterFunded
+    const bandPool = m.coFunded
       ? 0
-      : Math.round(netGate * (EVENT_SPLIT.productionHouse / 100));
+      : m.promoterFunded
+        ? events * (m.bandFeePerEvent ?? 0)
+        : Math.round(netGate * (EVENT_SPLIT.bands / 100)) + nonGateToBand;
+    const housePool = m.coFunded
+      ? Math.round(coFundedProfit * (SPLITS.celebrity.productionHouse / 100))
+      : m.promoterFunded
+        ? 0
+        : Math.round(netGate * (EVENT_SPLIT.productionHouse / 100));
 
     return {
       ...m,
@@ -429,12 +494,19 @@ export function rollUpSeason(
       // Sponsorship, stalls, F&B and merch sit outside the 40/30/30 and accrue
       // to whoever carries the night — they were being computed and then
       // dropped, so a corporate season earned nobody anything.
-      operatorPool: m.promoterFunded
-        ? netGate + nonGate - build - events * (m.bandFeePerEvent ?? 0)
-        : netGate -
-          Math.round(netGate * (EVENT_SPLIT.bands / 100)) -
-          housePool +
-          (nonGate - nonGateToBand),
+      coFundedRevenue,
+      coFundedProfit,
+      /** What each side puts up on a co-funded night. */
+      houseFunding: m.coFunded ? Math.round(build / 2) : 0,
+      operatorFunding: m.coFunded ? build - Math.round(build / 2) : 0,
+      operatorPool: m.coFunded
+        ? Math.round(coFundedProfit * (SPLITS.celebrity.operator / 100))
+        : m.promoterFunded
+          ? netGate + nonGate - build - events * (m.bandFeePerEvent ?? 0)
+          : netGate -
+            Math.round(netGate * (EVENT_SPLIT.bands / 100)) -
+            housePool +
+            (nonGate - nonGateToBand),
       bandSeason: Math.round(bandPool / bands),
       houseSeasonPerBand: Math.round(housePool / bands),
     };
@@ -451,6 +523,10 @@ export function rollUpSeason(
     grossGate: sum((r) => r.grossGate),
     nonGate: sum((r) => r.nonGate),
     build: sum((r) => r.build),
+    coFundedRevenue: sum((r) => r.coFundedRevenue),
+    coFundedProfit: sum((r) => r.coFundedProfit),
+    houseFunding: sum((r) => r.houseFunding),
+    operatorFunding: sum((r) => r.operatorFunding),
     guestFees: sum((r) => r.guestFees),
     netGate: sum((r) => r.netGate),
     admissions: sum((r) => r.events * r.attendance),
