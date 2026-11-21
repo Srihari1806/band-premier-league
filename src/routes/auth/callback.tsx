@@ -117,9 +117,9 @@ function AuthCallbackPage() {
 
         // ── Step 4: Navigate ────────────────────────────────────────────────
         if (foundProfile) {
-          navigate({ to: "/dashboard" });
+          navigate({ to: "/workspace" });
         } else {
-          navigate({ to: "/onboarding" });
+          navigate({ to: "/workspace" });
         }
       } catch (err: any) {
         if (active) {

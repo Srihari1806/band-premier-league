@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as VenuesRouteImport } from './routes/venues'
+import { Route as WorkspaceRouteImport } from './routes/workspace'
 import { Route as SignupRouteImport } from './routes/signup'
 import { Route as SeasonRouteImport } from './routes/season'
 import { Route as ProductionHousesRouteImport } from './routes/production-houses'
@@ -45,6 +46,11 @@ import { Route as AdminApplicationsRouteImport } from './routes/admin/applicatio
 const VenuesRoute = VenuesRouteImport.update({
   id: '/venues',
   path: '/venues',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const WorkspaceRoute = WorkspaceRouteImport.update({
+  id: '/workspace',
+  path: '/workspace',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SignupRoute = SignupRouteImport.update({
@@ -223,6 +229,7 @@ export interface FileRoutesByFullPath {
   '/season': typeof SeasonRoute
   '/signup': typeof SignupRoute
   '/venues': typeof VenuesRoute
+  '/workspace': typeof WorkspaceRoute
   '/admin/applications': typeof AdminApplicationsRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/bands/$bandId': typeof BandsBandIdRoute
@@ -257,6 +264,7 @@ export interface FileRoutesByTo {
   '/season': typeof SeasonRoute
   '/signup': typeof SignupRoute
   '/venues': typeof VenuesRoute
+  '/workspace': typeof WorkspaceRoute
   '/admin/applications': typeof AdminApplicationsRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/bands/$bandId': typeof BandsBandIdRoute
@@ -292,6 +300,7 @@ export interface FileRoutesById {
   '/season': typeof SeasonRoute
   '/signup': typeof SignupRoute
   '/venues': typeof VenuesRoute
+  '/workspace': typeof WorkspaceRoute
   '/admin/applications': typeof AdminApplicationsRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/bands/$bandId': typeof BandsBandIdRoute
@@ -328,6 +337,7 @@ export interface FileRouteTypes {
     | '/season'
     | '/signup'
     | '/venues'
+    | '/workspace'
     | '/admin/applications'
     | '/auth/callback'
     | '/bands/$bandId'
@@ -362,6 +372,7 @@ export interface FileRouteTypes {
     | '/season'
     | '/signup'
     | '/venues'
+    | '/workspace'
     | '/admin/applications'
     | '/auth/callback'
     | '/bands/$bandId'
@@ -396,6 +407,7 @@ export interface FileRouteTypes {
     | '/season'
     | '/signup'
     | '/venues'
+    | '/workspace'
     | '/admin/applications'
     | '/auth/callback'
     | '/bands/$bandId'
@@ -431,6 +443,7 @@ export interface RootRouteChildren {
   SeasonRoute: typeof SeasonRoute
   SignupRoute: typeof SignupRoute
   VenuesRoute: typeof VenuesRoute
+  WorkspaceRoute: typeof WorkspaceRoute
   AdminApplicationsRoute: typeof AdminApplicationsRoute
   AuthCallbackRoute: typeof AuthCallbackRoute
   JoinBandRoute: typeof JoinBandRoute
@@ -452,6 +465,13 @@ declare module '@tanstack/react-router' {
       path: '/venues'
       fullPath: '/venues'
       preLoaderRoute: typeof VenuesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/workspace': {
+      id: '/workspace'
+      path: '/workspace'
+      fullPath: '/workspace'
+      preLoaderRoute: typeof WorkspaceRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/signup': {
@@ -704,6 +724,7 @@ const rootRouteChildren: RootRouteChildren = {
   SeasonRoute: SeasonRoute,
   SignupRoute: SignupRoute,
   VenuesRoute: VenuesRoute,
+  WorkspaceRoute: WorkspaceRoute,
   AdminApplicationsRoute: AdminApplicationsRoute,
   AuthCallbackRoute: AuthCallbackRoute,
   JoinBandRoute: JoinBandRoute,
